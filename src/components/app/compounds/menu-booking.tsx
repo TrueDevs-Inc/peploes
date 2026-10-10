@@ -1,5 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { MENU_PAGE_CONTENT } from "@/lib/constants/menu-page";
@@ -10,6 +11,12 @@ import { cn } from "@/lib/utils";
 export function MenuBooking({
   booking = MENU_PAGE_CONTENT.booking,
 }: IMenuBookingProps) {
+  const actionContent = (
+    <>
+      {booking.label}
+      <ArrowRight aria-hidden="true" className="size-4" />
+    </>
+  );
   return (
     <section
       aria-labelledby="menu-booking-heading"
@@ -52,16 +59,20 @@ export function MenuBooking({
           </p>
         )}
         <Button
-          type="button"
+          asChild={Boolean(booking.href)}
+          type={booking.href ? undefined : "button"}
           variant="brand-primary-inverse"
-          aria-disabled="true"
+          aria-disabled={booking.href ? undefined : true}
           className={cn(
             dmSans.className,
             "h-11 rounded-[4px] px-5 text-base has-[>svg]:px-5",
           )}
         >
-          {booking.label}
-          <ArrowRight aria-hidden="true" className="size-4" />
+          {booking.href ? (
+            <Link href={booking.href}>{actionContent}</Link>
+          ) : (
+            actionContent
+          )}
         </Button>
       </div>
     </section>

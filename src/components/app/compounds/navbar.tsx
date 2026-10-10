@@ -5,7 +5,7 @@ import { DesktopMenus } from "@/components/app/molecules/desktop-menus";
 import { DesktopNavigation } from "@/components/app/molecules/desktop-navigation";
 import { MobileNavigation } from "@/components/app/molecules/mobile-navigation";
 import { Button } from "@/components/ui/button";
-import { NAVBAR_CONTENT } from "@/lib/constants";
+import { NAVBAR_CONTENT, ROUTES } from "@/lib/constants";
 import { dmSans, ebGaramondItalic } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
 
@@ -30,8 +30,9 @@ export function Navbar() {
             },
             { id: "our-story", label: NAVBAR_CONTENT.ourStoryLabel },
             {
-              id: "groups-occasions",
+              id: NAVBAR_CONTENT.groupsId,
               label: NAVBAR_CONTENT.groupsLabel,
+              href: ROUTES.PRIVATE_DINING,
               content: <DesktopGroups />,
             },
             { id: "whats-on", label: NAVBAR_CONTENT.whatsOnLabel },
@@ -48,6 +49,7 @@ export function Navbar() {
             {NAVBAR_CONTENT.visitContactLabel}
           </Button>
           <Button
+            data-navbar-gift
             type="button"
             variant="brand-nav"
             aria-disabled="true"

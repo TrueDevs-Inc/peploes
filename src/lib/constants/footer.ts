@@ -1,4 +1,8 @@
-import { RESTAURANT_OPENING_HOURS, ROUTES } from "@/lib/constants";
+import {
+  NAVBAR_CONTENT,
+  RESTAURANT_OPENING_HOURS,
+  ROUTES,
+} from "@/lib/constants";
 import type { IFooterContent } from "@/lib/types";
 
 export const FOOTER_CONTENT: IFooterContent = {
@@ -12,7 +16,7 @@ export const FOOTER_CONTENT: IFooterContent = {
   exploreLinks: [
     { label: "Menus", href: ROUTES.MENUS },
     { label: "Our Story" },
-    { label: "Groups & Occasions" },
+    { label: NAVBAR_CONTENT.groupsLabel, href: ROUTES.PRIVATE_DINING },
     { label: "What’s On" },
     { label: "The Journal" },
     { label: "Visit & Contact" },
@@ -61,9 +65,9 @@ export const MOBILE_FOOTER_CONTENT = {
     {
       heading: "Occasions",
       links: [
-        { label: "Groups & Celebrations" },
-        { label: "Corporate & Exclusive Hire" },
-        { label: "Weddings" },
+        { label: "Groups & Celebrations", href: ROUTES.CELEBRATIONS },
+        { label: "Corporate & Exclusive Hire", href: ROUTES.CORPORATE_EVENTS },
+        { label: "Weddings", href: ROUTES.WEDDINGS },
       ],
     },
     {
@@ -76,3 +80,7 @@ export const MOBILE_FOOTER_CONTENT = {
     },
   ],
 } as const;
+
+export const MOBILE_FOOTER_LEGAL_LABELS: Readonly<Record<string, string>> = {
+  "Cookie Preferences": "Cookies",
+};

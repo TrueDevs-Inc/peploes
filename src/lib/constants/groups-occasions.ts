@@ -1,3 +1,4 @@
+import { ROUTES } from "@/lib/constants";
 import type { IGroupsOccasionsContent } from "@/lib/types";
 
 export const GROUPS_OCCASIONS_CONTENT: IGroupsOccasionsContent = {
@@ -11,6 +12,7 @@ export const GROUPS_OCCASIONS_CONTENT: IGroupsOccasionsContent = {
   occasions: [
     {
       title: "Groups & Celebrations",
+      href: ROUTES.CELEBRATIONS,
       description:
         "Birthdays, family gatherings, long lunches and special occasions.",
       mobileDescription:
@@ -23,6 +25,7 @@ export const GROUPS_OCCASIONS_CONTENT: IGroupsOccasionsContent = {
     },
     {
       title: "Corporate & Exclusive Hire",
+      href: ROUTES.CORPORATE_EVENTS,
       description:
         "From team dinners to full-room occasions, with bespoke menus and attentive service.",
       image: {
@@ -33,6 +36,7 @@ export const GROUPS_OCCASIONS_CONTENT: IGroupsOccasionsContent = {
     },
     {
       title: "Weddings",
+      href: ROUTES.WEDDINGS,
       description:
         "Intimate celebrations in the heart of Dublin, with a setting that feels both special and relaxed.",
       image: {

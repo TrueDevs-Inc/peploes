@@ -3,10 +3,14 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 
+import { DesktopNavigationTrigger } from "@/components/app/atoms/desktop-navigation-trigger";
 import styles from "@/components/app/molecules/desktop-navigation.module.css";
-import { Button } from "@/components/ui/button";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { DESKTOP_NAVIGATION_QUERY, FOCUS_RING, ROUTES } from "@/lib/constants";
+import {
+  DESKTOP_NAVIGATION_QUERY,
+  NAVBAR_CONTENT,
+  ROUTES,
+} from "@/lib/constants";
 import type {
   IDesktopNavigationProps,
   IOpenDesktopNavigation,
@@ -16,11 +20,14 @@ import { cn } from "@/lib/utils";
 export function DesktopNavigation({ items }: IDesktopNavigationProps) {
   const [openItem, setOpenItem] = useState<IOpenDesktopNavigation | null>(null);
   const activeItemRef = useRef<HTMLLIElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
   const navigationId = useId();
   const isDesktop = useMediaQuery(DESKTOP_NAVIGATION_QUERY);
   const pathname = usePathname();
-  const activeNavigationId = pathname.startsWith(ROUTES.MENUS) ? "menus" : null;
+  const activeNavigationId = pathname.startsWith(ROUTES.MENUS)
+    ? "menus"
+    : pathname.startsWith(ROUTES.PRIVATE_DINING)
+      ? NAVBAR_CONTENT.groupsId
+      : null;
 
   useEffect(() => {
     if (!isDesktop) setOpenItem(null);
@@ -42,7 +49,9 @@ export function DesktopNavigation({ items }: IDesktopNavigationProps) {
       if (event.key !== "Escape") return;
 
       if (activeItemRef.current?.contains(document.activeElement)) {
-        triggerRef.current?.focus();
+        activeItemRef.current
+          ?.querySelector<HTMLElement>("[data-navigation-trigger]")
+          ?.focus();
       }
       setOpenItem(null);
     }
@@ -57,15 +66,17 @@ export function DesktopNavigation({ items }: IDesktopNavigationProps) {
 
   return (
     <ul
+      data-navbar-primary
       className="hidden h-full flex-1 items-center gap-[30px] xl:flex"
       onClickCapture={(event) => {
         if (event.target instanceof Element && event.target.closest("a[href]"))
           setOpenItem(null);
       }}
     >
-      {items.map(({ id, label, content }) => {
+      {items.map((item) => {
+        const { id, href, content } = item;
         const isOpen = openItem?.id === id;
-        const panelId = `${navigationId}-${id}`;
+        const panelId = `${navigationId}-${encodeURIComponent(id)}`;
 
         return (
           <li
@@ -91,35 +102,24 @@ export function DesktopNavigation({ items }: IDesktopNavigationProps) {
               }
             }}
           >
-            <Button
-              ref={isOpen ? triggerRef : undefined}
-              type="button"
-              data-active={activeNavigationId === id}
-              variant="brand-nav"
-              aria-disabled={content ? undefined : true}
-              aria-expanded={content ? isOpen : undefined}
-              aria-controls={content ? panelId : undefined}
+            <DesktopNavigationTrigger
+              item={item}
+              isOpen={isOpen}
+              isActive={activeNavigationId === id}
+              isCurrent={href === pathname}
+              panelId={panelId}
               onFocus={() =>
                 setOpenItem((current) => (current?.id === id ? current : null))
               }
-              onClick={
-                content
-                  ? () =>
-                      setOpenItem((current) =>
-                        current?.id === id && current.source === "activation"
-                          ? null
-                          : { id, source: "activation" },
-                      )
-                  : undefined
+              onToggle={() =>
+                setOpenItem((current) =>
+                  current?.id === id && current.source === "activation"
+                    ? null
+                    : { id, source: "activation" },
+                )
               }
-              className={cn(
-                FOCUS_RING,
-                "h-11 rounded-sm p-0 text-base leading-[22px] font-medium text-ink focus-visible:ring-peploe-burgundy data-[active=true]:text-peploe-burgundy data-[active=true]:underline",
-                isOpen && "text-peploe-burgundy underline",
-              )}
-            >
-              {label}
-            </Button>
+              onOpen={() => setOpenItem({ id, source: "activation" })}
+            />
             {content && (
               <div
                 id={panelId}

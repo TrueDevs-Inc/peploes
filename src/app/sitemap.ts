@@ -14,6 +14,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ROUTES.COCKTAILS,
     ROUTES.GROUP_SET_MENU,
     ROUTES.SEASONAL,
+    ROUTES.PRIVATE_DINING,
+    ROUTES.CELEBRATIONS,
+    ROUTES.CORPORATE_EVENTS,
+    ROUTES.WEDDINGS,
   ].map((route) => ({
     url: `${baseUrl}${route}`,
   }));

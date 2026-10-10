@@ -3,6 +3,9 @@
 Menu implementations, approved Figma comments and the local Sanity-ready
 content contract are documented in [Menu pages](menus.md).
 
+Dedicated occasion pages, their Figma references and enquiry preview are
+documented in [Private dining and events](private-dining.md).
+
 ## Identity and audience
 
 Peploe's is an independent, family-run restaurant at 16 St Stephen's Green,
@@ -50,20 +53,29 @@ not a requirement for an animation. Keep movement restrained and navigation
 usable. Obtain the original logo, colour values and image files before settling
 visual tokens or selecting final crops.
 
-## Homepage content width
+## Site content width
 
-The Final Pages homepage (`3131:11098`) specifies desktop side padding, not a
-shared content maximum. At the desktop breakpoint, `site-container` in
-`src/app/globals.css` leaves 72px on each side; `site-container-inset` leaves
-80px for the closing booking banner and footer. Their content widths are
-therefore 1296px and 1280px only when the available page width is 1440px.
-The content containers cap at 1296px and 1280px respectively, while section
-backgrounds and full-width photographs remain viewport-width. Below the
-desktop breakpoint they retain 24px gutters. This preserves the frame's
-padding and Fill constraints; Figma supplies a 1440px desktop reference, not
-additional wide-screen frames.
+Site content has a shared 1440px maximum, defined by
+`--site-content-max-width` in `src/app/globals.css`. Section backgrounds and
+full-width photographs fill the page. Keep the root layout full-width and put
+content inside the shared `site-container` or `site-container-inset` utilities.
+This applies to the homepage, menu pages, private dining pages, navbar and footer.
 
-Backgrounds and full-width photographs fill the page. Wine keeps its 748px
+Both utilities retain 24px gutters below the desktop breakpoint. On desktop,
+the standard container leaves at least 72px on each side and the inset container
+leaves at least 80px. At the 1440px Figma reference, their content widths remain
+1296px and 1280px. At a 2400px available page width, both are 1440px wide and
+centered with 480px on each side. Measure the content, not its background.
+
+Custom split sections must respect the same content edges. Hospitality includes
+its existing 72px internal offset when capping and positioning its grid. Private
+dining's overview menu and wedding-hire copy use the shared maximum to calculate
+their outer gutters. Wedding hire keeps its inner padding fixed on wide screens
+so increasing the outer gutter cannot squeeze its text column.
+Split hero photographs align their inner edge to the capped text container and
+extend outward to the page edge, keeping text clear of the photograph.
+
+Wine keeps its 748px
 text column. Hospitality caps its text at 783px and reserves a separate artwork
 column on desktop, with a 32px gap and the shared left gutter. Stories follows the
 source frame's fixed 636px columns and 28px gap, shrinking those tracks on
@@ -97,14 +109,14 @@ The closing booking heading is upright on mobile and retains its desktop italic.
 
 Compare section positions, line breaks, crops and overlays at 390px, then check
 narrow phones, tablet and desktop for overflow. Keep the existing inactive
-actions, disabled newsletter and active telephone and email links.
+actions, inactive newsletter subscription and active telephone and email links.
 
 ## Homepage interaction previews
 
 Placeholder actions use inert `type="button"` controls with `aria-disabled="true"`
 and no click handlers. They remain focusable and show the Figma hover styles
-without navigating, booking or submitting. Keep the newsletter input natively
-disabled so it cannot collect an email address.
+without navigating, booking or submitting. The newsletter email input accepts
+typing and keyboard focus, but does not send or store the entered address.
 
 The existing shared button owns the homepage's brand variants: primary,
 primary inverse, secondary inverse, editorial text, navigation and contact.
@@ -144,7 +156,10 @@ The desktop Groups & Occasions dropdown follows Nav / Shelf / Groups / Light
 with 132px images. The local shelf catalog owns its copy and the crops exported
 from Figma. Destination titles turn burgundy with a 32px underline on hover;
 retain visible keyboard focus and the shared reduced-motion-aware duration.
-Destinations remain inactive until their pages are built.
+The destinations now open their dedicated pages. Clicking Private Dining & Events
+opens the overview; hover and Arrow Down still open the shelf. On mobile, the
+label is an overview link with a separate submenu toggle. See
+[Private dining and events](private-dining.md) for the shared page sections.
 
 Both desktop shelves share one open state so switching triggers replaces the
 visible panel. Verify switching by pointer and keyboard as well as dismissal.
@@ -178,9 +193,10 @@ Footer dividers, mobile row borders and the email field rule use 1px thickness.
 The three burgundy heading underlines are 32px wide and 2px high, matching Figma.
 
 Telephone and email links are active. Navigation, legal and social destinations
-remain inactive until approved destinations exist. The newsletter field stays
-disabled and Subscribe remains inactive pending the subscription integration.
-No email is collected or submitted. Opening hours and contact details follow
+remain inactive until approved destinations exist. The newsletter email field is
+editable, with an accessible label, email autocomplete and visible keyboard focus.
+Subscribe remains inactive pending the subscription integration; no email is
+sent or stored by the application. Opening hours and contact details follow
 the design and should be confirmed by the restaurant before launch.
 
 When changing the footer, verify the desktop columns, mobile reading order,
@@ -294,12 +310,12 @@ and horizontal cards with 124px-wide photos, reduced further below 360px.
 The yellow Distinct commercial journeys note (`3131:11700`) requires separate
 pages and enquiry experiences for Groups & Celebrations, Corporate & Exclusive
 Hire and Weddings. These remain distinct cards with local content. The banner
-button and three Explore actions stay inactive until their destinations exist,
-following the approved homepage placeholder behaviour. Dedicated pages and
-enquiry forms remain future work.
+button now opens the private dining overview, and the three Explore actions
+open their dedicated pages. See [Private dining and events](private-dining.md)
+for the page layouts and enquiry preview limits.
 
 When changing this section, compare the photograph crops, gradient, typography,
-card order and spacing with Figma. Verify image loading, four inactive actions,
+card order and spacing with Figma. Verify image loading, four destination links,
 mobile reading order and wrapping without horizontal overflow.
 
 ## Stories implementation

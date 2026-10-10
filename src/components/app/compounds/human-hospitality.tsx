@@ -18,7 +18,7 @@ export function HumanHospitality() {
         "overflow-hidden bg-warm-cream bg-linear-to-b from-ink/10 to-transparent to-[66px] text-ink",
       )}
     >
-      <div className="relative isolate grid xl:grid-cols-[minmax(0,1fr)_min(37.5%,563px)] xl:gap-8">
+      <div className="relative isolate grid xl:ml-[max(0px,calc((100vw-var(--site-content-max-width))/2-72px))] xl:max-w-[calc(var(--site-content-max-width)+72px)] xl:grid-cols-[minmax(0,1fr)_min(37.5%,563px)] xl:gap-8">
         <div className="site-container relative z-10 xl:mx-0 xl:ml-[72px] xl:w-auto">
           <div className="flex min-w-0 flex-col items-start gap-5 pt-12 pb-9 sm:gap-7 sm:py-20 xl:max-w-[783px]">
             <p className="flex items-center gap-2.5 text-sm leading-4 font-medium tracking-[0.1em] text-peploe-burgundy uppercase">

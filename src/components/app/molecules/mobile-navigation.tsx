@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 
 import { CloseButton } from "@/components/app/atoms/close-button";
+import { MobileNavigationTrigger } from "@/components/app/atoms/mobile-navigation-trigger";
 import { NavbarBookingButton } from "@/components/app/atoms/navbar-booking-button";
 import { NavbarBrand } from "@/components/app/atoms/navbar-brand";
 import styles from "@/components/app/molecules/mobile-navigation.module.css";
@@ -126,37 +127,17 @@ export function MobileNavigation({
                         key={item.id}
                         className="not-last:after:mt-1 not-last:after:block not-last:after:h-px not-last:after:bg-soft-stone"
                       >
-                        <Button
-                          type="button"
-                          variant="brand-nav"
-                          aria-disabled={item.children ? undefined : true}
-                          aria-expanded={item.children ? isExpanded : undefined}
-                          aria-controls={item.children ? panelId : undefined}
-                          onClick={
-                            item.children
-                              ? () =>
-                                  setExpandedSection((currentSection) =>
-                                    currentSection === item.id ? null : item.id,
-                                  )
-                              : undefined
+                        <MobileNavigationTrigger
+                          item={item}
+                          isExpanded={isExpanded}
+                          panelId={panelId}
+                          onNavigate={closeMenu}
+                          onToggle={() =>
+                            setExpandedSection((currentSection) =>
+                              currentSection === item.id ? null : item.id,
+                            )
                           }
-                          className={cn(
-                            FOCUS_RING,
-                            "h-auto min-h-12 w-full justify-between gap-4 rounded-none px-2 py-2.5 text-left text-base leading-6 font-medium whitespace-normal hover:no-underline focus-visible:ring-peploe-burgundy",
-                            isExpanded &&
-                              "text-peploe-burgundy shadow-[inset_0_-1px_0_var(--peploe-burgundy)]",
-                          )}
-                        >
-                          <span>{item.label}</span>
-                          {item.children && (
-                            <span
-                              aria-hidden="true"
-                              className="size-6 shrink-0 text-center text-xl leading-6 font-normal"
-                            >
-                              {isExpanded ? "−" : "+"}
-                            </span>
-                          )}
-                        </Button>
+                        />
                         {item.children && (
                           <div
                             id={panelId}

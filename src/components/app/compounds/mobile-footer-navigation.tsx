@@ -9,7 +9,10 @@ import { cn } from "@/lib/utils";
 
 export function MobileFooterNavigation() {
   return (
-    <div className={cn(FOOTER_STYLES.mobileDivider, "order-3 xl:hidden")}>
+    <div
+      data-footer-homepage-extra
+      className={cn(FOOTER_STYLES.mobileDivider, "order-3 xl:hidden")}
+    >
       {MOBILE_FOOTER_CONTENT.navigation.map(({ heading, links }) => (
         <nav
           key={heading}

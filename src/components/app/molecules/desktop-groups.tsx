@@ -18,7 +18,7 @@ export function DesktopGroups() {
         className="grid min-w-0 flex-1 grid-cols-3 gap-9"
       >
         {GROUPS_SHELF_CONTENT.destinations.map(
-          ({ label, description, image }) => (
+          ({ label, description, image, href }) => (
             <li key={label} className="flex min-w-0 flex-col gap-4">
               <div className="relative h-[132px] w-full">
                 <Image
@@ -29,7 +29,11 @@ export function DesktopGroups() {
                   className="object-cover"
                 />
               </div>
-              <NavigationShelfLink label={label} description={description} />
+              <NavigationShelfLink
+                label={label}
+                description={description}
+                href={href}
+              />
             </li>
           ),
         )}

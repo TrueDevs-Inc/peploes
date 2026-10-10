@@ -1,12 +1,21 @@
 import { Facebook, Instagram } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { FOOTER_CONTENT } from "@/lib/constants/footer";
+import {
+  FOOTER_CONTENT,
+  MOBILE_FOOTER_LEGAL_LABELS,
+} from "@/lib/constants/footer";
 
 export function FooterMeta() {
   return (
-    <div className="relative mt-20 flex flex-col gap-10 text-xs leading-[18px] text-text-secondary xl:mt-16 xl:flex-row xl:items-center xl:justify-between xl:gap-6 xl:pt-[25px] xl:leading-5 xl:before:absolute xl:before:inset-x-0 xl:before:top-0 xl:before:h-px xl:before:bg-soft-stone">
-      <div className="order-2 flex flex-col gap-2 xl:order-1 xl:flex-row xl:items-center xl:gap-4">
+    <div
+      data-footer-meta
+      className="relative mt-20 flex flex-col gap-10 text-xs leading-[18px] text-text-secondary xl:mt-16 xl:flex-row xl:items-center xl:justify-between xl:gap-6 xl:pt-[25px] xl:leading-5 xl:before:absolute xl:before:inset-x-0 xl:before:top-0 xl:before:h-px xl:before:bg-soft-stone"
+    >
+      <div
+        data-footer-legal
+        className="order-2 flex flex-col gap-2 xl:order-1 xl:flex-row xl:items-center xl:gap-4"
+      >
         <p className="order-2 xl:order-none">{FOOTER_CONTENT.copyright}</p>
         <span aria-hidden="true" className="hidden xl:inline">
           |
@@ -27,14 +36,20 @@ export function FooterMeta() {
                   aria-disabled="true"
                   className="h-auto rounded-none p-0 text-xs leading-[18px] font-normal text-text-secondary xl:leading-5"
                 >
-                  {label}
+                  <span data-footer-full-label>{label}</span>
+                  <span data-footer-short-label className="hidden">
+                    {MOBILE_FOOTER_LEGAL_LABELS[label] ?? label}
+                  </span>
                 </Button>
               </li>
             ))}
           </ul>
         </nav>
       </div>
-      <div className="order-1 flex items-center gap-3 xl:order-2">
+      <div
+        data-footer-social
+        className="order-1 flex items-center gap-3 xl:order-2"
+      >
         <Button
           type="button"
           variant="brand-nav"

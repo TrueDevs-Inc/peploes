@@ -3,21 +3,27 @@
 
 @custom-variant dark (&:is(.dark *));
 
+:root {
+  --site-content-max-width: 1440px;
+}
+
 @utility site-container {
-  width: min(calc(100% - 3rem), 1296px);
+  width: calc(100% - 3rem);
+  max-width: var(--site-content-max-width);
   margin-inline: auto;
 
   @media (width >= 80rem) {
-    width: min(calc(100% - 9rem), 1296px);
+    width: calc(100% - 9rem);
   }
 }
 
 @utility site-container-inset {
-  width: min(calc(100% - 3rem), 1280px);
+  width: calc(100% - 3rem);
+  max-width: var(--site-content-max-width);
   margin-inline: auto;
 
   @media (width >= 80rem) {
-    width: min(calc(100% - 10rem), 1280px);
+    width: calc(100% - 10rem);
   }
 }
 

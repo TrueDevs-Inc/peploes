@@ -450,6 +450,7 @@ export interface INavbarContent {
   menusLabel: string;
   ourStoryLabel: string;
   groupsLabel: string;
+  groupsId: string;
   whatsOnLabel: string;
   visitContactLabel: string;
   giftVouchersLabel: string;
@@ -460,11 +461,23 @@ export interface INavbarContent {
 export interface IDesktopNavigationItem {
   id: string;
   label: string;
+  href?: Route;
   content?: ReactNode;
 }
 
 export interface IDesktopNavigationProps {
   items: readonly IDesktopNavigationItem[];
+}
+
+export interface IDesktopNavigationTriggerProps {
+  item: IDesktopNavigationItem;
+  isOpen: boolean;
+  isActive: boolean;
+  isCurrent: boolean;
+  panelId: string;
+  onFocus: () => void;
+  onToggle: () => void;
+  onOpen: () => void;
 }
 
 export interface IOpenDesktopNavigation {
@@ -493,7 +506,16 @@ export interface IMobileNavigationProps {
 export interface IMobileNavigationItem {
   id: string;
   label: string;
+  href?: Route;
   children?: readonly IMenuNavigationLink[];
+}
+
+export interface IMobileNavigationTriggerProps {
+  item: IMobileNavigationItem;
+  isExpanded: boolean;
+  panelId: string;
+  onNavigate: () => void;
+  onToggle: () => void;
 }
 
 export interface IMenuNavigationLink {
@@ -550,6 +572,7 @@ export interface IMenuBooking {
   heading: string;
   description?: string;
   label: string;
+  href?: Route;
   image: ISectionImage;
 }
 
@@ -715,6 +738,11 @@ export interface IMobileNavigationContent {
   brandPhrase: string;
 }
 
+export interface IFooterShellProps {
+  children: ReactNode;
+  className?: string;
+}
+
 export interface IFooterContent {
   homeLabel: string;
   address: string;
@@ -770,6 +798,7 @@ export interface IStoriesContent {
 }
 
 export interface IGroupOccasion {
+  href: Route;
   title: string;
   description: string;
   mobileDescription?: string;
@@ -785,6 +814,105 @@ export interface IGroupsOccasionsContent {
   cardCtaLabel: string;
   image: ISectionImage;
   occasions: readonly IGroupOccasion[];
+}
+
+export interface IPrivateDiningLayoutProps {
+  children: ReactNode;
+}
+
+export interface IPrivateDiningHeading {
+  eyebrow: string;
+  heading: string;
+  description?: string;
+}
+
+export interface IPrivateDiningHero extends IPrivateDiningHeading {
+  image: ISectionImage;
+  action?: string;
+}
+
+export interface IPrivateDiningFeature {
+  _key: string;
+  heading: string;
+  description?: string;
+  illustration?: string;
+  items?: readonly string[];
+}
+
+export interface IPrivateDiningEnquiryContent {
+  eyebrow: string;
+  heading: string;
+  description: string;
+  formEyebrow?: string;
+  occasionLabel?: string;
+  occasions?: readonly string[];
+  messageLabel: string;
+  company?: boolean;
+  consent?: boolean;
+  contacts?: boolean;
+}
+
+export interface IPrivateDiningPageContent {
+  title: string;
+  seoDescription: string;
+  hero: IPrivateDiningHero;
+  enquiry: IPrivateDiningEnquiryContent;
+  closing: {
+    heading: string;
+    description: string;
+    image: ISectionImage;
+    contacts?: boolean;
+  };
+}
+
+export interface IPrivateDiningHeadingProps extends IPrivateDiningHeading {
+  className?: string;
+}
+
+export interface IPrivateDiningHeroProps {
+  hero: IPrivateDiningHero;
+  variant: "overview" | "celebrations" | "corporate" | "weddings";
+}
+
+export interface IPrivateDiningFeaturesProps {
+  items: readonly IPrivateDiningFeature[];
+  className?: string;
+}
+
+export interface IPrivateDiningFeatureSectionProps {
+  content: IPrivateDiningHeading & {
+    items: readonly IPrivateDiningFeature[];
+  };
+  className?: string;
+  featuresClassName?: string;
+}
+
+export interface IPrivateDiningImageSectionProps {
+  heading: IPrivateDiningHeading;
+  image: ISectionImage;
+  className?: string;
+  imageFirst?: boolean;
+  contained?: boolean;
+  children?: ReactNode;
+}
+
+export interface IPrivateDiningEnquiryProps {
+  content: IPrivateDiningEnquiryContent;
+  compact?: boolean;
+  className?: string;
+}
+
+export interface IPrivateDiningClosingProps {
+  content: IPrivateDiningPageContent["closing"];
+  imageSizes?: string;
+  className?: string;
+}
+
+export interface IPrivateDiningMenuProps {
+  heading: IPrivateDiningHeading;
+  paragraphs: readonly string[];
+  imageFirst?: boolean;
+  className?: string;
 }
 
 export interface IWhatsOnContent {

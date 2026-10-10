@@ -2,6 +2,7 @@ import {
   NAVBAR_CONTENT,
   RESTAURANT_CONTACT,
   RESTAURANT_OPENING_HOURS,
+  ROUTES,
 } from "@/lib/constants";
 import { GROUPS_SHELF_CONTENT } from "@/lib/constants/groups-shelf";
 import { MENUS_CONTENT } from "@/lib/constants/menus";
@@ -25,8 +26,10 @@ export const MOBILE_NAVIGATION_CONTENT = {
     {
       id: "groups-occasions",
       label: NAVBAR_CONTENT.groupsLabel,
-      children: GROUPS_SHELF_CONTENT.destinations.map(({ label }) => ({
+      href: ROUTES.PRIVATE_DINING,
+      children: GROUPS_SHELF_CONTENT.destinations.map(({ label, href }) => ({
         label,
+        href,
       })),
     },
     { id: "whats-on", label: NAVBAR_CONTENT.whatsOnLabel },

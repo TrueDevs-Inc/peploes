@@ -1,8 +1,10 @@
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 import styles from "@/components/app/compounds/groups-occasions.module.css";
 import { Button } from "@/components/ui/button";
+import { ROUTES } from "@/lib/constants";
 import { GROUPS_OCCASIONS_CONTENT } from "@/lib/constants/groups-occasions";
 import { dmSans, ebGaramond } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
@@ -52,13 +54,14 @@ export function GroupsOccasions() {
             </p>
 
             <Button
-              type="button"
+              asChild
               variant="brand-primary-inverse"
-              aria-disabled="true"
               className="h-11 w-[216px] rounded-[4px] bg-warm-cream px-5 has-[>svg]:px-5 text-base leading-[22px] font-medium text-peploe-burgundy shadow-none"
             >
-              {GROUPS_OCCASIONS_CONTENT.ctaLabel}
-              <ArrowRight aria-hidden="true" className="size-4" />
+              <Link href={ROUTES.PRIVATE_DINING}>
+                {GROUPS_OCCASIONS_CONTENT.ctaLabel}
+                <ArrowRight aria-hidden="true" className="size-4" />
+              </Link>
             </Button>
           </div>
         </div>
@@ -106,14 +109,15 @@ export function GroupsOccasions() {
                 </p>
               </div>
               <Button
-                type="button"
+                asChild
                 variant="brand-text"
-                aria-disabled="true"
                 aria-label={`${GROUPS_OCCASIONS_CONTENT.cardCtaLabel} ${occasion.title}`}
                 className="mt-auto h-11 self-start rounded-none px-0 has-[>svg]:px-0 text-base leading-[22px] font-medium text-peploe-burgundy"
               >
-                {GROUPS_OCCASIONS_CONTENT.cardCtaLabel}
-                <ArrowRight aria-hidden="true" className="size-4" />
+                <Link href={occasion.href}>
+                  {GROUPS_OCCASIONS_CONTENT.cardCtaLabel}
+                  <ArrowRight aria-hidden="true" className="size-4" />
+                </Link>
               </Button>
             </div>
           </li>
