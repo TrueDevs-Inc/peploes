@@ -18,7 +18,7 @@ export const SEASONAL_MENU: ISetMenuCollection = {
       title: "Set Christmas Lunch",
       price: 75,
       summary: "This menu is offered to groups greater than 7 guests.",
-      inclusions: ["Includes a bread course and sides with your main course."],
+      inclusions: [],
       courses: [
         {
           _key: "starters",
@@ -84,7 +84,7 @@ export const SEASONAL_MENU: ISetMenuCollection = {
             },
             {
               _key: "winetavern-farm-free-range-pork-chop-5",
-              name: "Winetavern Farm Free Range Pork Chop",
+              name: "Wineteavern Farm Free Range Pork Chop",
               description: "Apple, Mustard Cream, Seasonal Greens",
             },
           ],
@@ -135,7 +135,7 @@ export const SEASONAL_MENU: ISetMenuCollection = {
       title: "Set Christmas Dinner",
       price: 95,
       summary: "This menu is offered to groups greater than 7 guests.",
-      inclusions: ["Includes a bread course and sides with your main course."],
+      inclusions: [],
       courses: [
         {
           _key: "starters",
@@ -196,7 +196,7 @@ export const SEASONAL_MENU: ISetMenuCollection = {
             },
             {
               _key: "winetavern-farm-free-range-pork-chop-5",
-              name: "Winetavern Farm Free Range Pork Chop",
+              name: "Wineteavern Farm Free Range Pork Chop",
               description: "Apple, Mustard Cream, Seasonal Greens",
             },
           ],
@@ -255,12 +255,21 @@ export const SEASONAL_MENU: ISetMenuCollection = {
   seoDescription:
     "Discover seasonal menus at Peploe’s, including Christmas lunch and dinner for festive gatherings.",
   booking: {
+    desktopOverlay:
+      "linear-gradient(90deg,rgba(15,13,12,0.101961),rgba(15,13,12,0.470588) 37.0192%,rgb(15,13,12))",
+    fullWidthOnMobile: true,
+    mobilePadding: 14,
+    mobileOverlay:
+      "linear-gradient(180deg,rgba(15,13,12,0.031373),rgba(15,13,12,0.690196) 45.4111%,rgba(15,13,12,0.960784))",
+    desktopContentWidth: 390,
+    desktopTextAlign: "left",
     heading: "Celebrate the season at Peploe’s.",
     description:
       "Seasonal food, exceptional wine and a table made for gathering.",
     label: "Plan Your Gathering",
     image: {
       src: "/peploes-seasonal-menu-booking.webp",
+      desktopPosition: "50% 61%",
       alt: "A festive table at Peploe’s.",
     },
   },

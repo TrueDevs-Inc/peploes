@@ -10,6 +10,7 @@ export const WINE_MENU: IWineMenuContent = {
   image: {
     src: "/peploes-menu-wine-bottles.webp",
     scale: 1.5,
+    desktopScale: 1.56,
     alt: "A selection of wines from Peploe’s cellar.",
   },
   imageBeforeAside: true,
@@ -17,6 +18,7 @@ export const WINE_MENU: IWineMenuContent = {
   sections: [
     {
       _key: "start-here",
+      mobileBottomPadding: 8,
       heading: "Start Here",
       columns: [
         {
@@ -24,7 +26,7 @@ export const WINE_MENU: IWineMenuContent = {
           categories: [
             {
               _key: "sommeliers-choices",
-              heading: "Sommelier’s Choices",
+              heading: "Sommelier's Choices",
               showVintage: true,
               showGlass: true,
               wines: [
@@ -98,6 +100,7 @@ export const WINE_MENU: IWineMenuContent = {
             },
             {
               _key: "house-wines",
+              mobileTopPadding: 40,
               heading: "House Wines",
               showVintage: false,
               showGlass: true,
@@ -131,7 +134,9 @@ export const WINE_MENU: IWineMenuContent = {
     },
     {
       _key: "sparkling-rose",
+      mobileBottomPadding: 10,
       heading: "Sparkling & Rosé",
+      desktopBottomPadding: 80,
       columns: [
         {
           _key: "left",
@@ -178,6 +183,7 @@ export const WINE_MENU: IWineMenuContent = {
           categories: [
             {
               _key: "french-rose",
+              mobileTopPadding: 38,
               heading: "French Rosé",
               showVintage: true,
               showGlass: true,
@@ -216,6 +222,7 @@ export const WINE_MENU: IWineMenuContent = {
     },
     {
       _key: "white-wines",
+      mobileBottomPadding: 4,
       heading: "White Wines",
       columns: [
         {
@@ -258,6 +265,7 @@ export const WINE_MENU: IWineMenuContent = {
             },
             {
               _key: "spain",
+              mobileTopPadding: 42,
               heading: "Spain",
               showVintage: true,
               showGlass: true,
@@ -333,6 +341,7 @@ export const WINE_MENU: IWineMenuContent = {
             },
             {
               _key: "usa",
+              mobileTopPadding: 42,
               heading: "USA",
               showVintage: true,
               showGlass: true,
@@ -372,6 +381,7 @@ export const WINE_MENU: IWineMenuContent = {
     },
     {
       _key: "red-wines",
+      mobileBottomPadding: 6,
       heading: "Red Wines",
       columns: [
         {
@@ -414,7 +424,9 @@ export const WINE_MENU: IWineMenuContent = {
             },
             {
               _key: "spain",
+              mobileTopPadding: 36,
               heading: "Spain",
+              emphasized: true,
               showVintage: true,
               showGlass: true,
               wines: [
@@ -488,7 +500,9 @@ export const WINE_MENU: IWineMenuContent = {
             },
             {
               _key: "usa",
+              mobileTopPadding: 38,
               heading: "USA",
+              emphasized: true,
               showVintage: true,
               showGlass: true,
               wines: [
@@ -503,7 +517,7 @@ export const WINE_MENU: IWineMenuContent = {
                 },
                 {
                   _key: "cabernet-sauvignon-stags-leap-2",
-                  name: "Cabernet Sauvignon, Stag’s Leap",
+                  name: "Cabernet Sauvignon, Stag's Leap",
                   available: true,
                   region: "Napa Valley, California",
                   vintage: "2018",
@@ -534,7 +548,10 @@ export const WINE_MENU: IWineMenuContent = {
           categories: [
             {
               _key: "peploes-ultimate-selection",
-              heading: "Peploe’s Ultimate Selection",
+              compactVintageHeading: true,
+              heading: "Peploe's Ultimate Selection",
+              shortHeading: "Ultimate Selection",
+              emphasized: true,
               showVintage: true,
               showGlass: false,
               wines: [
@@ -574,7 +591,10 @@ export const WINE_MENU: IWineMenuContent = {
             },
             {
               _key: "sweet-wines-ports",
+              mobileHeadingGap: 11,
+              compactVintageHeading: true,
               heading: "Sweet Wines & Ports",
+              emphasized: true,
               showVintage: true,
               showGlass: true,
               wines: [
@@ -598,7 +618,7 @@ export const WINE_MENU: IWineMenuContent = {
                 },
                 {
                   _key: "grahams-lbv-port-3",
-                  name: "Graham’s LBV Port",
+                  name: "Graham's LBV Port",
                   available: true,
                   region: "Douro, Portugal",
                   vintage: "2017",
@@ -607,7 +627,7 @@ export const WINE_MENU: IWineMenuContent = {
                 },
                 {
                   _key: "chateau-dyquem-4",
-                  name: "Château d’Yquem",
+                  name: "Château d'Yquem",
                   available: true,
                   region: "Sauternes, France",
                   vintage: "2011",
@@ -622,7 +642,10 @@ export const WINE_MENU: IWineMenuContent = {
           categories: [
             {
               _key: "magnums",
+              mobileHeadingGap: 21,
+              compactVintageHeading: true,
               heading: "Magnums",
+              emphasized: true,
               showVintage: true,
               showGlass: false,
               wines: [
@@ -662,13 +685,15 @@ export const WINE_MENU: IWineMenuContent = {
             },
             {
               _key: "vintage-ports",
+              compactVintageHeading: true,
               heading: "Vintage Ports",
+              emphasized: true,
               showVintage: true,
               showGlass: false,
               wines: [
                 {
                   _key: "taylors-vintage-port-1",
-                  name: "Taylor’s Vintage Port",
+                  name: "Taylor's Vintage Port",
                   available: true,
                   region: "Douro, Portugal",
                   vintage: "2016",
@@ -684,7 +709,7 @@ export const WINE_MENU: IWineMenuContent = {
                 },
                 {
                   _key: "grahams-vintage-port-3",
-                  name: "Graham’s Vintage Port",
+                  name: "Graham's Vintage Port",
                   available: true,
                   region: "Douro, Portugal",
                   vintage: "2017",
@@ -706,6 +731,7 @@ export const WINE_MENU: IWineMenuContent = {
       description:
         "Rarer bottles, celebratory wines and hand-selected cellar treasures from exceptional producers and classic regions.",
       highlighted: true,
+      desktopBottomPadding: 80,
     },
   ],
   notes: [
@@ -719,6 +745,12 @@ export const WINE_MENU: IWineMenuContent = {
   seoDescription:
     "Browse Peploe’s wine list, with wines by the glass, European producers and a selection of cellar bottles.",
   booking: {
+    mobilePadding: 44,
+    mobileOverlay:
+      "linear-gradient(180deg,rgba(32,16,9,0.031373),rgba(32,16,9,0.9) 49.9345%,rgba(32,16,9,0.941176))",
+    desktopContentWidth: 465,
+    desktopTextAlign: "left",
+    tallOnMobile: true,
     heading: "Direct from small European producers",
     description:
       "We work closely with independent winemakers across France, Italy, Spain and beyond to bring you wines of place, authenticity and character — selected for their sense of origin and the people behind them.",

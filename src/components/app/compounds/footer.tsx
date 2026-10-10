@@ -7,8 +7,8 @@ import {
   Phone,
 } from "lucide-react";
 import Link from "next/link";
+import { FooterFrame } from "@/components/app/compounds/footer-frame";
 import { FooterMeta } from "@/components/app/compounds/footer-meta";
-import { FooterShell } from "@/components/app/compounds/footer-shell";
 import { MobileFooterNavigation } from "@/components/app/compounds/mobile-footer-navigation";
 import { Button } from "@/components/ui/button";
 import { FOCUS_RING, RESTAURANT_CONTACT, ROUTES } from "@/lib/constants";
@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 
 export function Footer() {
   return (
-    <FooterShell className={cn(dmSans.className, "bg-warm-cream text-ink")}>
+    <FooterFrame className={cn(dmSans.className, "bg-warm-cream text-ink")}>
       <div
         data-footer-container
         className="site-container-inset pt-14 pb-10 xl:pt-20"
@@ -253,6 +253,6 @@ export function Footer() {
 
         <FooterMeta />
       </div>
-    </FooterShell>
+    </FooterFrame>
   );
 }

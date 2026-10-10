@@ -63,9 +63,15 @@ This applies to the homepage, menu pages, private dining pages, navbar and foote
 
 Both utilities retain 24px gutters below the desktop breakpoint. On desktop,
 the standard container leaves at least 72px on each side and the inset container
-leaves at least 80px. At the 1440px Figma reference, their content widths remain
-1296px and 1280px. At a 2400px available page width, both are 1440px wide and
+leaves at least 80px. The menu footer uses the standard 72px gutters; the
+homepage footer uses the 80px inset. At the 1440px Figma reference, their content
+widths remain 1296px and 1280px. At a 2400px available page width, both are 1440px wide and
 centered with 480px on each side. Measure the content, not its background.
+At a 1520px page width, standard content is 1376px wide and inset content is
+1360px wide. At 1920px, both containers are 1440px wide with 240px side gaps.
+Verify navbar, hero copy, section content and footer at the Figma reference
+and wider viewports; keep intentional text-column and artwork widths separate
+from the shared page gutters.
 
 Custom split sections must respect the same content edges. Hospitality includes
 its existing 72px internal offset when capping and positioning its grid. Private

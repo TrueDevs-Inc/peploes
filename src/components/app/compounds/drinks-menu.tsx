@@ -8,7 +8,12 @@ import { cn } from "@/lib/utils";
 
 export function DrinksMenu({ menu }: IDrinksMenuProps) {
   return (
-    <article className={cn(dmSans.className, "bg-warm-cream text-ink")}>
+    <article
+      className={cn(
+        dmSans.className,
+        "bg-warm-cream text-ink xl:text-[#282828]",
+      )}
+    >
       <div className="site-container pb-12">
         <MenuEditorialIntro menu={menu} />
         {menu.cocktailSections
@@ -17,29 +22,29 @@ export function DrinksMenu({ menu }: IDrinksMenuProps) {
             <section
               key={section._key}
               aria-labelledby={section._key}
-              className="border-t border-soft-stone py-8 xl:py-10"
+              className="border-t border-soft-stone py-8 first-of-type:border-t-0 xl:py-10 xl:first-of-type:border-t"
             >
               <h2
                 id={section._key}
                 className={cn(
                   ebGaramond.className,
-                  "mb-6 text-[38px] leading-[44px] xl:text-[32px]",
+                  "mb-6 text-[38px] leading-[42px] tracking-[-0.4px] before:mb-2 before:block before:h-0.5 before:w-[42px] before:bg-peploe-burgundy xl:mb-5 xl:text-[32px] xl:leading-[38px] xl:before:hidden",
                 )}
               >
                 {section.heading}
               </h2>
-              <ul className="space-y-4 xl:space-y-3">
+              <ul className="space-y-4 xl:space-y-[14px]">
                 {section.dishes.map((dish) => (
                   <li
                     key={dish._key}
-                    className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 xl:grid-cols-[160px_1fr_auto]"
+                    className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-0.5 xl:grid-cols-[160px_1fr_auto]"
                   >
                     <h3 className="text-base leading-6">{dish.name}</h3>
                     {dish.description && (
                       <p
                         className={cn(
                           ebGaramond.className,
-                          "col-start-1 row-start-2 text-[15px] leading-[23px] text-text-secondary xl:col-start-2 xl:row-start-1",
+                          "col-start-1 row-start-2 text-[15px] leading-[23px] text-text-secondary xl:col-start-2 xl:row-start-1 xl:text-sm xl:text-[#505050]",
                         )}
                       >
                         {dish.description}
@@ -47,7 +52,7 @@ export function DrinksMenu({ menu }: IDrinksMenuProps) {
                     )}
                     {dish.price != null && (
                       <span className="col-start-2 row-start-1 text-sm leading-6 xl:col-start-3">
-                        {formatMenuPrice(dish.price)}
+                        {formatMenuPrice(dish.price, dish.priceDecimalPlaces)}
                       </span>
                     )}
                   </li>
@@ -64,17 +69,17 @@ export function DrinksMenu({ menu }: IDrinksMenuProps) {
               id="spirits-heading"
               className={cn(
                 ebGaramond.className,
-                "text-[38px] leading-[44px] xl:text-[32px]",
+                "text-[38px] leading-[42px] tracking-[-0.4px] before:mb-2 before:block before:h-0.5 before:w-[42px] before:bg-peploe-burgundy xl:text-[32px] xl:leading-[38px] xl:before:hidden",
               )}
             >
               {menu.spiritsHeading}
             </h2>
             {menu.spiritsDescription && (
-              <p className="mt-4 text-[15px] leading-6 text-text-secondary xl:text-base">
+              <p className="mt-4 text-[15px] leading-6 text-text-secondary xl:text-base xl:text-[#505050]">
                 {menu.spiritsDescription}
               </p>
             )}
-            <div className="mt-8 grid xl:grid-cols-2 xl:gap-x-28">
+            <div className="mt-5 grid border-t border-soft-stone pt-3 xl:mt-8 xl:grid-cols-2 xl:gap-x-28 xl:border-t-0 xl:pt-0">
               {menu.spirits
                 .filter((section) => section.dishes.length > 0)
                 .map((section) => (
@@ -82,13 +87,13 @@ export function DrinksMenu({ menu }: IDrinksMenuProps) {
                     key={section._key}
                     aria-labelledby={section._key}
                     className={cn(
-                      "border-soft-stone py-8 not-first:border-t xl:even:-ml-14 xl:even:border-l xl:even:pl-14 xl:nth-2:border-t-0",
+                      "border-soft-stone py-4 not-first:border-t xl:py-5 xl:even:-ml-14 xl:even:border-l xl:even:pl-14 xl:nth-2:border-t-0",
                       section.columns === 2 && "xl:col-span-2",
                     )}
                   >
                     <h3
                       id={section._key}
-                      className="mb-4 flex items-center gap-2.5 text-sm tracking-[0.08em] text-peploe-burgundy uppercase before:h-0.5 before:w-12 before:bg-peploe-burgundy"
+                      className="mb-4 flex items-center xl:mb-1 gap-2.5 text-sm tracking-[0.08em] text-peploe-burgundy uppercase xl:text-[#242424] before:h-0.5 before:w-12 before:bg-peploe-burgundy"
                     >
                       {section.heading}
                     </h3>
@@ -116,16 +121,18 @@ export function DrinksMenu({ menu }: IDrinksMenuProps) {
                               {section.heading} prices in euro
                             </caption>
                             <thead>
-                              <tr className="text-[10px] font-medium tracking-[0.04em] text-peploe-burgundy uppercase xl:text-xs">
+                              <tr className="text-[10px] font-medium tracking-[0.04em] text-peploe-burgundy uppercase xl:text-xs xl:text-[#242424]">
                                 <th
                                   scope="col"
-                                  className="pb-3 text-left font-medium"
+                                  className="pb-3 xl:pb-1.5 text-left font-medium"
                                 >
-                                  <span className="xl:sr-only">Selection</span>
+                                  <span className="text-text-secondary xl:sr-only">
+                                    Selection
+                                  </span>
                                 </th>
                                 <th
                                   scope="col"
-                                  className="pb-3 text-right font-medium"
+                                  className="pb-3 xl:pb-1.5 text-right font-medium"
                                 >
                                   Price
                                 </th>
@@ -136,12 +143,15 @@ export function DrinksMenu({ menu }: IDrinksMenuProps) {
                                 <tr key={dish._key}>
                                   <th
                                     scope="row"
-                                    className="py-1 pr-4 text-left leading-[21px] font-normal"
+                                    className="py-1 pr-4 text-left leading-[21px] font-normal xl:leading-[22px]"
                                   >
                                     {dish.name}
                                   </th>
-                                  <td className="py-1 text-right align-top whitespace-nowrap">
-                                    {formatMenuPrice(dish.price, 2)}
+                                  <td className="py-1 text-right align-top whitespace-nowrap text-sm leading-[21px] xl:leading-[22px]">
+                                    {formatMenuPrice(
+                                      dish.price,
+                                      dish.priceDecimalPlaces ?? 2,
+                                    )}
                                   </td>
                                 </tr>
                               ))}

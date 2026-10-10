@@ -10,6 +10,8 @@ export const PRE_THEATRE_MENU: IMenuContent = {
     "Simple, seasonal ingredients, prepared with care and served with understated elegance.",
   image: {
     src: "/peploes-menu-artichoke.webp",
+    rotation: -23,
+    desktopScale: 1.193,
     alt: "An illustrated artichoke.",
   },
   courses: [
@@ -69,7 +71,7 @@ export const PRE_THEATRE_MENU: IMenuContent = {
       dishes: [
         {
           _key: "peploes-chicken-milanese-1",
-          name: "Peploe’s Chicken Milanese",
+          name: "Peploe's Chicken Milanese",
           description: "Rocket, Heritage Tomatoes, Parmesan",
         },
         {
@@ -166,7 +168,7 @@ export const PRE_THEATRE_MENU: IMenuContent = {
   allergens: {
     heading: "Allergen Information",
     description:
-      "Please inform your server of any allergies or dietary requirements. While we take great care, we cannot guarantee the absence of allergens in our dishes.",
+      "Please inform your server of any allergies or dietary requirements.\nWhile we take great care, we cannot guarantee the absence of allergens in our dishes.",
   },
   seoDescription:
     "Enjoy a pre-theatre meal at Peploe’s on St Stephen’s Green, with two or three seasonal courses before your evening in the city.",

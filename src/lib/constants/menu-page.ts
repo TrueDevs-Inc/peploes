@@ -17,11 +17,12 @@ export const MENU_PAGE_CONTENT = {
     { label: "Lunch", href: ROUTES.LUNCH },
     { label: "Dinner", href: ROUTES.DINNER },
     { label: "Pre-Theatre", href: ROUTES.PRE_THEATRE },
-    { label: "Wine", href: ROUTES.WINE },
-    { label: "Cocktails", href: ROUTES.COCKTAILS },
+    { label: "Wine", href: ROUTES.WINE, compactDesktop: true },
+    { label: "Cocktails", href: ROUTES.COCKTAILS, compactDesktop: true },
     {
       label: "Group Set Menu",
       href: ROUTES.GROUP_SET_MENU,
+      compactDesktop: true,
       children: GROUP_SET_MENU.menus.map((menu) => ({
         label: menu.title,
         href: `${ROUTES.GROUP_SET_MENU}#${menu._key}`,
@@ -30,6 +31,7 @@ export const MENU_PAGE_CONTENT = {
     {
       label: "Seasonal",
       href: ROUTES.SEASONAL,
+      compactDesktop: true,
       children: SEASONAL_MENU.menus.map((menu) => ({
         label: menu.title,
         href: `${ROUTES.SEASONAL}#${menu._key}`,
@@ -37,6 +39,9 @@ export const MENU_PAGE_CONTENT = {
     },
   ],
   booking: {
+    desktopOverlay: "linear-gradient(90deg,rgba(32,16,9,0),rgb(32,16,9))",
+    mobileOverlay:
+      "linear-gradient(180deg,rgba(32,16,9,0.031373),rgba(32,16,9,0.658824) 58%,rgba(32,16,9,0.941176))",
     heading: "Good food deserves good company.",
     label: "Book a Table",
     image: {

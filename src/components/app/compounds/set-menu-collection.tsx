@@ -17,7 +17,7 @@ export function SetMenuCollection({ menu }: ISetMenuCollectionProps) {
         <MenuEditorialIntro menu={menu} compact />
         <nav
           aria-label={`${menu.title} sections`}
-          className="mb-10 grid gap-3 xl:mb-8 xl:grid-cols-2 xl:gap-9"
+          className="mb-10 grid gap-3 xl:mb-8 xl:grid-cols-2 xl:gap-6"
         >
           {menu.menus.map((set) => (
             <a
@@ -25,7 +25,7 @@ export function SetMenuCollection({ menu }: ISetMenuCollectionProps) {
               href={`#${set._key}`}
               className={cn(
                 FOCUS_RING,
-                "flex items-center justify-between gap-5 border border-soft-stone bg-white/20 px-4 py-4 hover:border-peploe-burgundy focus-visible:ring-peploe-burgundy xl:px-6",
+                "flex items-center justify-between gap-5 border border-soft-stone bg-[#fcfaf6] px-4 py-4 hover:border-peploe-burgundy focus-visible:ring-peploe-burgundy xl:px-6",
               )}
             >
               <div>
@@ -74,14 +74,27 @@ export function SetMenuCollection({ menu }: ISetMenuCollectionProps) {
               <p className="mt-3 text-sm leading-5 text-text-secondary">
                 {set.summary}
               </p>
-              {set.inclusions.map((note) => (
-                <p
-                  key={note}
-                  className="mt-2 text-sm leading-5 text-text-secondary"
-                >
-                  {note}
-                </p>
-              ))}
+              {set.inclusions.length > 0 && (
+                <div className="mx-auto mt-2 hidden max-w-[800px] items-center justify-center gap-2.5 border-t border-soft-stone pt-2 text-sm leading-[18px] text-text-secondary xl:flex">
+                  {menu.inclusionsHeading && (
+                    <p className="text-peploe-burgundy uppercase xl:border-r xl:border-soft-stone xl:pr-2.5">
+                      {menu.inclusionsHeading}
+                    </p>
+                  )}
+                  <ul className="flex flex-wrap justify-center gap-x-5 gap-y-2">
+                    {set.inclusions.map((note, index) => (
+                      <li key={note} className="flex items-center gap-5">
+                        {index > 0 && (
+                          <span aria-hidden="true" className="hidden xl:inline">
+                            •
+                          </span>
+                        )}
+                        {note}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </header>
             {set.courses.map((course) => (
               <MenuCourse
@@ -94,7 +107,7 @@ export function SetMenuCollection({ menu }: ISetMenuCollectionProps) {
           </section>
         ))}
       </div>
-      <MenuNotes menu={menu} />
+      <MenuNotes menu={menu} collection />
       <MenuBooking booking={menu.booking} />
     </article>
   );

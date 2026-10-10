@@ -11,6 +11,7 @@ export const GROUP_SET_MENU: ISetMenuCollection = {
     alt: "A delicate botanical illustration.",
   },
   imageBeforeAside: true,
+  inclusionsHeading: "Included with your menu",
   menus: [
     {
       _key: "group-set-lunch",
@@ -18,7 +19,7 @@ export const GROUP_SET_MENU: ISetMenuCollection = {
       price: 65,
       summary: "This menu is offered to groups of 10 or more.",
       cardDescription: "For groups of 10 or more",
-      inclusions: ["Includes a bread course and sides with your main course."],
+      inclusions: ["Bread Course", "Side dishes served with main course"],
       courses: [
         {
           _key: "starters",
@@ -79,7 +80,7 @@ export const GROUP_SET_MENU: ISetMenuCollection = {
             },
             {
               _key: "winetavern-farm-free-range-pork-chop-5",
-              name: "Winetavern Farm Free Range Pork Chop",
+              name: "Wineteavern Farm Free Range Pork Chop",
               description: "Apple, Mustard Cream, Seasonal Greens",
             },
           ],
@@ -125,7 +126,7 @@ export const GROUP_SET_MENU: ISetMenuCollection = {
       price: 85,
       summary: "This menu is offered to groups of 10 or more.",
       cardDescription: "For groups of 10 or more",
-      inclusions: ["Includes a bread course and sides with your main course."],
+      inclusions: [],
       courses: [
         {
           _key: "starters",
@@ -186,7 +187,7 @@ export const GROUP_SET_MENU: ISetMenuCollection = {
             },
             {
               _key: "winetavern-farm-free-range-pork-chop-5",
-              name: "Winetavern Farm Free Range Pork Chop",
+              name: "Wineteavern Farm Free Range Pork Chop",
               description: "Apple, Mustard Cream, Seasonal Greens",
             },
           ],
@@ -239,6 +240,14 @@ export const GROUP_SET_MENU: ISetMenuCollection = {
   seoDescription:
     "Explore group lunch and dinner menus at Peploe’s, for celebrations, private dining and business occasions.",
   booking: {
+    desktopOverlay:
+      "linear-gradient(90deg,rgba(15,13,12,0.101961),rgba(15,13,12,0.470588) 37.0192%,rgb(15,13,12))",
+    fullWidthOnMobile: true,
+    mobilePadding: 45,
+    mobileOverlay:
+      "linear-gradient(180deg,rgba(15,13,12,0.031373),rgba(15,13,12,0.690196) 41.8051%,rgba(15,13,12,0.960784))",
+    desktopContentWidth: 300,
+    desktopTextAlign: "left",
     heading: "Bring everyone together.",
     description:
       "From family celebrations to business dinners, our team can help you plan the right menu and setting.",
@@ -246,6 +255,7 @@ export const GROUP_SET_MENU: ISetMenuCollection = {
     href: `${ROUTES.PRIVATE_DINING}#enquire`,
     image: {
       src: "/peploes-group-menu-booking.webp",
+      desktopPosition: "50% 57.7%",
       alt: "Guests and staff in Peploe’s dining room.",
     },
   },

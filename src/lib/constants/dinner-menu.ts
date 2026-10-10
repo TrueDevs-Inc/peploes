@@ -7,7 +7,13 @@ export const DINNER_MENU: IMenuContent = {
   image: {
     src: "/peploes-dinner-flatlay.webp",
     alt: "A selection of Peploe’s dinner dishes arranged on white plates.",
-    desktopScale: 1.4,
+    desktopCrop: {
+      widthPercent: 72.662253,
+      aspectRatio: 1.666666608,
+      leftPercent: 43.6941,
+      topPx: -207.6,
+      rotationDegrees: 10.7862,
+    },
   },
   courses: [
     {
@@ -150,7 +156,7 @@ export const DINNER_MENU: IMenuContent = {
   allergens: {
     heading: "Allergen Information",
     description:
-      "Please inform your server of any allergies or dietary requirements. While we take great care, we cannot guarantee the absence of allergens in our dishes.",
+      "Please inform your server of any allergies or dietary requirements.\nWhile we take great care, we cannot guarantee the absence of allergens in our dishes.",
   },
   seoDescription:
     "Explore the Dinner menu at Peploe’s on St Stephen’s Green, with seasonal starters, main courses and sides, served from 5pm.",

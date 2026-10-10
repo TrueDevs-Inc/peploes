@@ -1,10 +1,7 @@
 import { Facebook, Instagram } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  FOOTER_CONTENT,
-  MOBILE_FOOTER_LEGAL_LABELS,
-} from "@/lib/constants/footer";
+import { FOOTER_CONTENT } from "@/lib/constants/footer";
 
 export function FooterMeta() {
   return (
@@ -22,7 +19,7 @@ export function FooterMeta() {
         </span>
         <nav aria-label={FOOTER_CONTENT.legalNavigationLabel}>
           <ul className="flex flex-wrap items-center gap-x-3 gap-y-2 xl:gap-x-4">
-            {FOOTER_CONTENT.legalLabels.map((label, index) => (
+            {FOOTER_CONTENT.legalLabels.map(({ label, shortLabel }, index) => (
               <li key={label} className="flex items-center gap-3 xl:gap-4">
                 {index > 0 && (
                   <span aria-hidden="true">
@@ -36,10 +33,14 @@ export function FooterMeta() {
                   aria-disabled="true"
                   className="h-auto rounded-none p-0 text-xs leading-[18px] font-normal text-text-secondary xl:leading-5"
                 >
-                  <span data-footer-full-label>{label}</span>
-                  <span data-footer-short-label className="hidden">
-                    {MOBILE_FOOTER_LEGAL_LABELS[label] ?? label}
+                  <span data-footer-full-label={shortLabel ? "" : undefined}>
+                    {label}
                   </span>
+                  {shortLabel && (
+                    <span data-footer-short-label className="hidden">
+                      {shortLabel}
+                    </span>
+                  )}
                 </Button>
               </li>
             ))}

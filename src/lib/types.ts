@@ -519,12 +519,14 @@ export interface IMobileNavigationTriggerProps {
 }
 
 export interface IMenuNavigationLink {
+  compactDesktop?: boolean;
   label: string;
   href?: Route;
   children?: readonly { label: string; href: Route }[];
 }
 
 export interface IMenuDish {
+  priceDecimalPlaces?: 0 | 2;
   _key: string;
   name: string;
   description?: string | null;
@@ -569,11 +571,27 @@ export interface IMenuEditorialImageProps {
 }
 
 export interface IMenuBooking {
+  tallOnMobile?: boolean;
+  fullWidthOnMobile?: boolean;
+  mobilePadding?: number;
+  mobileOverlay?: string;
+  desktopOverlay?: string;
+  desktopContentWidth?: number;
+  desktopTextAlign?: "left" | "right";
   heading: string;
   description?: string;
   label: string;
   href?: Route;
-  image: ISectionImage;
+  image: IMenuImage;
+}
+
+export interface IMenuBookingStyle extends CSSProperties {
+  "--menu-booking-mobile-padding": string;
+  "--menu-booking-mobile-overlay": string;
+  "--menu-booking-desktop-overlay": string;
+  "--menu-booking-image-position": string;
+  "--menu-booking-content-width": string;
+  "--menu-booking-text-align": "left" | "right";
 }
 
 export interface IMenuBookingProps {
@@ -588,7 +606,9 @@ export interface IMenuNotesContent {
 
 export interface IMenuNotesProps {
   menu: IMenuNotesContent;
+  allergenHeadingClassName?: string;
   compact?: boolean;
+  collection?: boolean;
 }
 
 export interface ISetMenu {
@@ -605,6 +625,7 @@ export interface ISetMenu {
 export interface ISetMenuCollection
   extends IMenuEditorialContent,
     IMenuNotesContent {
+  inclusionsHeading?: string;
   menus: readonly ISetMenu[];
   booking: IMenuBooking;
 }
@@ -626,6 +647,11 @@ export interface IWine {
 export interface IWineCategory {
   _key: string;
   heading: string;
+  shortHeading?: string;
+  emphasized?: boolean;
+  compactVintageHeading?: boolean;
+  mobileTopPadding?: number;
+  mobileHeadingGap?: number;
   showVintage: boolean;
   showGlass: boolean;
   wines: readonly IWine[];
@@ -636,6 +662,8 @@ export interface IWineSection {
   heading: string;
   description?: string;
   highlighted?: boolean;
+  desktopBottomPadding?: number;
+  mobileBottomPadding?: number;
   columns: readonly { _key: string; categories: readonly IWineCategory[] }[];
 }
 
@@ -659,9 +687,16 @@ export interface IWineCategoryProps {
   continued: boolean;
 }
 
+export interface IWineSectionStyle extends CSSProperties {
+  "--wine-bottom-padding": string;
+  "--wine-mobile-bottom-padding": string;
+}
+
 export interface IWineCategoryStyle extends CSSProperties {
   "--wine-column": number;
   "--wine-row-span": number;
+  "--wine-top-padding": string;
+  "--wine-heading-gap": string;
 }
 
 export interface IDrinksMenuContent
@@ -678,14 +713,35 @@ export interface IDrinksMenuProps {
   menu: IDrinksMenuContent;
 }
 
+export interface IMenuImageCrop {
+  widthPercent: number;
+  aspectRatio: number;
+  leftPercent: number;
+  topPx: number;
+  rotationDegrees?: number;
+}
+
 export interface IMenuImage extends ISectionImage {
+  desktopCrop?: IMenuImageCrop;
+  desktopPosition?: string;
+  mobilePosition?: string;
+  rotation?: number;
   desktopScale?: number;
   scale?: number;
   fit?: "contain" | "cover";
 }
 
 export interface IMenuImageStyle extends CSSProperties {
+  "--menu-image-crop-left"?: string;
+  "--menu-image-crop-top"?: string;
+  "--menu-image-crop-width"?: string;
+  "--menu-image-crop-aspect"?: string;
+  "--menu-image-crop-rotation"?: string;
   "--menu-image-scale": number;
+  "--menu-image-rotation"?: string;
+  "--menu-image-position"?: string;
+  "--menu-image-desktop-position"?: string;
+  "--menu-image-desktop-scale"?: number;
 }
 
 export interface IMenuPageContent {
@@ -738,11 +794,6 @@ export interface IMobileNavigationContent {
   brandPhrase: string;
 }
 
-export interface IFooterShellProps {
-  children: ReactNode;
-  className?: string;
-}
-
 export interface IFooterContent {
   homeLabel: string;
   address: string;
@@ -761,7 +812,7 @@ export interface IFooterContent {
   };
   copyright: string;
   legalNavigationLabel: string;
-  legalLabels: readonly string[];
+  legalLabels: readonly { label: string; shortLabel?: string }[];
   instagramLabel: string;
   facebookLabel: string;
 }

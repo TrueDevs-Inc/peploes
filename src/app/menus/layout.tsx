@@ -7,7 +7,7 @@ import { ebGaramond } from "@/lib/fonts";
 
 export default function MenusLayout({ children }: { children: ReactNode }) {
   return (
-    <main>
+    <main className="[font-optical-sizing:none] [font-variation-settings:'opsz'_14]">
       <MenuHero />
       <MenuNavigation
         items={MENU_PAGE_CONTENT.navigation}

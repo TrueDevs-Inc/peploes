@@ -2,12 +2,14 @@ import type { IDrinksMenuContent } from "@/lib/types";
 
 export const COCKTAILS_MENU: IDrinksMenuContent = {
   slug: "cocktails",
-  title: "Cocktails at Peploe’s",
+  title: "Cocktails at Peploe's",
   aside:
     "Beautifully made drinks, timeless favourites and modern creations, served in a setting made for good company.",
   image: {
     src: "/peploes-menu-cocktail.webp",
     fit: "cover",
+    desktopPosition: "center 87.3%",
+    mobilePosition: "center 70.6%",
     alt: "A freshly prepared cocktail with mint and lime at the bar.",
   },
   cocktailSections: [
@@ -86,7 +88,7 @@ export const COCKTAILS_MENU: IDrinksMenuContent = {
         },
         {
           _key: "hendricks-5",
-          name: "Hendrick’s",
+          name: "Hendrick's",
           price: 9.5,
         },
         {
@@ -313,7 +315,7 @@ export const COCKTAILS_MENU: IDrinksMenuContent = {
         },
         {
           _key: "makers-mark-4",
-          name: "Maker’s Mark",
+          name: "Maker's Mark",
           price: 8.5,
         },
         {
@@ -323,7 +325,7 @@ export const COCKTAILS_MENU: IDrinksMenuContent = {
         },
         {
           _key: "jack-daniels-single-barrel-6",
-          name: "Jack Daniel’s Single Barrel",
+          name: "Jack Daniel's Single Barrel",
           price: 12.0,
         },
       ],
@@ -345,7 +347,7 @@ export const COCKTAILS_MENU: IDrinksMenuContent = {
         },
         {
           _key: "pierre-de-segonzac-cognac-vsop-3",
-          name: "Pierre de Segonzac Cognac VSOP",
+          name: "Pierre de Segonzac Cognaz VSOP",
           price: 9.5,
         },
         {
@@ -367,6 +369,7 @@ export const COCKTAILS_MENU: IDrinksMenuContent = {
           _key: "hennessy-paradis-imperial-7",
           name: "Hennessy Paradis Imperial",
           price: 375.0,
+          priceDecimalPlaces: 0,
         },
       ],
     },
@@ -407,7 +410,7 @@ export const COCKTAILS_MENU: IDrinksMenuContent = {
         },
         {
           _key: "kahlua-7",
-          name: "Kahlúa",
+          name: "Kalhua",
           price: 7.0,
         },
         {
@@ -442,15 +445,20 @@ export const COCKTAILS_MENU: IDrinksMenuContent = {
   allergens: {
     heading: "Allergen Information",
     description:
-      "Please inform your server of any allergies or dietary requirements. While we take great care, we cannot guarantee the absence of allergens in our drinks.",
+      "Please inform your server of any allergies or dietary requirements. While we take great care, we cannot guarantee the absence of allergens in our wines.",
   },
   seoDescription:
     "Explore aperitifs, cocktails and spirits at Peploe’s, served at our bar on St Stephen’s Green.",
   booking: {
+    mobilePadding: 54,
+    mobileOverlay:
+      "linear-gradient(180deg,rgba(32,16,9,0.031373),rgba(32,16,9,0.721569) 58%,rgba(32,16,9,0.941176))",
+    tallOnMobile: true,
     heading: "Classic cocktails, timeless company",
     label: "Book a Table",
     image: {
       src: "/peploes-cocktail-menu-booking.webp",
+      desktopPosition: "50% 79.3%",
       alt: "A cocktail being finished with aromatic smoke at Peploe’s bar.",
     },
   },

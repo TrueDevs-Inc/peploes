@@ -3,10 +3,17 @@ import type { IMenuContent } from "@/lib/types";
 export const LUNCH_MENU: IMenuContent = {
   slug: "lunch",
   title: "Lunch Menu",
-  serviceTimes: "Served from 12pm until 4:30pm · Last orders 4:45pm",
+  serviceTimes: "Served from 12pm until 4:30pm   ·   Last orders 4:45pm",
   offer: "2 Courses €42 / 3 Courses €48",
   image: {
     src: "/peploes-lunch-flatlay.webp",
+    desktopCrop: {
+      widthPercent: 62.372685,
+      aspectRatio: 1.498581784,
+      leftPercent: 43.9136,
+      topPx: -114.92,
+      rotationDegrees: 0,
+    },
     alt: "A selection of Peploe’s lunch dishes, with fish, steak and dessert.",
   },
   courses: [
@@ -134,7 +141,7 @@ export const LUNCH_MENU: IMenuContent = {
   allergens: {
     heading: "Allergen Information",
     description:
-      "Please inform your server of any allergies or dietary requirements. While we take great care, we cannot guarantee the absence of allergens in our dishes.",
+      "Please inform your server of any allergies or dietary requirements.\nWhile we take great care, we cannot guarantee the absence of allergens in our dishes.",
   },
   seoDescription:
     "Explore the Lunch menu at Peploe’s on St Stephen’s Green, with seasonal dishes, small bites and sides.",

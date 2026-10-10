@@ -94,3 +94,13 @@ spec or ticket, read its acceptance criteria and linked decisions before editing
 Before using or changing a Next.js API, read the relevant guide for the installed
 version in `node_modules/next/dist/docs/`. If dependencies are unavailable, use
 official documentation for the declared version and report the verification limit.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

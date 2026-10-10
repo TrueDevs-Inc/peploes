@@ -32,7 +32,12 @@ export const FOOTER_CONTENT: IFooterContent = {
   },
   copyright: "© 2026 Peploe’s",
   legalNavigationLabel: "Legal and accessibility",
-  legalLabels: ["Privacy", "Terms", "Cookie Preferences", "Accessibility"],
+  legalLabels: [
+    { label: "Privacy" },
+    { label: "Terms" },
+    { label: "Cookie Preferences", shortLabel: "Cookies" },
+    { label: "Accessibility" },
+  ],
   instagramLabel: "Peploe’s on Instagram",
   facebookLabel: "Peploe’s on Facebook",
 };
@@ -80,7 +85,3 @@ export const MOBILE_FOOTER_CONTENT = {
     },
   ],
 } as const;
-
-export const MOBILE_FOOTER_LEGAL_LABELS: Readonly<Record<string, string>> = {
-  "Cookie Preferences": "Cookies",
-};
