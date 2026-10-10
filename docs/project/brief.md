@@ -38,6 +38,15 @@ Booking controls retain the existing inert preview until ResDiary is connected.
 Navigation and footer links point to this page; opening-hours and location links
 use its `#opening-hours` and `#find-us` anchors.
 
+Below 640px, section headings use the Private Dining phone scale of 36/44px,
+with 16/24px supporting text. Transport and dining hours use 48px icons beside
+left-aligned details, 16px column gaps and horizontal Soft Stone dividers.
+The opening-hours table spans the contact grid, with times aligned on the right.
+Contact links have at least 44px touch targets; primary actions remain full width.
+The hero image scales between 220px and 280px high, and the map has a 240px frame
+that keeps the restaurant marker visible. Tablet and desktop layouts retain
+their original dimensions.
+
 ## Identity and audience
 
 Peploe's is an independent, family-run restaurant at 16 St Stephen's Green,

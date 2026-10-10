@@ -273,35 +273,143 @@ body:has(.page) [data-navbar-visit]::after {
   outline-color: var(--warm-cream);
 }
 @media (width < 40rem) {
+  .eyebrow {
+    font-size: 12px;
+    line-height: 18px;
+  }
   .heroImage {
-    height: 300px;
+    height: clamp(220px, 62vw, 280px);
+  }
+  .heroCopy {
+    padding-block: 32px 40px;
   }
   .heroCopy h1 {
-    font-size: 48px;
-    line-height: 52px;
+    margin-top: 16px;
+    font-size: clamp(40px, 12vw, 48px);
+    line-height: 1.08;
+  }
+  .heroAddress {
+    margin-top: 16px;
+    font-size: 20px;
+    line-height: 28px;
+  }
+  .description {
+    font-size: 16px;
+    line-height: 24px;
+  }
+  .heroCopy .description {
+    margin-top: 16px;
+  }
+  .heroActions {
+    gap: 12px;
+  }
+  .action {
+    font-size: 16px;
+    line-height: 24px;
   }
   .heroActions .action {
     width: 100%;
   }
-  .hours > div {
-    flex-wrap: wrap;
-    gap: 4px 12px;
+  .contactGrid {
+    gap: 24px;
   }
   .contactItem {
     gap: 16px;
   }
+  .contactItem + .contactItem {
+    padding-top: 24px;
+    border-top: 1px solid var(--soft-stone);
+  }
+  .contactItem h2 {
+    font-size: 28px;
+    line-height: 34px;
+  }
+  .contactItem:first-child > div {
+    display: contents;
+  }
+  .contactItem:first-child h2 {
+    align-self: center;
+  }
   .contactItem:first-child .hours {
-    margin-left: -64px;
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+  .hours {
+    gap: 12px;
+    font-size: 16px;
+    line-height: 24px;
+  }
+  .hours > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 16px;
+  }
+  .hours dd {
+    text-align: right;
+  }
+  .contactItem address {
+    font-size: 16px;
+    line-height: 24px;
   }
   .contactLinks {
-    font-size: 18px;
+    gap: 4px;
+    margin-top: 8px;
+    font-size: 16px;
+    line-height: 24px;
+  }
+  .contactLinks a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
   }
   .heading {
-    font-size: 42px;
-    line-height: 46px;
+    font-size: 36px;
+    line-height: 44px;
+  }
+  .locationCopy .heading {
+    margin-block: 16px;
+  }
+  .map {
+    aspect-ratio: auto;
+    height: 240px;
+  }
+  .transport {
+    margin-top: 32px;
+  }
+  .transportGrid {
+    gap: 24px;
+    margin-top: 24px;
+  }
+  .transportGrid li {
+    gap: 16px;
+  }
+  .transportGrid li + li {
+    border-top: 1px solid var(--soft-stone);
+    padding-top: 24px;
+  }
+  .transportGrid h4 {
+    font-size: 22px;
+    line-height: 26px;
+  }
+  .transportGrid p {
+    margin-top: 8px;
+    font-size: 16px;
+    line-height: 24px;
   }
   .closingCopy {
     padding-block: 48px;
+  }
+  .closingCopy .heading {
+    margin-block: 16px;
+  }
+  .closingCopy > p:not(.eyebrow) {
+    font-size: 18px;
+    line-height: 28px;
+  }
+  .closingCopy .action {
+    width: 100%;
+    margin-top: 24px;
   }
   .closing::before {
     background: color-mix(in srgb, var(--ink) 78%, transparent);

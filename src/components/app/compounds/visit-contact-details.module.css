@@ -206,6 +206,101 @@
   }
 }
 
+@media (width < 640px) {
+  .eyebrow {
+    margin-bottom: 16px;
+    font-size: 12px;
+    line-height: 18px;
+  }
+
+  .heading {
+    font-size: 36px;
+    line-height: 44px;
+  }
+
+  .description,
+  .diningDescription {
+    font-size: 16px;
+    line-height: 24px;
+  }
+
+  .reservationGrid {
+    gap: 28px;
+  }
+
+  .reservationActions {
+    gap: 12px;
+  }
+
+  .reservationActions :is(.bookingButton, .phoneButton),
+  .gatherings .gatheringsButton {
+    min-height: 48px;
+    padding-inline: 16px;
+    font-size: 16px;
+    line-height: 24px;
+  }
+
+  .reservationActions .emailLink {
+    font-size: 16px;
+    line-height: 24px;
+  }
+
+  .diningIntro {
+    gap: 16px;
+  }
+
+  .services {
+    gap: 24px;
+    margin-top: 32px;
+  }
+
+  .service {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    align-items: start;
+    gap: 6px 16px;
+    text-align: left;
+  }
+
+  .service + .service {
+    padding-top: 24px;
+  }
+
+  .serviceIcon {
+    grid-column: 1;
+    grid-row: 1 / 4;
+  }
+
+  .serviceHeading,
+  .serviceHours,
+  .serviceDetail {
+    grid-column: 2;
+  }
+
+  .serviceHeading {
+    font-size: 22px;
+    line-height: 26px;
+  }
+
+  .serviceHours {
+    font-size: 24px;
+    line-height: 30px;
+  }
+
+  .serviceDetail {
+    font-size: 16px;
+    line-height: 24px;
+  }
+
+  .practicalities {
+    gap: 32px;
+  }
+
+  .gatherings {
+    padding-top: 32px;
+  }
+}
+
 @media (width >= 640px) {
   .heading {
     font-size: 52px;
