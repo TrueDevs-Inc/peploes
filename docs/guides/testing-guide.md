@@ -87,11 +87,25 @@ service-policy tests at the SQL layer.
 
 ## Browser tests
 
-Add Playwright when the app has a critical user journey such as sign-in,
-checkout, permission enforcement or a destructive workflow. Test the production
-build, locate controls by accessible role or label, and give each test isolated
-data. Add the browser command and CI job when that journey exists; the generic
-starter does not install a browser suite for a homepage smoke check.
+Playwright covers the Visit & Contact journey in headless Chromium at desktop
+and phone widths, including a narrow 320px screen. The suite checks navigation,
+the active Visit state, section anchors, contact destinations, image loading
+and horizontal overflow. Phone, email and map destinations are checked without
+opening external services.
+
+```bash
+bunx playwright install chromium
+bun run test:e2e
+```
+
+The command builds the production application, then starts and stops its own
+server at `http://127.0.0.1:3107`. Keep that port free; the suite refuses to reuse
+an existing server. Pull-request CI installs Chromium and its system dependencies
+before running the same command. Failure traces stay in ignored `test-results/`.
+
+Test the production build, locate controls by accessible role or label, and give
+each test isolated data. Add coverage for critical journeys such as sign-in,
+checkout, permission enforcement or a destructive workflow as they are built.
 
 Start with a few Chromium tests in pull requests. Add browsers when the support
 policy requires them. A homepage heading assertion alone does not justify a

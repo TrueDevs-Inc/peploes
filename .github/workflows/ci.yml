@@ -68,8 +68,11 @@ jobs:
       - name: Run database integration test
         run: bun run test:integration
 
-      - name: Build production application
-        run: bun run build
+      - name: Install Chromium for browser tests
+        run: bunx playwright install --with-deps chromium
+
+      - name: Build and browser-test production application
+        run: bun run test:e2e
         env:
           NODE_ENV: production
 

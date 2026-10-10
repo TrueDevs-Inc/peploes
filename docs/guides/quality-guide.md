@@ -30,9 +30,9 @@ touches files outside the change.
 `bun run ci` checks formatting/lint, types, unit tests, the production build and
 high-severity dependency advisories. It does not run database integration or
 browser tests locally. Changes to SQL or persistence also need the relevant
-integration check. When a derived application adds a critical journey, add its
-production-build browser check as described in the [testing guide](testing-guide.md).
-The starter has no browser suite until such a journey exists.
+integration check. Visit & Contact navigation and responsive changes also need
+`bun run test:e2e`, which builds and tests the production application. Add browser
+coverage for new critical journeys as described in the [testing guide](testing-guide.md).
 
 For prose-only changes, check changed Markdown links, rule consistency and the
 diff. Render HTML, PDF or other visual artifacts with their owning workflow.

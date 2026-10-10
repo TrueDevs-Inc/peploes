@@ -22,6 +22,7 @@
     "format": "biome format --write .",
     "test": "vitest run",
     "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:e2e": "bun run build && playwright test",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
@@ -57,6 +58,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.11",
+    "@playwright/test": "1.64.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "19.2.18",
