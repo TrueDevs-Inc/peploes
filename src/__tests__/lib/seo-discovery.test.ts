@@ -49,6 +49,9 @@ describe("public discovery", function publicDiscoveryTests() {
       "> A family-run restaurant on St Stephen's Green, Dublin, since 2002.",
     );
     expect(content).toContain("[Home](https://example.com/)");
+    expect(content).toContain(
+      "- [Visit & Contact](https://example.com/visit-contact): Opening hours, directions and contact details.",
+    );
     expect(content).toContain("[Sitemap](https://example.com/sitemap.xml)");
     expect(content).not.toContain("production-ready");
     expect(content).not.toContain("Dynamic OG images");

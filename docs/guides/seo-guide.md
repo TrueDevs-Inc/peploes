@@ -60,8 +60,8 @@ application has no trustworthy value.
 
 `src/app/llms.txt/route.ts` serves Markdown built by
 `src/lib/seo/discovery.ts`. It contains the configured site name and
-description, then links to the home page, sitemap, and crawler policy. The root
-layout points agents to it with `rel="describedby"`.
+description, then links to the home page, Visit & Contact, sitemap, and crawler
+policy. The root layout points agents to it with `rel="describedby"`.
 
 Add a public page to `llms.txt` only when the URL exists and its description
 matches the page. Prefer links to clean Markdown versions for long technical
