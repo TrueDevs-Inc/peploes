@@ -340,4 +340,7 @@ labels and disabled submission. Inspect the browser console and image loading.
 Check the desktop overview link, Arrow Down, Tab and Escape, and the mobile
 overview link and submenu toggle separately. Confirm refactored sections retain
 their desktop and phone dimensions.
+In forced-colors mode, check that corporate, celebration and wedding enquiry
+fields and contact links retain visible outlines, consent checkboxes retain
+native appearance, and keyboard focus remains distinct.
 Run the gates in the [quality guide](../guides/quality-guide.md).

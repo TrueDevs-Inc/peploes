@@ -2412,17 +2412,20 @@
 }
 
 @media (forced-colors: active) {
+  .corporatePage :where(input, select, textarea, .contacts a),
   .celebrationEnquiry :where(input, select, textarea, .contacts a),
   .weddingEnquiry :where(input, select, textarea, .contacts a) {
     outline: 1px solid CanvasText;
     outline-offset: -1px;
   }
 
+  .corporatePage .consent input,
   .celebrationEnquiry .consent input,
   .weddingEnquiry .consent input {
     appearance: auto;
   }
 
+  .corporatePage .contacts a:focus-visible,
   .celebrationEnquiry .contacts a:focus-visible,
   .weddingEnquiry .contacts a:focus-visible {
     outline: 2px solid CanvasText;
