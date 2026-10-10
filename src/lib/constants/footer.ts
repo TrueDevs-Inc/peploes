@@ -19,7 +19,7 @@ export const FOOTER_CONTENT: IFooterContent = {
     { label: NAVBAR_CONTENT.groupsLabel, href: ROUTES.PRIVATE_DINING },
     { label: "What’s On" },
     { label: "The Journal" },
-    { label: "Visit & Contact" },
+    { label: "Visit & Contact", href: ROUTES.VISIT_CONTACT },
     { label: "Gift Vouchers" },
   ],
   newsletter: {
@@ -63,7 +63,7 @@ export const MOBILE_FOOTER_CONTENT = {
         { label: "Menus", href: ROUTES.MENUS },
         { label: "Our Story" },
         { label: "What's On" },
-        { label: "Visit & Contact" },
+        { label: "Visit & Contact", href: ROUTES.VISIT_CONTACT },
         { label: "The Journal" },
       ],
     },
@@ -80,7 +80,7 @@ export const MOBILE_FOOTER_CONTENT = {
       links: [
         { label: "People & Produce" },
         { label: "Gift Vouchers" },
-        { label: "Contact" },
+        { label: "Contact", href: ROUTES.VISIT_CONTACT },
       ],
     },
   ],

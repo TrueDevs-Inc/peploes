@@ -102,6 +102,7 @@ export const ROUTES = {
   CELEBRATIONS: "/private-dining/groups-celebrations",
   CORPORATE_EVENTS: "/private-dining/corporate-events",
   WEDDINGS: "/private-dining/weddings",
+  VISIT_CONTACT: "/visit-contact",
   LLMS: "/llms.txt",
   ROBOTS: "/robots.txt",
   SITEMAP: "/sitemap.xml",

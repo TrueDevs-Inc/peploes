@@ -18,10 +18,12 @@ export function FooterFrame({ children, className }: ComponentProps<"footer">) {
         className,
         isMenuPage && styles.menuFooter,
         (pathname === ROUTES.PRIVATE_DINING ||
-          pathname === ROUTES.CORPORATE_EVENTS) &&
+          pathname === ROUTES.CORPORATE_EVENTS ||
+          pathname === ROUTES.VISIT_CONTACT) &&
           styles.privateDiningFooter,
         pathname === ROUTES.CORPORATE_EVENTS && styles.corporateFooter,
         pathname === ROUTES.CELEBRATIONS && styles.celebrationFooter,
+        pathname === ROUTES.VISIT_CONTACT && styles.visitFooter,
       )}
     >
       {children}

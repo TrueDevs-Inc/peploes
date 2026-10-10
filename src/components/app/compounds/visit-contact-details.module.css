@@ -1,0 +1,335 @@
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--peploe-burgundy);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 28px;
+}
+
+.eyebrow::before {
+  content: "";
+  flex: 0 0 48px;
+  height: 2px;
+  background: currentColor;
+}
+
+.heading,
+.serviceHeading,
+.serviceHours {
+  font-family: var(--font-eb-garamond), serif;
+  font-weight: 400;
+}
+
+.heading {
+  font-size: 44px;
+  line-height: 46px;
+}
+
+.description {
+  margin-top: 16px;
+  font-size: 18px;
+  line-height: 26px;
+  color: var(--text-secondary);
+}
+
+.reservation {
+  padding-block: 48px;
+  background: var(--peploe-burgundy);
+  color: var(--warm-cream);
+}
+
+.reservation .eyebrow,
+.reservation .description {
+  color: inherit;
+}
+
+.reservationGrid {
+  display: grid;
+  gap: 36px;
+}
+
+.reservationActions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  min-width: 0;
+}
+
+.reservationActions :is(.bookingButton, .phoneButton),
+.gatherings .gatheringsButton {
+  height: auto;
+  min-height: 48px;
+  width: 100%;
+  border-radius: 4px;
+  padding: 12px 20px;
+  font-size: 18px;
+  line-height: 24px;
+  white-space: normal;
+  text-align: center;
+}
+
+.reservationActions .phoneButton {
+  min-height: 64px;
+  border: 0;
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px var(--warm-cream);
+  font-size: 21px;
+  line-height: 28px;
+}
+
+.reservationActions .phoneButton:hover {
+  background: color-mix(in srgb, var(--warm-cream) 12%, transparent);
+}
+
+.reservationActions .emailLink {
+  min-height: 44px;
+  height: auto;
+  max-width: 100%;
+  padding: 0;
+  color: var(--warm-cream);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 27px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  white-space: normal;
+}
+
+.reservationActions .emailLink:hover {
+  color: color-mix(in srgb, var(--warm-cream) 80%, transparent);
+  text-decoration-thickness: 2px;
+}
+
+.reservationActions a:focus-visible,
+.reservationActions button:focus-visible {
+  outline: 2px solid var(--warm-cream);
+  outline-offset: 4px;
+}
+
+.dining {
+  padding-block: 48px;
+  background: color-mix(in srgb, var(--peploe-burgundy) 6%, var(--warm-cream));
+}
+
+.diningIntro {
+  display: grid;
+  gap: 24px;
+}
+
+.diningDescription {
+  color: var(--text-secondary);
+  font-size: 18px;
+  line-height: 27px;
+}
+
+.services {
+  display: grid;
+  gap: 28px;
+  margin-top: 40px;
+}
+
+.service {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  text-align: center;
+}
+
+.service + .service {
+  border-top: 1px solid var(--soft-stone);
+  padding-top: 28px;
+}
+
+.serviceIcon {
+  flex: 0 0 auto;
+}
+
+.serviceHeading {
+  font-size: 28px;
+  line-height: 34px;
+}
+
+.serviceHours {
+  font-size: 26px;
+  line-height: 34px;
+}
+
+.serviceDetail {
+  color: var(--text-secondary);
+  font-size: 18px;
+  line-height: 27px;
+}
+
+.practicalities {
+  display: grid;
+  gap: 40px;
+  padding-block: 48px;
+}
+
+.practicalities .description {
+  max-width: 460px;
+}
+
+.gatherings .description {
+  max-width: 460px;
+}
+
+.gatherings {
+  border-top: 1px solid var(--soft-stone);
+  padding-top: 40px;
+}
+
+.gatherings .gatheringsButton {
+  margin-top: 20px;
+  border: 0;
+  box-shadow: inset 0 0 0 1px var(--peploe-burgundy);
+  gap: 6px;
+}
+
+.gatheringsButton:focus-visible {
+  outline: 2px solid var(--peploe-burgundy);
+  outline-offset: 4px;
+}
+
+@media (forced-colors: active) {
+  :is(.phoneButton, .gatheringsButton):not(:focus-visible) {
+    outline: 1px solid CanvasText;
+    outline-offset: -1px;
+  }
+}
+
+@media (width >= 640px) {
+  .heading {
+    font-size: 52px;
+    line-height: 54px;
+  }
+
+  .reservationActions {
+    max-width: 450px;
+  }
+
+  .services {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 32px 0;
+  }
+
+  .service,
+  .service + .service {
+    border-top: 0;
+    padding: 0 20px;
+  }
+
+  .service:nth-child(even) {
+    border-left: 1px solid var(--soft-stone);
+  }
+
+  .gatherings .gatheringsButton {
+    width: 337px;
+    max-width: 100%;
+    padding-inline: 24px;
+  }
+}
+
+@media (width >= 1280px) {
+  .heading {
+    font-size: 60px;
+    line-height: 64px;
+  }
+
+  .reservation .eyebrow,
+  .practicalities .eyebrow {
+    margin-bottom: 20px;
+  }
+
+  .reservation .description,
+  .practicalities .description {
+    margin-top: 20px;
+  }
+
+  .dining .eyebrow {
+    margin-bottom: 24px;
+  }
+
+  .reservation {
+    padding-block: 52px;
+  }
+
+  .reservationGrid {
+    grid-template-columns: minmax(0, 1fr) 450px;
+    align-items: center;
+    gap: 64px;
+  }
+
+  .reservation .description {
+    max-width: 782px;
+  }
+
+  .reservationActions {
+    max-width: none;
+    padding-left: 56px;
+    box-shadow: inset 1px 0 var(--warm-cream);
+  }
+
+  .reservationActions .bookingButton,
+  .gatherings .gatheringsButton {
+    height: 48px;
+  }
+
+  .reservationActions .emailLink {
+    min-height: 27px;
+  }
+
+  .diningIntro {
+    grid-template-columns: minmax(0, 654fr) minmax(0, 578fr);
+    align-items: center;
+    gap: 64px;
+  }
+
+  .services {
+    grid-template-columns: minmax(0, 323.25fr) repeat(3, minmax(0, 324.25fr));
+    gap: 0;
+  }
+
+  .service,
+  .service + .service {
+    padding: 0 20px;
+  }
+
+  .service + .service {
+    border-left: 0;
+    box-shadow: inset 1px 0 var(--soft-stone);
+  }
+
+  .practicalities {
+    grid-template-columns: minmax(0, 608.5fr) minmax(0, 591.5fr);
+    gap: 96px;
+  }
+
+  .practicalities > section {
+    min-height: 270px;
+  }
+
+  .gatherings {
+    position: relative;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .gatherings::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -48px;
+    width: 1px;
+    background: var(--soft-stone);
+  }
+}

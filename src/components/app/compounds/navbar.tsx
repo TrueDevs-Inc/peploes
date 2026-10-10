@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { NavbarBookingButton } from "@/components/app/atoms/navbar-booking-button";
 import { NavbarBrand } from "@/components/app/atoms/navbar-brand";
 import { DesktopGroups } from "@/components/app/molecules/desktop-groups";
@@ -41,12 +43,14 @@ export function Navbar() {
         <NavbarBrand />
         <div className="flex shrink-0 items-center gap-3 xl:flex-1 xl:justify-end xl:gap-7">
           <Button
-            type="button"
+            asChild
+            data-navbar-visit
             variant="brand-nav"
-            aria-disabled="true"
             className="hidden h-11 rounded-sm p-0 text-base leading-[22px] font-medium text-ink xl:inline-flex"
           >
-            {NAVBAR_CONTENT.visitContactLabel}
+            <Link href={ROUTES.VISIT_CONTACT}>
+              {NAVBAR_CONTENT.visitContactLabel}
+            </Link>
           </Button>
           <Button
             data-navbar-gift

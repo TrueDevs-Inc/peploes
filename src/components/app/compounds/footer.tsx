@@ -216,13 +216,14 @@ export function Footer() {
               </dl>
               <Button
                 data-footer-homepage-extra
-                type="button"
+                asChild
                 variant="brand-text"
-                aria-disabled="true"
                 className="mt-2.5 flex h-[18px] justify-start rounded-none p-0 has-[>svg]:px-0 text-[13px] leading-[18px] text-peploe-burgundy xl:hidden"
               >
-                {MOBILE_FOOTER_CONTENT.openingTimesLabel}
-                <ArrowRight aria-hidden="true" className="size-4" />
+                <Link href={`${ROUTES.VISIT_CONTACT}#opening-hours`}>
+                  {MOBILE_FOOTER_CONTENT.openingTimesLabel}
+                  <ArrowRight aria-hidden="true" className="size-4" />
+                </Link>
               </Button>
             </div>
             <div
@@ -230,22 +231,24 @@ export function Footer() {
               className="mt-4 flex flex-col items-start gap-1.5 xl:hidden"
             >
               <Button
-                type="button"
+                asChild
                 variant="brand-contact"
-                aria-disabled="true"
                 className="h-11 gap-2 rounded-[4px] border-peploe-burgundy/25 bg-transparent pr-5 pl-4 has-[>svg]:pr-5 has-[>svg]:pl-4 text-[15px] leading-[22px] text-peploe-burgundy"
               >
-                <MapPin aria-hidden="true" className="size-4" />
-                {MOBILE_FOOTER_CONTENT.locationLabel}
+                <Link href={`${ROUTES.VISIT_CONTACT}#find-us`}>
+                  <MapPin aria-hidden="true" className="size-4" />
+                  {MOBILE_FOOTER_CONTENT.locationLabel}
+                </Link>
               </Button>
               <Button
-                type="button"
+                asChild
                 variant="brand-text"
-                aria-disabled="true"
                 className="h-[18px] rounded-none p-0 has-[>svg]:px-0 text-[13px] leading-[18px] text-peploe-burgundy"
               >
-                {MOBILE_FOOTER_CONTENT.directionsLabel}
-                <ArrowRight aria-hidden="true" className="size-4" />
+                <Link href={`${ROUTES.VISIT_CONTACT}#find-us`}>
+                  {MOBILE_FOOTER_CONTENT.directionsLabel}
+                  <ArrowRight aria-hidden="true" className="size-4" />
+                </Link>
               </Button>
             </div>
           </section>

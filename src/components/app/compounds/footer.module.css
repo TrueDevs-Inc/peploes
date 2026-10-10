@@ -1,3 +1,23 @@
+.visitFooter [data-footer-newsletter-controls] input {
+  border-bottom: 0;
+  background-image: linear-gradient(var(--ink), var(--ink));
+  background-position: bottom;
+  background-repeat: no-repeat;
+  background-size: 100% 1px;
+}
+
+@media (forced-colors: active) {
+  .visitFooter [data-footer-newsletter-controls] input {
+    outline: 1px solid CanvasText;
+    outline-offset: -1px;
+  }
+
+  .visitFooter [data-footer-newsletter-controls] input:focus-visible {
+    outline: 2px solid CanvasText;
+    outline-offset: 3px;
+  }
+}
+
 @media (width < 80rem) {
   :is(.privateDiningFooter, .celebrationFooter) [data-footer-container] {
     width: calc(100% - 48px);
@@ -205,16 +225,16 @@
     order: 2;
   }
 
-  .corporateFooter [data-footer-section="contact"] a {
+  :is(.corporateFooter, .visitFooter) [data-footer-section="contact"] a {
     line-height: 24px;
   }
 
-  .corporateFooter [data-footer-section="contact"] dl {
+  :is(.corporateFooter, .visitFooter) [data-footer-section="contact"] dl {
     display: grid;
     gap: 6px;
   }
 
-  .corporateFooter [data-footer-section="contact"] dl > div {
+  :is(.corporateFooter, .visitFooter) [data-footer-section="contact"] dl > div {
     margin: 0;
   }
 
@@ -289,6 +309,54 @@
 
   .privateDiningFooter [data-footer-section="newsletter"]::before {
     left: -42px;
+  }
+
+  .visitFooter [data-footer-section="explore"]::before {
+    transform: skewX(0.622756deg);
+    transform-origin: top;
+  }
+
+  .visitFooter [data-footer-section="contact"]::before {
+    height: 275px;
+  }
+
+  .visitFooter [data-footer-section="newsletter"]::before {
+    transform: skewX(1.245364deg);
+    transform-origin: top;
+  }
+
+  .visitFooter [data-footer-section="brand"] p {
+    font-weight: 500;
+    letter-spacing: 0.1em;
+  }
+
+  .visitFooter [data-footer-section="contact"] dd {
+    color: var(--ink);
+  }
+
+  .visitFooter [data-footer-newsletter-controls] input::placeholder {
+    color: #9e9791;
+  }
+
+  .visitFooter [data-footer-meta]::before {
+    background-color: color-mix(
+      in srgb,
+      var(--peploe-burgundy) 20%,
+      var(--warm-cream)
+    );
+  }
+
+  .visitFooter [data-footer-legal] > p,
+  .visitFooter [data-footer-legal] nav button {
+    opacity: 0.8;
+  }
+
+  .visitFooter [data-footer-legal] [aria-hidden="true"] {
+    opacity: 0.6;
+  }
+
+  .visitFooter [data-footer-social] {
+    gap: 16px;
   }
 
   .privateDiningFooter [data-footer-meta] {

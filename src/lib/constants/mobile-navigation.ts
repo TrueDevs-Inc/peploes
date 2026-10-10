@@ -33,7 +33,11 @@ export const MOBILE_NAVIGATION_CONTENT = {
       })),
     },
     { id: "whats-on", label: NAVBAR_CONTENT.whatsOnLabel },
-    { id: "visit-contact", label: "Visit & Contact" },
+    {
+      id: "visit-contact",
+      label: NAVBAR_CONTENT.visitContactLabel,
+      href: ROUTES.VISIT_CONTACT,
+    },
   ],
   giftVouchersLabel: "Gift Vouchers",
   openingHoursHeading: "Opening Hours",

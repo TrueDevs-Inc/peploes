@@ -6,6 +6,38 @@ content contract are documented in [Menu pages](menus.md).
 Dedicated occasion pages, their Figma references and enquiry preview are
 documented in [Private dining and events](private-dining.md).
 
+## Visit & Contact
+
+`/visit-contact` follows the Final Pages Visit & Contact frame (`3602:4457`).
+At the 1440px reference, its section heights are 604, 236, 698, 302, 419, 366
+and 480px, followed by the 468px production footer. Content uses the shared
+72px desktop gutters, DM Sans and EB Garamond, and the existing colour tokens.
+The contact strip and dining-hours background mix 6% burgundy into warm cream.
+
+Eyebrow rules are 48px wide and 2px high. Outlined buttons and section dividers
+use 1px strokes; button corners retain their individual Figma radii. Render
+button outlines with inset shadows so fractional display scaling does not round
+their thickness down. The active Visit navigation underline is 2px thick.
+On desktop, transport paragraphs retain their 207.25–208.25px Figma widths so
+wider columns do not shorten the text or dividers.
+Reservation assistance keeps its 450px action column, 394px buttons and 782px
+paragraph maximum on desktop, with the original phone SVG and text arrows.
+
+Use the original entrance photograph, map and illustrations exported from
+Figma. The closing photograph reuses `peploes-entrance-backdrop.png`. The desktop
+hero preserves the source's crop and slight vertical compression; smaller
+layouts use an undistorted cover crop. Its original entrance photograph is only
+765px wide. The page's review comment approves the design and notes that its
+images may be improved later; it does not supply replacement photography.
+
+There is no separate mobile Visit & Contact frame. Smaller layouts retain
+24px gutters, stack the content and actions, and allow text to increase section
+heights. Phone, email, directions and private dining links are active. The map
+is a local image linking to directions, so it does not load a third-party embed.
+Booking controls retain the existing inert preview until ResDiary is connected.
+Navigation and footer links point to this page; opening-hours and location links
+use its `#opening-hours` and `#find-us` anchors.
+
 ## Identity and audience
 
 Peploe's is an independent, family-run restaurant at 16 St Stephen's Green,
