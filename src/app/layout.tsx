@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 import { JsonLd } from "@/components/app/atoms/json-ld";
+import { VisitAnchorInitializer } from "@/components/app/atoms/visit-anchor-initializer";
 import { Footer } from "@/components/app/compounds/footer";
 import { Navbar } from "@/components/app/compounds/navbar";
 import { DEFAULT_SEO, HTTP_CONTENT_TYPE, ROUTES } from "@/lib/constants";
@@ -56,6 +57,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Navbar />
+        <VisitAnchorInitializer />
         {children}
         <Footer />
       </body>

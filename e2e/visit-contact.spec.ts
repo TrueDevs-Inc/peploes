@@ -77,14 +77,14 @@ test("navigation reaches Visit, closes the mobile menu and shows the desktop act
   }
 });
 
-test("opening hours and find-us anchors land below the sticky navigation", async ({
-  page,
-  isMobile,
-}) => {
-  for (const destination of [
-    { id: "opening-hours", label: "View full opening times" },
-    { id: "find-us", label: "16 St Stephen's Green" },
-  ]) {
+for (const destination of [
+  { id: "opening-hours", label: "View full opening times" },
+  { id: "find-us", label: "16 St Stephen's Green" },
+]) {
+  test(`${destination.id} lands below the sticky navigation`, async ({
+    page,
+    isMobile,
+  }) => {
     const path = `/visit-contact#${destination.id}`;
     if (isMobile) {
       await page.goto("/");
@@ -101,21 +101,34 @@ test("opening hours and find-us anchors land below the sticky navigation", async
     await expect(page).toHaveURL(path);
     const target = page.locator(`#${destination.id}`);
     await expect(target).toBeInViewport();
-    await expect
-      .poll(async () => {
-        const section = await target.boundingBox();
-        const navigation = await page
-          .getByRole("navigation", { name: "Main navigation", exact: true })
-          .boundingBox();
-        return (
-          section !== null &&
-          navigation !== null &&
-          section.y >= navigation.y + navigation.height &&
-          section.y <= navigation.y + navigation.height + 100
+    const offsetBelowNavigation = () =>
+      target.evaluate((section) => {
+        const navigation = document.querySelector(
+          'nav[aria-label="Main navigation"]',
         );
-      })
-      .toBe(true);
-  }
+        if (!navigation) throw new Error("Main navigation is missing");
+        return (
+          section.getBoundingClientRect().top -
+          navigation.getBoundingClientRect().bottom
+        );
+      });
+    await expect(async () => {
+      const offset = await offsetBelowNavigation();
+      expect(offset).toBeGreaterThanOrEqual(0);
+      expect(offset).toBeLessThanOrEqual(100);
+    }).toPass({ timeout: 5000 });
+  });
+}
+
+test("cold anchor links scroll to opening hours with a slower renderer", async ({
+  page,
+}) => {
+  const session = await page.context().newCDPSession(page);
+  await session.send("Emulation.setCPUThrottlingRate", { rate: 6 });
+  await page.goto("/visit-contact#opening-hours");
+  await expect
+    .poll(async () => (await page.locator("#opening-hours").boundingBox())?.y)
+    .toBeCloseTo(100, 0);
 });
 
 test("contact and map links point to the restaurant's public destinations", async ({

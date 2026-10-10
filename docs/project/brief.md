@@ -37,6 +37,8 @@ is a local image linking to directions, so it does not load a third-party embed.
 Booking controls retain the existing inert preview until ResDiary is connected.
 Navigation and footer links point to this page; opening-hours and location links
 use its `#opening-hours` and `#find-us` anchors.
+Direct anchor links recover a missed initial browser scroll after the document
+loads. Client navigation and history remain handled by the router.
 
 Below 640px, section headings use the Private Dining phone scale of 36/44px,
 with 16/24px supporting text. Transport and dining hours use 48px icons beside
