@@ -52,7 +52,7 @@ their original dimensions.
 ## Identity and audience
 
 Peploe's is an independent, family-run restaurant at 16 St Stephen's Green,
-Dublin. Founded by Barry Canny in 2002, it continues under the next generation
+Dublin. Founded by Barry Canny in 2003, it continues under the next generation
 of the Canny family. Its basement dining room, food, wine, service and people
 should give the website its character.
 
@@ -377,12 +377,51 @@ screens, with a vertical gradient behind the producer copy on mobile.
 
 The yellow Editorial gateway note (`3131:11698`) sends Our Story to its dedicated
 page, the other cards to Journal categories or articles, and Explore the Journal
-to the Journal hub. These actions remain inactive placeholders until those
-destinations are built, following the approved homepage behaviour.
+to the Journal hub. Discover Our Story now opens `/our-story`. The Journal
+actions remain inactive placeholders until those destinations are built.
 
 When changing this section, compare the card arrangement, image crops, line
 breaks and overlays with Figma. Check all four images, mobile text contrast,
 placeholder controls and horizontal overflow at narrow widths.
+
+## Our Story implementation
+
+`/our-story` follows Final Pages `3609:5115`: the dining-room hero, history
+timeline, Georgian building, founder, mural, archive, next generation and
+closing service photograph. It uses the existing brand fonts, buttons and
+production footer. Desktop section heights at 1440px are 546, 457, 600, 390,
+444, 516, 340 and 390px. Narrow layouts stack the content with 24px gutters,
+a vertical timeline and readable overlays; Figma has no separate mobile frame.
+At the 1440px reference width and above, the philosophy column stays 525px
+wide beside a flexible timeline, with a 100px gap. The timeline has 22px top
+padding, so its dates and divider do not move when the descriptions reflow.
+The desktop descriptions keep Figma's 199.667px text width and 4/5/4 line
+breaks even when the timeline columns grow. Mobile paragraphs remain fluid.
+From 1280px, the founder section keeps a 490px copy column and a 68px gap
+beside the portrait. The portrait fills the remaining width, preserving the
+390px section height and the paragraph's five authored desktop lines.
+The next-generation section also keeps its 527px copy column, 16px portrait
+gap and five authored lines from 1280px, with 48px vertical padding inside
+the 340px section. Its paragraph wraps naturally on smaller screens.
+The closing banner retains its 390px height, 60px heading and 20px body
+text on desktop. From 1440px, anchor the photograph to the wrist beneath
+“dining” on the third body line. Scale the image uniformly around that point
+to fill the banner as it widens, preserving the word-to-hand alignment.
+
+The design gives 2003 as the opening year; comment #47 requests Barry Canny
+alone in the founder references. The page and public site description use those
+facts consistently. The founder and Gina image areas are still empty grey placeholders
+in Figma. Preserve those areas until approved portraits are supplied. Comment
+#60 says archive pieces will be supplied; the current archive artwork remains
+the design's temporary image. The building illustration and mural are also
+limited by the resolution of the supplied Figma sources.
+
+Our Location opens Visit & Contact at Find Us. Navigation, footer and the
+homepage family card open Our Story. The mural, archive and booking actions
+remain inactive placeholders until their destinations are built. Browser tests
+cover these journeys, image loading and narrow-screen overflow. Compare crops,
+type sizes, line breaks, 2px eyebrow rules and 1px button outlines with Figma
+when changing the page.
 
 ## Human Hospitality implementation
 

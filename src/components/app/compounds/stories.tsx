@@ -1,20 +1,29 @@
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 import styles from "@/components/app/compounds/stories.module.css";
 import { Button } from "@/components/ui/button";
-import { MOBILE_HOME_CONTENT } from "@/lib/constants";
+import { MOBILE_HOME_CONTENT, ROUTES } from "@/lib/constants";
 import { STORIES_CONTENT } from "@/lib/constants/stories";
 import { dmSans, ebGaramond } from "@/lib/fonts";
 import type { IStoryActionProps } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-function StoryAction({ label, filled = false }: IStoryActionProps) {
+function StoryAction({ label, filled = false, href }: IStoryActionProps) {
+  const content = (
+    <>
+      {label}
+      <ArrowRight aria-hidden="true" className="size-4" />
+    </>
+  );
+
   return (
     <Button
-      type="button"
+      asChild={Boolean(href)}
+      type={href ? undefined : "button"}
       variant={filled ? "brand-primary-inverse" : "brand-secondary-inverse"}
-      aria-disabled="true"
+      aria-disabled={href ? undefined : true}
       className={cn(
         "h-auto min-h-11 max-w-full self-start rounded-[4px] border border-warm-cream/70 px-4 has-[>svg]:px-4 text-base leading-6 font-medium whitespace-normal shadow-none sm:px-5 sm:has-[>svg]:px-5",
         filled
@@ -22,8 +31,7 @@ function StoryAction({ label, filled = false }: IStoryActionProps) {
           : "bg-transparent text-warm-cream max-sm:rounded-none max-sm:border-0 max-sm:px-0 max-sm:has-[>svg]:px-0 max-sm:hover:bg-transparent max-sm:hover:underline",
       )}
     >
-      {label}
-      <ArrowRight aria-hidden="true" className="size-4" />
+      {href ? <Link href={href}>{content}</Link> : content}
     </Button>
   );
 }
@@ -101,7 +109,11 @@ export function Stories() {
                 {STORIES_CONTENT.family.description}
               </p>
               <div className="sm:pt-3">
-                <StoryAction label={STORIES_CONTENT.family.ctaLabel} filled />
+                <StoryAction
+                  label={STORIES_CONTENT.family.ctaLabel}
+                  filled
+                  href={ROUTES.OUR_STORY}
+                />
               </div>
             </div>
           </article>

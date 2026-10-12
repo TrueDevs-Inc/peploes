@@ -15,7 +15,7 @@ export const FOOTER_CONTENT: IFooterContent = {
   exploreHeading: "Explore",
   exploreLinks: [
     { label: "Menus", href: ROUTES.MENUS },
-    { label: "Our Story" },
+    { label: "Our Story", href: ROUTES.OUR_STORY },
     { label: NAVBAR_CONTENT.groupsLabel, href: ROUTES.PRIVATE_DINING },
     { label: "What’s On" },
     { label: "The Journal" },
@@ -61,7 +61,7 @@ export const MOBILE_FOOTER_CONTENT = {
       heading: "Explore",
       links: [
         { label: "Menus", href: ROUTES.MENUS },
-        { label: "Our Story" },
+        { label: "Our Story", href: ROUTES.OUR_STORY },
         { label: "What's On" },
         { label: "Visit & Contact", href: ROUTES.VISIT_CONTACT },
         { label: "The Journal" },

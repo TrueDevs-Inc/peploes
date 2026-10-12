@@ -45,7 +45,7 @@ export const CORS_HEADERS = {
 export const DEFAULT_SEO = {
   siteName: "Peploe's",
   description:
-    "A family-run restaurant on St Stephen's Green, Dublin, since 2002.",
+    "A family-run restaurant on St Stephen's Green, Dublin, since 2003.",
   titleSuffix: " | Peploe's",
   twitterHandle: "",
   locale: "en_IE",
@@ -90,6 +90,7 @@ export const AI_CRAWLER_POLICY = {
 
 export const ROUTES = {
   HOME: "/",
+  OUR_STORY: "/our-story",
   MENUS: "/menus",
   LUNCH: "/menus/lunch",
   DINNER: "/menus/dinner",
