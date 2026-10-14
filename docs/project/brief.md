@@ -397,7 +397,8 @@ Comment #65 approves this hub and asks for rugby fixtures to be added during
 the year. Comment #63 describes future Campaign, Event and Menu Moment CMS
 variants. This frontend keeps Figma’s example programme in a static catalog;
 the dates are not a live schedule and do not produce Event structured data.
-Event details and booking actions remain inactive until those flows are built.
+The six diary actions open the individual event template. Booking actions
+remain inactive until the booking flow is built.
 Contact Us opens Visit & Contact. Navigation and footer links, plus the homepage’s
 “View what’s on” action, open the new hub.
 
@@ -407,6 +408,33 @@ natural proportions when cropping. No separate mobile frame is supplied, so
 narrow layouts use the existing 24px gutters, readable date columns and wrapped
 buttons. Check the desktop line breaks, image placement, mobile navigation,
 image loading and horizontal overflow when changing this page.
+
+### Individual event template
+
+`/seasonal/[slug]` follows Final Pages `3889:13660`, “Peploe’s luxury dining
+campaign.” Comment #69 identifies it as the page for individual events. The
+approved implementation keeps the exact Figma placeholder copy, including
+“Campaign/Event Title,” for all six diary destinations. Unknown slugs return
+404. These placeholders use `noindex` and stay out of the sitemap and
+`llms.txt` until real event content is approved.
+
+The template includes optional event information, menu cards, a story block,
+gallery and related content, followed by the existing invitation banner.
+At 1440px, the eight section heights are 416, 166, 704, 470, 522.674, 372,
+262 and 444px. Use 72px desktop gutters, 48px information icons, 2px eyebrow
+rules and the original Figma photography. Keep image proportions natural;
+the hero uses a uniform cover crop instead of the source design’s slight
+vertical stretch. Two gallery sources are only 243px wide and need approved
+larger originals for sharper desktop rendering.
+
+Make an Inquiry and Contact Us open Visit & Contact. Menu, related-content
+and booking actions remain inactive until their destinations are approved.
+The related row scrolls with touch or its arrow controls on smaller screens.
+No separate mobile design is supplied; use the established 24px gutters,
+stacked sections and readable text. Check the six routes, unknown-route 404,
+image loading, navigation, carousel controls and horizontal overflow when
+changing this template. No CMS integration or Event structured data is added
+for the placeholder programme.
 
 ## Human Hospitality implementation
 

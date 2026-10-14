@@ -23,6 +23,7 @@ export function DesktopNavigation({ items }: IDesktopNavigationProps) {
   const navigationId = useId();
   const isDesktop = useMediaQuery(DESKTOP_NAVIGATION_QUERY);
   const pathname = usePathname();
+  const isSeasonalDetail = pathname.startsWith(`${ROUTES.WHATS_ON}/`);
   const activeNavigationId = pathname.startsWith(ROUTES.MENUS)
     ? "menus"
     : pathname.startsWith(ROUTES.PRIVATE_DINING)
@@ -105,7 +106,11 @@ export function DesktopNavigation({ items }: IDesktopNavigationProps) {
             <DesktopNavigationTrigger
               item={item}
               isOpen={isOpen}
-              isActive={activeNavigationId === id || href === pathname}
+              isActive={
+                activeNavigationId === id ||
+                href === pathname ||
+                (href === ROUTES.WHATS_ON && isSeasonalDetail)
+              }
               isCurrent={href === pathname}
               panelId={panelId}
               onFocus={() =>

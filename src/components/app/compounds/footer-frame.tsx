@@ -11,6 +11,8 @@ export function FooterFrame({ children, className }: ComponentProps<"footer">) {
   const pathname = usePathname();
   const isMenuPage =
     pathname === ROUTES.MENUS || pathname.startsWith(`${ROUTES.MENUS}/`);
+  const isSeasonalPage =
+    pathname === ROUTES.WHATS_ON || pathname.startsWith(`${ROUTES.WHATS_ON}/`);
 
   return (
     <footer
@@ -20,11 +22,11 @@ export function FooterFrame({ children, className }: ComponentProps<"footer">) {
         (pathname === ROUTES.PRIVATE_DINING ||
           pathname === ROUTES.CORPORATE_EVENTS ||
           pathname === ROUTES.VISIT_CONTACT ||
-          pathname === ROUTES.WHATS_ON) &&
+          isSeasonalPage) &&
           styles.privateDiningFooter,
         pathname === ROUTES.CORPORATE_EVENTS && styles.corporateFooter,
         pathname === ROUTES.CELEBRATIONS && styles.celebrationFooter,
-        (pathname === ROUTES.VISIT_CONTACT || pathname === ROUTES.WHATS_ON) &&
+        (pathname === ROUTES.VISIT_CONTACT || isSeasonalPage) &&
           styles.visitFooter,
       )}
     >

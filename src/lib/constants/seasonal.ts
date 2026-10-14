@@ -24,6 +24,7 @@ export const SEASONAL_CONTENT = {
         abbreviation: "Oct",
         events: [
           {
+            slug: "rugby-at-peploes",
             day: "04",
             category: "Autumn Rugby",
             title: "Rugby at Peploe’s",
@@ -32,6 +33,7 @@ export const SEASONAL_CONTENT = {
             action: "Find out more",
           },
           {
+            slug: "italian-wine-dinner",
             day: "18",
             category: "Wine Dinner",
             title: "An Evening with Italian Wines",
@@ -46,6 +48,7 @@ export const SEASONAL_CONTENT = {
         abbreviation: "Nov",
         events: [
           {
+            slug: "christmas-at-peploes",
             day: "01",
             category: "Christmas",
             title: "Christmas at Peploe’s",
@@ -54,6 +57,7 @@ export const SEASONAL_CONTENT = {
             action: "View menus & details",
           },
           {
+            slug: "sunday-at-peploes",
             day: "15",
             category: "Sunday Dining",
             title: "Sunday at Peploe’s",
@@ -62,6 +66,7 @@ export const SEASONAL_CONTENT = {
             action: "Find out more",
           },
           {
+            slug: "lobster-season",
             day: "28",
             category: "Lobster Season",
             title: "Lobster Season",
@@ -75,6 +80,7 @@ export const SEASONAL_CONTENT = {
         abbreviation: "Dec",
         events: [
           {
+            slug: "new-years-eve",
             day: "31",
             category: "Special Event",
             title: "New Year’s Eve",

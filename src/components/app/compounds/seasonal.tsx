@@ -74,13 +74,14 @@ function SeasonalDiary() {
                         {event.description}
                       </p>
                       <Button
-                        type="button"
-                        aria-disabled="true"
+                        asChild
                         variant="brand-text"
                         className={styles.eventAction}
                       >
-                        {event.action}
-                        <ArrowRight aria-hidden="true" className="size-4" />
+                        <Link href={`${ROUTES.WHATS_ON}/${event.slug}`}>
+                          {event.action}
+                          <ArrowRight aria-hidden="true" className="size-4" />
+                        </Link>
                       </Button>
                     </div>
                   </li>
@@ -117,7 +118,7 @@ function SeasonalTerrace() {
   );
 }
 
-function SeasonalJoin() {
+export function SeasonalJoin() {
   const { join } = SEASONAL_CONTENT;
 
   return (

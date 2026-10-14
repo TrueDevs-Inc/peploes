@@ -56,6 +56,10 @@ pages, the four private dining pages and Visit & Contact. Add public canonical p
 they exist. Use a content update time for `lastModified`; omit it when the
 application has no trustworthy value.
 
+The individual `/seasonal/[slug]` pages currently show approved Figma template
+copy. Keep their `noindex` metadata and exclude them from the sitemap and
+`llms.txt` until real event content replaces the placeholders.
+
 ## Agent discovery
 
 `src/app/llms.txt/route.ts` serves Markdown built by

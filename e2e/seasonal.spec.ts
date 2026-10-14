@@ -116,23 +116,44 @@ test("the Seasonal menu remains a separate destination from What's On", async ({
   ).toBeVisible();
 });
 
-test("event details and booking remain marked as unavailable and do not navigate", async ({
+test("diary entries link to their individual event pages while booking remains unavailable", async ({
   page,
 }) => {
   await page.goto("/seasonal");
   const main = page.getByRole("main");
   const diary = main.getByRole("region", { name: "In the diary." });
-  expect(await diary.getByRole("button").count()).toBeGreaterThan(0);
-  await expect(
-    main.getByRole("button", { name: "Book a Table", exact: true }),
-  ).toBeVisible();
-
-  for (const action of await main.getByRole("button").all()) {
-    await expect(action).toHaveAttribute("type", "button");
-    await expect(action).toHaveAttribute("aria-disabled", "true");
-    await action.focus();
-    await page.keyboard.press("Enter");
-    await expect(page).toHaveURL("/seasonal");
-    await expect(page.getByRole("dialog")).toHaveCount(0);
+  const eventLinks = diary.getByRole("link");
+  await expect(eventLinks).toHaveCount(6);
+  const destinations = [
+    "/seasonal/rugby-at-peploes",
+    "/seasonal/italian-wine-dinner",
+    "/seasonal/christmas-at-peploes",
+    "/seasonal/sunday-at-peploes",
+    "/seasonal/lobster-season",
+    "/seasonal/new-years-eve",
+  ];
+  for (const [index, destination] of destinations.entries()) {
+    await expect(eventLinks.nth(index)).toHaveAttribute("href", destination);
   }
+
+  const booking = main.getByRole("button", {
+    name: "Book a Table",
+    exact: true,
+  });
+  await expect(booking).toHaveAttribute("type", "button");
+  await expect(booking).toHaveAttribute("aria-disabled", "true");
+  await booking.focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL("/seasonal");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+
+  await eventLinks.first().click();
+  await expect(page).toHaveURL("/seasonal/rugby-at-peploes");
+  await expect(
+    main.getByRole("heading", {
+      name: "Campaign/Event Title",
+      level: 1,
+      exact: true,
+    }),
+  ).toBeVisible();
 });
