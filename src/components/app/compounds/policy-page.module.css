@@ -1,0 +1,502 @@
+.page {
+  color: var(--ink);
+  background: var(--warm-cream);
+}
+
+.page :is(h1, h2, .number) {
+  font-family: var(--font-eb-garamond), serif;
+  font-weight: 400;
+}
+
+.page a:focus-visible,
+.policySection:focus-visible {
+  outline: 2px solid var(--peploe-burgundy);
+  outline-offset: 4px;
+}
+
+.page a:hover {
+  color: var(--peploe-burgundy);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.hero {
+  position: relative;
+}
+
+.heroCopy {
+  padding-block: 32px;
+}
+
+.eyebrow {
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  letter-spacing: 0.1em;
+}
+
+.page h1 {
+  margin-top: 20px;
+  font-size: 44px;
+  font-weight: 500;
+  line-height: 48px;
+  white-space: pre-line;
+}
+
+.description {
+  margin-top: 16px;
+  color: var(--text-secondary);
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.heroImage {
+  position: relative;
+  aspect-ratio: 2 / 1;
+  overflow: hidden;
+}
+
+.photoBounds {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+
+.privacy .photoBounds {
+  aspect-ratio: 3 / 4;
+  transform: translate(0.0612%, -40.8045%);
+}
+
+.accessibility .photoBounds {
+  width: 115.5172%;
+  aspect-ratio: 3 / 2;
+  transform: translate(-6.7164%, -15.1343%);
+}
+
+.terms .photoBounds {
+  aspect-ratio: 4000 / 2667;
+  transform: translateY(-16.0948%);
+}
+
+.booking .photoBounds {
+  aspect-ratio: 695 / 800;
+  transform: translateY(-41.83125%);
+}
+
+.booking .eyebrow,
+.help .eyebrow {
+  color: var(--peploe-burgundy);
+}
+
+.content {
+  padding-block: 24px 32px;
+}
+
+.contents {
+  margin-bottom: 16px;
+}
+
+.contents h2 {
+  border-bottom: 1px solid var(--soft-stone);
+  padding-bottom: 16px;
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 32px;
+}
+
+.contents ol {
+  display: grid;
+  margin-top: 8px;
+}
+
+.contents a {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+  min-height: 44px;
+  padding-block: 10px;
+  color: var(--text-secondary);
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.contentsNumber {
+  color: var(--peploe-burgundy);
+  font-size: 14px;
+}
+
+.policySection {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  column-gap: 16px;
+  row-gap: 12px;
+  padding-block: 28px;
+  scroll-margin-top: 96px;
+}
+
+.policySection:not(:last-child) {
+  box-shadow: inset 0 -1px 0 var(--soft-stone);
+}
+
+.number {
+  color: var(--peploe-burgundy);
+  font-size: 28px;
+  line-height: 34px;
+}
+
+.policySection h2 {
+  font-size: 28px;
+  line-height: 34px;
+}
+
+.sectionCopy {
+  grid-column: 2;
+  min-width: 0;
+  color: var(--text-secondary);
+  font-size: 16px;
+  line-height: 24px;
+  overflow-wrap: anywhere;
+}
+
+.sectionCopy a {
+  color: var(--peploe-burgundy);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.sectionCopy ul {
+  margin-top: 8px;
+  padding-left: 28px;
+  list-style: disc;
+}
+
+.sectionCopy li::marker {
+  color: var(--peploe-burgundy);
+}
+
+.help {
+  border: 1px solid var(--soft-stone);
+  background: color-mix(in srgb, var(--peploe-burgundy) 6%, var(--warm-cream));
+}
+
+.helpContainer {
+  display: grid;
+  gap: 24px;
+  padding-block: 32px;
+}
+
+.help h2 {
+  margin-top: 12px;
+  font-size: 36px;
+  line-height: 42px;
+}
+
+.helpDetails {
+  color: var(--text-secondary);
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.contactActions {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 16px;
+  margin-top: 12px;
+}
+
+.contactActions a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--ink);
+}
+
+.contactActions a + a {
+  color: var(--peploe-burgundy);
+}
+
+@media (width >= 48rem) and (width < 80rem) {
+  .heroCopy {
+    max-width: 620px;
+  }
+
+  .heroImage {
+    height: 360px;
+    aspect-ratio: auto;
+  }
+}
+
+@media (width >= 80rem) {
+  .hero {
+    height: 400px;
+    overflow: hidden;
+  }
+
+  .privacy .hero {
+    height: 360px;
+  }
+
+  .booking .hero {
+    height: 286px;
+  }
+
+  .heroContainer {
+    position: relative;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .heroCopy {
+    width: 620px;
+    padding-block: 48px;
+  }
+
+  .page h1 {
+    font-size: 76px;
+    line-height: 82px;
+  }
+
+  .privacy h1 {
+    font-size: 54px;
+    line-height: 60px;
+  }
+
+  .booking h1 {
+    margin-top: 16px;
+  }
+
+  .booking .heroCopy {
+    width: 660px;
+  }
+
+  .description {
+    font-size: 18px;
+    line-height: 28px;
+  }
+
+  .privacy .description {
+    margin-top: 20px;
+  }
+
+  .heroImage {
+    position: absolute;
+    inset: 0 0 0 50%;
+    height: auto;
+    aspect-ratio: auto;
+  }
+
+  .privacy .heroImage {
+    left: calc(50% - 40px);
+  }
+
+  .accessibility .heroImage {
+    left: calc(50% + 24px);
+  }
+
+  .booking .heroImage {
+    left: calc(50% + 25px);
+  }
+
+  .heroImage::after {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 100px;
+    background: linear-gradient(to right, var(--warm-cream), transparent);
+  }
+
+  .privacy .heroImage::after {
+    width: 360px;
+  }
+
+  .booking .heroImage::after {
+    width: 180px;
+  }
+
+  .accessibility .heroImage::after {
+    content: none;
+  }
+
+  .content {
+    padding-block: 0;
+  }
+
+  .withContents {
+    display: grid;
+    grid-template-columns: 320px minmax(0, 1fr);
+    gap: 56px;
+  }
+
+  .privacy .content {
+    padding-bottom: 32px;
+  }
+
+  .terms .content {
+    grid-template-columns: 312px minmax(0, 1fr);
+    gap: 48px;
+    padding-top: 8px;
+  }
+
+  .accessibility .content {
+    padding-block: 24px 16px;
+  }
+
+  .contents {
+    margin: 0;
+    padding-top: 20px;
+    padding-right: 48px;
+    border-right: 1px solid var(--soft-stone);
+  }
+
+  .contents h2 {
+    width: 272px;
+    padding-bottom: 12px;
+    line-height: 32px;
+  }
+
+  .terms .contents {
+    padding-top: 24px;
+    padding-right: 40px;
+  }
+
+  .terms .contents h2 {
+    padding-bottom: 12px;
+  }
+
+  .contents ol {
+    margin-top: 10px;
+  }
+
+  .contents a {
+    padding-block: 8px 14px;
+  }
+
+  .terms .contents ol {
+    margin-top: 10px;
+  }
+
+  .terms .contents a {
+    padding-block: 8px 16px;
+  }
+
+  .policySection {
+    grid-template-columns: 88px minmax(0, 1fr);
+    column-gap: 28px;
+    row-gap: 8px;
+    padding-block: 18px;
+  }
+
+  .number {
+    grid-row: 1 / 3;
+  }
+
+  .policySection h2,
+  .number {
+    font-size: 32px;
+    line-height: 36px;
+  }
+
+  .terms .policySection {
+    grid-template-columns: 80px minmax(0, 1fr);
+    column-gap: 32px;
+    padding-block: 20px 22px;
+    row-gap: 10px;
+  }
+
+  .terms .policySection:not(:first-child) {
+    border-top: 1px solid var(--soft-stone);
+  }
+
+  .terms .policySection:not(:last-child) {
+    box-shadow: none;
+  }
+
+  .terms .policySection h2,
+  .terms .number {
+    line-height: 36px;
+  }
+
+  :is(.accessibility, .booking) .policySection {
+    grid-template-columns: 96px 408px minmax(0, 1fr);
+    column-gap: 32px;
+    row-gap: 0;
+    padding-block: 36px;
+    min-height: 128px;
+  }
+
+  :is(.accessibility, .booking) .number {
+    grid-row: auto;
+    font-size: 42px;
+    line-height: 48px;
+  }
+
+  :is(.accessibility, .booking) .policySection h2 {
+    line-height: 36px;
+  }
+
+  :is(.accessibility, .booking) .sectionCopy {
+    grid-column: 3;
+  }
+
+  .accessibility .sectionCopy {
+    font-size: 18px;
+    line-height: 28px;
+  }
+
+  .booking .policySection {
+    grid-template-columns: 104px 400px minmax(0, 1fr);
+    padding-block: 48px;
+  }
+
+  .helpContainer {
+    grid-template-columns: 433px minmax(0, 1fr);
+    gap: 40px;
+    min-height: 166px;
+    padding-block: 31px;
+  }
+
+  .helpHeading {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-right: 1px solid var(--soft-stone);
+  }
+
+  .help h2 {
+    margin-top: 8px;
+    font-size: 42px;
+    line-height: 48px;
+  }
+
+  .helpDetails {
+    align-self: center;
+  }
+
+  .contactActions {
+    align-items: center;
+    gap: 32px;
+    margin-top: 12px;
+  }
+
+  .contactActions a {
+    padding-inline: 16px;
+    min-height: 44px;
+  }
+
+  .contactActions a + a {
+    position: relative;
+  }
+
+  .contactActions a + a::before {
+    content: "";
+    position: absolute;
+    top: 12px;
+    left: -17px;
+    width: 1px;
+    height: 20px;
+    background: color-mix(in srgb, var(--peploe-burgundy) 50%, transparent);
+  }
+}

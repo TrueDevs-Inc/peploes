@@ -1,9 +1,11 @@
 "use client";
 
 import { ArrowRight, Calendar, ChevronDown } from "lucide-react";
+import Link from "next/link";
 
 import styles from "@/components/app/compounds/private-dining.module.css";
 import { Button } from "@/components/ui/button";
+import { ROUTES } from "@/lib/constants";
 import { PRIVATE_DINING_FORM } from "@/lib/constants/private-dining";
 import type { IPrivateDiningEnquiryProps } from "@/lib/types";
 
@@ -104,9 +106,12 @@ export function PrivateDiningEnquiryFields({
           <input type="checkbox" name="consent" required />
           <span>
             {PRIVATE_DINING_FORM.consent.beforePolicy}
-            <span className={styles.consentPolicy}>
+            <Link
+              href={ROUTES.PRIVACY_COOKIES}
+              className={styles.consentPolicy}
+            >
               {PRIVATE_DINING_FORM.consent.policy}
-            </span>
+            </Link>
             {PRIVATE_DINING_FORM.consent.afterPolicy}
           </span>
         </label>

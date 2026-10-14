@@ -33,10 +33,14 @@ export const FOOTER_CONTENT: IFooterContent = {
   copyright: "© 2026 Peploe’s",
   legalNavigationLabel: "Legal and accessibility",
   legalLabels: [
-    { label: "Privacy" },
-    { label: "Terms" },
-    { label: "Cookie Preferences", shortLabel: "Cookies" },
-    { label: "Accessibility" },
+    { label: "Privacy", href: ROUTES.PRIVACY_COOKIES },
+    { label: "Terms", href: ROUTES.TERMS_CONDITIONS },
+    {
+      label: "Booking & Cancellation",
+      shortLabel: "Booking Terms",
+      href: ROUTES.BOOKING_CANCELLATION_TERMS,
+    },
+    { label: "Accessibility", href: ROUTES.ACCESSIBILITY_POLICY },
   ],
   instagramLabel: "Peploe’s on Instagram",
   facebookLabel: "Peploe’s on Facebook",

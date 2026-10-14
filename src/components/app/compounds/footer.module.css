@@ -159,7 +159,10 @@
     order: 0;
   }
 
-  :is(.privateDiningFooter, .celebrationFooter) [data-footer-meta] nav button {
+  :is(.privateDiningFooter, .celebrationFooter)
+    [data-footer-meta]
+    nav
+    :is(a, button) {
     font-size: 14px;
     line-height: 21px;
   }
@@ -347,7 +350,7 @@
   }
 
   .visitFooter [data-footer-legal] > p,
-  .visitFooter [data-footer-legal] nav button {
+  .visitFooter [data-footer-legal] nav :is(a, button) {
     opacity: 0.8;
   }
 
@@ -366,7 +369,7 @@
     line-height: 20px;
   }
 
-  .privateDiningFooter [data-footer-meta] nav button {
+  .privateDiningFooter [data-footer-meta] nav :is(a, button) {
     font-size: 14px;
     line-height: 20px;
   }
@@ -485,7 +488,7 @@
   order: 2;
 }
 
-.menuFooter [data-footer-meta] nav button {
+.menuFooter [data-footer-meta] nav :is(a, button) {
   font-size: 14px;
   line-height: 21px;
 }
@@ -580,7 +583,7 @@
     line-height: 20px;
   }
 
-  .menuFooter [data-footer-meta] nav button {
+  .menuFooter [data-footer-meta] nav :is(a, button) {
     font-size: 14px;
     line-height: 20px;
   }

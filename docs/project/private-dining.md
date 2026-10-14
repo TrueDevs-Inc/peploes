@@ -71,8 +71,8 @@ The left and right headings use 44/46px and 34/35px EB Garamond respectively.
 Fields use secondary-colour 16/24px DM Sans, 38px control heights, 2px input
 corners and square selects. The date and guest fields have a 12px gap.
 Consent uses a 22px checkbox and 14/21px text; contact buttons have 2px corners,
-and Send Enquiry is 161 × 44px. Privacy-policy text is styled as shown in the
-design; its destination and form submission remain deferred as described below.
+and Send Enquiry is 161 × 44px. Privacy-policy text links to `/privacy-cookies`
+and retains the design styling. Form submission remains deferred as described below.
 
 The overview's occasion cards use 416 × 216px image frames and 24px gaps at the
 1440px reference. Their photographs retain the Figma crops toward the bottom of
@@ -163,8 +163,8 @@ including its slight vertical compression and full-width gradient. Below 1024px,
 it retains a proportional cover crop in the 290px stacked image frame.
 The enquiry has 598px and 650px columns separated by
 48px, a full-height inset divider, 38px fields, 2px corners and a 22px checkbox.
-The privacy-policy wording retains the design's underline as a text placeholder
-until a policy destination is configured.
+The privacy-policy link points to `/privacy-cookies` and retains the design's
+underline.
 
 The corporate Location Matters section uses 36px top and 40px bottom padding,
 a 48/50px regular heading, 48px icons and 1px inset Soft Stone dividers.
@@ -325,8 +325,8 @@ button describes the unavailable state to assistive technology and in its
 tooltip. It retains the brand hover colour without enabling submission;
 telephone and email remain the working enquiry routes.
 
-Submission, server validation, privacy-policy linking and delivery failure
-handling must be implemented when the enquiry service and policy page are
+The privacy-policy link opens `/privacy-cookies`. Submission, server validation
+and delivery failure handling remain deferred until the enquiry service is
 configured. Do not enable submission by changing only the button's disabled
 state. Booking and newsletter integration remain outside these pages.
 

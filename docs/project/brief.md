@@ -241,8 +241,14 @@ EB Garamond headings.
 Footer dividers, mobile row borders and the email field rule use 1px thickness.
 The three burgundy heading underlines are 32px wide and 2px high, matching Figma.
 
-Telephone and email links are active. Navigation, legal and social destinations
-remain inactive until approved destinations exist. The newsletter email field is
+Telephone and email links are active. Footer legal links open Privacy & Cookies,
+Terms & Conditions, Booking & Cancellation Terms, and Accessibility. Booking &
+Cancellation Terms replaces Cookie Preferences at the contributor's request.
+All four policies use the shared `src/app/[slug]/page.tsx` route and policy template,
+with separate content and metadata in `src/lib/constants/policies.ts`. Existing
+policy URLs are preserved; unknown slugs return 404. Other navigation and social
+destinations remain inactive until approved destinations exist. The newsletter
+email field is
 editable, with an accessible label, email autocomplete and visible keyboard focus.
 Subscribe remains inactive pending the subscription integration; no email is
 sent or stored by the application. Opening hours and contact details follow

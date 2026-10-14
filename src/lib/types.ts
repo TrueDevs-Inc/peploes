@@ -5,6 +5,7 @@ import type { ComponentProps, CSSProperties, ReactNode } from "react";
 import type { z } from "zod/v4";
 
 import type { examples } from "@/db/schema";
+import type { ROUTES } from "@/lib/constants";
 import type { buttonVariants } from "@/lib/constants/button";
 import type { ErrorCode, HttpVerb, LogLevel } from "@/lib/enums";
 import type { createExampleSchema } from "@/lib/examples-schema";
@@ -812,7 +813,11 @@ export interface IFooterContent {
   };
   copyright: string;
   legalNavigationLabel: string;
-  legalLabels: readonly { label: string; shortLabel?: string }[];
+  legalLabels: readonly {
+    label: string;
+    shortLabel?: string;
+    href: TPolicyPath;
+  }[];
   instagramLabel: string;
   facebookLabel: string;
 }
@@ -996,4 +1001,39 @@ export interface IButtonProps
   extends ComponentProps<"button">,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
+}
+
+export interface IPolicyTextPart {
+  text: string;
+  href?: string;
+}
+
+export interface IPolicySection {
+  _key: string;
+  heading: string;
+  body: readonly IPolicyTextPart[];
+  items?: readonly string[];
+}
+
+export type TPolicyPath = (typeof ROUTES)[
+  | "PRIVACY_COOKIES"
+  | "ACCESSIBILITY_POLICY"
+  | "TERMS_CONDITIONS"
+  | "BOOKING_CANCELLATION_TERMS"];
+
+export interface IPolicyPageContent {
+  variant: "privacy" | "accessibility" | "terms" | "booking";
+  path: TPolicyPath;
+  seoDescription: string;
+  title: string;
+  eyebrow: string;
+  heading: string;
+  description: string;
+  image: ISectionImage;
+  showContents?: boolean;
+  sections: readonly IPolicySection[];
+}
+
+export interface IPolicyPageProps {
+  policy: IPolicyPageContent;
 }

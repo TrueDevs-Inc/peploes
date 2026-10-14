@@ -1,4 +1,5 @@
 import { Facebook, Instagram } from "lucide-react";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { FOOTER_CONTENT } from "@/lib/constants/footer";
@@ -19,31 +20,40 @@ export function FooterMeta() {
         </span>
         <nav aria-label={FOOTER_CONTENT.legalNavigationLabel}>
           <ul className="flex flex-wrap items-center gap-x-3 gap-y-2 xl:gap-x-4">
-            {FOOTER_CONTENT.legalLabels.map(({ label, shortLabel }, index) => (
-              <li key={label} className="flex items-center gap-3 xl:gap-4">
-                {index > 0 && (
-                  <span aria-hidden="true">
-                    <span className="xl:hidden">·</span>
-                    <span className="hidden xl:inline">|</span>
-                  </span>
-                )}
-                <Button
-                  type="button"
-                  variant="brand-nav"
-                  aria-disabled="true"
-                  className="h-auto rounded-none p-0 text-xs leading-[18px] font-normal text-text-secondary xl:leading-5"
-                >
-                  <span data-footer-full-label={shortLabel ? "" : undefined}>
-                    {label}
-                  </span>
-                  {shortLabel && (
-                    <span data-footer-short-label className="hidden">
-                      {shortLabel}
+            {FOOTER_CONTENT.legalLabels.map(
+              ({ label, shortLabel, href }, index) => {
+                const linkLabel = (
+                  <>
+                    <span data-footer-full-label={shortLabel ? "" : undefined}>
+                      {label}
                     </span>
-                  )}
-                </Button>
-              </li>
-            ))}
+                    {shortLabel && (
+                      <span data-footer-short-label className="hidden">
+                        {shortLabel}
+                      </span>
+                    )}
+                  </>
+                );
+
+                return (
+                  <li key={label} className="flex items-center gap-3 xl:gap-4">
+                    {index > 0 && (
+                      <span aria-hidden="true">
+                        <span className="xl:hidden">·</span>
+                        <span className="hidden xl:inline">|</span>
+                      </span>
+                    )}
+                    <Button
+                      asChild
+                      variant="brand-nav"
+                      className="h-auto rounded-none p-0 text-xs leading-[18px] font-normal text-text-secondary xl:leading-5"
+                    >
+                      <Link href={href}>{linkLabel}</Link>
+                    </Button>
+                  </li>
+                );
+              },
+            )}
           </ul>
         </nav>
       </div>
