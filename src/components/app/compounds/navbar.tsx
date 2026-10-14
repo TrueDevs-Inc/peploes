@@ -37,7 +37,11 @@ export function Navbar() {
               href: ROUTES.PRIVATE_DINING,
               content: <DesktopGroups />,
             },
-            { id: "whats-on", label: NAVBAR_CONTENT.whatsOnLabel },
+            {
+              id: "whats-on",
+              label: NAVBAR_CONTENT.whatsOnLabel,
+              href: ROUTES.WHATS_ON,
+            },
           ]}
         />
         <NavbarBrand />

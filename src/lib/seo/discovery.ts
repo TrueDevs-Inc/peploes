@@ -53,6 +53,7 @@ export function buildRobots(
 
 export function buildLlmsText(siteUrl: string): string {
   const homeUrl = getAbsolutePublicUrl(siteUrl, ROUTES.HOME);
+  const whatsOnUrl = getAbsolutePublicUrl(siteUrl, ROUTES.WHATS_ON);
   const visitUrl = getAbsolutePublicUrl(siteUrl, ROUTES.VISIT_CONTACT);
   const sitemapUrl = getAbsolutePublicUrl(siteUrl, ROUTES.SITEMAP);
   const robotsUrl = getAbsolutePublicUrl(siteUrl, ROUTES.ROBOTS);
@@ -65,6 +66,7 @@ export function buildLlmsText(siteUrl: string): string {
     "## Public pages",
     "",
     `- [Home](${homeUrl}): Application home page.`,
+    `- [What’s On](${whatsOnUrl}): Seasonal menus, dining occasions and events at Peploe’s.`,
     `- [Visit & Contact](${visitUrl}): Opening hours, directions and contact details.`,
     "",
     "## Discovery",

@@ -90,6 +90,7 @@ export const AI_CRAWLER_POLICY = {
 
 export const ROUTES = {
   HOME: "/",
+  WHATS_ON: "/seasonal",
   MENUS: "/menus",
   LUNCH: "/menus/lunch",
   DINNER: "/menus/dinner",

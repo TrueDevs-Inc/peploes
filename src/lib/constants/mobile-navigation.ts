@@ -32,7 +32,11 @@ export const MOBILE_NAVIGATION_CONTENT = {
         href,
       })),
     },
-    { id: "whats-on", label: NAVBAR_CONTENT.whatsOnLabel },
+    {
+      id: "whats-on",
+      label: NAVBAR_CONTENT.whatsOnLabel,
+      href: ROUTES.WHATS_ON,
+    },
     {
       id: "visit-contact",
       label: NAVBAR_CONTENT.visitContactLabel,

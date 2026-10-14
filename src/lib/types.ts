@@ -981,6 +981,7 @@ export interface IStoryActionProps {
 export interface IEventActionProps {
   label: string;
   mobileLabel?: string;
+  href?: Route;
 }
 
 export interface IEventCardProps {

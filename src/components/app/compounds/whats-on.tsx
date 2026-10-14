@@ -1,8 +1,9 @@
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { WHATS_ON_CONTENT } from "@/lib/constants";
+import { ROUTES, WHATS_ON_CONTENT } from "@/lib/constants";
 import { dmSans, ebGaramond } from "@/lib/fonts";
 import type {
   IEventActionProps,
@@ -11,14 +12,9 @@ import type {
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-function EventAction({ label, mobileLabel }: IEventActionProps) {
-  return (
-    <Button
-      type="button"
-      variant="brand-text"
-      aria-disabled="true"
-      className="h-11 w-fit justify-start gap-2 rounded-none px-0 has-[>svg]:px-0 text-base leading-6 font-medium text-warm-cream uppercase"
-    >
+function EventAction({ label, mobileLabel, href }: IEventActionProps) {
+  const content = (
+    <>
       {mobileLabel ? (
         <>
           <span className="sm:hidden">{mobileLabel}</span>
@@ -28,6 +24,18 @@ function EventAction({ label, mobileLabel }: IEventActionProps) {
         label
       )}
       <ArrowRight aria-hidden="true" className="size-4" />
+    </>
+  );
+
+  return (
+    <Button
+      asChild={Boolean(href)}
+      type={href ? undefined : "button"}
+      variant="brand-text"
+      aria-disabled={href ? undefined : true}
+      className="h-11 w-fit justify-start gap-2 rounded-none px-0 has-[>svg]:px-0 text-base leading-6 font-medium text-warm-cream uppercase"
+    >
+      {href ? <Link href={href}>{content}</Link> : content}
     </Button>
   );
 }
@@ -135,7 +143,10 @@ export function WhatsOn({ events }: IWhatsOnProps) {
               {WHATS_ON_CONTENT.description}
             </p>
           </div>
-          <EventAction label={WHATS_ON_CONTENT.ctaLabel} />
+          <EventAction
+            label={WHATS_ON_CONTENT.ctaLabel}
+            href={ROUTES.WHATS_ON}
+          />
         </div>
 
         <div className="grid items-start gap-6 sm:gap-12 xl:grid-cols-[minmax(0,635fr)_minmax(0,613fr)]">

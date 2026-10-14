@@ -50,6 +50,9 @@ describe("public discovery", function publicDiscoveryTests() {
     );
     expect(content).toContain("[Home](https://example.com/)");
     expect(content).toContain(
+      "- [What’s On](https://example.com/seasonal): Seasonal menus, dining occasions and events at Peploe’s.",
+    );
+    expect(content).toContain(
       "- [Visit & Contact](https://example.com/visit-contact): Opening hours, directions and contact details.",
     );
     expect(content).toContain("[Sitemap](https://example.com/sitemap.xml)");

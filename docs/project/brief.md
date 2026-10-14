@@ -384,6 +384,30 @@ When changing this section, compare the card arrangement, image crops, line
 breaks and overlays with Figma. Check all four images, mobile text contrast,
 placeholder controls and horizontal overflow at narrow widths.
 
+## Seasonal / What’s On implementation
+
+`/seasonal` follows Final Pages `3821:14668`: the cocktail hero, monthly event
+diary, terrace feature and closing invitation. It is separate from the existing
+seasonal menu at `/menus/seasonal`. At the 1440px reference width, the sections
+are 437, 1729, 256 and 444px high. The diary uses 72px gutters, 45px month bars,
+224px event rows and 1px Soft Stone dividers. Its empty right column and the
+absence of decorative eyebrow rules are intentional.
+
+Comment #65 approves this hub and asks for rugby fixtures to be added during
+the year. Comment #63 describes future Campaign, Event and Menu Moment CMS
+variants. This frontend keeps Figma’s example programme in a static catalog;
+the dates are not a live schedule and do not produce Event structured data.
+Event details and booking actions remain inactive until those flows are built.
+Contact Us opens Visit & Contact. Navigation and footer links, plus the homepage’s
+“View what’s on” action, open the new hub.
+
+Use the three original Figma photos. The terrace source is only 243×244px;
+it needs an approved larger source for a sharp desktop image. Preserve its
+natural proportions when cropping. No separate mobile frame is supplied, so
+narrow layouts use the existing 24px gutters, readable date columns and wrapped
+buttons. Check the desktop line breaks, image placement, mobile navigation,
+image loading and horizontal overflow when changing this page.
+
 ## Human Hospitality implementation
 
 The homepage section follows Final Pages `3131:11401`, with the burgundy heading
