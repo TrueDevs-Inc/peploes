@@ -32,6 +32,49 @@ test("Our Story loads its photographs without stretching or horizontal overflow"
     .toBe(true);
 });
 
+test("archive copy and photograph stay separate at responsive widths", async ({
+  page,
+  isMobile,
+}) => {
+  const widths = isMobile
+    ? [page.viewportSize()?.width ?? 390]
+    : [1024, 1100, 1279, 1280, 1440, 2400];
+
+  for (const width of widths) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/our-story");
+    const archive = page.getByRole("region", {
+      name: /Moments, menus\s+and memories\./,
+    });
+    const photograph = archive.getByRole("img");
+    await photograph.scrollIntoViewIfNeeded();
+    await expect(photograph).toBeVisible();
+    await page.evaluate(() => document.fonts.ready);
+
+    const image = await photograph.evaluate((element) =>
+      element.getBoundingClientRect().toJSON(),
+    );
+    const copy = await archive
+      .locator("p, h2, button")
+      .evaluateAll((elements) =>
+        elements.map((element) => ({
+          text: element.textContent,
+          bounds: element.getBoundingClientRect().toJSON(),
+        })),
+      );
+    expect(copy.length).toBeGreaterThan(0);
+    for (const { text, bounds } of copy) {
+      expect(
+        bounds.right <= image.left ||
+          bounds.left >= image.right ||
+          bounds.bottom <= image.top ||
+          bounds.top >= image.bottom,
+        `Archive copy box "${text}" overlaps its photograph at ${width}px`,
+      ).toBe(true);
+    }
+  }
+});
+
 test("the home family story card opens Our Story", async ({ page }) => {
   await page.goto("/");
   await page

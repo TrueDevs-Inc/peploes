@@ -615,7 +615,7 @@
 
   .archiveImage {
     position: absolute;
-    inset: 47px 0 47px 40%;
+    inset: 47px 0 47px calc(24px + 445px);
     aspect-ratio: auto;
     margin-top: 0;
   }
