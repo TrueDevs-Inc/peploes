@@ -13,10 +13,9 @@ import type {
 
 function getDetailsErrors(details: ITableBookingGuestDetails) {
   const copy = TABLE_BOOKING_CONTENT.details;
-  const [firstName, ...names] = details.name.split(" ");
   return {
-    firstName: firstName.trim() ? "" : copy.nameError,
-    surname: names.join(" ").trim() ? "" : copy.nameError,
+    firstName: details.firstName.trim() ? "" : copy.nameError,
+    surname: details.surname.trim() ? "" : copy.nameError,
     email: z.string().email().safeParse(details.email.trim()).success
       ? ""
       : copy.emailError,
@@ -63,8 +62,9 @@ export function TableBookingDetails({
 }: ITableBookingDetailsProps) {
   const [attempted, setAttempted] = useState(false);
   const copy = TABLE_BOOKING_CONTENT.details;
-  const [firstName, ...names] = details.name.split(" ");
-  const surname = names.join(" ");
+  const fullName = details.surname
+    ? `${details.firstName} ${details.surname}`
+    : details.firstName;
   const invalid = getDetailsErrors(details);
   const errors: Partial<typeof invalid> = attempted ? invalid : {};
   function update(
@@ -72,6 +72,22 @@ export function TableBookingDetails({
     value: string | boolean,
   ) {
     onChange({ ...details, [field]: value });
+  }
+  function updateFullName(value: string) {
+    if (value === fullName) return;
+    let separator = value.lastIndexOf(" ");
+    // Retain the known name boundary when editing one part in the mobile field.
+    if (details.firstName && value.startsWith(`${details.firstName} `)) {
+      separator = details.firstName.length;
+    } else if (details.surname && value.endsWith(` ${details.surname}`)) {
+      separator = value.length - details.surname.length - 1;
+    }
+    const hasSurname = separator >= 0 && separator < value.length - 1;
+    onChange({
+      ...details,
+      firstName: hasSurname ? value.slice(0, separator) : value,
+      surname: hasSurname ? value.slice(separator + 1) : "",
+    });
   }
   return (
     <form
@@ -103,34 +119,30 @@ export function TableBookingDetails({
           className={styles.desktopField}
           label="First name"
           autoComplete="given-name"
-          value={firstName}
+          value={details.firstName}
           placeholder="Your name"
           error={errors.firstName}
-          onChange={(event) =>
-            update("name", [event.target.value, surname].join(" "))
-          }
+          onChange={(event) => update("firstName", event.target.value)}
         />
         <BookingField
           id="booking-surname"
           className={styles.desktopField}
           label="Surname"
           autoComplete="family-name"
-          value={surname}
+          value={details.surname}
           placeholder="Your name"
           error={errors.surname}
-          onChange={(event) =>
-            update("name", [firstName, event.target.value].join(" "))
-          }
+          onChange={(event) => update("surname", event.target.value)}
         />
         <BookingField
           id="booking-name"
           className={styles.mobileField}
           label="Full name"
           autoComplete="name"
-          value={details.name}
+          value={fullName}
           placeholder="Your name"
           error={errors.firstName || errors.surname}
-          onChange={(event) => update("name", event.target.value)}
+          onChange={(event) => updateFullName(event.target.value)}
         />
         <BookingField
           id="booking-phone"

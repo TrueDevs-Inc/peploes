@@ -208,6 +208,98 @@ test("booking preview preserves selections on back navigation and resets time wh
     reservations.getByRole("button", { name: "Find a Table", exact: true }),
   ).toBeVisible();
 });
+test("multiword guest names survive typing, back navigation and responsive changes", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/book-a-table");
+  const reservations = page.getByRole("region", { name: "Table reservations" });
+  await reservations
+    .getByRole("button", { name: "Find a Table", exact: true })
+    .click();
+  await reservations
+    .getByRole("button", { name: "6:00 pm", exact: true })
+    .click();
+  await reservations
+    .getByRole("button", { name: "Continue", exact: true })
+    .click();
+  const firstName = reservations.getByLabel("First name", { exact: false });
+  const surname = reservations.getByLabel("Surname", { exact: false });
+  const fullName = reservations.getByLabel("Full name", { exact: false });
+
+  await surname.fill("Doyle");
+  await firstName.fill("Mary Jane");
+  await expect(firstName).toHaveValue("Mary Jane");
+  await expect(surname).toHaveValue("Doyle");
+  await firstName.fill("");
+  await firstName.pressSequentially("Mary Jane");
+  await expect(firstName).toHaveValue("Mary Jane");
+  await expect(surname).toHaveValue("Doyle");
+
+  await reservations
+    .getByRole("button", { name: "Back to times", exact: true })
+    .click();
+  await reservations
+    .getByRole("button", { name: "Continue", exact: true })
+    .click();
+  await expect(firstName).toHaveValue("Mary Jane");
+  await expect(surname).toHaveValue("Doyle");
+
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    await expect(fullName).toBeVisible();
+    await expect(fullName).toHaveValue("Mary Jane Doyle");
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await expect(firstName).toHaveValue("Mary Jane");
+    await expect(surname).toHaveValue("Doyle");
+  }
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await fullName.fill("Mary Jane Smith");
+  await reservations
+    .getByRole("button", { name: "Back to times", exact: true })
+    .click();
+  await reservations
+    .getByRole("button", { name: "Continue", exact: true })
+    .click();
+  await expect(fullName).toHaveValue("Mary Jane Smith");
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await expect(firstName).toHaveValue("Mary Jane");
+  await expect(surname).toHaveValue("Smith");
+});
+
+test("extra time selections stay visible after returning from guest details", async ({
+  page,
+}) => {
+  await page.goto("/book-a-table");
+  const reservations = page.getByRole("region", { name: "Table reservations" });
+  await reservations
+    .getByRole("button", { name: "Find a Table", exact: true })
+    .click();
+  await reservations
+    .getByRole("button", { name: "Show more times (6 more)", exact: true })
+    .click();
+  const noon = reservations.getByRole("button", {
+    name: "12:00 pm",
+    exact: true,
+  });
+  await noon.click();
+  await reservations
+    .getByRole("button", { name: "Continue", exact: true })
+    .click();
+  await reservations
+    .getByRole("button", { name: "Back to times", exact: true })
+    .click();
+  await expect(noon).toBeVisible();
+  await expect(noon).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    reservations.getByRole("button", { name: "Show fewer times", exact: true }),
+  ).toHaveAttribute("aria-expanded", "true");
+  await expect(
+    reservations.getByRole("button", { name: "Continue", exact: true }),
+  ).toBeEnabled();
+});
+
 test("booking help offers the restaurant's contact and group dining destinations", async ({
   page,
 }) => {

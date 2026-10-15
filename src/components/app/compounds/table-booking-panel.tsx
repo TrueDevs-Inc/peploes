@@ -37,7 +37,8 @@ export function TableBookingPanel() {
 
   const [returnAccepted, setReturnAccepted] = useState(false);
   const [details, setDetails] = useState<ITableBookingGuestDetails>({
-    name: "",
+    firstName: "",
+    surname: "",
     email: "",
     phone: "",
     requests: "",
@@ -211,7 +212,8 @@ export function TableBookingPanel() {
               setTime("");
               setReturnAccepted(false);
               setDetails({
-                name: "",
+                firstName: "",
+                surname: "",
                 email: "",
                 phone: "",
                 requests: "",
@@ -265,7 +267,9 @@ function BookingTimes({
   onBack,
   onContinue,
 }: ITableBookingTimesProps) {
-  const [showMore, setShowMore] = useState(false);
+  const [showMore, setShowMore] = useState(() =>
+    content.moreTimes.some((slot) => slot === time),
+  );
   const requiresReturn = time === content.returnTime.start;
   return (
     <div>

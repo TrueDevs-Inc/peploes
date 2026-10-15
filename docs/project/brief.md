@@ -27,8 +27,10 @@ Contact, telephone and email links use the existing destinations.
 The available-times frame includes the two-hour return-time acknowledgement for
 the sample 7pm slot. Changing the date or party size clears the previous time
 selection. Guest fields validate before advancing; back navigation preserves
-the entered details. Desktop uses separate first-name and surname inputs, while
-mobile displays the same name in one field. Booking terms remain placeholder
+the entered details. First name and surname are stored independently, including
+spaces within either part. Mobile displays them together in one field; switching
+widths does not reinterpret the name. Returning from guest details reopens the
+extra time slots when the retained selection is in that list. Booking terms remain placeholder
 copy until the restaurant supplies the final terms and ResDiary is integrated.
 
 Verify the forward and back journey, invalid guest details, contact destinations,
