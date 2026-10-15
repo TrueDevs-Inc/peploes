@@ -1,0 +1,777 @@
+.page {
+  --story-photo-placeholder: #686565;
+  color: var(--ink);
+  background: var(--warm-cream);
+}
+
+.page :is(h1, h2, h3, .year) {
+  font-family: var(--font-eb-garamond), serif;
+  font-weight: 400;
+}
+
+.page :is(a, button):focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--peploe-burgundy);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.leadingRule::before,
+.trailingRule::after {
+  content: "";
+  flex-shrink: 0;
+  width: 48px;
+  height: 2px;
+  background: currentColor;
+}
+
+.heading {
+  margin-top: 16px;
+  font-size: 42px;
+  line-height: 44px;
+  text-wrap: balance;
+}
+
+.description {
+  margin-top: 16px;
+  color: var(--text-secondary);
+  font-size: 18px;
+  line-height: 28px;
+}
+
+.action {
+  width: fit-content;
+  max-width: 100%;
+  height: auto;
+  min-height: 44px;
+  margin-top: 24px;
+  padding: 10px 20px;
+  gap: 5px;
+  border-radius: 4px;
+  font-size: 16px;
+  line-height: 24px;
+  white-space: normal;
+}
+
+.outlineAction {
+  border: 0;
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+
+.outlineAction:hover {
+  color: var(--warm-cream);
+  background: var(--peploe-burgundy);
+  box-shadow: inset 0 0 0 1px var(--peploe-burgundy);
+}
+
+.cover,
+.heroPhoto,
+.muralPhoto {
+  object-fit: cover;
+}
+
+.hero,
+.founder,
+.mural,
+.archive,
+.nextChapter,
+.today {
+  position: relative;
+}
+
+.heroImage {
+  position: relative;
+  height: 300px;
+}
+
+.heroPhoto {
+  object-position: center 50%;
+}
+
+.heroCopy {
+  position: relative;
+  padding-block: 40px 48px;
+}
+
+.heroCopy h1 {
+  margin-top: 24px;
+  font-size: 48px;
+  line-height: 48px;
+  text-wrap: balance;
+}
+
+.establishment {
+  margin-top: 24px;
+  color: var(--peploe-burgundy);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+}
+
+.philosophy {
+  padding-block: 48px;
+  background: linear-gradient(rgb(46 42 40 / 10%), transparent 62.47px);
+}
+
+.philosophyGrid {
+  display: grid;
+  align-items: center;
+  gap: 40px;
+}
+
+.philosophyHeading {
+  font-size: 38px;
+  line-height: 40px;
+}
+
+.philosophyHeading::after {
+  content: "";
+  display: block;
+  width: 48px;
+  height: 2px;
+  margin-top: 24px;
+  background: var(--peploe-burgundy);
+}
+
+.timeline {
+  position: relative;
+  display: grid;
+  gap: 28px;
+}
+
+.timeline li {
+  position: relative;
+  min-width: 0;
+  padding-left: 30px;
+}
+
+.timeline li::before {
+  content: "";
+  position: absolute;
+  top: 14px;
+  bottom: -42px;
+  left: 6.5px;
+  width: 1px;
+  background: var(--peploe-burgundy);
+}
+
+.timeline li:last-child::before {
+  display: none;
+}
+
+.year {
+  color: var(--peploe-burgundy);
+  font-size: 28px;
+  line-height: 37px;
+}
+
+.marker {
+  position: absolute;
+  top: 12px;
+  left: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--peploe-burgundy);
+}
+
+.timeline h3 {
+  margin-top: 8px;
+  font-size: 25px;
+  line-height: 27px;
+}
+
+.milestoneDescription {
+  margin-top: 12px;
+  color: var(--text-secondary);
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.building {
+  background: color-mix(in srgb, var(--peploe-burgundy) 6%, var(--warm-cream));
+}
+
+.buildingGrid {
+  display: grid;
+  align-items: center;
+  gap: 32px;
+  padding-block: 48px;
+}
+
+.buildingCopy {
+  min-width: 0;
+}
+
+.buildingCopy .action {
+  width: 161px;
+}
+
+.buildingImage {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.journey {
+  display: grid;
+  gap: 24px;
+}
+
+.journey li {
+  position: relative;
+  padding-left: 24px;
+}
+
+.journey li::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+
+.journey li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 10px;
+  bottom: -30px;
+  left: 1.5px;
+  width: 1px;
+  background: var(--text-secondary);
+}
+
+.journey p {
+  font-size: 11px;
+  line-height: 17px;
+  text-transform: uppercase;
+}
+
+.journey p:first-child {
+  font-weight: 600;
+}
+
+.journey p + p {
+  margin-top: 5px;
+  color: var(--text-secondary);
+}
+
+.photoPlaceholder {
+  height: 240px;
+  background: var(--story-photo-placeholder);
+}
+
+.founderCopy,
+.nextChapterCopy {
+  padding-block: 40px 48px;
+}
+
+.mural {
+  overflow: hidden;
+  color: var(--warm-cream);
+  background: rgb(var(--overlay-dark-ink-rgb));
+}
+
+.muralImage,
+.todayImage {
+  position: absolute;
+  inset: 0;
+}
+
+.muralPhoto {
+  object-position: center top;
+}
+
+.mural::after,
+.today::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    rgb(var(--overlay-dark-ink-rgb) / 92%),
+    rgb(var(--overlay-dark-ink-rgb) / 55%)
+  );
+}
+
+.muralCopy,
+.todayCopy {
+  position: relative;
+  z-index: 1;
+  padding-block: 48px;
+}
+
+:is(.mural, .today) :is(.eyebrow, .description) {
+  color: inherit;
+}
+
+.mural .outlineAction:hover {
+  color: var(--ink);
+  background: var(--warm-cream);
+  box-shadow: inset 0 0 0 1px var(--warm-cream);
+}
+
+.muralCopy .action {
+  width: 249px;
+}
+
+.archiveImage {
+  position: relative;
+  aspect-ratio: 923 / 422;
+  margin-top: 40px;
+}
+
+.archiveCopy {
+  padding-block: 32px 48px;
+}
+
+.archiveCopy .action {
+  width: 210px;
+}
+
+.today {
+  overflow: hidden;
+  color: var(--warm-cream);
+}
+
+.todayImage > img {
+  object-position: 60% center;
+}
+
+.todayCopy .action {
+  width: 156px;
+  white-space: nowrap;
+}
+
+@media (width >= 40rem) {
+  .heroImage {
+    height: 400px;
+  }
+
+  .heroCopy h1 {
+    max-width: 600px;
+    font-size: 60px;
+    line-height: 58px;
+  }
+
+  .heading {
+    font-size: 52px;
+    line-height: 52px;
+  }
+
+  .timeline {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 36px;
+  }
+
+  .timeline::before {
+    content: "";
+    position: absolute;
+    top: 59px;
+    right: 32px;
+    left: 7px;
+    height: 1px;
+    background: var(--peploe-burgundy);
+  }
+
+  .timeline li {
+    padding-left: 0;
+  }
+
+  .timeline li::before {
+    display: none;
+  }
+
+  .marker {
+    position: relative;
+    top: auto;
+    display: block;
+    margin-top: 18px;
+  }
+
+  .timeline h3 {
+    min-height: 50px;
+    margin-top: 18px;
+    line-height: 25px;
+    white-space: pre-line;
+  }
+
+  .milestoneDescription {
+    margin-top: 18px;
+  }
+
+  .buildingGrid {
+    grid-template-columns: minmax(0, 1fr) 170px;
+  }
+
+  .buildingCopy {
+    grid-column: 1 / -1;
+  }
+
+  .journey {
+    gap: 6px;
+  }
+
+  .journey li {
+    padding-left: 0;
+  }
+
+  .journey li:not(:last-child) {
+    height: 96px;
+  }
+
+  .journey li::before {
+    top: 47px;
+    left: 35px;
+  }
+
+  .journey li:last-child::before {
+    display: none;
+  }
+
+  .journey li:not(:last-child)::after {
+    top: 51px;
+    bottom: 0;
+    left: 36.5px;
+  }
+
+  .journey p + p {
+    white-space: pre-line;
+  }
+}
+
+@media (width >= 64rem) {
+  .hero {
+    min-height: 546px;
+  }
+
+  .heroImage {
+    position: absolute;
+    inset: 0 0 0 40%;
+    height: auto;
+  }
+
+  .heroImage::after {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 426px;
+    max-width: 100%;
+    background: linear-gradient(
+      90deg,
+      var(--warm-cream) 5.75%,
+      rgb(var(--overlay-cream-rgb) / 90%) 28.4%,
+      rgb(var(--overlay-cream-rgb) / 0%) 100%
+    );
+  }
+
+  .heroCopy {
+    width: 535px;
+    max-width: 55%;
+    padding-block: 80px;
+  }
+
+  .heroCopy h1 {
+    margin-top: 28px;
+    font-size: 64px;
+    line-height: 58px;
+    white-space: pre-line;
+  }
+
+  .heroCopy .description {
+    max-width: 498px;
+    margin-top: 16px;
+  }
+
+  .philosophy {
+    padding-block: 80px;
+  }
+
+  .philosophyGrid {
+    grid-template-columns: 525fr 671fr;
+    gap: 60px;
+    min-height: 297px;
+  }
+
+  .philosophyHeading {
+    font-size: 46px;
+    line-height: 48px;
+  }
+
+  .timeline {
+    align-self: stretch;
+    padding-top: 22px;
+  }
+
+  .timeline::before {
+    top: 81px;
+  }
+
+  .heading {
+    font-size: 60px;
+    line-height: 52px;
+    white-space: pre-line;
+    text-wrap: wrap;
+  }
+
+  .buildingGrid {
+    min-height: 600px;
+    grid-template-columns: 525fr 23fr 518fr 57fr 173fr;
+    gap: 0;
+    padding-block: 0;
+  }
+
+  .buildingCopy {
+    grid-column: 1;
+    padding-block: 80px;
+  }
+
+  .buildingCopy .heading {
+    font-size: 48px;
+    line-height: 48px;
+  }
+
+  .buildingImage {
+    grid-column: 3;
+  }
+
+  .journey {
+    grid-column: 5;
+  }
+
+  .founder .photoPlaceholder,
+  .nextChapter .photoPlaceholder {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 52%;
+    height: auto;
+  }
+
+  .founderCopy,
+  .nextChapterCopy {
+    width: 44%;
+    margin-left: auto;
+    padding-block: 51px;
+  }
+
+  .founderCopy {
+    min-height: 390px;
+  }
+
+  .founderCopy .heading,
+  .archiveCopy .heading {
+    line-height: 50px;
+  }
+
+  .muralImage {
+    left: 11.7249%;
+    right: auto;
+    width: 100%;
+  }
+
+  .muralPhoto {
+    object-position: left top;
+  }
+
+  .mural::after {
+    background: linear-gradient(
+      90deg,
+      rgb(var(--overlay-dark-ink-rgb)) 12.9636%,
+      rgb(var(--overlay-dark-ink-rgb) / 50%) 37.9808%,
+      rgb(var(--overlay-dark-ink-rgb) / 0%) 59.5541%
+    );
+  }
+
+  .muralCopy {
+    width: 470px;
+    min-height: 444px;
+    padding-block: 48px 36px;
+  }
+
+  .muralCopy .description,
+  .archiveCopy .description,
+  .todayCopy .description {
+    white-space: pre-line;
+  }
+
+  .archive {
+    min-height: 516px;
+  }
+
+  .archiveImage {
+    position: absolute;
+    inset: 47px 0 47px calc(24px + 445px);
+    aspect-ratio: auto;
+    margin-top: 0;
+  }
+
+  .archiveCopy {
+    position: relative;
+    width: 445px;
+    padding-block: 80px;
+  }
+
+  .archiveCopy .description {
+    margin-top: 20px;
+  }
+
+  .archiveCopy .action {
+    margin-top: 20px;
+  }
+
+  .nextChapterCopy {
+    min-height: 340px;
+    padding-block: 48px;
+  }
+
+  .nextChapterCopy .description {
+    margin-top: 20px;
+  }
+
+  .today::after {
+    background: linear-gradient(
+      90deg,
+      rgb(var(--overlay-dark-ink-rgb)),
+      rgb(var(--overlay-dark-ink-rgb) / 50%) 51.4423%,
+      rgb(var(--overlay-dark-ink-rgb) / 0%)
+    );
+  }
+
+  .todayCopy {
+    width: 520px;
+    min-height: 390px;
+    padding-block: 38px 20px;
+  }
+
+  .todayCopy .description {
+    margin-top: 20px;
+    font-size: 20px;
+  }
+
+  .todayCopy .action {
+    margin-top: 20px;
+  }
+
+  .todayImage > img {
+    object-position: center;
+  }
+}
+
+@media (width >= 80rem) {
+  .page {
+    --story-gutter: max(72px, (100% - var(--site-content-max-width)) / 2);
+  }
+
+  .heroImage {
+    left: calc(var(--story-gutter) + 500px);
+  }
+
+  .heroCopy {
+    max-width: none;
+  }
+
+  .philosophyGrid {
+    gap: 100px;
+  }
+
+  .philosophyHeading {
+    font-size: clamp(46px, calc(5vw - 18px), 54px);
+    line-height: clamp(48px, 3.75vw, 54px);
+    white-space: pre-line;
+  }
+
+  .buildingCopy .heading {
+    font-size: clamp(52px, 4.166667vw, 60px);
+    line-height: 52px;
+    white-space: pre;
+  }
+
+  .buildingCopy .description {
+    white-space: pre-line;
+  }
+
+  .buildingImage {
+    align-self: start;
+    margin-top: 21px;
+  }
+
+  .founder .photoPlaceholder {
+    width: calc(100% - var(--story-gutter) - 490px - 68px);
+  }
+
+  .founderCopy {
+    width: 490px;
+  }
+
+  .founderCopy .description {
+    white-space: pre-line;
+  }
+
+  .archiveImage {
+    left: calc(var(--story-gutter) + 445px);
+  }
+
+  .nextChapter .photoPlaceholder {
+    width: calc(100% - var(--story-gutter) - 527px - 16px);
+  }
+
+  .nextChapterCopy {
+    width: 527px;
+  }
+
+  .nextChapterCopy .heading {
+    font-size: 60px;
+    white-space: nowrap;
+  }
+
+  .nextChapterCopy .description {
+    white-space: pre-line;
+  }
+}
+
+@media (width >= 90rem) {
+  .philosophyGrid {
+    grid-template-columns: 525px minmax(0, 1fr);
+  }
+
+  .milestoneDescription {
+    max-width: 199.667px;
+  }
+
+  .todayImage {
+    /* Anchor the wrist beneath “dining” at (528, 264) in the Figma frame. */
+    --wrist-x: calc(var(--story-gutter) + 456px);
+    top: 264px;
+    right: auto;
+    bottom: auto;
+    left: var(--wrist-x);
+    width: max(
+      calc(var(--wrist-x) * 30 / 11),
+      calc((100% - var(--wrist-x)) * 30 / 19)
+    );
+    aspect-ratio: 3 / 2;
+    transform: translate(-36.666667%, -57.1875%);
+  }
+}
+
+@media (forced-colors: active) {
+  .outlineAction:not(:focus-visible) {
+    outline: 1px solid CanvasText;
+    outline-offset: -1px;
+  }
+}

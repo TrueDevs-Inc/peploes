@@ -29,13 +29,14 @@ export function VisitContactDetails() {
           </div>
           <div className={styles.reservationActions}>
             <Button
-              type="button"
+              asChild
               variant="brand-primary-inverse"
-              aria-disabled="true"
               className={styles.bookingButton}
             >
-              {VISIT_CONTACT_DETAILS.reservation.bookingLabel}
-              <span aria-hidden="true">→</span>
+              <Link href={ROUTES.BOOK_A_TABLE}>
+                {VISIT_CONTACT_DETAILS.reservation.bookingLabel}
+                <span aria-hidden="true">→</span>
+              </Link>
             </Button>
             <Button
               asChild

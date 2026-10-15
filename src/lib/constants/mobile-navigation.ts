@@ -22,7 +22,11 @@ export const MOBILE_NAVIGATION_CONTENT = {
         href,
       })),
     },
-    { id: "our-story", label: NAVBAR_CONTENT.ourStoryLabel },
+    {
+      id: "our-story",
+      label: NAVBAR_CONTENT.ourStoryLabel,
+      href: ROUTES.OUR_STORY,
+    },
     {
       id: "groups-occasions",
       label: NAVBAR_CONTENT.groupsLabel,

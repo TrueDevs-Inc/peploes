@@ -44,6 +44,7 @@ export const MENU_PAGE_CONTENT = {
       "linear-gradient(180deg,rgba(32,16,9,0.031373),rgba(32,16,9,0.658824) 58%,rgba(32,16,9,0.941176))",
     heading: "Good food deserves good company.",
     label: "Book a Table",
+    href: ROUTES.BOOK_A_TABLE,
     image: {
       src: "/peploes-menu-booking.jpg",
       alt: "Candlelit tables and artwork in Peploe’s dining room.",

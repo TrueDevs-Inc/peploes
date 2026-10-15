@@ -51,10 +51,10 @@ routes, enforce access on the server, prevent shared caching, and exclude those
 routes from public discovery. Use non-indexing response headers and metadata
 where appropriate; crawler directives alone do not protect private content.
 
-`src/app/sitemap.ts` contains the home page, What’s On, all seven menu
-pages, the four private dining pages and Visit & Contact. Add public canonical pages when
-they exist. Use a content update time for `lastModified`; omit it when the
-application has no trustworthy value.
+`src/app/sitemap.ts` contains the home page, Our Story, What’s On, all seven
+menu pages, the four private dining pages and Visit & Contact. Add public
+canonical pages when they exist. Use a content update time for `lastModified`;
+omit it when the application has no trustworthy value.
 
 The individual `/seasonal/[slug]` pages currently show approved Figma template
 copy. Keep their `noindex` metadata and exclude them from the sitemap and
@@ -64,8 +64,9 @@ copy. Keep their `noindex` metadata and exclude them from the sitemap and
 
 `src/app/llms.txt/route.ts` serves Markdown built by
 `src/lib/seo/discovery.ts`. It contains the configured site name and
-description, then links to the home page, What’s On, Visit & Contact, sitemap,
-and crawler policy. The root layout points agents to it with `rel="describedby"`.
+description, then links to the home page, Our Story, What’s On, Visit & Contact,
+sitemap, and crawler policy. The root layout points agents to it with
+`rel="describedby"`.
 
 Add a public page to `llms.txt` only when the URL exists and its description
 matches the page. Prefer links to clean Markdown versions for long technical

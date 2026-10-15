@@ -1,3 +1,4 @@
+import { ROUTES } from "@/lib/constants";
 import type { IWineMenuContent } from "@/lib/types";
 
 export const WINE_MENU: IWineMenuContent = {
@@ -755,6 +756,7 @@ export const WINE_MENU: IWineMenuContent = {
     description:
       "We work closely with independent winemakers across France, Italy, Spain and beyond to bring you wines of place, authenticity and character — selected for their sense of origin and the people behind them.",
     label: "Book a Table",
+    href: ROUTES.BOOK_A_TABLE,
     image: {
       src: "/peploes-wine-menu-booking.webp",
       alt: "Bottles resting in Peploe’s wine cellar.",
