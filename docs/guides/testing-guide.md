@@ -87,11 +87,11 @@ service-policy tests at the SQL layer.
 
 ## Browser tests
 
-Playwright covers the Visit & Contact journey in headless Chromium at desktop
-and phone widths, including a narrow 320px screen. The suite checks navigation,
-the active Visit state, section anchors, contact destinations, image loading
-and horizontal overflow. Phone, email and map destinations are checked without
-opening external services.
+Playwright covers public-page journeys in headless Chromium at desktop and phone
+widths, including a narrow 320px screen. The suite checks navigation and active
+states, Visit & Contact anchors and contact destinations, placeholder actions,
+image loading and horizontal overflow. Phone, email and map destinations are
+checked without opening external services.
 
 ```bash
 bunx playwright install chromium

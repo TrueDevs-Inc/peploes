@@ -6,6 +6,39 @@ content contract are documented in [Menu pages](menus.md).
 Dedicated occasion pages, their Figma references and enquiry preview are
 documented in [Private dining and events](private-dining.md).
 
+## Book a Table design preview
+
+The /book-a-table page follows the desktop and mobile booking frames in Figma.
+Its four steps run in browser memory: choose a date and party size, select a
+sample time, enter guest details, and view the confirmation layout. The page
+stays noindex. A visible notice identifies the flow as a design preview.
+
+The booking layout and colours retain the Figma structure. Its controls and
+typography use the site's smaller scale: desktop actions are 48px tall with
+16px text, time choices use 18px text, and flow headings are 36px. Keep the
+existing card width, column counts and responsive arrangement. Let each step
+fit its content instead of retaining the design artboard's fixed minimum height.
+
+This preview does not query ResDiary, create reservations, send email, store
+guest details, or export calendar entries. The confirmation explicitly says no
+reservation was made. Refreshing the page resets the preview. Menu, Visit &
+Contact, telephone and email links use the existing destinations.
+
+The available-times frame includes the two-hour return-time acknowledgement for
+the sample 7pm slot. Changing the date or party size clears the previous time
+selection. Guest fields validate before advancing; back navigation preserves
+the entered details. First name and surname are stored independently, including
+spaces within either part. Mobile displays them together in one field; switching
+widths does not reinterpret the name. Returning from guest details reopens the
+extra time slots when the retained selection is in that list. Booking terms remain placeholder
+copy until the restaurant supplies the final terms and ResDiary is integrated.
+
+Verify the forward and back journey, invalid guest details, contact destinations,
+image loading and overflow at 1440px, 390px and 320px. Every Book a Table link,
+including the homepage hero and closing banner, menu banners, and Visit &
+Contact buttons, opens `/book-a-table`. Visit's Check Online Availability action
+opens the same preview. Group enquiry links keep their existing destinations.
+
 ## Visit & Contact
 
 `/visit-contact` follows the Final Pages Visit & Contact frame (`3602:4457`).
@@ -34,7 +67,7 @@ There is no separate mobile Visit & Contact frame. Smaller layouts retain
 24px gutters, stack the content and actions, and allow text to increase section
 heights. Phone, email, directions and private dining links are active. The map
 is a local image linking to directions, so it does not load a third-party embed.
-Booking controls retain the existing inert preview until ResDiary is connected.
+Booking controls open the [Book a Table design preview](#book-a-table-design-preview).
 Navigation and footer links point to this page; opening-hours and location links
 use its `#opening-hours` and `#find-us` anchors.
 Direct anchor links recover a missed initial browser scroll after the document
@@ -52,7 +85,7 @@ their original dimensions.
 ## Identity and audience
 
 Peploe's is an independent, family-run restaurant at 16 St Stephen's Green,
-Dublin. Founded by Barry Canny in 2002, it continues under the next generation
+Dublin. Founded by Barry Canny in 2003, it continues under the next generation
 of the Canny family. Its basement dining room, food, wine, service and people
 should give the website its character.
 
@@ -157,12 +190,13 @@ happen.” heading and omits the art description.
 The closing booking heading is upright on mobile and retains its desktop italic.
 
 Compare section positions, line breaks, crops and overlays at 390px, then check
-narrow phones, tablet and desktop for overflow. Keep the existing inactive
-actions, inactive newsletter subscription and active telephone and email links.
+narrow phones, tablet and desktop for overflow. Book a Table opens its design
+preview. Keep the remaining inactive actions, inactive newsletter subscription
+and active telephone and email links.
 
 ## Homepage interaction previews
 
-Placeholder actions use inert `type="button"` controls with `aria-disabled="true"`
+Remaining placeholder actions use inert `type="button"` controls with `aria-disabled="true"`
 and no click handlers. They remain focusable and show the Figma hover styles
 without navigating, booking or submitting. The newsletter email input accepts
 typing and keyboard focus, but does not send or store the entered address.
@@ -223,8 +257,8 @@ Book button. The full-screen menu expands Menus and Groups & Occasions inline,
 then shows Gift Vouchers, opening hours, address, telephone, email and the
 People make Peploe's brand line. Preserve the 44px minimum control targets.
 
-Page links, booking and Gift Vouchers remain inactive placeholders until their
-journeys are built. Home, telephone and email links work. Keep modal focus
+Unbuilt page links and Gift Vouchers remain inactive placeholders. Book opens
+the booking design preview; Home, telephone and email links work. Keep modal focus
 containment and restoration, Escape and close-button dismissal, scroll locking
 and automatic dismissal at the desktop breakpoint. Verify both accordion
 groups, narrow screens, short viewports, enlarged text and overflow with the
@@ -272,7 +306,8 @@ phone and email targets, keyboard focus, 200% zoom and horizontal overflow.
 
 The homepage hero follows the Final Pages hero and entrance group (`3131:11100`).
 The desktop photo panel is 780px tall with EB Garamond headings and DM Sans
-supporting copy. Booking and telephone buttons remain placeholders.
+supporting copy. Book a Table opens the booking design preview; the telephone
+button remains a placeholder.
 On phones, the panel is 660px tall with 48px headings and stacked full-width
 buttons. The 520px entrance photograph has a separate 74px caption below it.
 
@@ -394,12 +429,124 @@ screens, with a vertical gradient behind the producer copy on mobile.
 
 The yellow Editorial gateway note (`3131:11698`) sends Our Story to its dedicated
 page, the other cards to Journal categories or articles, and Explore the Journal
-to the Journal hub. These actions remain inactive placeholders until those
-destinations are built, following the approved homepage behaviour.
+to the Journal hub. Discover Our Story now opens `/our-story`. The Journal
+actions remain inactive placeholders until those destinations are built.
 
 When changing this section, compare the card arrangement, image crops, line
 breaks and overlays with Figma. Check all four images, mobile text contrast,
 placeholder controls and horizontal overflow at narrow widths.
+
+## Seasonal / What’s On implementation
+
+`/seasonal` follows Final Pages `3821:14668`: the cocktail hero, monthly event
+diary, terrace feature and closing invitation. It is separate from the existing
+seasonal menu at `/menus/seasonal`. At the 1440px reference width, the sections
+are 437, 1729, 256 and 444px high. The diary uses 72px gutters, 45px month bars,
+224px event rows and 1px Soft Stone dividers. Its empty right column and the
+absence of decorative eyebrow rules are intentional.
+
+Comment #65 approves this hub and asks for rugby fixtures to be added during
+the year. Comment #63 describes future Campaign, Event and Menu Moment CMS
+variants. This frontend keeps Figma’s example programme in a static catalog;
+the dates are not a live schedule and do not produce Event structured data.
+The six diary actions open the individual event template. Booking actions
+remain inactive until the booking flow is built.
+Contact Us opens Visit & Contact. Navigation and footer links, plus the homepage’s
+“View what’s on” action, open the new hub.
+
+Use the three original Figma photos. The terrace source is only 243×244px;
+it needs an approved larger source for a sharp desktop image. Preserve its
+natural proportions when cropping. No separate mobile frame is supplied. Below
+640px, follow the homepage and menu pages: 24px gutters, 48px hero type, 42px
+section headings, 16px body copy and stacked full-width invitation buttons.
+Photo banners use vertical overlays with room above the text; their height grows
+with the content. The diary retains its date column, 1px horizontal row dividers
+and a 1px Soft Stone vertical rule beside each date. Use compact month headings
+and 44px minimum action targets. The terrace photo uses a 3:2 crop.
+The shared invitation follows these phone styles on individual events too;
+tablet and desktop layouts retain their existing sizing. Check the desktop
+line breaks, image placement, mobile navigation,
+image loading and horizontal overflow when changing this page.
+
+### Individual event template
+
+`/seasonal/[slug]` follows Final Pages `3889:13660`, “Peploe’s luxury dining
+campaign.” Comment #69 identifies it as the page for individual events. The
+approved implementation keeps the exact Figma placeholder copy, including
+“Campaign/Event Title,” for all six diary destinations. Unknown slugs return
+404. These placeholders use `noindex` and stay out of the sitemap and
+`llms.txt` until real event content is approved.
+
+The template includes optional event information, menu cards, a story block,
+gallery and related content, followed by the existing invitation banner.
+At 1440px, the eight section heights are 416, 166, 704, 470, 522.674, 372,
+262 and 444px. Use 72px desktop gutters, 48px information icons, 2px eyebrow
+rules and the original Figma photography. Keep image proportions natural;
+the hero uses a uniform cover crop instead of the source design’s slight
+vertical stretch. Two gallery sources are only 243px wide and need approved
+larger originals for sharper desktop rendering.
+
+The Menu & Experience container is capped at 1296px. Its heading is 64px/65px,
+with 20px gaps between the eyebrow, heading and body, then 48px before the cards.
+At the 1440px design width, the story has a 704px content column, a 48px gap and
+a 688px image. Its text block is 600px wide, with 54px top and 48px bottom padding,
+a 72px/73px heading and 22px/31px paragraphs. Both headings use -1px letter spacing.
+Keep desktop type sizes fixed; allow narrower columns to wrap and the section
+to grow beyond its 470px minimum rather than shrinking or clipping the copy.
+
+Make an Inquiry and Contact Us open Visit & Contact. Menu, related-content
+and booking actions remain inactive until their destinations are approved.
+At tablet widths, the related row scrolls with touch or its arrow controls.
+No separate mobile design is supplied. Below 640px, use the established 24px
+gutters, 42px/44px section headings, 16px/24px body copy and 12px eyebrows.
+Stack the menu cards, story and gallery; use 3:2 menu and story photos with
+40px section padding. Keep information icons at 40px and invitation buttons
+stacked at full width with at least 44px touch targets. Related cards form a
+single vertical column, with a full-width 3:2 photo above the copy on each
+card and 32px between cards. Hide carousel controls on phones.
+Tablet and desktop sizing stays unchanged. Check the six routes, unknown-route 404,
+image loading, navigation, carousel controls and horizontal overflow when
+changing this template. No CMS integration or Event structured data is added
+for the placeholder programme.
+
+## Our Story implementation
+
+`/our-story` follows Final Pages `3609:5115`: the dining-room hero, history
+timeline, Georgian building, founder, mural, archive, next generation and
+closing service photograph. It uses the existing brand fonts, buttons and
+production footer. Desktop section heights at 1440px are 546, 457, 600, 390,
+444, 516, 340 and 390px. Narrow layouts stack the content with 24px gutters,
+a vertical timeline and readable overlays; Figma has no separate mobile frame.
+At the 1440px reference width and above, the philosophy column stays 525px
+wide beside a flexible timeline, with a 100px gap. The timeline has 22px top
+padding, so its dates and divider do not move when the descriptions reflow.
+The desktop descriptions keep Figma's 199.667px text width and 4/5/4 line
+breaks even when the timeline columns grow. Mobile paragraphs remain fluid.
+From 1280px, the founder section keeps a 490px copy column and a 68px gap
+beside the portrait. The portrait fills the remaining width, preserving the
+390px section height and the paragraph's five authored desktop lines.
+The next-generation section also keeps its 527px copy column, 16px portrait
+gap and five authored lines from 1280px, with 48px vertical padding inside
+the 340px section. Its paragraph wraps naturally on smaller screens.
+The closing banner retains its 390px height, 60px heading and 20px body
+text on desktop. From 1440px, anchor the photograph to the wrist beneath
+“dining” on the third body line. Scale the image uniformly around that point
+to fill the banner as it widens, preserving the word-to-hand alignment.
+
+The design gives 2003 as the opening year; comment #47 requests Barry Canny
+alone in the founder references. The page and public site description use those
+facts consistently. The founder and Gina image areas are still empty grey placeholders
+in Figma. Preserve those areas until approved portraits are supplied. Comment
+#60 says archive pieces will be supplied; the current archive artwork remains
+the design's temporary image. The building illustration and mural are also
+limited by the resolution of the supplied Figma sources.
+
+Our Location opens Visit & Contact at Find Us. Navigation, footer and the
+homepage family card open Our Story. The mural, archive and booking actions
+remain inactive placeholders until their destinations are built. Browser tests
+cover these journeys, image loading and narrow-screen overflow. Compare crops,
+type sizes, line breaks, 2px eyebrow rules and 1px button outlines with Figma
+when changing the page.
 
 ## Human Hospitality implementation
 
@@ -431,11 +578,11 @@ the banner is 318px tall with 72px vertical padding.
 On narrow screens the text wraps, margins reduce and the illustration fades
 to keep the copy readable.
 
-Book a Table remains an inactive placeholder, consistent with the existing
-booking controls. The nearby Booking fallback note (`3131:11704`) requires
+Book a Table opens the [booking design preview](#book-a-table-design-preview).
+The nearby Booking fallback note (`3131:11704`) requires
 working phone and email options when online availability is missing. The
 footer retains those active links; ResDiary integration remains future work.
 
 When changing the banner, compare the italic text, botanical crop, background,
 spacing and button with Figma. Check artwork and font loading, narrow-screen
-wrapping, horizontal overflow and the inactive booking action.
+wrapping, horizontal overflow and navigation to the booking preview.

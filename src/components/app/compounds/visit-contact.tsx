@@ -1,10 +1,15 @@
 import { MapPin } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 import styles from "@/components/app/compounds/visit-contact.module.css";
 import { VisitContactDetails } from "@/components/app/compounds/visit-contact-details";
 import { Button } from "@/components/ui/button";
-import { RESTAURANT_CONTACT, RESTAURANT_OPENING_HOURS } from "@/lib/constants";
+import {
+  RESTAURANT_CONTACT,
+  RESTAURANT_OPENING_HOURS,
+  ROUTES,
+} from "@/lib/constants";
 import { VISIT_CONTACT_CONTENT } from "@/lib/constants/visit-contact";
 import { dmSans, ebGaramond } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
@@ -12,13 +17,14 @@ import { cn } from "@/lib/utils";
 function VisitBookingButton() {
   return (
     <Button
-      type="button"
+      asChild
       variant="brand-primary"
-      aria-disabled="true"
       className={cn(styles.action, styles.booking)}
     >
-      {VISIT_CONTACT_CONTENT.bookingLabel}
-      <span aria-hidden="true">→</span>
+      <Link href={ROUTES.BOOK_A_TABLE}>
+        {VISIT_CONTACT_CONTENT.bookingLabel}
+        <span aria-hidden="true">→</span>
+      </Link>
     </Button>
   );
 }

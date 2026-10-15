@@ -30,14 +30,22 @@ export function Navbar() {
               label: NAVBAR_CONTENT.menusLabel,
               content: <DesktopMenus />,
             },
-            { id: "our-story", label: NAVBAR_CONTENT.ourStoryLabel },
+            {
+              id: "our-story",
+              label: NAVBAR_CONTENT.ourStoryLabel,
+              href: ROUTES.OUR_STORY,
+            },
             {
               id: NAVBAR_CONTENT.groupsId,
               label: NAVBAR_CONTENT.groupsLabel,
               href: ROUTES.PRIVATE_DINING,
               content: <DesktopGroups />,
             },
-            { id: "whats-on", label: NAVBAR_CONTENT.whatsOnLabel },
+            {
+              id: "whats-on",
+              label: NAVBAR_CONTENT.whatsOnLabel,
+              href: ROUTES.WHATS_ON,
+            },
           ]}
         />
         <NavbarBrand />

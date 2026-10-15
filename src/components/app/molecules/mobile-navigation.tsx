@@ -101,7 +101,7 @@ export function MobileNavigation({
           <div className="flex h-[72px] items-center justify-between gap-2 px-6 shadow-[inset_0_-1px_0_var(--soft-stone)]">
             <NavbarBrand onClick={closeMenu} />
             <div className="flex shrink-0 items-center gap-3">
-              <NavbarBookingButton />
+              <NavbarBookingButton onNavigate={closeMenu} />
               <div ref={closeButtonRef}>
                 <CloseButton
                   onClick={closeMenu}

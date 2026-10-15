@@ -445,6 +445,10 @@ export interface INavbarBrandProps {
   onClick?: () => void;
 }
 
+export interface INavbarBookingButtonProps {
+  onNavigate?: () => void;
+}
+
 export interface INavbarContent {
   navigationLabel: string;
   homeLabel: string;
@@ -981,11 +985,13 @@ export interface IWhatsOnContent {
 export interface IStoryActionProps {
   label: string;
   filled?: boolean;
+  href?: Route;
 }
 
 export interface IEventActionProps {
   label: string;
   mobileLabel?: string;
+  href?: Route;
 }
 
 export interface IEventCardProps {
@@ -1039,4 +1045,114 @@ export interface IPolicyContentsProps {
 
 export interface IPolicyPageProps {
   policy: IPolicyPageContent;
+}
+
+export interface ISeasonalEventCard {
+  title: string;
+  description: string;
+  action: string;
+  image: ISectionImage;
+  href?: Route;
+}
+
+export interface ISeasonalEventContent {
+  title: string;
+  seoDescription: string;
+  hero: {
+    eyebrow: string;
+    heading: string;
+    description: string;
+    image: ISectionImage;
+  };
+  details?: readonly {
+    label: string;
+    description: string;
+    icon: { src: string; width: number; height: number };
+  }[];
+  menu?: {
+    eyebrow: string;
+    heading: string;
+    description: string;
+    cards: readonly ISeasonalEventCard[];
+  };
+  story?: {
+    eyebrow: string;
+    heading: string;
+    paragraphs: readonly string[];
+    image: ISectionImage;
+  };
+  gallery?: {
+    eyebrow: string;
+    heading: string;
+    images: readonly ISectionImage[];
+  };
+  invitation: {
+    heading: string;
+    description: string;
+    bookingAction: string;
+    enquiryAction: string;
+    image: ISectionImage;
+  };
+  related?: {
+    eyebrow: string;
+    cards: readonly ISeasonalEventCard[];
+  };
+}
+
+export interface ISeasonalEventActionProps {
+  label: string;
+  href?: Route;
+}
+
+export interface ISeasonalEventRelatedProps {
+  content: NonNullable<ISeasonalEventContent["related"]>;
+}
+
+export interface ITableBookingGuestDetails {
+  firstName: string;
+  surname: string;
+  email: string;
+  phone: string;
+  requests: string;
+  terms: boolean;
+}
+
+export interface ITableBookingDetailsProps {
+  details: ITableBookingGuestDetails;
+  onChange: (details: ITableBookingGuestDetails) => void;
+  onBack: () => void;
+  onContinue: () => void;
+}
+
+export interface ITableBookingDateProps {
+  value: string;
+  onChange: (value: string) => void;
+}
+
+export interface ITableBookingPartySizeProps {
+  value: string;
+  onChange: (value: string) => void;
+}
+
+export interface ITableBookingSupportProps {
+  confirmation?: boolean;
+}
+
+export interface ITableBookingProgressProps {
+  step: number;
+}
+export interface ITableBookingFieldProps extends ComponentProps<"input"> {
+  label: ReactNode;
+  error?: string;
+}
+
+export interface ITableBookingTimesProps {
+  longDate: string;
+  guests: string;
+  time: string;
+  returnAccepted: boolean;
+  onTimeChange: (time: string) => void;
+  onReturnChange: (accepted: boolean) => void;
+  onBack: () => void;
+  onContinue: () => void;
 }

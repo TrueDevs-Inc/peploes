@@ -1,0 +1,779 @@
+.page :is(h1, h2, h3, dt) {
+  font-family: var(--font-eb-garamond), serif;
+  font-weight: 400;
+}
+
+.page .eyebrow {
+  color: var(--peploe-burgundy);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.ruledEyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ruledEyebrow::before {
+  content: "";
+  width: 48px;
+  height: 2px;
+  flex-shrink: 0;
+  background: currentColor;
+}
+
+.cover {
+  object-fit: cover;
+}
+
+.hero,
+.invitation {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::after,
+.invitation::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hero::after {
+  background: linear-gradient(
+    90deg,
+    rgb(var(--overlay-cream-rgb) / 97%),
+    rgb(var(--overlay-cream-rgb) / 86%)
+  );
+}
+
+.heroImage {
+  object-position: center 59.67%;
+}
+
+.heroCopy,
+.invitationCopy {
+  position: relative;
+  z-index: 1;
+  padding-block: 48px;
+}
+
+.heroCopy {
+  max-width: 671px;
+}
+
+.heroCopy h1 {
+  margin-top: 20px;
+  font-size: clamp(36px, 11vw, 48px);
+  line-height: 1;
+  letter-spacing: -1.5px;
+  white-space: pre-line;
+}
+
+.heroDivider {
+  display: block;
+  width: 58px;
+  height: 1px;
+  margin-block: 16px 17px;
+  background: var(--text-secondary);
+}
+
+.heroCopy > p:last-child {
+  font-size: 18px;
+  line-height: 24px;
+}
+
+.details {
+  padding-block: 32px;
+  background: color-mix(in srgb, var(--peploe-burgundy) 6%, var(--warm-cream));
+}
+
+.detailsList {
+  display: grid;
+  gap: 24px;
+}
+
+.detail {
+  position: relative;
+  padding-left: 70px;
+}
+
+.detailIcon {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.detail dt {
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 24px;
+}
+
+.detail dd {
+  margin-top: 6px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 20px;
+  white-space: pre-line;
+}
+
+.menu,
+.gallery {
+  padding-block: 48px;
+}
+
+.menu h2,
+.gallery h2,
+.story h2 {
+  margin-top: 24px;
+  font-size: 44px;
+  line-height: 46px;
+}
+
+.menuDescription {
+  margin-top: 24px;
+  color: var(--text-secondary);
+  font-size: 18px;
+  line-height: 27px;
+}
+
+.menuCards {
+  display: grid;
+  gap: 28px;
+  margin-top: 32px;
+}
+
+.menuCard {
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--ink) 6.27451%, transparent);
+}
+
+.menuImage {
+  position: relative;
+  height: 208px;
+}
+
+.menuCard:first-child img {
+  object-position: center 67.133%;
+}
+
+.menuCard:nth-child(2) img {
+  object-position: center 32.867%;
+}
+
+.menuCardCopy {
+  padding: 20px 24px 32px;
+}
+
+.menuCard h3 {
+  font-size: 32px;
+  line-height: 34px;
+}
+
+.menuCardCopy > p {
+  margin-top: 8px;
+  color: var(--text-secondary);
+  font-size: 18px;
+  line-height: 26px;
+}
+
+.textAction {
+  justify-content: flex-start;
+  gap: 8px;
+  height: auto;
+  min-height: 44px;
+  margin-top: 12px;
+  padding: 8px 0;
+  border-radius: 0;
+  font-size: 16px;
+  line-height: 24px;
+  white-space: normal;
+  text-align: left;
+}
+
+.story {
+  position: relative;
+  background: var(--button-primary-pressed);
+  color: var(--warm-cream);
+}
+
+.story .eyebrow {
+  color: inherit;
+}
+
+.storyCopy {
+  padding-block: 48px;
+}
+
+.storyParagraph {
+  margin-top: 24px;
+  font-size: 18px;
+  line-height: 27px;
+}
+
+.storyImage {
+  position: relative;
+  height: 340px;
+}
+
+.galleryImages {
+  display: grid;
+  gap: 24px;
+  margin-top: 36px;
+}
+
+.galleryImage {
+  position: relative;
+  aspect-ratio: 416 / 269.674;
+}
+
+.invitation {
+  color: var(--warm-cream);
+  background: var(--ink);
+}
+
+.invitation::after {
+  background: linear-gradient(
+    90deg,
+    rgb(var(--overlay-warm-ink-rgb) / 95%),
+    rgb(var(--overlay-warm-ink-rgb) / 65%)
+  );
+}
+
+.invitationCopy {
+  max-width: 540px;
+}
+
+.invitation h2 {
+  font-size: 44px;
+  line-height: 46px;
+}
+
+.invitationCopy > p {
+  max-width: 430px;
+  margin-top: 28px;
+  font-size: 20px;
+  line-height: 28px;
+}
+
+.invitationActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.invitationActions :is(a, button) {
+  gap: 8px;
+  height: auto;
+  min-height: 48px;
+  padding: 10px 24px;
+  border-radius: 0;
+  font-size: 18px;
+  line-height: 26px;
+  white-space: normal;
+}
+
+.invitationActions button {
+  border-radius: 4px;
+}
+
+.related {
+  padding-block: 24px 38px;
+}
+
+.relatedHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.carouselControls {
+  display: flex;
+  gap: 8px;
+}
+
+.carouselControls button {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  cursor: pointer;
+  transition: color var(--duration-interaction) var(--ease-organic);
+}
+
+.carouselControls button:hover:not(:disabled) {
+  color: var(--peploe-burgundy);
+}
+
+.carouselControls button:disabled {
+  cursor: default;
+}
+
+.relatedCards {
+  display: flex;
+  gap: 40px;
+  overflow-x: auto;
+  margin-top: 12px;
+  padding-block: 4px;
+  scrollbar-width: none;
+  scroll-snap-type: x mandatory;
+}
+
+.relatedCard {
+  display: flex;
+  flex: 0 0 100%;
+  gap: 16px;
+  min-width: 0;
+  scroll-snap-align: start;
+}
+
+.relatedImage {
+  position: relative;
+  width: 112px;
+  min-height: 150px;
+  flex-shrink: 0;
+}
+
+.relatedCopy {
+  min-width: 0;
+}
+
+.relatedCard h3 {
+  font-size: 26px;
+  line-height: 30px;
+}
+
+.relatedCard p {
+  margin-top: 8px;
+  color: var(--text-secondary);
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.relatedCard .textAction {
+  margin-top: 4px;
+}
+
+@media (width < 40rem) {
+  .page .eyebrow {
+    font-size: 12px;
+  }
+
+  .heroCopy {
+    padding-block: 40px;
+  }
+
+  .heroCopy h1 {
+    margin-top: 14px;
+    letter-spacing: -1px;
+  }
+
+  .heroCopy > p:last-child,
+  .menuDescription,
+  .menuCardCopy > p,
+  .storyParagraph,
+  .invitationCopy > p {
+    font-size: 16px;
+    line-height: 24px;
+  }
+
+  .detail {
+    min-height: 40px;
+    padding-left: 60px;
+  }
+
+  .detailIcon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .menu,
+  .gallery,
+  .storyCopy {
+    padding-block: 40px;
+  }
+
+  .menu h2,
+  .gallery h2,
+  .story h2,
+  .invitation h2 {
+    font-size: 42px;
+    line-height: 44px;
+  }
+
+  .menu h2,
+  .gallery h2,
+  .story h2 {
+    margin-top: 14px;
+  }
+
+  .menuDescription,
+  .storyParagraph,
+  .invitationCopy > p {
+    margin-top: 16px;
+  }
+
+  .storyParagraph + .storyParagraph {
+    margin-top: 24px;
+  }
+
+  .menuCards {
+    gap: 24px;
+    margin-top: 28px;
+  }
+
+  .menuImage,
+  .storyImage {
+    height: auto;
+    aspect-ratio: 3 / 2;
+  }
+
+  .menuCardCopy {
+    padding: 20px;
+  }
+
+  .menuCard h3,
+  .relatedCard h3 {
+    font-size: 28px;
+    line-height: 30px;
+  }
+
+  .galleryImages {
+    gap: 16px;
+    margin-top: 28px;
+  }
+
+  .invitationCopy {
+    display: flex;
+    min-height: 440px;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding-block: 128px 40px;
+  }
+
+  .invitationActions {
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 24px;
+  }
+
+  .invitationActions :is(a, button) {
+    width: 100%;
+    min-height: 44px;
+    font-size: 16px;
+    line-height: 22px;
+  }
+
+  .related {
+    padding-block: 28px 40px;
+  }
+
+  .carouselControls {
+    display: none;
+  }
+
+  .relatedCards {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+    overflow: visible;
+    margin-top: 24px;
+    scroll-snap-type: none;
+  }
+
+  .relatedCard {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .relatedImage {
+    width: 100%;
+    min-height: 0;
+    aspect-ratio: 3 / 2;
+  }
+
+  .relatedCopy {
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--soft-stone);
+  }
+
+  .relatedCard .textAction {
+    margin-top: 12px;
+  }
+}
+
+@media (width >= 40rem) {
+  .heroCopy h1 {
+    font-size: 64px;
+    line-height: 64px;
+  }
+
+  .detailsList,
+  .menuCards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .menuCards {
+    gap: 40px;
+  }
+
+  .menu h2,
+  .gallery h2,
+  .story h2 {
+    font-size: 56px;
+    line-height: 58px;
+  }
+
+  .galleryImages {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .relatedCard {
+    flex-basis: calc((100% - 40px) / 2);
+  }
+
+  .relatedImage {
+    width: 140px;
+  }
+}
+
+@media (width >= 64rem) {
+  .hero::after {
+    background: linear-gradient(
+      90deg,
+      rgb(var(--overlay-cream-rgb) / 98.0392%),
+      rgb(var(--overlay-cream-rgb) / 90.9804%) 47.204928%,
+      rgb(var(--overlay-cream-rgb) / 18.0392%) 60.423192%,
+      rgb(var(--overlay-cream-rgb) / 0%) 72%
+    );
+  }
+
+  .heroCopy {
+    min-height: 416px;
+    padding-block: 68px 48px;
+  }
+
+  .heroCopy h1 {
+    margin-top: 14px;
+    font-size: 72px;
+    line-height: 69px;
+  }
+
+  .details {
+    padding-block: 48px;
+  }
+
+  .detailsList {
+    grid-template-columns: 23.668981% 26.060957% 26.060957% 24.209105%;
+    gap: 0;
+  }
+
+  .detail {
+    min-height: 70px;
+    padding-inline: 99px 30px;
+    border-left: 1px solid var(--soft-stone);
+  }
+
+  .detailIcon {
+    left: 29px;
+  }
+
+  .detail:first-child {
+    padding-left: 70px;
+    border-left: 0;
+  }
+
+  .detail:first-child .detailIcon {
+    left: 0;
+  }
+
+  .detail:last-child {
+    padding-right: 0;
+  }
+
+  .menu {
+    padding-block: 66px 28px;
+  }
+
+  .menuContent {
+    max-width: 1296px;
+  }
+
+  .menu h2 {
+    margin-top: 20px;
+    font-size: 64px;
+    line-height: 65px;
+    letter-spacing: -1px;
+  }
+
+  .menuDescription {
+    margin-top: 20px;
+    font-size: 22px;
+    line-height: 31px;
+  }
+
+  .menuCards {
+    margin-top: 48px;
+  }
+
+  .menuCardCopy {
+    min-height: 171px;
+    padding-top: 16px;
+    padding-bottom: 40px;
+  }
+
+  .menuCard h3 {
+    line-height: 32px;
+  }
+
+  .menuCard .textAction {
+    margin-top: 9px;
+  }
+
+  .textAction {
+    min-height: 40px;
+  }
+
+  .story {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 47.777778%;
+    gap: 48px;
+    min-height: 470px;
+  }
+
+  .story .storyContent {
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    margin-inline: 0;
+    padding-left: 24px;
+  }
+
+  .storyCopy {
+    width: 600px;
+    max-width: 100%;
+    padding-block: 54px 48px;
+  }
+
+  .story h2,
+  .gallery h2 {
+    font-size: 72px;
+    line-height: 74px;
+  }
+
+  .story h2 {
+    margin-top: 20px;
+    line-height: 73px;
+    letter-spacing: -1px;
+  }
+
+  .storyParagraph {
+    margin-top: 20px;
+    font-size: 22px;
+    line-height: 31px;
+  }
+
+  .storyParagraph + .storyParagraph {
+    margin-top: 31px;
+  }
+
+  .storyImage {
+    width: auto;
+    height: auto;
+  }
+
+  .gallery h2 {
+    margin-top: 21px;
+  }
+
+  .galleryImages {
+    margin-top: 46px;
+  }
+
+  .invitation::after {
+    background: linear-gradient(
+      90deg,
+      var(--ink),
+      color-mix(in srgb, var(--ink) 80%, transparent) 40.09913%,
+      transparent 77.01389%
+    );
+  }
+
+  .invitationCopy {
+    min-height: 372px;
+    padding-block: 74px 72px;
+  }
+
+  .invitation h2 {
+    font-size: 60px;
+    line-height: 62px;
+  }
+
+  .invitationCopy > p {
+    margin-top: 28px;
+    font-size: 21px;
+    line-height: 30px;
+  }
+
+  .invitationActions {
+    gap: 16px;
+    margin-top: 28px;
+  }
+
+  .invitationActions :is(a, button) {
+    padding-inline: 20px;
+    white-space: nowrap;
+  }
+
+  .related {
+    padding-top: 14px;
+  }
+
+  .relatedCards {
+    margin-top: 12px;
+    padding-block: 4px 0;
+  }
+
+  .invitationActions button {
+    width: 249px;
+  }
+
+  .invitationActions a {
+    width: 206px;
+  }
+
+  .relatedCard {
+    flex-basis: calc((100% - 80px) / 3);
+    gap: 24px;
+  }
+
+  .relatedImage {
+    width: 42.927632%;
+    height: 150px;
+  }
+
+  .relatedCard p {
+    font-size: 18px;
+    line-height: 25px;
+  }
+}
+
+@media (width >= 80rem) {
+  .story .storyContent {
+    padding-left: max(72px, calc((100vw - var(--site-content-max-width)) / 2));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carouselControls button {
+    transition: none;
+  }
+}

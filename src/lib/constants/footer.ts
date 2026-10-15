@@ -15,9 +15,9 @@ export const FOOTER_CONTENT: IFooterContent = {
   exploreHeading: "Explore",
   exploreLinks: [
     { label: "Menus", href: ROUTES.MENUS },
-    { label: "Our Story" },
+    { label: "Our Story", href: ROUTES.OUR_STORY },
     { label: NAVBAR_CONTENT.groupsLabel, href: ROUTES.PRIVATE_DINING },
-    { label: "What’s On" },
+    { label: "What’s On", href: ROUTES.WHATS_ON },
     { label: "The Journal" },
     { label: "Visit & Contact", href: ROUTES.VISIT_CONTACT },
     { label: "Gift Vouchers" },
@@ -65,8 +65,8 @@ export const MOBILE_FOOTER_CONTENT = {
       heading: "Explore",
       links: [
         { label: "Menus", href: ROUTES.MENUS },
-        { label: "Our Story" },
-        { label: "What's On" },
+        { label: "Our Story", href: ROUTES.OUR_STORY },
+        { label: "What's On", href: ROUTES.WHATS_ON },
         { label: "Visit & Contact", href: ROUTES.VISIT_CONTACT },
         { label: "The Journal" },
       ],
