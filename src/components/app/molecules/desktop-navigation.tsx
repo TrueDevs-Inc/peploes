@@ -105,7 +105,7 @@ export function DesktopNavigation({ items }: IDesktopNavigationProps) {
             <DesktopNavigationTrigger
               item={item}
               isOpen={isOpen}
-              isActive={activeNavigationId === id}
+              isActive={activeNavigationId === id || href === pathname}
               isCurrent={href === pathname}
               panelId={panelId}
               onFocus={() =>

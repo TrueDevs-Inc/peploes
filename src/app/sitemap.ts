@@ -7,6 +7,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return [
     ROUTES.HOME,
+    ROUTES.OUR_STORY,
     ROUTES.LUNCH,
     ROUTES.DINNER,
     ROUTES.PRE_THEATRE,

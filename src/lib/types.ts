@@ -980,6 +980,7 @@ export interface IWhatsOnContent {
 export interface IStoryActionProps {
   label: string;
   filled?: boolean;
+  href?: Route;
 }
 
 export interface IEventActionProps {
