@@ -5,23 +5,45 @@ const policies = [
     path: "/privacy-cookies",
     heading: "Your privacy matters.",
     title: "Privacy & Cookies",
+    emailLinkCount: 2,
   },
   {
     path: "/accessibility-policy",
     heading: "A warm welcome for everyone.",
     title: "Accessibility",
+    emailLinkCount: 1,
   },
   {
     path: "/terms-conditions",
     heading: "Our terms and conditions.",
     title: "Terms & Conditions",
+    emailLinkCount: 1,
   },
   {
     path: "/booking-cancellation-terms",
     heading: "Before you book.",
     title: "Booking & Cancellation Terms",
+    emailLinkCount: 2,
   },
 ];
+
+test("policy email links reach the reception address", async ({ page }) => {
+  for (const policy of policies) {
+    await test.step(policy.path, async () => {
+      await page.goto(policy.path);
+      const emailLinks = page.getByRole("main").locator('a[href^="mailto:"]');
+      await expect(emailLinks).toHaveCount(policy.emailLinkCount);
+
+      for (const link of await emailLinks.all()) {
+        await expect(link).toHaveAttribute(
+          "href",
+          "mailto:reception@peploes.ie",
+        );
+        await expect(link).toHaveText(/^reception@peploes\.ie\.?$/);
+      }
+    });
+  }
+});
 
 for (const policy of policies) {
   test(`${policy.path} loads its photograph and fits the viewport`, async ({

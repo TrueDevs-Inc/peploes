@@ -1,4 +1,4 @@
-import { ROUTES } from "@/lib/constants";
+import { RESTAURANT_CONTACT, ROUTES } from "@/lib/constants";
 import type { IPolicyPageContent } from "@/lib/types";
 
 export const POLICY_PAGES = {
@@ -115,8 +115,8 @@ export const POLICY_PAGES = {
             text: "If you have any questions about this policy or how your information is used, please contact us at ",
           },
           {
-            text: "reception@peploes.com",
-            href: "mailto:reception@peploes.com",
+            text: RESTAURANT_CONTACT.email,
+            href: `mailto:${RESTAURANT_CONTACT.email}`,
           },
           {
             text: " or call +353 1 676 3144.",
@@ -345,8 +345,8 @@ export const POLICY_PAGES = {
             text: "Cancellations or amendments should be made by emailing ",
           },
           {
-            text: "reception@peploes.com.",
-            href: "mailto:reception@peploes.com",
+            text: `${RESTAURANT_CONTACT.email}.`,
+            href: `mailto:${RESTAURANT_CONTACT.email}`,
           },
           {
             text: " Please include your booking reference in your email.",
@@ -375,5 +375,5 @@ export const POLICY_HELP = {
     "If you have any questions or need assistance with a booking, please contact our team.",
   phone: "+35316763144",
   phoneLabel: "+353 1 676 3144",
-  email: "reception@peploes.com",
+  email: RESTAURANT_CONTACT.email,
 } as const;
