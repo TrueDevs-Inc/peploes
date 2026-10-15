@@ -404,9 +404,16 @@ Contact Us opens Visit & Contact. Navigation and footer links, plus the homepage
 
 Use the three original Figma photos. The terrace source is only 243×244px;
 it needs an approved larger source for a sharp desktop image. Preserve its
-natural proportions when cropping. No separate mobile frame is supplied, so
-narrow layouts use the existing 24px gutters, readable date columns and wrapped
-buttons. Check the desktop line breaks, image placement, mobile navigation,
+natural proportions when cropping. No separate mobile frame is supplied. Below
+640px, follow the homepage and menu pages: 24px gutters, 48px hero type, 42px
+section headings, 16px body copy and stacked full-width invitation buttons.
+Photo banners use vertical overlays with room above the text; their height grows
+with the content. The diary retains its date column, 1px horizontal row dividers
+and a 1px Soft Stone vertical rule beside each date. Use compact month headings
+and 44px minimum action targets. The terrace photo uses a 3:2 crop.
+The shared invitation follows these phone styles on individual events too;
+tablet and desktop layouts retain their existing sizing. Check the desktop
+line breaks, image placement, mobile navigation,
 image loading and horizontal overflow when changing this page.
 
 ### Individual event template
@@ -427,11 +434,25 @@ the hero uses a uniform cover crop instead of the source design’s slight
 vertical stretch. Two gallery sources are only 243px wide and need approved
 larger originals for sharper desktop rendering.
 
+The Menu & Experience container is capped at 1296px. Its heading is 64px/65px,
+with 20px gaps between the eyebrow, heading and body, then 48px before the cards.
+At the 1440px design width, the story has a 704px content column, a 48px gap and
+a 688px image. Its text block is 600px wide, with 54px top and 48px bottom padding,
+a 72px/73px heading and 22px/31px paragraphs. Both headings use -1px letter spacing.
+Keep desktop type sizes fixed; allow narrower columns to wrap and the section
+to grow beyond its 470px minimum rather than shrinking or clipping the copy.
+
 Make an Inquiry and Contact Us open Visit & Contact. Menu, related-content
 and booking actions remain inactive until their destinations are approved.
-The related row scrolls with touch or its arrow controls on smaller screens.
-No separate mobile design is supplied; use the established 24px gutters,
-stacked sections and readable text. Check the six routes, unknown-route 404,
+At tablet widths, the related row scrolls with touch or its arrow controls.
+No separate mobile design is supplied. Below 640px, use the established 24px
+gutters, 42px/44px section headings, 16px/24px body copy and 12px eyebrows.
+Stack the menu cards, story and gallery; use 3:2 menu and story photos with
+40px section padding. Keep information icons at 40px and invitation buttons
+stacked at full width with at least 44px touch targets. Related cards form a
+single vertical column, with a full-width 3:2 photo above the copy on each
+card and 32px between cards. Hide carousel controls on phones.
+Tablet and desktop sizing stays unchanged. Check the six routes, unknown-route 404,
 image loading, navigation, carousel controls and horizontal overflow when
 changing this template. No CMS integration or Event structured data is added
 for the placeholder programme.

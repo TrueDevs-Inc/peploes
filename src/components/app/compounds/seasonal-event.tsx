@@ -66,7 +66,7 @@ export function SeasonalEvent() {
 
       {menu && (
         <section className={styles.menu} aria-labelledby="event-menu">
-          <div className="site-container">
+          <div className={cn("site-container", styles.menuContent)}>
             <p className={cn(styles.eyebrow, styles.ruledEyebrow)}>
               {menu.eyebrow}
             </p>
@@ -79,7 +79,7 @@ export function SeasonalEvent() {
                     <Image
                       {...card.image}
                       fill
-                      sizes="(min-width: 1584px) 700px, (min-width: 1280px) calc((100vw - 184px) / 2), (min-width: 640px) calc((100vw - 88px) / 2), calc(100vw - 48px)"
+                      sizes="(min-width: 1440px) 628px, (min-width: 1280px) calc((100vw - 184px) / 2), (min-width: 640px) calc((100vw - 88px) / 2), calc(100vw - 48px)"
                       className={styles.cover}
                     />
                   </div>
@@ -97,7 +97,7 @@ export function SeasonalEvent() {
 
       {story && (
         <section className={styles.story} aria-labelledby="event-story">
-          <div className="site-container">
+          <div className={cn("site-container", styles.storyContent)}>
             <div className={styles.storyCopy}>
               <p className={cn(styles.eyebrow, styles.ruledEyebrow)}>
                 {story.eyebrow}

@@ -172,7 +172,7 @@ test("unfinished menu, related and booking actions remain inert placeholders", a
   }
 });
 
-test("related item controls reveal the final card and return to the first on narrow screens", async ({
+test("related items stack on phones and remain navigable on tablets", async ({
   page,
   isMobile,
 }) => {
@@ -196,23 +196,31 @@ test("related item controls reveal the final card and return to the first on nar
     exact: true,
   });
 
-  await related.scrollIntoViewIfNeeded();
-  await expect(previous).toBeDisabled();
-  await expect(first).toBeInViewport();
   if (isMobile) {
-    await expect(next).toBeEnabled();
-    await expect(last).not.toBeInViewport();
-    await next.click();
-    await expect(previous).toBeEnabled();
-    await next.click();
-    await expect(last).toBeInViewport();
-    await expect(next).toBeDisabled();
+    await expect(previous).toBeHidden();
+    await expect(next).toBeHidden();
+    const cards = related.getByRole("listitem");
+    await expect(cards).toHaveCount(3);
+    const bounds = await cards.evaluateAll((elements) =>
+      elements.map((element) => {
+        const { top, bottom, left, width } = element.getBoundingClientRect();
+        return { top, bottom, left, width };
+      }),
+    );
+    for (let index = 1; index < bounds.length; index++) {
+      expect(bounds[index].top).toBeGreaterThan(bounds[index - 1].bottom);
+      expect(bounds[index].left).toBeCloseTo(bounds[0].left, 0);
+      expect(bounds[index].width).toBeCloseTo(bounds[0].width, 0);
+    }
 
-    await previous.click();
-    await previous.click();
-    await expect(first).toBeInViewport();
-    await expect(previous).toBeDisabled();
+    for (const card of await cards.all()) {
+      await card.scrollIntoViewIfNeeded();
+      await expect(card).toBeInViewport();
+    }
   } else {
+    await related.scrollIntoViewIfNeeded();
+    await expect(previous).toBeDisabled();
+    await expect(first).toBeInViewport();
     await expect(last).toBeInViewport();
     await expect(next).toBeDisabled();
 

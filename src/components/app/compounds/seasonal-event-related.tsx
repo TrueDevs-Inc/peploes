@@ -91,7 +91,7 @@ export function SeasonalEventRelated({ content }: ISeasonalEventRelatedProps) {
                 <Image
                   {...card.image}
                   fill
-                  sizes="(min-width: 1024px) 174px, (min-width: 640px) 140px, 112px"
+                  sizes="(min-width: 1024px) 174px, (min-width: 640px) 140px, calc(100vw - 48px)"
                   className={styles.cover}
                 />
               </div>

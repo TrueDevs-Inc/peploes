@@ -362,6 +362,154 @@
   margin-top: 4px;
 }
 
+@media (width < 40rem) {
+  .page .eyebrow {
+    font-size: 12px;
+  }
+
+  .heroCopy {
+    padding-block: 40px;
+  }
+
+  .heroCopy h1 {
+    margin-top: 14px;
+    letter-spacing: -1px;
+  }
+
+  .heroCopy > p:last-child,
+  .menuDescription,
+  .menuCardCopy > p,
+  .storyParagraph,
+  .invitationCopy > p {
+    font-size: 16px;
+    line-height: 24px;
+  }
+
+  .detail {
+    min-height: 40px;
+    padding-left: 60px;
+  }
+
+  .detailIcon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .menu,
+  .gallery,
+  .storyCopy {
+    padding-block: 40px;
+  }
+
+  .menu h2,
+  .gallery h2,
+  .story h2,
+  .invitation h2 {
+    font-size: 42px;
+    line-height: 44px;
+  }
+
+  .menu h2,
+  .gallery h2,
+  .story h2 {
+    margin-top: 14px;
+  }
+
+  .menuDescription,
+  .storyParagraph,
+  .invitationCopy > p {
+    margin-top: 16px;
+  }
+
+  .storyParagraph + .storyParagraph {
+    margin-top: 24px;
+  }
+
+  .menuCards {
+    gap: 24px;
+    margin-top: 28px;
+  }
+
+  .menuImage,
+  .storyImage {
+    height: auto;
+    aspect-ratio: 3 / 2;
+  }
+
+  .menuCardCopy {
+    padding: 20px;
+  }
+
+  .menuCard h3,
+  .relatedCard h3 {
+    font-size: 28px;
+    line-height: 30px;
+  }
+
+  .galleryImages {
+    gap: 16px;
+    margin-top: 28px;
+  }
+
+  .invitationCopy {
+    display: flex;
+    min-height: 440px;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding-block: 128px 40px;
+  }
+
+  .invitationActions {
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 24px;
+  }
+
+  .invitationActions :is(a, button) {
+    width: 100%;
+    min-height: 44px;
+    font-size: 16px;
+    line-height: 22px;
+  }
+
+  .related {
+    padding-block: 28px 40px;
+  }
+
+  .carouselControls {
+    display: none;
+  }
+
+  .relatedCards {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+    overflow: visible;
+    margin-top: 24px;
+    scroll-snap-type: none;
+  }
+
+  .relatedCard {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .relatedImage {
+    width: 100%;
+    min-height: 0;
+    aspect-ratio: 3 / 2;
+  }
+
+  .relatedCopy {
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--soft-stone);
+  }
+
+  .relatedCard .textAction {
+    margin-top: 12px;
+  }
+}
+
 @media (width >= 40rem) {
   .heroCopy h1 {
     font-size: 64px;
@@ -455,10 +603,15 @@
     padding-block: 66px 28px;
   }
 
+  .menuContent {
+    max-width: 1296px;
+  }
+
   .menu h2 {
-    margin-top: 22px;
+    margin-top: 20px;
     font-size: 64px;
-    line-height: 66px;
+    line-height: 65px;
+    letter-spacing: -1px;
   }
 
   .menuDescription {
@@ -468,7 +621,7 @@
   }
 
   .menuCards {
-    margin-top: 45px;
+    margin-top: 48px;
   }
 
   .menuCardCopy {
@@ -489,10 +642,25 @@
     min-height: 40px;
   }
 
-  .storyCopy {
-    width: 46.3%;
+  .story {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 47.777778%;
+    gap: 48px;
     min-height: 470px;
-    padding-block: 54px 64px;
+  }
+
+  .story .storyContent {
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    margin-inline: 0;
+    padding-left: 24px;
+  }
+
+  .storyCopy {
+    width: 600px;
+    max-width: 100%;
+    padding-block: 54px 48px;
   }
 
   .story h2,
@@ -502,7 +670,9 @@
   }
 
   .story h2 {
-    margin-top: 21px;
+    margin-top: 20px;
+    line-height: 73px;
+    letter-spacing: -1px;
   }
 
   .storyParagraph {
@@ -516,9 +686,7 @@
   }
 
   .storyImage {
-    position: absolute;
-    inset: 0 0 0 auto;
-    width: 47.777778%;
+    width: auto;
     height: auto;
   }
 
@@ -595,6 +763,12 @@
   .relatedCard p {
     font-size: 18px;
     line-height: 25px;
+  }
+}
+
+@media (width >= 80rem) {
+  .story .storyContent {
+    padding-left: max(72px, calc((100vw - var(--site-content-max-width)) / 2));
   }
 }
 

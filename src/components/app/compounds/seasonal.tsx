@@ -19,7 +19,7 @@ function SeasonalHero() {
           {...hero.image}
           fill
           preload
-          sizes="(min-width: 1024px) 74vw, 100vw"
+          sizes="(min-width: 1024px) 74vw, (min-width: 640px) 100vw, 130vw"
           className={styles.cover}
         />
       </div>
@@ -127,7 +127,7 @@ export function SeasonalJoin() {
         <Image
           {...join.image}
           fill
-          sizes="(min-width: 1024px) 141vw, 100vw"
+          sizes="(min-width: 1024px) 141vw, (min-width: 640px) 100vw, 150vw"
           className={styles.cover}
         />
       </div>
