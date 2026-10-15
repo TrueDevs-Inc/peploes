@@ -6,6 +6,37 @@ content contract are documented in [Menu pages](menus.md).
 Dedicated occasion pages, their Figma references and enquiry preview are
 documented in [Private dining and events](private-dining.md).
 
+## Book a Table design preview
+
+The /book-a-table page follows the desktop and mobile booking frames in Figma.
+Its four steps run in browser memory: choose a date and party size, select a
+sample time, enter guest details, and view the confirmation layout. The page
+stays noindex. A visible notice identifies the flow as a design preview.
+
+The booking layout and colours retain the Figma structure. Its controls and
+typography use the site's smaller scale: desktop actions are 48px tall with
+16px text, time choices use 18px text, and flow headings are 36px. Keep the
+existing card width, column counts and responsive arrangement. Let each step
+fit its content instead of retaining the design artboard's fixed minimum height.
+
+This preview does not query ResDiary, create reservations, send email, store
+guest details, or export calendar entries. The confirmation explicitly says no
+reservation was made. Refreshing the page resets the preview. Menu, Visit &
+Contact, telephone and email links use the existing destinations.
+
+The available-times frame includes the two-hour return-time acknowledgement for
+the sample 7pm slot. Changing the date or party size clears the previous time
+selection. Guest fields validate before advancing; back navigation preserves
+the entered details. Desktop uses separate first-name and surname inputs, while
+mobile displays the same name in one field. Booking terms remain placeholder
+copy until the restaurant supplies the final terms and ResDiary is integrated.
+
+Verify the forward and back journey, invalid guest details, contact destinations,
+image loading and overflow at 1440px, 390px and 320px. Every Book a Table link,
+including the homepage hero and closing banner, menu banners, and Visit &
+Contact buttons, opens `/book-a-table`. Visit's Check Online Availability action
+opens the same preview. Group enquiry links keep their existing destinations.
+
 ## Visit & Contact
 
 `/visit-contact` follows the Final Pages Visit & Contact frame (`3602:4457`).
@@ -34,7 +65,7 @@ There is no separate mobile Visit & Contact frame. Smaller layouts retain
 24px gutters, stack the content and actions, and allow text to increase section
 heights. Phone, email, directions and private dining links are active. The map
 is a local image linking to directions, so it does not load a third-party embed.
-Booking controls retain the existing inert preview until ResDiary is connected.
+Booking controls open the [Book a Table design preview](#book-a-table-design-preview).
 Navigation and footer links point to this page; opening-hours and location links
 use its `#opening-hours` and `#find-us` anchors.
 Direct anchor links recover a missed initial browser scroll after the document
@@ -157,12 +188,13 @@ happen.” heading and omits the art description.
 The closing booking heading is upright on mobile and retains its desktop italic.
 
 Compare section positions, line breaks, crops and overlays at 390px, then check
-narrow phones, tablet and desktop for overflow. Keep the existing inactive
-actions, inactive newsletter subscription and active telephone and email links.
+narrow phones, tablet and desktop for overflow. Book a Table opens its design
+preview. Keep the remaining inactive actions, inactive newsletter subscription
+and active telephone and email links.
 
 ## Homepage interaction previews
 
-Placeholder actions use inert `type="button"` controls with `aria-disabled="true"`
+Remaining placeholder actions use inert `type="button"` controls with `aria-disabled="true"`
 and no click handlers. They remain focusable and show the Figma hover styles
 without navigating, booking or submitting. The newsletter email input accepts
 typing and keyboard focus, but does not send or store the entered address.
@@ -223,8 +255,8 @@ Book button. The full-screen menu expands Menus and Groups & Occasions inline,
 then shows Gift Vouchers, opening hours, address, telephone, email and the
 People make Peploe's brand line. Preserve the 44px minimum control targets.
 
-Page links, booking and Gift Vouchers remain inactive placeholders until their
-journeys are built. Home, telephone and email links work. Keep modal focus
+Unbuilt page links and Gift Vouchers remain inactive placeholders. Book opens
+the booking design preview; Home, telephone and email links work. Keep modal focus
 containment and restoration, Escape and close-button dismissal, scroll locking
 and automatic dismissal at the desktop breakpoint. Verify both accordion
 groups, narrow screens, short viewports, enlarged text and overflow with the
@@ -255,7 +287,8 @@ phone and email targets, keyboard focus, 200% zoom and horizontal overflow.
 
 The homepage hero follows the Final Pages hero and entrance group (`3131:11100`).
 The desktop photo panel is 780px tall with EB Garamond headings and DM Sans
-supporting copy. Booking and telephone buttons remain placeholders.
+supporting copy. Book a Table opens the booking design preview; the telephone
+button remains a placeholder.
 On phones, the panel is 660px tall with 48px headings and stacked full-width
 buttons. The 520px entrance photograph has a separate 74px caption below it.
 
@@ -414,11 +447,11 @@ the banner is 318px tall with 72px vertical padding.
 On narrow screens the text wraps, margins reduce and the illustration fades
 to keep the copy readable.
 
-Book a Table remains an inactive placeholder, consistent with the existing
-booking controls. The nearby Booking fallback note (`3131:11704`) requires
+Book a Table opens the [booking design preview](#book-a-table-design-preview).
+The nearby Booking fallback note (`3131:11704`) requires
 working phone and email options when online availability is missing. The
 footer retains those active links; ResDiary integration remains future work.
 
 When changing the banner, compare the italic text, botanical crop, background,
 spacing and button with Figma. Check artwork and font loading, narrow-screen
-wrapping, horizontal overflow and the inactive booking action.
+wrapping, horizontal overflow and navigation to the booking preview.

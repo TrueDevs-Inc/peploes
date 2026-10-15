@@ -7,8 +7,8 @@ navigation. Each page supplies its closing photograph and copy. The site header
 and footer remain shared with the homepage. The footer's menu variant follows
 the menu frames' spacing and mobile section order; homepage styling is unchanged.
 The Group Set Menu enquiry action opens the private-dining enquiry section.
-Booking actions and enquiry submission remain inactive until their integrations
-exist.
+Book a Table actions open the [booking design preview](brief.md#book-a-table-design-preview).
+Enquiry submission remains inactive until its integration exists.
 
 ## Design and approved comments
 

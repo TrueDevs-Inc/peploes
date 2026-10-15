@@ -1,8 +1,9 @@
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { BOOKING_BANNER_CONTENT } from "@/lib/constants";
+import { BOOKING_BANNER_CONTENT, ROUTES } from "@/lib/constants";
 import { dmSans, ebGaramond, ebGaramondItalic } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
 
@@ -51,13 +52,14 @@ export function BookingBanner() {
           </div>
 
           <Button
-            type="button"
+            asChild
             variant="brand-primary-inverse"
-            aria-disabled="true"
             className="h-11 w-full rounded-[4px] bg-warm-cream px-5 has-[>svg]:px-5 text-base leading-[22px] font-medium text-peploe-burgundy shadow-none sm:w-[156px]"
           >
-            {BOOKING_BANNER_CONTENT.ctaLabel}
-            <ArrowRight aria-hidden="true" className="size-4" />
+            <Link href={ROUTES.BOOK_A_TABLE}>
+              {BOOKING_BANNER_CONTENT.ctaLabel}
+              <ArrowRight aria-hidden="true" className="size-4" />
+            </Link>
           </Button>
         </div>
       </div>

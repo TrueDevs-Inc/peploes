@@ -1,3 +1,4 @@
+import { ROUTES } from "@/lib/constants";
 import type { IDrinksMenuContent } from "@/lib/types";
 
 export const COCKTAILS_MENU: IDrinksMenuContent = {
@@ -456,6 +457,7 @@ export const COCKTAILS_MENU: IDrinksMenuContent = {
     tallOnMobile: true,
     heading: "Classic cocktails, timeless company",
     label: "Book a Table",
+    href: ROUTES.BOOK_A_TABLE,
     image: {
       src: "/peploes-cocktail-menu-booking.webp",
       desktopPosition: "50% 79.3%",

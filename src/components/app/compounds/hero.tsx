@@ -1,10 +1,11 @@
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 import { Reveal } from "@/components/app/atoms/scroll-reveal";
 import styles from "@/components/app/compounds/hero.module.css";
 import { Button } from "@/components/ui/button";
-import { MOBILE_HOME_CONTENT } from "@/lib/constants";
+import { MOBILE_HOME_CONTENT, ROUTES } from "@/lib/constants";
 import { HERO_CONTENT } from "@/lib/constants/hero";
 import { dmSans, ebGaramond } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
@@ -59,13 +60,14 @@ export function Hero() {
 
           <div className="flex flex-col items-center gap-2.5 sm:flex-row sm:flex-wrap sm:gap-4">
             <Button
-              type="button"
+              asChild
               variant="brand-primary"
-              aria-disabled="true"
               className="h-11 w-full gap-2 rounded-[4px] bg-peploe-burgundy px-5 has-[>svg]:px-5 text-base leading-[22px] font-medium text-warm-cream shadow-none sm:w-[156px]"
             >
-              {HERO_CONTENT.bookingLabel}
-              <ArrowRight aria-hidden="true" className="size-4" />
+              <Link href={ROUTES.BOOK_A_TABLE}>
+                {HERO_CONTENT.bookingLabel}
+                <ArrowRight aria-hidden="true" className="size-4" />
+              </Link>
             </Button>
             <Button
               type="button"
