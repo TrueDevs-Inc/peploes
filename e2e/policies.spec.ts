@@ -151,7 +151,24 @@ test("all four policies share the responsive contents and reading layout", async
           headingBounds.y + headingBounds.height,
         );
       }
-      expect(bodyBounds.x).toBeCloseTo(headingBounds.x, 0);
+      expect(bodyBounds.x).toBeCloseTo(
+        isMobile ? sectionBounds.x : headingBounds.x,
+        0,
+      );
+      if (isMobile) {
+        expect(bodyBounds.width).toBeCloseTo(sectionBounds.width, 0);
+        const toggle = contents.getByRole("button", {
+          name: "On this page",
+          exact: true,
+        });
+        await expect(toggle).toHaveAttribute("aria-expanded", "false");
+        await expect(contents.getByRole("link").first()).toBeHidden();
+        await toggle.click();
+        await expect(toggle).toHaveAttribute("aria-expanded", "true");
+        await expect(contents.getByRole("link").first()).toBeVisible();
+        await toggle.click();
+        await expect(contents.getByRole("link").first()).toBeHidden();
+      }
       expect(bodyBounds.y).toBeGreaterThanOrEqual(
         headingBounds.y + headingBounds.height,
       );
@@ -249,12 +266,22 @@ for (const destination of [
 ]) {
   test(`${destination.path} contents links work by keyboard and clear the sticky header`, async ({
     page,
+    isMobile,
   }) => {
     await page.goto(destination.path);
     const contents = page.getByRole("navigation", {
       name: "On this page",
       exact: true,
     });
+    if (isMobile) {
+      const toggle = contents.getByRole("button", {
+        name: "On this page",
+        exact: true,
+      });
+      await toggle.focus();
+      await page.keyboard.press("Enter");
+      await expect(toggle).toHaveAttribute("aria-expanded", "true");
+    }
     const link = contents.getByRole("link", {
       name: new RegExp(destination.heading),
     });

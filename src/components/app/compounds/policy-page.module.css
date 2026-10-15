@@ -9,6 +9,7 @@
 }
 
 .page a:focus-visible,
+.page button:focus-visible,
 .policySection:focus-visible {
   outline: 2px solid var(--peploe-burgundy);
   outline-offset: 4px;
@@ -96,35 +97,6 @@
 
 .content {
   padding-block: 24px 32px;
-}
-
-.contents {
-  margin-bottom: 16px;
-}
-
-.contents h2 {
-  border-bottom: 1px solid var(--soft-stone);
-  padding-bottom: 16px;
-  font-size: 24px;
-  font-weight: 500;
-  line-height: 32px;
-}
-
-.contents ol {
-  display: grid;
-  margin-top: 8px;
-}
-
-.contents a {
-  display: grid;
-  grid-template-columns: 24px minmax(0, 1fr);
-  align-items: start;
-  gap: 16px;
-  min-height: 44px;
-  padding-block: 10px;
-  color: var(--text-secondary);
-  font-size: 16px;
-  line-height: 24px;
 }
 
 .contentsNumber {
@@ -222,9 +194,101 @@
   color: var(--peploe-burgundy);
 }
 
+@media (width < 80rem) {
+  .eyebrow {
+    color: var(--peploe-burgundy);
+    font-size: 12px;
+    line-height: 18px;
+  }
+
+  .page h1 {
+    margin-top: 16px;
+    font-size: clamp(40px, 11.8vw, 46px);
+    font-weight: 400;
+    line-height: 1.08;
+    white-space: normal;
+    text-wrap: balance;
+  }
+
+  .description,
+  .sectionCopy,
+  .helpDetails {
+    line-height: 26px;
+  }
+
+  .heroImage {
+    width: 100%;
+    min-height: 200px;
+  }
+
+  .policySection {
+    grid-template-columns: 28px minmax(0, 1fr);
+    column-gap: 12px;
+    row-gap: 16px;
+  }
+
+  .number {
+    font-size: 24px;
+    line-height: 32px;
+  }
+
+  .policySection h2 {
+    line-height: 32px;
+  }
+
+  .sectionCopy {
+    grid-column: 1 / -1;
+  }
+
+  .sectionCopy ul {
+    margin-top: 12px;
+    padding-left: 20px;
+  }
+
+  .sectionCopy li + li {
+    margin-top: 6px;
+  }
+
+  .helpContainer {
+    gap: 16px;
+  }
+
+  .help h2 {
+    font-size: 32px;
+    line-height: 38px;
+  }
+
+  .contactActions {
+    display: grid;
+    gap: 8px;
+    margin-top: 20px;
+  }
+
+  .contactActions a {
+    justify-content: center;
+    min-height: 48px;
+    padding: 10px 12px;
+    border: 1px solid
+      color-mix(in srgb, var(--peploe-burgundy) 30%, transparent);
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    overflow-wrap: anywhere;
+  }
+
+  .contactActions a:hover {
+    background: var(--warm-cream);
+  }
+}
+
 @media (width >= 48rem) and (width < 80rem) {
   .heroCopy {
     max-width: 620px;
+  }
+
+  .content,
+  .helpContainer {
+    max-width: 720px;
   }
 
   .heroImage {
@@ -280,27 +344,6 @@
     grid-template-columns: 312px minmax(0, 1fr);
     gap: 48px;
     padding-block: 8px 0;
-  }
-
-  .contents {
-    margin: 0;
-    padding-top: 24px;
-    padding-right: 40px;
-    border-right: 1px solid var(--soft-stone);
-  }
-
-  .contents h2 {
-    width: 272px;
-    padding-bottom: 12px;
-    line-height: 32px;
-  }
-
-  .contents ol {
-    margin-top: 10px;
-  }
-
-  .contents a {
-    padding-block: 8px 16px;
   }
 
   .sections {

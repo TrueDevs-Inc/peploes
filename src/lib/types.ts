@@ -1033,6 +1033,10 @@ export interface IPolicyPageContent {
   sections: readonly IPolicySection[];
 }
 
+export interface IPolicyContentsProps {
+  children: ReactNode;
+}
+
 export interface IPolicyPageProps {
   policy: IPolicyPageContent;
 }

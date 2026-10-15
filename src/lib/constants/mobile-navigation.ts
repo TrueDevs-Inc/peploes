@@ -26,11 +26,13 @@ export const MOBILE_NAVIGATION_CONTENT = {
     {
       id: "groups-occasions",
       label: NAVBAR_CONTENT.groupsLabel,
-      href: ROUTES.PRIVATE_DINING,
-      children: GROUPS_SHELF_CONTENT.destinations.map(({ label, href }) => ({
-        label,
-        href,
-      })),
+      children: [
+        { label: "Overview", href: ROUTES.PRIVATE_DINING },
+        ...GROUPS_SHELF_CONTENT.destinations.map(({ label, href }) => ({
+          label,
+          href,
+        })),
+      ],
     },
     { id: "whats-on", label: NAVBAR_CONTENT.whatsOnLabel },
     {

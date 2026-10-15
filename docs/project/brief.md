@@ -207,7 +207,7 @@ from Figma. Destination titles turn burgundy with a 32px underline on hover;
 retain visible keyboard focus and the shared reduced-motion-aware duration.
 The destinations now open their dedicated pages. Clicking Private Dining & Events
 opens the overview; hover and Arrow Down still open the shelf. On mobile, the
-label is an overview link with a separate submenu toggle. See
+entire row toggles the submenu like Menus; its first link opens the overview. See
 [Private dining and events](private-dining.md) for the shared page sections.
 
 Both desktop shelves share one open state so switching triggers replaces the
@@ -252,6 +252,10 @@ The desktop reading column stays within the template's 936px section width,
 leaving 824px for copy after the number column and gap. Section headings use
 32px type with 38px line-height and an 8px gap above body copy; section dividers
 use the 1px soft-stone token. Paragraphs wrap naturally without forced breaks.
+On mobile, the contents navigation is expandable, numbered headings sit above
+full-width paragraphs, and contact links stack as outlined touch targets. The
+24px side gutters and existing fonts match the other mobile pages. Tablet
+reading content is capped at 720px; the desktop template remains unchanged.
 Only policy content, metadata and photograph crops vary, with local content in
 `src/lib/constants/policies.ts`. Existing policy URLs are preserved; unknown
 slugs return 404. Other navigation and social

@@ -2,7 +2,8 @@ import Image from "next/image";
 import { Fragment } from "react";
 
 import styles from "@/components/app/compounds/policy-page.module.css";
-import { POLICY_CONTENTS_LABEL, POLICY_HELP } from "@/lib/constants/policies";
+import { PolicyContents } from "@/components/app/molecules/policy-contents";
+import { POLICY_HELP } from "@/lib/constants/policies";
 import { dmSans, ebGaramond } from "@/lib/fonts";
 import type { IPolicyPageProps } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -35,8 +36,7 @@ export function PolicyPage({ policy }: IPolicyPageProps) {
       </section>
 
       <div data-policy-content className={cn("site-container", styles.content)}>
-        <nav className={styles.contents} aria-label={POLICY_CONTENTS_LABEL}>
-          <h2>{POLICY_CONTENTS_LABEL}</h2>
+        <PolicyContents key={policy.path}>
           <ol>
             {policy.sections.map((section, index) => (
               <li key={section._key}>
@@ -49,7 +49,7 @@ export function PolicyPage({ policy }: IPolicyPageProps) {
               </li>
             ))}
           </ol>
-        </nav>
+        </PolicyContents>
         <div className={styles.sections}>
           {policy.sections.map((section, index) => (
             <section
