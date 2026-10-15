@@ -16,7 +16,6 @@ export const POLICY_PAGES = {
       src: "/peploes-group-menu-booking.webp",
       alt: "A member of the Peploe’s team in the restaurant.",
     },
-    showContents: true,
     sections: [
       {
         _key: "information-we-collect",
@@ -140,7 +139,6 @@ export const POLICY_PAGES = {
       src: "/peploes-entrance-backdrop.png",
       alt: "Guests dining in Peploe’s, reflected in a mirror.",
     },
-    showContents: false,
     sections: [
       {
         _key: "our-commitment",
@@ -212,7 +210,6 @@ export const POLICY_PAGES = {
       src: "/peploes-entrance-mobile.jpg",
       alt: "The ivy-covered entrance to Peploe’s on St Stephen’s Green.",
     },
-    showContents: true,
     sections: [
       {
         _key: "website-use",
@@ -303,7 +300,6 @@ export const POLICY_PAGES = {
       src: "/images/policies/booking-cancellation.webp",
       alt: "Tables set with white linen and red flowers at Peploe’s.",
     },
-    showContents: false,
     sections: [
       {
         _key: "card-guarantee",

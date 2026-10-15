@@ -12,12 +12,7 @@ export function PolicyPage({ policy }: IPolicyPageProps) {
     <main
       aria-labelledby="policy-title"
       data-policy={policy.variant}
-      className={cn(
-        dmSans.className,
-        ebGaramond.variable,
-        styles.page,
-        styles[policy.variant],
-      )}
+      className={cn(dmSans.className, ebGaramond.variable, styles.page)}
     >
       <section className={styles.hero} aria-labelledby="policy-title">
         <div className={cn("site-container", styles.heroContainer)}>
@@ -28,7 +23,7 @@ export function PolicyPage({ policy }: IPolicyPageProps) {
           </div>
         </div>
         <div className={styles.heroImage}>
-          <div className={styles.photoBounds}>
+          <div className={cn(styles.photoBounds, styles[policy.variant])}>
             <Image
               {...policy.image}
               fill
@@ -39,31 +34,22 @@ export function PolicyPage({ policy }: IPolicyPageProps) {
         </div>
       </section>
 
-      <div
-        data-policy-content
-        className={cn(
-          "site-container",
-          styles.content,
-          policy.showContents && styles.withContents,
-        )}
-      >
-        {policy.showContents && (
-          <nav className={styles.contents} aria-label={POLICY_CONTENTS_LABEL}>
-            <h2>{POLICY_CONTENTS_LABEL}</h2>
-            <ol>
-              {policy.sections.map((section, index) => (
-                <li key={section._key}>
-                  <a href={`#${section._key}`}>
-                    <span className={styles.contentsNumber}>
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                    <span>{section.heading}</span>
-                  </a>
-                </li>
-              ))}
-            </ol>
-          </nav>
-        )}
+      <div data-policy-content className={cn("site-container", styles.content)}>
+        <nav className={styles.contents} aria-label={POLICY_CONTENTS_LABEL}>
+          <h2>{POLICY_CONTENTS_LABEL}</h2>
+          <ol>
+            {policy.sections.map((section, index) => (
+              <li key={section._key}>
+                <a href={`#${section._key}`}>
+                  <span className={styles.contentsNumber}>
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <span>{section.heading}</span>
+                </a>
+              </li>
+            ))}
+          </ol>
+        </nav>
         <div className={styles.sections}>
           {policy.sections.map((section, index) => (
             <section

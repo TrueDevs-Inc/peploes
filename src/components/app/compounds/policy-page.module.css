@@ -3,7 +3,7 @@
   background: var(--warm-cream);
 }
 
-.page :is(h1, h2, .number) {
+.page :where(h1, h2, .number) {
   font-family: var(--font-eb-garamond), serif;
   font-weight: 400;
 }
@@ -64,28 +64,32 @@
   width: 100%;
 }
 
-.privacy .photoBounds {
+.photoBounds.privacy {
   aspect-ratio: 3 / 4;
   transform: translate(0.0612%, -40.8045%);
 }
 
-.accessibility .photoBounds {
+.photoBounds.accessibility {
   width: 115.5172%;
   aspect-ratio: 3 / 2;
   transform: translate(-6.7164%, -15.1343%);
 }
 
-.terms .photoBounds {
+.photoBounds.terms {
   aspect-ratio: 4000 / 2667;
+  min-height: calc(100% / 0.839052);
   transform: translateY(-16.0948%);
 }
 
-.booking .photoBounds {
+.photoBounds.terms img {
+  object-fit: cover;
+}
+
+.photoBounds.booking {
   aspect-ratio: 695 / 800;
   transform: translateY(-41.83125%);
 }
 
-.booking .eyebrow,
 .help .eyebrow {
   color: var(--peploe-burgundy);
 }
@@ -235,14 +239,6 @@
     overflow: hidden;
   }
 
-  .privacy .hero {
-    height: 360px;
-  }
-
-  .booking .hero {
-    height: 286px;
-  }
-
   .heroContainer {
     position: relative;
     z-index: 1;
@@ -259,26 +255,9 @@
     line-height: 82px;
   }
 
-  .privacy h1 {
-    font-size: 54px;
-    line-height: 60px;
-  }
-
-  .booking h1 {
-    margin-top: 16px;
-  }
-
-  .booking .heroCopy {
-    width: 660px;
-  }
-
   .description {
     font-size: 18px;
     line-height: 28px;
-  }
-
-  .privacy .description {
-    margin-top: 20px;
   }
 
   .heroImage {
@@ -286,18 +265,6 @@
     inset: 0 0 0 50%;
     height: auto;
     aspect-ratio: auto;
-  }
-
-  .privacy .heroImage {
-    left: calc(50% - 40px);
-  }
-
-  .accessibility .heroImage {
-    left: calc(50% + 24px);
-  }
-
-  .booking .heroImage {
-    left: calc(50% + 25px);
   }
 
   .heroImage::after {
@@ -308,46 +275,17 @@
     background: linear-gradient(to right, var(--warm-cream), transparent);
   }
 
-  .privacy .heroImage::after {
-    width: 360px;
-  }
-
-  .booking .heroImage::after {
-    width: 180px;
-  }
-
-  .accessibility .heroImage::after {
-    content: none;
-  }
-
   .content {
-    padding-block: 0;
-  }
-
-  .withContents {
     display: grid;
-    grid-template-columns: 320px minmax(0, 1fr);
-    gap: 56px;
-  }
-
-  .privacy .content {
-    padding-bottom: 32px;
-  }
-
-  .terms .content {
     grid-template-columns: 312px minmax(0, 1fr);
     gap: 48px;
-    padding-top: 8px;
-  }
-
-  .accessibility .content {
-    padding-block: 24px 16px;
+    padding-block: 8px 0;
   }
 
   .contents {
     margin: 0;
-    padding-top: 20px;
-    padding-right: 48px;
+    padding-top: 24px;
+    padding-right: 40px;
     border-right: 1px solid var(--soft-stone);
   }
 
@@ -357,36 +295,42 @@
     line-height: 32px;
   }
 
-  .terms .contents {
-    padding-top: 24px;
-    padding-right: 40px;
-  }
-
-  .terms .contents h2 {
-    padding-bottom: 12px;
-  }
-
   .contents ol {
     margin-top: 10px;
   }
 
   .contents a {
-    padding-block: 8px 14px;
-  }
-
-  .terms .contents ol {
-    margin-top: 10px;
-  }
-
-  .terms .contents a {
     padding-block: 8px 16px;
   }
 
+  .sections {
+    min-width: 0;
+    max-width: 936px;
+  }
+
   .policySection {
-    grid-template-columns: 88px minmax(0, 1fr);
-    column-gap: 28px;
+    position: relative;
+    grid-template-columns: 80px minmax(0, 1fr);
+    column-gap: 32px;
     row-gap: 8px;
-    padding-block: 18px;
+    padding-block: 20px 22px;
+  }
+
+  .policySection:not(:first-child) {
+    padding-top: 21px;
+  }
+
+  /* Figma uses a filled rule; borders round down at fractional browser scaling. */
+  .policySection:not(:first-child)::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 1px;
+    background: var(--soft-stone);
+  }
+
+  .policySection:not(:last-child) {
+    box-shadow: none;
   }
 
   .number {
@@ -396,59 +340,7 @@
   .policySection h2,
   .number {
     font-size: 32px;
-    line-height: 36px;
-  }
-
-  .terms .policySection {
-    grid-template-columns: 80px minmax(0, 1fr);
-    column-gap: 32px;
-    padding-block: 20px 22px;
-    row-gap: 10px;
-  }
-
-  .terms .policySection:not(:first-child) {
-    border-top: 1px solid var(--soft-stone);
-  }
-
-  .terms .policySection:not(:last-child) {
-    box-shadow: none;
-  }
-
-  .terms .policySection h2,
-  .terms .number {
-    line-height: 36px;
-  }
-
-  :is(.accessibility, .booking) .policySection {
-    grid-template-columns: 96px 408px minmax(0, 1fr);
-    column-gap: 32px;
-    row-gap: 0;
-    padding-block: 36px;
-    min-height: 128px;
-  }
-
-  :is(.accessibility, .booking) .number {
-    grid-row: auto;
-    font-size: 42px;
-    line-height: 48px;
-  }
-
-  :is(.accessibility, .booking) .policySection h2 {
-    line-height: 36px;
-  }
-
-  :is(.accessibility, .booking) .sectionCopy {
-    grid-column: 3;
-  }
-
-  .accessibility .sectionCopy {
-    font-size: 18px;
-    line-height: 28px;
-  }
-
-  .booking .policySection {
-    grid-template-columns: 104px 400px minmax(0, 1fr);
-    padding-block: 48px;
+    line-height: 38px;
   }
 
   .helpContainer {

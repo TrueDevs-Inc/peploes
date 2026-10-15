@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-for (const policy of [
+const policies = [
   {
     path: "/privacy-cookies",
     heading: "Your privacy matters.",
@@ -21,7 +21,9 @@ for (const policy of [
     heading: "Before you book.",
     title: "Booking & Cancellation Terms",
   },
-]) {
+];
+
+for (const policy of policies) {
   test(`${policy.path} loads its photograph and fits the viewport`, async ({
     page,
     isMobile,
@@ -72,6 +74,13 @@ for (const policy of [
           };
         });
         expect(bounds.width).toBeCloseTo(1440, 0);
+        const paragraphBounds = await main
+          .locator("[data-policy-content]")
+          .getByRole("paragraph")
+          .first()
+          .boundingBox();
+        if (!paragraphBounds) throw new Error("Policy text is missing");
+        expect(paragraphBounds.width).toBeCloseTo(824, 0);
         expect(bounds.x).toBeCloseTo(
           viewport.contentLeft + (viewport.contentWidth - bounds.width) / 2,
           0,
@@ -83,6 +92,74 @@ for (const policy of [
     }
   });
 }
+
+test("all four policies share the responsive contents and reading layout", async ({
+  page,
+  isMobile,
+}) => {
+  const headingStyles: string[] = [];
+
+  for (const policy of policies) {
+    await test.step(policy.title, async () => {
+      await page.goto(policy.path);
+      await page.evaluate(async () => {
+        await document.fonts.ready;
+      });
+      const main = page.getByRole("main");
+      headingStyles.push(
+        await main.getByRole("heading", { level: 1 }).evaluate((element) => {
+          const style = getComputedStyle(element);
+          return [
+            style.fontFamily,
+            style.fontSize,
+            style.fontWeight,
+            style.lineHeight,
+          ].join("|");
+        }),
+      );
+      const contents = main.getByRole("navigation", {
+        name: "On this page",
+        exact: true,
+      });
+      await expect(contents).toBeVisible();
+      const firstSection = main
+        .locator("[data-policy-content]")
+        .getByRole("region")
+        .first();
+      const [contentsBounds, sectionBounds, headingBounds, bodyBounds] =
+        await Promise.all([
+          contents.boundingBox(),
+          firstSection.boundingBox(),
+          firstSection.getByRole("heading", { level: 2 }).boundingBox(),
+          firstSection.getByRole("paragraph").first().boundingBox(),
+        ]);
+      if (!contentsBounds || !sectionBounds || !headingBounds || !bodyBounds) {
+        throw new Error(
+          `${policy.title} is missing its contents or first section`,
+        );
+      }
+
+      if (isMobile) {
+        expect(contentsBounds.y + contentsBounds.height).toBeLessThanOrEqual(
+          sectionBounds.y,
+        );
+      } else {
+        expect(contentsBounds.x + contentsBounds.width).toBeLessThanOrEqual(
+          sectionBounds.x,
+        );
+        expect(contentsBounds.y).toBeLessThan(
+          headingBounds.y + headingBounds.height,
+        );
+      }
+      expect(bodyBounds.x).toBeCloseTo(headingBounds.x, 0);
+      expect(bodyBounds.y).toBeGreaterThanOrEqual(
+        headingBounds.y + headingBounds.height,
+      );
+    });
+  }
+
+  expect(new Set(headingStyles).size).toBe(1);
+});
 
 test("footer legal links open all four policies", async ({
   page,
@@ -158,6 +235,16 @@ for (const destination of [
     path: "/terms-conditions",
     id: "gift-vouchers",
     heading: "Gift vouchers",
+  },
+  {
+    path: "/accessibility-policy",
+    id: "visiting-the-restaurant",
+    heading: "Visiting the restaurant",
+  },
+  {
+    path: "/booking-cancellation-terms",
+    id: "cancellations",
+    heading: "Cancellations",
   },
 ]) {
   test(`${destination.path} contents links work by keyboard and clear the sticky header`, async ({

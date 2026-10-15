@@ -1030,7 +1030,6 @@ export interface IPolicyPageContent {
   heading: string;
   description: string;
   image: ISectionImage;
-  showContents?: boolean;
   sections: readonly IPolicySection[];
 }
 
