@@ -9,6 +9,17 @@ import type { ROUTES } from "@/lib/constants";
 import type { buttonVariants } from "@/lib/constants/button";
 import type { ErrorCode, HttpVerb, LogLevel } from "@/lib/enums";
 import type { createExampleSchema } from "@/lib/examples-schema";
+import type { createResDiaryProvider } from "@/lib/resdiary-provider";
+import type {
+  bookingReplySchema,
+  dateRangeReplySchema,
+  guestReplySchema,
+  holdReplySchema,
+  holdStatusReplySchema,
+  setupReplySchema,
+  signInReplySchema,
+  timeSearchReplySchema,
+} from "@/lib/resdiary-schema";
 
 // ─── Core Framework Types ─────────────────────────────────────────────────
 
@@ -305,6 +316,274 @@ export interface ILoggerConfig {
   message: string;
   metadata?: Record<string, unknown>;
 }
+
+// ─── ResDiary ─────────────────────────────────────────────────────────────
+
+export type TResDiaryOperation =
+  | "getRules"
+  | "getAvailableDates"
+  | "searchTimes"
+  | "createHold"
+  | "submitHoldGuest"
+  | "getHoldStatus"
+  | "getBooking"
+  | "getCancellationReasons"
+  | "cancelBooking";
+
+interface IResDiaryFailureBase {
+  operation: TResDiaryOperation;
+  httpStatus?: number;
+  requestId?: string;
+  detail?: string;
+}
+
+export type TResDiaryFailure = IResDiaryFailureBase &
+  (
+    | {
+        kind:
+          | "not_configured"
+          | "unavailable"
+          | "not_found"
+          | "not_allowed"
+          | "outcome_unknown"
+          | "payment_unsupported";
+      }
+    | { kind: "rejected"; fields: string[] }
+    | { kind: "cancel_not_applied"; reference: string }
+  );
+
+/** A restaurant wall-clock time; `nextDay` marks a time after midnight. */
+export interface IResDiaryClock {
+  time: string;
+  nextDay: boolean;
+}
+
+export interface IResDiaryRules {
+  minPartySize: number;
+  maxPartySize: number;
+  defaultPartySize: number;
+  maxDaysAhead: number | null;
+  services: { id: number; name: string }[];
+  currency: string;
+  termsHtml: string;
+  privacyHtml: string;
+  noAvailability: { message: string | null; phone: string | null };
+  membership: { label: string | null; required: boolean } | null;
+  customField: {
+    label: string | null;
+    required: boolean;
+    type: "text" | "url";
+  } | null;
+  stripe: { publishableKey: string; accountId: string; live: boolean } | null;
+  paymentProvider: "stripe" | "guestpay" | null;
+}
+
+export interface IResDiaryDateRangeInput {
+  from: string;
+  to: string;
+  partySize: number;
+}
+
+export interface IResDiaryTimeSearchInput {
+  date: string;
+  partySize: number;
+}
+
+export interface IResDiaryDateRange {
+  dates: { date: string; times: IResDiaryClock[] }[];
+  missing: { from: string; to: string } | null;
+}
+
+export interface IResDiarySlot {
+  date: string;
+  time: string;
+  serviceId: number;
+  standard: boolean;
+  feeCents: number;
+  leaveTimeRequired: boolean;
+  leaveTime: IResDiaryClock | null;
+}
+
+export interface IResDiaryTimes {
+  mayRequireCard: boolean;
+  slots: IResDiarySlot[];
+}
+
+export interface IResDiaryHoldInput {
+  date: string;
+  /** Restaurant wall-clock time, HH:mm. */
+  time: string;
+  partySize: number;
+}
+
+export interface IResDiaryHold {
+  holdId: number;
+  reference: string;
+  expiresAt: number;
+  expiresInMs: number;
+}
+
+export interface IResDiaryGuest {
+  firstName: string;
+  surname: string;
+  email: string;
+  mobile?: string;
+}
+
+export interface IResDiaryGuestInput {
+  holdId: number;
+  guest: IResDiaryGuest;
+  specialRequests?: string;
+  returnUrl: string;
+  cancelUrl: string;
+}
+
+export interface IResDiaryStripeStep {
+  publishableKey: string;
+  accountId: string;
+  clientSecret: string;
+}
+
+export type TResDiaryGuestOutcome =
+  | { kind: "confirmed"; reference: string }
+  | {
+      kind: "payment";
+      amountCents: number;
+      amountText: string;
+      stripe: IResDiaryStripeStep;
+    }
+  | { kind: "card"; amountText: string; stripe: IResDiaryStripeStep }
+  | { kind: "table_taken" }
+  | { kind: "guest_blocked" };
+
+export interface IResDiaryHoldStatus {
+  status: "pending" | "confirmed" | "failed" | "cancelled" | "unknown";
+  reference: string | null;
+}
+
+export interface IResDiaryBooking {
+  reference: string;
+  date: string;
+  time: string;
+  partySize: number;
+  status: "booked" | "cancelled" | "other";
+  canCancel: boolean;
+  canEdit: boolean;
+  depositPaidCents: number;
+  visitAtUtc: number | null;
+}
+
+export interface IResDiaryCancelReason {
+  id: number;
+  label: string;
+}
+
+export interface IResDiaryBookingLookup {
+  reference: string;
+  /** The guest's email; ResDiary lets the guest read the booking with it. */
+  email: string;
+}
+
+export interface IResDiaryCancelInput extends IResDiaryBookingLookup {
+  reasonId: number;
+}
+
+export interface IResDiaryCancelled {
+  reference: string;
+  status: "cancelled";
+}
+
+export type TResDiaryProvider = ReturnType<typeof createResDiaryProvider>;
+
+export interface IResDiaryCallOptions {
+  /** Epoch ms after which the operation gives up. Default: now + 8 s. */
+  deadlineAt?: number;
+}
+
+export interface IResDiaryConfig {
+  apiUrl: string;
+  micrositeName: string;
+  channelCode: string;
+  username: string;
+  password: string;
+}
+
+/** The part of a fetch Response the provider reads. */
+export interface IResDiaryReply {
+  status: number;
+  headers: Headers;
+  text: () => Promise<string>;
+}
+
+export type TResDiaryFetch = (
+  url: string,
+  init: RequestInit,
+) => Promise<IResDiaryReply>;
+
+/** Tests pass their own config and fetch; the app reads both from env. */
+export interface IResDiaryDeps {
+  config?: IResDiaryConfig | null;
+  fetch?: TResDiaryFetch;
+}
+
+export type TResDiaryResult<T> = Promise<NeverthrowResult<T, TResDiaryFailure>>;
+
+export type TResDiaryCache<T> = (
+  key: string,
+  caller: { operation: TResDiaryOperation; deadlineAt: number },
+  load: (loadDeadlineAt: number) => TResDiaryResult<T>,
+) => TResDiaryResult<T>;
+
+/** One provider's state: its settings, shared token and caches. */
+export interface IResDiaryConnection {
+  config: IResDiaryConfig;
+  fetch: TResDiaryFetch;
+  token: { value: string; renewAt: number } | null;
+  signingIn: Promise<NeverthrowResult<string, string>> | null;
+  signInPausedUntil: number;
+  rules: TResDiaryCache<IResDiaryRules>;
+  cancelReasons: TResDiaryCache<IResDiaryCancelReason[]>;
+}
+
+export interface IResDiaryRequest {
+  operation: TResDiaryOperation;
+  method: "GET" | "POST" | "PUT";
+  path: string;
+  body?: unknown;
+  /** Writes are never retried and report a lost reply as outcome_unknown. */
+  write?: boolean;
+  /** A read whose caller retries anyway, such as the hold-status poll. */
+  noRetry?: boolean;
+  /** What an empty 2xx body means for this read; without it, empty is unreadable. */
+  emptyBody?: unknown;
+  deadlineAt: number;
+}
+
+export interface IResDiaryHttpReply {
+  status: number;
+  text: string;
+  /** ResDiary's `Date` header, epoch ms. */
+  date: number | null;
+  retryAfterMs: number | null;
+  /** From sending the request to reading the whole reply, on our clock. */
+  elapsedMs: number;
+}
+
+export type TResDiaryAttempt =
+  | { reply: IResDiaryHttpReply }
+  | { lost: "not_sent" | "unknown"; detail: string };
+
+// ResDiary's replies as parsed by src/lib/resdiary-schema.ts.
+export type TResDiarySignInReply = z.infer<typeof signInReplySchema>;
+export type TResDiarySetupReply = z.infer<typeof setupReplySchema>;
+export type TResDiaryDateRangeReply = z.infer<typeof dateRangeReplySchema>;
+export type TResDiaryTimeSlotReply = NonNullable<
+  z.infer<typeof timeSearchReplySchema>["TimeSlots"]
+>[number];
+export type TResDiaryHoldReply = z.infer<typeof holdReplySchema>;
+export type TResDiaryGuestReply = z.infer<typeof guestReplySchema>;
+export type TResDiaryHoldStatusReply = z.infer<typeof holdStatusReplySchema>;
+export type TResDiaryBookingReply = z.infer<typeof bookingReplySchema>;
 
 // ─── Component Prop Types ──────────────────────────────────────────────
 

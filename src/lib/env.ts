@@ -25,6 +25,17 @@ export const env = createEnv({
     GA_API_SECRET: z.string().optional(),
     ADMIN_EMAIL: z.string().email().optional(),
     ALLOWED_ORIGINS: z.string().optional(),
+
+    // Online booking stays off until all five ResDiary values are set.
+    RESDIARY_API_URL: z
+      .string()
+      .url()
+      .refine((value) => value.startsWith("https://"), "Must use https")
+      .optional(),
+    RESDIARY_MICROSITE_NAME: z.string().min(1).optional(),
+    RESDIARY_CHANNEL_CODE: z.string().min(1).optional(),
+    RESDIARY_USERNAME: z.string().min(1).optional(),
+    RESDIARY_PASSWORD: z.string().min(1).optional(),
   },
 
   clientPrefix: "NEXT_PUBLIC_",

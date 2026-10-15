@@ -11,6 +11,9 @@ framework entry points required by the Next.js SDK.
 - `src/instrumentation.ts` loads the runtime config and exports
   `captureRequestError`.
 - `src/lib/error-handler.ts` adds server-side context and tags.
+- `src/lib/sentry-scrub.ts` removes query strings and fragments from outgoing
+  request URLs in server and edge breadcrumbs and spans, because a URL can carry
+  a secret such as a ResDiary guest token.
 - `src/lib/client-errors.ts` reports browser exceptions.
 - `src/components/app/atoms/sentry-error-boundary.tsx` captures React rendering
   failures.

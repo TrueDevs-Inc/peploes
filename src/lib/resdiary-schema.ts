@@ -1,0 +1,213 @@
+// biome-ignore-all lint/style/useNamingConvention: ResDiary's API uses PascalCase field names.
+import { z } from "zod/v4";
+
+import {
+  RESDIARY_AVAILABILITY_TYPE,
+  RESDIARY_PATTERNS,
+  RESDIARY_TIME_SUFFIX,
+} from "@/lib/constants/resdiary";
+import type {
+  IResDiaryBookingLookup,
+  IResDiaryConfig,
+  IResDiaryDateRangeInput,
+  IResDiaryGuestInput,
+  IResDiaryHoldInput,
+  IResDiaryTimeSearchInput,
+} from "@/lib/types";
+
+// ResDiary's wire format: the replies the provider reads and the bodies it
+// sends. Each reply schema lists only the fields the provider uses; zod drops
+// the rest. Shapes verified in the sandbox on 15 October 2026.
+
+// ─── Replies ──────────────────────────────────────────────────────────────
+
+export const signInReplySchema = z.object({
+  Status: z.string().nullish(),
+  Token: z.string().nullish(),
+  TokenExpiryUtc: z.string().nullish(),
+});
+
+export const errorReplySchema = z.object({
+  ValidationErrors: z
+    .array(z.object({ PropertyName: z.string().nullish() }))
+    .nullish(),
+  ApiRequestId: z.string().nullish(),
+});
+
+export const setupReplySchema = z.object({
+  MinOnlinePartySize: z.number().int().nullish(),
+  MaxOnlinePartySize: z.number().int(),
+  OnlinePartySizeDefault: z.number().int().nullish(),
+  AcceptBookingsDaysInAdvance: z.number().int().nullish(),
+  Services: z
+    .array(z.object({ ServiceId: z.number().int(), Name: z.string() }))
+    .nullish(),
+  CurrencyCode: z.string(),
+  TermsAndConditions: z.string().nullish(),
+  PrivacyPolicy: z.string().nullish(),
+  NoAvailabilityText: z.string().nullish(),
+  DisplayPhoneNumberWhenNoAvailability: z.boolean().nullish(),
+  ReservationPhoneNumber: z.string().nullish(),
+  IsMembershipIdEnabled: z.boolean().nullish(),
+  IsMembershipIdRequired: z.boolean().nullish(),
+  MembershipIdTitle: z.string().nullish(),
+  CustomField: z
+    .object({
+      Name: z.string().nullish(),
+      IsRequired: z.boolean().nullish(),
+      Type: z.string().nullish(),
+    })
+    .nullish(),
+  StripeInfo: z
+    .object({
+      StripePublishableKey: z.string().nullish(),
+      StripeAccountId: z.string().nullish(),
+      UseLiveToken: z.boolean().nullish(),
+      IsEnabled: z.boolean().nullish(),
+    })
+    .nullish(),
+  PaymentProvider: z.string().nullish(),
+});
+
+export const dateRangeReplySchema = z.object({
+  AvailableDates: z
+    .array(
+      z.object({
+        Date: z.string().regex(RESDIARY_PATTERNS.wireDate),
+        AvailableTimes: z
+          .array(
+            z.object({
+              TimeSlot: z.string().regex(RESDIARY_PATTERNS.wireClock),
+            }),
+          )
+          .nullish(),
+      }),
+    )
+    .nullish(),
+  MissingDatesStart: z.string().regex(RESDIARY_PATTERNS.wireDate).nullish(),
+  MissingDatesEnd: z.string().regex(RESDIARY_PATTERNS.wireDate).nullish(),
+});
+
+export const timeSearchReplySchema = z.object({
+  StandardAvailabilityMayRequireCreditCard: z.boolean().nullish(),
+  TimeSlots: z
+    .array(
+      z.object({
+        TimeSlot: z.string().regex(RESDIARY_PATTERNS.wireDateTime),
+        ServiceId: z.number().int(),
+        HasStandardAvailability: z.boolean(),
+        StandardAvailabilityFeeAmount: z.number().nullish(),
+        IsLeaveTimeRequired: z.boolean().nullish(),
+        LeaveTime: z.string().regex(RESDIARY_PATTERNS.wireClock).nullish(),
+      }),
+    )
+    .nullish(),
+});
+
+export const holdReplySchema = z.object({
+  BookingId: z.number().int(),
+  BookingReference: z.string().min(1),
+  ExpiryTimestamp: z.string().nullish(),
+});
+
+export const guestReplySchema = z.object({
+  Status: z.string(),
+  Booking: z.object({ Reference: z.string().nullish() }).nullish(),
+  PaymentAmount: z.number().nullish(),
+  FormattedPaymentAmount: z.string().nullish(),
+  StripePublishableKey: z.string().nullish(),
+  StripeAccountId: z.string().nullish(),
+  PaymentIntentSecret: z.string().nullish(),
+  SetupIntentClientSecret: z.string().nullish(),
+  GuestPayHostedPageUrl: z.string().nullish(),
+});
+
+export const holdStatusReplySchema = z.object({
+  Status: z.string(),
+  Booking: z.object({ Reference: z.string().nullish() }).nullish(),
+});
+
+export const guestTokenReplySchema = z.object({ Result: z.string().min(1) });
+
+export const bookingReplySchema = z.object({
+  Reference: z.string(),
+  VisitDate: z.string().regex(RESDIARY_PATTERNS.wireDate),
+  VisitTime: z.string().regex(RESDIARY_PATTERNS.wireClock),
+  PartySize: z.number().int(),
+  BookingStatus: z.string(),
+  CanCancel: z.boolean().nullish(),
+  CanEdit: z.boolean().nullish(),
+  DepositPaidAmount: z.number().nullish(),
+  VisitDateTimeUtc: z.string().nullish(),
+});
+
+export const cancelReasonsReplySchema = z.array(
+  z.object({
+    Id: z.number().int(),
+    Description: z.string(),
+    DisplayOnline: z.boolean().nullish(),
+    ApplyToStandardBookings: z.boolean().nullish(),
+  }),
+);
+
+// ─── Request bodies ───────────────────────────────────────────────────────
+
+export function signInBody(config: IResDiaryConfig) {
+  return { Username: config.username, Password: config.password };
+}
+
+export function dateRangeBody(
+  config: IResDiaryConfig,
+  input: IResDiaryDateRangeInput,
+) {
+  return {
+    DateFrom: `${input.from}${RESDIARY_TIME_SUFFIX.midnight}`,
+    DateTo: `${input.to}${RESDIARY_TIME_SUFFIX.midnight}`,
+    PartySize: input.partySize,
+    ChannelCode: config.channelCode,
+    AvailabilityType: RESDIARY_AVAILABILITY_TYPE,
+  };
+}
+
+export function timeSearchBody(
+  config: IResDiaryConfig,
+  input: IResDiaryTimeSearchInput,
+) {
+  return {
+    VisitDate: input.date,
+    PartySize: input.partySize,
+    ChannelCode: config.channelCode,
+    AvailabilityType: RESDIARY_AVAILABILITY_TYPE,
+  };
+}
+
+export function holdBody(config: IResDiaryConfig, input: IResDiaryHoldInput) {
+  return {
+    VisitDate: input.date,
+    VisitTime: `${input.time}${RESDIARY_TIME_SUFFIX.seconds}`,
+    PartySize: input.partySize,
+    ChannelCode: config.channelCode,
+  };
+}
+
+export function guestBody(input: IResDiaryGuestInput) {
+  const { guest } = input;
+  return {
+    BookingId: input.holdId,
+    Customer: {
+      FirstName: guest.firstName,
+      Surname: guest.surname,
+      Email: guest.email,
+      ...(guest.mobile ? { Mobile: guest.mobile } : {}),
+    },
+    ...(input.specialRequests
+      ? { SpecialRequests: input.specialRequests }
+      : {}),
+    RedirectUrl: input.returnUrl,
+    CancelUrl: input.cancelUrl,
+  };
+}
+
+export function guestTokenBody(lookup: IResDiaryBookingLookup) {
+  return { Email: lookup.email };
+}

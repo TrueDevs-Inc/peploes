@@ -14,6 +14,14 @@ export const TRANSIENT_NETWORK_CODES = new Set([
   "ENOTFOUND",
 ]);
 
+/** Failures before the request left this server, so a write did not reach it. */
+export const UNSENT_NETWORK_CODES = new Set([
+  "ENOTFOUND",
+  "EAI_AGAIN",
+  "ECONNREFUSED",
+  "UND_ERR_CONNECT_TIMEOUT",
+]);
+
 export function hasTransientNetworkCode(error: unknown): boolean {
   if (error instanceof Error) {
     const code = (error as NodeJS.ErrnoException).code;
