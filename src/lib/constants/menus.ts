@@ -45,3 +45,7 @@ export const MENUS_CONTENT: IMenusContent = {
     alt: "Guests dining at Peploe’s, surrounded by red banquettes and colourful murals.",
   },
 };
+
+export const MENUS_SHELF_COLUMNS = [0, 1, 2].map((column) =>
+  MENUS_CONTENT.categories.filter((_, index) => index % 3 === column),
+);

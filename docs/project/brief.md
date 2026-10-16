@@ -226,18 +226,25 @@ The logo artwork comes from the [existing website](https://peploes.com/), stored
 locally and tinted with the Ink token using a CSS mask. Preserve its aspect
 ratio; replace it with the exact Figma vector when that export is available.
 
-The desktop Menus dropdown follows Nav / Shelf / Menus / Light (`3041:2013`).
-It opens on mouse hover or button activation and overlays the page below the
-76px header without moving the logo or page content. The Warm Cream panel has
-an editorial introduction and six destinations in three columns. Reuse the
-homepage menu category order; destination actions remain inactive placeholders.
+The desktop Menus dropdown follows the updated Nav / Shelf / Menus / Light
+frame (`3732:6583`). It opens on mouse hover or button activation and overlays
+the page below the 76px header without moving the logo or page content. At
+1440px, the Warm Cream panel is 218px high with 36px vertical padding, 72px
+side gutters, a 360px introduction and a 56px gap before the destinations.
+Six active menu links sit in three 146px-high columns, paired Lunch/Wine,
+Dinner/Cocktails and Pre-Theatre/Seasonal, with 40px column gaps, 24px row gaps
+and 1px Soft Stone dividers after the first two columns. The introduction and
+links omit the old descriptions; homepage menu content stays unchanged.
 Verify pointer travel into the panel, keyboard activation and tab order, Escape
 with focus restoration, outside-click and focus-leave dismissal, short-viewport
 scrolling, reduced motion and dismissal when switching to mobile navigation.
-The desktop Groups & Occasions dropdown follows Nav / Shelf / Groups / Light
-(`3041:1933`): a 320px introduction, 56px column gap and three photo destinations
-with 132px images. The local shelf catalog owns its copy and the crops exported
-from Figma. Destination titles turn burgundy with a 32px underline on hover;
+The desktop Private Dining & Events dropdown follows the updated Nav / Shelf /
+Groups / Light frame (`3732:6657`): a 292px panel with a 320px introduction,
+56px column gap and three photo destinations with 132px images and 36px gaps.
+The introduction replaces its description with a 44px-high Explore text action
+that opens the private dining overview. The first destination is Celebrations &
+Gatherings; the shared mobile navigation uses the same label. The local shelf
+catalog owns its copy and the crops exported from Figma. Destination titles turn burgundy with a 32px underline on hover;
 retain visible keyboard focus and the shared reduced-motion-aware duration.
 The destinations now open their dedicated pages. Clicking Private Dining & Events
 opens the overview; hover and Arrow Down still open the shelf. On mobile, the

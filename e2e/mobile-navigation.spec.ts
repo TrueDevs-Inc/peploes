@@ -45,7 +45,7 @@ test("the entire Private Dining row toggles its submenu and keeps the overview r
   await dining.press("Enter");
   await expect(dining).toHaveAttribute("aria-expanded", "true");
   for (const label of [
-    "Groups & Celebrations",
+    "Celebrations & Gatherings",
     "Corporate & Exclusive Hire",
     "Weddings",
   ]) {

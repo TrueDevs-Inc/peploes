@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 export function NavigationShelf({
   eyebrow,
   heading,
-  description,
+  action,
   introClassName,
   children,
 }: INavigationShelfProps) {
@@ -29,7 +29,7 @@ export function NavigationShelf({
           {heading}
         </p>
         <span aria-hidden="true" className="h-0.5 w-11 bg-peploe-burgundy" />
-        <p className="text-base leading-[22px]">{description}</p>
+        {action}
       </div>
       {children}
     </div>

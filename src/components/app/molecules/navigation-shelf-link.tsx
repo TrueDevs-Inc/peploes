@@ -10,9 +10,12 @@ export function NavigationShelfLink({
   label,
   description,
   href,
+  className,
 }: INavigationShelfLinkProps) {
   return (
-    <div className="flex min-h-[72px] min-w-0 flex-col gap-1.5">
+    <div
+      className={cn("flex min-h-[72px] min-w-0 flex-col gap-1.5", className)}
+    >
       <Button
         asChild={Boolean(href)}
         type={href ? undefined : "button"}
@@ -26,7 +29,7 @@ export function NavigationShelfLink({
       >
         {href ? <Link href={href}>{label}</Link> : label}
       </Button>
-      <p className="text-sm leading-[21px]">{description}</p>
+      {description && <p className="text-sm leading-[21px]">{description}</p>}
     </div>
   );
 }

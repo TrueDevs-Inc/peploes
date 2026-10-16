@@ -250,8 +250,6 @@ export const DESKTOP_NAVIGATION_QUERY = "(min-width: 80rem)";
 
 export const MENUS_SHELF_CONTENT = {
   heading: "Great food brings people together.",
-  description:
-    "Seasonal dishes, exceptional wines and a warm welcome in the heart of Dublin.",
 } as const;
 
 export const WINE_CONTENT: IWineContent = {

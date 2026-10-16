@@ -493,15 +493,16 @@ export interface IOpenDesktopNavigation {
 export interface INavigationShelfProps {
   eyebrow: string;
   heading: string;
-  description: string;
+  action?: ReactNode;
   introClassName: string;
   children: ReactNode;
 }
 
 export interface INavigationShelfLinkProps {
   label: string;
-  description: string;
+  description?: string;
   href?: Route;
+  className?: string;
 }
 
 export interface IMobileNavigationProps {
