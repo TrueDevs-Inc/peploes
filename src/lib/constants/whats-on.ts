@@ -1,8 +1,10 @@
+import { ROUTES } from "@/lib/constants";
 import type { IWhatsOnEvent } from "@/lib/types";
 
 export const whatsOnEvents: readonly IWhatsOnEvent[] = [
   {
     id: "lobster-week",
+    href: `${ROUTES.WHATS_ON}/lobster-season`,
     category: "Seasonal special",
     title: "Lobster Week Returns",
     description:
@@ -15,6 +17,7 @@ export const whatsOnEvents: readonly IWhatsOnEvent[] = [
   },
   {
     id: "seasonal-wine-dinner",
+    href: `${ROUTES.WHATS_ON}/italian-wine-dinner`,
     category: "Special event",
     title: "A Seasonal Wine Dinner",
     description:
@@ -27,6 +30,7 @@ export const whatsOnEvents: readonly IWhatsOnEvent[] = [
   },
   {
     id: "sunday-at-peploes",
+    href: `${ROUTES.WHATS_ON}/sunday-at-peploes`,
     category: "At Peploe’s",
     title: "Sunday at Peploe’s",
     description:

@@ -18,13 +18,15 @@ export function Wine() {
         "relative isolate scroll-mt-20 bg-ink text-warm-cream",
       )}
     >
-      <Image
-        src={WINE_CONTENT.image.src}
-        alt={WINE_CONTENT.image.alt}
-        fill
-        sizes="100vw"
-        className="object-cover"
-      />
+      <div className="absolute inset-0 lg:h-[calc(100%/0.9815)] lg:origin-top lg:scale-y-[0.9815]">
+        <Image
+          src={WINE_CONTENT.image.src}
+          alt={WINE_CONTENT.image.alt}
+          fill
+          sizes="100vw"
+          className="object-cover lg:object-[center_40.15%]"
+        />
+      </div>
       <div
         aria-hidden="true"
         className={cn(styles.overlay, "absolute inset-0")}
@@ -58,7 +60,7 @@ export function Wine() {
             <Button
               asChild
               variant="brand-primary"
-              className="h-11 w-full gap-2 rounded-[4px] bg-peploe-burgundy px-5 has-[>svg]:px-5 text-base leading-[22px] font-medium text-warm-cream shadow-none sm:w-[220px]"
+              className="h-11 w-full gap-2 rounded-[4px] bg-peploe-burgundy px-5 has-[>svg]:px-5 text-base leading-[22px] font-medium sm:leading-6 text-warm-cream shadow-none sm:w-[220px]"
             >
               <Link href={ROUTES.WINE}>
                 {WINE_CONTENT.primaryCtaLabel}
@@ -69,7 +71,7 @@ export function Wine() {
               type="button"
               variant="brand-text"
               aria-disabled="true"
-              className="h-11 w-full gap-2 rounded-[4px] border border-warm-cream/70 px-5 has-[>svg]:px-5 text-base leading-[22px] font-medium text-warm-cream max-sm:hover:bg-peploe-burgundy max-sm:hover:no-underline sm:w-auto sm:rounded-none sm:border-0 sm:px-0 sm:has-[>svg]:px-0"
+              className="h-11 w-full gap-2 rounded-[4px] border border-warm-cream/70 px-5 has-[>svg]:px-5 text-base leading-[22px] font-medium sm:leading-6 text-warm-cream max-sm:hover:bg-peploe-burgundy max-sm:hover:no-underline sm:w-auto sm:rounded-none sm:border-0 sm:px-0 sm:has-[>svg]:px-0"
             >
               {WINE_CONTENT.secondaryCtaLabel}
               <ArrowRight aria-hidden="true" className="size-4" />

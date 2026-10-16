@@ -76,6 +76,7 @@ loads. Client navigation and history remain handled by the router.
 Below 640px, section headings use the Private Dining phone scale of 36/44px,
 with 16/24px supporting text. Transport and dining hours use 48px icons beside
 left-aligned details, 16px column gaps and horizontal Soft Stone dividers.
+Dining-hour meal names use 22/26px, timings 18/26px and notes 14/22px.
 The opening-hours table spans the contact grid, with times aligned on the right.
 Contact links have at least 44px touch targets; primary actions remain full width.
 The hero image scales between 220px and 280px high, and the map has a 240px frame
@@ -191,8 +192,10 @@ The closing booking heading is upright on mobile and retains its desktop italic.
 
 Compare section positions, line breaks, crops and overlays at 390px, then check
 narrow phones, tablet and desktop for overflow. Book a Table opens its design
-preview. Keep the remaining inactive actions, inactive newsletter subscription
-and active telephone and email links.
+preview. Homepage telephone actions use the shared restaurant contact. Event
+buttons open the existing seasonal event templates; menu, story, private dining
+and contact links open their matching pages. Unbuilt editorial pages, Gift
+Vouchers and newsletter subscription remain inactive.
 
 ## Homepage interaction previews
 
@@ -204,10 +207,12 @@ typing and keyboard focus, but does not send or store the entered address.
 The existing shared button owns the homepage's brand variants: primary,
 primary inverse, secondary inverse, editorial text, navigation and contact.
 Use the Figma primary hover colour `#68181E`, 90% cream for inverse buttons,
-burgundy fill for inverse outlines, underlines for text links, and a 6%
+a 12% cream tint with a cream border for inverse outlines, underlines for text
+links, and a 6%
 burgundy fill with a 60% border for contact actions. Navigation text changes
 to burgundy with an underline. Interactions use the 160ms token and respect
-reduced motion; buttons and images do not scale on hover.
+reduced motion; buttons and images do not scale on hover, except the three
+Groups and occasions card images, which use a 300ms, 5% zoom.
 
 Homepage action arrows use Lucide's 16px `ArrowRight`, matching the footer
 Subscribe button, including the menu category arrows. Keep existing button
@@ -285,6 +290,9 @@ The three burgundy heading underlines are 32px wide and 2px high, matching Figma
 Telephone and email links are active. Footer legal links open Privacy & Cookies,
 Terms & Conditions, Booking & Cancellation Terms, and Accessibility. Booking &
 Cancellation Terms replaces Cookie Preferences at the contributor's request.
+The homepage phone footer uses the compact Booking Terms label and tighter
+spacing below 360px to keep all four legal links on one row at standard phone
+widths, while allowing wrapping when text is enlarged.
 All four policies use the shared `src/app/[slug]/page.tsx` route and the
 [Terms & Conditions template](https://www.figma.com/design/0fEgisdlNBr23CuWHJOTNC/Peploe-s?node-id=3837-20047),
 as requested in Rabia's Figma comment #68. Hero geometry, typography, the
@@ -299,8 +307,9 @@ full-width paragraphs, and contact links stack as outlined touch targets. The
 reading content is capped at 720px; the desktop template remains unchanged.
 Only policy content, metadata and photograph crops vary, with local content in
 `src/lib/constants/policies.ts`. Existing policy URLs are preserved; unknown
-slugs return 404. Other navigation and social
-destinations remain inactive until approved destinations exist. The newsletter
+slugs return 404. Footer Instagram and Facebook links use the restaurant
+profiles linked from [the official website](https://peploes.com/) and open in a
+new tab. Other unbuilt navigation destinations remain inactive. The newsletter
 email field is editable, with an accessible label, email autocomplete and visible keyboard focus.
 Subscribe remains inactive pending the subscription integration; no email is
 sent or stored by the application. Opening hours and contact details follow
@@ -355,6 +364,10 @@ the Our Menus eyebrow, and six categories in their design order. The content
 uses the shared brand fonts, colours and content container. The category grid
 adapts to three and then two columns on tablet, and six full-width ruled rows
 on phones. Mobile uses its separate 238px-high dining-room photograph.
+The phone introduction uses a 12px eyebrow, a balanced 38px/40px heading
+(34px/38px below 360px), and 16px/24px body copy with paragraph wrapping
+that avoids a short final line. The eyebrow-to-heading gap is 20px; the
+heading-to-body gap is 12px. Tablet and desktop retain their existing sizing.
 
 The yellow note (`3131:11686`) specifies structured web menu categories and
 CMS-editable content. This section keeps the category actions and Explore Our
@@ -375,11 +388,12 @@ The cards stack on narrow screens.
 The adjacent yellow note (`3131:11688`) calls for CMS-managed campaigns that
 can be published or removed without changing the homepage layout, with cards
 linking to their campaign pages. For this phase, the contributor requested
-local event data and inactive links. Edit the ordered `whatsOnEvents` array in
+local event data. Homepage event actions now open the existing Lobster Season,
+Italian Wine Dinner and Sunday at Peploe’s templates. Edit the ordered `whatsOnEvents` array in
 `src/lib/constants/whats-on.ts` to add, remove or reorder cards; the first entry is
 featured. An empty list hides the section. The Figma entries are preview copy,
-not verified current events. CMS publishing and campaign destinations remain
-future work.
+not verified current events. Event pages retain the approved placeholder copy;
+CMS publishing and final campaign content remain future work.
 
 When changing this section, compare its image crops, typography and desktop
 spacing with Figma. Check image loading, stacked cards, long text and horizontal
@@ -411,15 +425,19 @@ horizontal overflow and the two inactive controls.
 The homepage section follows Final Pages `3131:11372`: a dining-room photo
 banner with a dark horizontal gradient, followed by three cards on Warm Cream.
 It uses the original Figma photographs, shared fonts and existing buttons. At
-1440px, the banner is 410px tall and the cards have 180px-wide images. The cards
-stack on smaller screens. Phones use a 560px banner with a vertical gradient
+1440px, the banner is 410px tall. The card row (`3338:682`) uses three 433px-wide
+cards with 28px gaps, 160 × 187px images, 213px text columns and full-height
+left dividers. The cards stack on smaller screens. Phones use a 560px banner
+with a vertical gradient
 and horizontal cards with 124px-wide photos, reduced further below 360px.
 
 The yellow Distinct commercial journeys note (`3131:11700`) requires separate
 pages and enquiry experiences for Groups & Celebrations, Corporate & Exclusive
 Hire and Weddings. These remain distinct cards with local content. The banner
-button now opens the private dining overview, and the three Explore actions
-open their dedicated pages. See [Private dining and events](private-dining.md)
+button now opens the private dining overview. Each card image and its Explore
+action open the same dedicated page. Images gently zoom on hover or keyboard
+focus, with motion disabled for visitors who prefer reduced motion.
+See [Private dining and events](private-dining.md)
 for the page layouts and enquiry preview limits.
 
 When changing this section, compare the photograph crops, gradient, typography,
@@ -524,6 +542,10 @@ closing service photograph. It uses the existing brand fonts, buttons and
 production footer. Desktop section heights at 1440px are 546, 457, 600, 390,
 444, 516, 340 and 390px. Narrow layouts stack the content with 24px gutters,
 a vertical timeline and readable overlays; Figma has no separate mobile frame.
+Main headings use 38px type on phones and 35px below 360px, with 42px and
+40px line heights respectively. Smaller timeline titles retain their existing
+scale. Tablet and desktop typography, section geometry and image crops remain
+unchanged. Page styling lives in Tailwind classes in the Our Story component.
 At the 1440px reference width and above, the philosophy column stays 525px
 wide beside a flexible timeline, with a 100px gap. The timeline has 22px top
 padding, so its dates and divider do not move when the descriptions reflow.

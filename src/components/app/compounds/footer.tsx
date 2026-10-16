@@ -96,10 +96,7 @@ export function Footer() {
                 autoComplete="email"
                 placeholder={FOOTER_CONTENT.newsletter.emailLabel}
                 aria-describedby="footer-newsletter-status"
-                className={cn(
-                  FOCUS_RING,
-                  "h-[30px] min-w-0 rounded-none border-b border-border-interactive bg-transparent text-sm leading-[21px] text-ink placeholder:text-text-secondary focus-visible:ring-peploe-burgundy focus-visible:ring-offset-warm-cream xl:h-11 xl:flex-1",
-                )}
+                className="h-[30px] min-w-0 rounded-none border-b border-border-interactive bg-transparent text-sm leading-[21px] text-ink placeholder:text-text-secondary focus-visible:shadow-[0_2px_0_var(--peploe-burgundy)] focus-visible:outline-none forced-colors:focus-visible:outline-2 forced-colors:focus-visible:outline-offset-2 forced-colors:focus-visible:outline-solid xl:h-11 xl:flex-1"
               />
               <Button
                 type="button"

@@ -42,7 +42,9 @@ export const FOOTER_CONTENT: IFooterContent = {
     },
     { label: "Accessibility", href: ROUTES.ACCESSIBILITY_POLICY },
   ],
+  instagramHref: "https://www.instagram.com/peploesstephensgreen/",
   instagramLabel: "Peploe’s on Instagram",
+  facebookHref: "https://www.facebook.com/Peploes",
   facebookLabel: "Peploe’s on Facebook",
 };
 

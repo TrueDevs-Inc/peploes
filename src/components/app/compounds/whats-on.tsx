@@ -47,7 +47,7 @@ function EventCard({ event, featured = false }: IEventCardProps) {
         "min-w-0 max-sm:pb-6 max-sm:shadow-[inset_0_-1px_0_rgb(250_247_241/0.3)]",
         featured
           ? "flex flex-col gap-[14px] sm:gap-4"
-          : "relative grid grid-cols-1 items-start gap-[14px] sm:not-first:pt-6 sm:not-first:before:absolute sm:not-first:before:inset-x-0 sm:not-first:before:top-0 sm:not-first:before:h-px sm:not-first:before:bg-warm-cream/30 sm:grid-cols-[200px_minmax(0,1fr)] sm:gap-6",
+          : "relative grid grid-cols-1 items-start gap-[14px] sm:not-first:pt-6 sm:not-first:before:absolute sm:not-first:before:inset-x-0 sm:not-first:before:top-0 sm:not-first:before:h-px sm:not-first:before:bg-soft-stone sm:grid-cols-[200px_minmax(0,1fr)] sm:gap-6",
       )}
     >
       <div
@@ -64,10 +64,13 @@ function EventCard({ event, featured = false }: IEventCardProps) {
           fill
           sizes={
             featured
-              ? "(min-width: 1280px) calc((100vw - 192px) * 635 / 1248), calc(100vw - 48px)"
+              ? "(min-width: 1440px) 635px, (min-width: 1280px) calc((100vw - 192px) * 635 / 1248), calc(100vw - 48px)"
               : "(min-width: 640px) 200px, calc(100vw - 48px)"
           }
-          className={cn("object-cover", featured && "sm:object-[center_60%]")}
+          className={cn(
+            "object-cover",
+            featured && "sm:scale-y-[1.194] sm:object-[center_63.7%]",
+          )}
         />
       </div>
 
@@ -95,10 +98,13 @@ function EventCard({ event, featured = false }: IEventCardProps) {
         >
           {event.description}
         </p>
-        <EventAction
-          label={event.ctaLabel}
-          mobileLabel={event.mobileCtaLabel}
-        />
+        <div className={featured ? undefined : "sm:pt-1"}>
+          <EventAction
+            label={event.ctaLabel}
+            mobileLabel={event.mobileCtaLabel}
+            href={event.href}
+          />
+        </div>
       </div>
     </article>
   );
@@ -118,7 +124,7 @@ export function WhatsOn({ events }: IWhatsOnProps) {
         "bg-button-primary-pressed text-warm-cream",
       )}
     >
-      <div className="site-container flex flex-col gap-8 pt-12 pb-[52px] sm:gap-12 sm:py-20">
+      <div className="site-container flex flex-col gap-8 pt-12 pb-[52px] sm:gap-12 sm:py-20 xl:max-w-[1296px]">
         <div className="flex flex-col items-start gap-4 xl:flex-row xl:items-end xl:justify-between xl:gap-8">
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-4 sm:gap-7">

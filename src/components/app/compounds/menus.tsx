@@ -31,23 +31,26 @@ export function Menus() {
         />
       </div>
 
-      <div className="site-container flex flex-col gap-6 pt-10 pb-12 sm:gap-7 sm:pt-12 sm:pb-20">
-        <p className="flex items-center gap-2.5 text-sm leading-4 font-medium tracking-[0.1em] text-peploe-burgundy uppercase">
-          <span aria-hidden="true" className="h-0.5 w-12 shrink-0 bg-current" />
+      <div className="site-container flex flex-col gap-5 pt-10 pb-12 sm:gap-7 sm:pt-12 sm:pb-20">
+        <p className="flex items-center gap-2.5 text-xs leading-4 font-medium tracking-[0.1em] text-peploe-burgundy uppercase sm:text-sm">
+          <span
+            aria-hidden="true"
+            className="h-0.5 w-10 shrink-0 bg-current sm:w-12"
+          />
           {MENUS_CONTENT.eyebrow}
         </p>
 
-        <div className="flex flex-col gap-[14px] sm:gap-4">
+        <div className="flex flex-col gap-3 sm:gap-4">
           <h2
             id="menus-heading"
             className={cn(
               ebGaramond.className,
-              "text-[42px] leading-[41px] font-medium tracking-[-0.6px] text-peploe-burgundy sm:text-[52px] sm:leading-[56px] sm:tracking-normal lg:text-[60px] lg:leading-[48px]",
+              "text-[38px] leading-10 font-medium tracking-[-0.4px] text-balance text-peploe-burgundy max-[360px]:text-[34px] max-[360px]:leading-[38px] sm:text-[52px] sm:text-wrap sm:leading-[56px] sm:tracking-normal lg:text-[60px] lg:leading-[48px]",
             )}
           >
             {MENUS_CONTENT.heading}
           </h2>
-          <p className="text-base leading-6 text-text-secondary sm:text-lg">
+          <p className="text-base leading-6 text-pretty text-text-secondary sm:text-lg sm:text-wrap">
             {MENUS_CONTENT.description}
           </p>
         </div>

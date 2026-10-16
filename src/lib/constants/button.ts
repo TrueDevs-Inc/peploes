@@ -21,7 +21,7 @@ export const buttonVariants = cva(
         "brand-primary-inverse":
           "bg-warm-cream text-peploe-burgundy shadow-none hover:bg-warm-cream/90",
         "brand-secondary-inverse":
-          "border border-warm-cream bg-transparent text-warm-cream shadow-none hover:border-warm-cream hover:bg-peploe-burgundy",
+          "border border-warm-cream bg-transparent text-warm-cream shadow-none hover:border-warm-cream hover:bg-warm-cream/12",
         "brand-text": "text-peploe-burgundy underline-offset-4 hover:underline",
         "brand-nav":
           "text-ink underline-offset-4 hover:text-peploe-burgundy hover:underline",

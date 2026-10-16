@@ -5,7 +5,11 @@ import Link from "next/link";
 import { Reveal } from "@/components/app/atoms/scroll-reveal";
 import styles from "@/components/app/compounds/hero.module.css";
 import { Button } from "@/components/ui/button";
-import { MOBILE_HOME_CONTENT, ROUTES } from "@/lib/constants";
+import {
+  MOBILE_HOME_CONTENT,
+  RESTAURANT_CONTACT,
+  ROUTES,
+} from "@/lib/constants";
 import { HERO_CONTENT } from "@/lib/constants/hero";
 import { dmSans, ebGaramond } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
@@ -70,12 +74,13 @@ export function Hero() {
               </Link>
             </Button>
             <Button
-              type="button"
+              asChild
               variant="brand-secondary-inverse"
-              aria-disabled="true"
               className="h-11 w-full rounded-[4px] border-warm-cream bg-transparent px-5 text-base leading-[22px] font-medium text-warm-cream shadow-none sm:w-[136px]"
             >
-              {HERO_CONTENT.callLabel}
+              <a href={`tel:${RESTAURANT_CONTACT.phone}`}>
+                {HERO_CONTENT.callLabel}
+              </a>
             </Button>
           </div>
         </div>
