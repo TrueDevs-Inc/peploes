@@ -1,6 +1,5 @@
 import type {
   IBookingBannerContent,
-  IFormActionResponse,
   INavbarContent,
   IOpeningHours,
   IWhatsOnContent,
@@ -113,17 +112,6 @@ export const ROUTES = {
   LLMS: "/llms.txt",
   ROBOTS: "/robots.txt",
   SITEMAP: "/sitemap.xml",
-  API: {
-    EXAMPLES: "/api/examples",
-    EXAMPLE_BY_ID: (id: number | string) => `/api/examples/${id}`,
-  },
-} as const;
-
-export const FORM_FIELDS = {
-  example: {
-    NAME: "name",
-    EMAIL: "email",
-  },
 } as const;
 
 export const EXAMPLE_LIMITS = {
@@ -269,11 +257,6 @@ export const WHATS_ON_CONTENT: IWhatsOnContent = {
     "From seasonal menus to special events, there’s always something to look forward to at Peploe’s.",
   ctaLabel: "View what’s on",
 };
-
-export const EXAMPLE_FORM_INITIAL_STATE = {
-  success: false,
-  error: undefined,
-} satisfies IFormActionResponse;
 
 export const READ_MORE_COLLAPSED_HEIGHT = "12.5em";
 

@@ -26,13 +26,13 @@ describe("fetcher", () => {
       vi.stubGlobal("fetch", request);
 
       const result = await fetcher({
-        url: "/api/examples",
+        url: "/api/bookings/times",
         method: HttpVerb.Post,
         body,
       });
 
       expect(request).toHaveBeenCalledWith(
-        "/api/examples",
+        "/api/bookings/times",
         expect.objectContaining({
           body: serialized,
           headers: { "Content-Type": "application/json" },
@@ -54,12 +54,12 @@ describe("fetcher", () => {
     vi.stubGlobal("fetch", request);
 
     const result = await fetcher({
-      url: "/api/examples",
+      url: "/api/bookings/times",
       method: HttpVerb.Get,
     });
 
     expect(request).toHaveBeenCalledWith(
-      "/api/examples",
+      "/api/bookings/times",
       expect.objectContaining({ body: undefined, headers: {} }),
     );
     expect(result).toEqual({ ok: true, status: 204, data: null, error: null });
@@ -76,7 +76,7 @@ describe("fetcher", () => {
     );
 
     const result = await fetcher({
-      url: "/api/examples",
+      url: "/api/bookings/times",
       method: HttpVerb.Get,
     });
 
@@ -101,7 +101,7 @@ describe("fetcher", () => {
     );
 
     const result = await fetcher({
-      url: "/api/examples",
+      url: "/api/bookings/times",
       method: HttpVerb.Get,
     });
 
@@ -117,7 +117,7 @@ describe("fetcher", () => {
     vi.stubGlobal("fetch", vi.fn<typeof fetch>().mockRejectedValue(error));
 
     const result = await fetcher({
-      url: "/api/examples",
+      url: "/api/bookings/times",
       method: HttpVerb.Get,
     });
 

@@ -4,11 +4,9 @@ import type { Route } from "next";
 import type { ComponentProps, CSSProperties, ReactNode } from "react";
 import type { z } from "zod/v4";
 
-import type { examples } from "@/db/schema";
 import type { ROUTES } from "@/lib/constants";
 import type { buttonVariants } from "@/lib/constants/button";
 import type { ErrorCode, HttpVerb, LogLevel } from "@/lib/enums";
-import type { createExampleSchema } from "@/lib/examples-schema";
 import type { createResDiaryProvider } from "@/lib/resdiary-provider";
 import type {
   bookingReplySchema,
@@ -73,12 +71,6 @@ export interface IAppError {
   context?: Record<string, unknown>;
 }
 
-export interface IFormActionResponse {
-  success: boolean;
-  error?: string;
-  fieldErrors?: Record<string, string[]>;
-}
-
 // ─── Action Framework ────────────────────────────────────────────────────
 
 export interface IActionDefinition<
@@ -115,31 +107,6 @@ export interface IActionPayload<TInput> {
 // ─── Auth ─────────────────────────────────────────────────────────────────
 
 export type TAuthErrorCodes = ErrorCode.Unauthorized;
-
-// ─── Example Domain ───────────────────────────────────────────────────────
-
-export type TExampleRecord = typeof examples.$inferSelect;
-
-export type TCreateExampleInput = z.infer<typeof createExampleSchema>;
-
-export interface IExampleDto {
-  id: number;
-  name: string;
-  createdAt: string;
-}
-
-export type TExampleActionErrorCodes =
-  | ErrorCode.InvalidForm
-  | ErrorCode.ValidationError
-  | ErrorCode.DbCreateFailed;
-
-export interface IExamplesResponse {
-  data: IExampleDto[];
-}
-
-export interface IListExamplesOptions {
-  limit?: number;
-}
 
 // ─── SEO Types ────────────────────────────────────────────────────────────
 
