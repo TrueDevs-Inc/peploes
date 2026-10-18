@@ -15,12 +15,6 @@ import type {
   IResDiaryTimeSearchInput,
 } from "@/lib/types";
 
-// ResDiary's wire format: the replies the provider reads and the bodies it
-// sends. Each reply schema lists only the fields the provider uses; zod drops
-// the rest. Shapes verified in the sandbox on 15 October 2026.
-
-// ─── Replies ──────────────────────────────────────────────────────────────
-
 export const signInReplySchema = z.object({
   Status: z.string().nullish(),
   Token: z.string().nullish(),
@@ -88,20 +82,28 @@ export const dateRangeReplySchema = z.object({
   MissingDatesEnd: z.string().regex(RESDIARY_PATTERNS.wireDate).nullish(),
 });
 
+export const timeSlotReplySchema = z.object({
+  TimeSlot: z.string().regex(RESDIARY_PATTERNS.wireDateTime),
+  ServiceId: z.number().int(),
+  HasStandardAvailability: z.boolean(),
+  StandardAvailabilityFeeAmount: z.number().nullish(),
+  IsLeaveTimeRequired: z.boolean().nullish(),
+  LeaveTime: z.string().regex(RESDIARY_PATTERNS.wireClock).nullish(),
+});
+
 export const timeSearchReplySchema = z.object({
   StandardAvailabilityMayRequireCreditCard: z.boolean().nullish(),
-  TimeSlots: z
-    .array(
-      z.object({
-        TimeSlot: z.string().regex(RESDIARY_PATTERNS.wireDateTime),
-        ServiceId: z.number().int(),
-        HasStandardAvailability: z.boolean(),
-        StandardAvailabilityFeeAmount: z.number().nullish(),
-        IsLeaveTimeRequired: z.boolean().nullish(),
-        LeaveTime: z.string().regex(RESDIARY_PATTERNS.wireClock).nullish(),
-      }),
-    )
-    .nullish(),
+  TimeSlots: z.array(z.unknown()).nullish(),
+});
+
+export const closedDatesReplySchema = z.object({
+  ClosedDays: z.array(z.string()).nullish(),
+  ClosedPeriods: z.array(z.unknown()).nullish(),
+});
+
+export const closedPeriodReplySchema = z.object({
+  StartDate: z.string().regex(RESDIARY_PATTERNS.wireDate),
+  EndDate: z.string().regex(RESDIARY_PATTERNS.wireDate),
 });
 
 export const holdReplySchema = z.object({
@@ -150,8 +152,6 @@ export const cancelReasonsReplySchema = z.array(
   }),
 );
 
-// ─── Request bodies ───────────────────────────────────────────────────────
-
 export function signInBody(config: IResDiaryConfig) {
   return { Username: config.username, Password: config.password };
 }
@@ -199,6 +199,9 @@ export function guestBody(input: IResDiaryGuestInput) {
       Surname: guest.surname,
       Email: guest.email,
       ...(guest.mobile ? { Mobile: guest.mobile } : {}),
+      ...(guest.mobile && guest.mobileCountryCode
+        ? { MobileCountryCode: guest.mobileCountryCode }
+        : {}),
     },
     ...(input.specialRequests
       ? { SpecialRequests: input.specialRequests }

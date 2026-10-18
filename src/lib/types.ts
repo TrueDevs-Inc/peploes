@@ -4,19 +4,31 @@ import type { Route } from "next";
 import type { ComponentProps, CSSProperties, ReactNode } from "react";
 import type { z } from "zod/v4";
 
+import type {
+  calendarQuerySchema,
+  guestDetailsSchema,
+  holdInputSchema,
+  timesQuerySchema,
+} from "@/lib/booking-schema";
+import type { holdTokenSchema } from "@/lib/booking-token";
 import type { ROUTES } from "@/lib/constants";
+import type {
+  BOOKING_SKIP_REASONS,
+  BOOKING_UNSUPPORTED_SETTINGS,
+} from "@/lib/constants/booking";
 import type { buttonVariants } from "@/lib/constants/button";
 import type { ErrorCode, HttpVerb, LogLevel } from "@/lib/enums";
 import type { createResDiaryProvider } from "@/lib/resdiary-provider";
 import type {
   bookingReplySchema,
+  closedDatesReplySchema,
   dateRangeReplySchema,
   guestReplySchema,
   holdReplySchema,
   holdStatusReplySchema,
   setupReplySchema,
   signInReplySchema,
-  timeSearchReplySchema,
+  timeSlotReplySchema,
 } from "@/lib/resdiary-schema";
 
 // ─── Core Framework Types ─────────────────────────────────────────────────
@@ -84,6 +96,17 @@ export interface IActionDefinition<
   ) => Promise<NeverthrowResult<TOutput, IError<TCode>>>;
 }
 
+export interface IPublicActionDefinition<
+  TInput,
+  TOutput,
+  TCode extends ErrorCode = ErrorCode,
+> {
+  parse: (rawInput: unknown) => NeverthrowResult<TInput, IError<TCode>>;
+  handler: (
+    payload: IPublicActionPayload<TInput>,
+  ) => Promise<NeverthrowResult<TOutput, IError<TCode>>>;
+}
+
 export type TActionResult<
   TOutput,
   TCode extends ErrorCode = ErrorCode,
@@ -99,8 +122,11 @@ export interface IAuthenticatedContext {
   role: string | null;
 }
 
-export interface IActionPayload<TInput> {
+export interface IPublicActionPayload<TInput> {
   input: TInput;
+}
+
+export interface IActionPayload<TInput> extends IPublicActionPayload<TInput> {
   context: IAuthenticatedContext;
 }
 
@@ -284,7 +310,15 @@ export interface ILoggerConfig {
   metadata?: Record<string, unknown>;
 }
 
-// ─── ResDiary ─────────────────────────────────────────────────────────────
+export interface IRestaurantNow {
+  date: string;
+  time: string;
+}
+
+export interface IDatePeriod {
+  from: string;
+  to: string;
+}
 
 export type TResDiaryOperation =
   | "getRules"
@@ -295,7 +329,8 @@ export type TResDiaryOperation =
   | "getHoldStatus"
   | "getBooking"
   | "getCancellationReasons"
-  | "cancelBooking";
+  | "cancelBooking"
+  | "getClosedDates";
 
 interface IResDiaryFailureBase {
   operation: TResDiaryOperation;
@@ -319,7 +354,6 @@ export type TResDiaryFailure = IResDiaryFailureBase &
     | { kind: "cancel_not_applied"; reference: string }
   );
 
-/** A restaurant wall-clock time; `nextDay` marks a time after midnight. */
 export interface IResDiaryClock {
   time: string;
   nextDay: boolean;
@@ -358,7 +392,7 @@ export interface IResDiaryTimeSearchInput {
 
 export interface IResDiaryDateRange {
   dates: { date: string; times: IResDiaryClock[] }[];
-  missing: { from: string; to: string } | null;
+  missing: IDatePeriod | null;
 }
 
 export interface IResDiarySlot {
@@ -378,7 +412,6 @@ export interface IResDiaryTimes {
 
 export interface IResDiaryHoldInput {
   date: string;
-  /** Restaurant wall-clock time, HH:mm. */
   time: string;
   partySize: number;
 }
@@ -395,6 +428,7 @@ export interface IResDiaryGuest {
   surname: string;
   email: string;
   mobile?: string;
+  mobileCountryCode?: number;
 }
 
 export interface IResDiaryGuestInput {
@@ -447,12 +481,21 @@ export interface IResDiaryCancelReason {
 
 export interface IResDiaryBookingLookup {
   reference: string;
-  /** The guest's email; ResDiary lets the guest read the booking with it. */
   email: string;
 }
 
 export interface IResDiaryCancelInput extends IResDiaryBookingLookup {
   reasonId: number;
+}
+
+export interface IResDiaryClosedDates {
+  closedWeekdays: number[];
+  closedPeriods: IDatePeriod[];
+}
+
+export interface IResDiaryWeekdays {
+  weekdays: number[];
+  skipped: number;
 }
 
 export interface IResDiaryCancelled {
@@ -463,7 +506,6 @@ export interface IResDiaryCancelled {
 export type TResDiaryProvider = ReturnType<typeof createResDiaryProvider>;
 
 export interface IResDiaryCallOptions {
-  /** Epoch ms after which the operation gives up. Default: now + 8 s. */
   deadlineAt?: number;
 }
 
@@ -475,7 +517,6 @@ export interface IResDiaryConfig {
   password: string;
 }
 
-/** The part of a fetch Response the provider reads. */
 export interface IResDiaryReply {
   status: number;
   headers: Headers;
@@ -487,7 +528,6 @@ export type TResDiaryFetch = (
   init: RequestInit,
 ) => Promise<IResDiaryReply>;
 
-/** Tests pass their own config and fetch; the app reads both from env. */
 export interface IResDiaryDeps {
   config?: IResDiaryConfig | null;
   fetch?: TResDiaryFetch;
@@ -501,7 +541,6 @@ export type TResDiaryCache<T> = (
   load: (loadDeadlineAt: number) => TResDiaryResult<T>,
 ) => TResDiaryResult<T>;
 
-/** One provider's state: its settings, shared token and caches. */
 export interface IResDiaryConnection {
   config: IResDiaryConfig;
   fetch: TResDiaryFetch;
@@ -510,6 +549,7 @@ export interface IResDiaryConnection {
   signInPausedUntil: number;
   rules: TResDiaryCache<IResDiaryRules>;
   cancelReasons: TResDiaryCache<IResDiaryCancelReason[]>;
+  closedDates: TResDiaryCache<IResDiaryClosedDates>;
 }
 
 export interface IResDiaryRequest {
@@ -517,11 +557,8 @@ export interface IResDiaryRequest {
   method: "GET" | "POST" | "PUT";
   path: string;
   body?: unknown;
-  /** Writes are never retried and report a lost reply as outcome_unknown. */
   write?: boolean;
-  /** A read whose caller retries anyway, such as the hold-status poll. */
   noRetry?: boolean;
-  /** What an empty 2xx body means for this read; without it, empty is unreadable. */
   emptyBody?: unknown;
   deadlineAt: number;
 }
@@ -529,10 +566,8 @@ export interface IResDiaryRequest {
 export interface IResDiaryHttpReply {
   status: number;
   text: string;
-  /** ResDiary's `Date` header, epoch ms. */
   date: number | null;
   retryAfterMs: number | null;
-  /** From sending the request to reading the whole reply, on our clock. */
   elapsedMs: number;
 }
 
@@ -540,17 +575,249 @@ export type TResDiaryAttempt =
   | { reply: IResDiaryHttpReply }
   | { lost: "not_sent" | "unknown"; detail: string };
 
-// ResDiary's replies as parsed by src/lib/resdiary-schema.ts.
 export type TResDiarySignInReply = z.infer<typeof signInReplySchema>;
 export type TResDiarySetupReply = z.infer<typeof setupReplySchema>;
 export type TResDiaryDateRangeReply = z.infer<typeof dateRangeReplySchema>;
-export type TResDiaryTimeSlotReply = NonNullable<
-  z.infer<typeof timeSearchReplySchema>["TimeSlots"]
->[number];
+export type TResDiaryTimeSlotReply = z.infer<typeof timeSlotReplySchema>;
+export type TResDiaryClosedDatesReply = z.infer<typeof closedDatesReplySchema>;
 export type TResDiaryHoldReply = z.infer<typeof holdReplySchema>;
 export type TResDiaryGuestReply = z.infer<typeof guestReplySchema>;
 export type TResDiaryHoldStatusReply = z.infer<typeof holdStatusReplySchema>;
 export type TResDiaryBookingReply = z.infer<typeof bookingReplySchema>;
+
+export type TBookingProvider = Pick<
+  TResDiaryProvider,
+  | "getRules"
+  | "getClosedDates"
+  | "getAvailableDates"
+  | "searchTimes"
+  | "createHold"
+  | "submitHoldGuest"
+  | "getHoldStatus"
+>;
+
+export type TBookingOperation =
+  | "getFindTableData"
+  | "getCalendarDays"
+  | "getTimes"
+  | "holdTable"
+  | "submitGuestDetails"
+  | "getHoldStatus";
+
+export type TBookingSkipReason =
+  (typeof BOOKING_SKIP_REASONS)[keyof typeof BOOKING_SKIP_REASONS];
+
+export interface ISkippedSlot {
+  date: string;
+  time: string;
+  reason: TBookingSkipReason;
+}
+
+export type TUnsupportedSetting =
+  (typeof BOOKING_UNSUPPORTED_SETTINGS)[keyof typeof BOOKING_UNSUPPORTED_SETTINGS];
+
+export interface IBookingServiceDeps {
+  provider?: TBookingProvider;
+  holdSecret?: string | null;
+  liveSite?: boolean;
+}
+
+export type TBookingErrorCode =
+  | ErrorCode.ServiceUnavailable
+  | ErrorCode.ValidationError
+  | ErrorCode.Conflict
+  | ErrorCode.Forbidden
+  | ErrorCode.NotFound
+  | ErrorCode.HoldExpired
+  | ErrorCode.OutcomeUnknown;
+
+export type THoldInput = z.infer<typeof holdInputSchema>;
+
+export type THoldToken = z.infer<typeof holdTokenSchema>;
+
+export type TGuestDetails = z.infer<typeof guestDetailsSchema>;
+
+export type TBookingField =
+  | keyof z.infer<typeof timesQuerySchema>
+  | keyof z.infer<typeof calendarQuerySchema>
+  | keyof THoldInput
+  | keyof TGuestDetails;
+
+export interface IBookingError extends IError<TBookingErrorCode> {
+  fieldErrors?: Partial<Record<TBookingField, string>>;
+  clearHold?: true;
+}
+
+export type TBookingResult<T> = Promise<NeverthrowResult<T, IBookingError>>;
+
+export interface IBookingWindow {
+  rules: IResDiaryRules;
+  lastDate: string | null;
+  closed: IResDiaryClosedDates;
+}
+
+export interface IBookingVisit {
+  today: string;
+  now: string;
+  lastDate: string | null;
+  closed: boolean;
+}
+
+export interface IFindTableData {
+  partySize: { min: number; max: number; default: number };
+  calendar: {
+    today: string;
+    lastDate: string | null;
+    defaultDate: string;
+    closedWeekdays: number[];
+    closedPeriods: IDatePeriod[];
+  };
+  terms: string[];
+}
+
+export interface ICalendarDays {
+  from: string;
+  to: string;
+  partySize: number;
+  openDates: string[];
+}
+
+export interface IReturnBy {
+  time: string;
+  label: string;
+  nextDay: boolean;
+  required: boolean;
+}
+
+export type TBookingOffer =
+  | {
+      kind: "standard";
+      feeCents: number;
+      mayRequireCard: boolean;
+      returnBy: IReturnBy | null;
+    }
+  | {
+      kind: "promotion";
+      promotionId: number;
+      name: string;
+      description: string;
+      feeCents: number;
+      mayRequireCard: boolean;
+      mayRequireDeposit: boolean;
+      returnBy: IReturnBy | null;
+    };
+
+export type TStandardOffer = Extract<TBookingOffer, { kind: "standard" }>;
+
+export interface ICurrentOffer {
+  time: IBookingTime;
+  offer: TStandardOffer;
+}
+
+export interface IBookingGuestContext {
+  provider: TBookingProvider;
+  secret: string;
+  liveSite: boolean;
+}
+
+export interface IBookingTime {
+  searchDate: string;
+  date: string;
+  time: string;
+  label: string;
+  offers: TBookingOffer[];
+}
+
+export type TTimesEmptyReason = "closed" | "none_online" | "all_passed";
+
+export interface ITimesData {
+  date: string;
+  dateLabel: string;
+  partySize: number;
+  guestsLabel: string;
+  times: IBookingTime[];
+  emptyReason: TTimesEmptyReason | null;
+}
+
+export interface IHoldSummary {
+  reference: string;
+  date: string;
+  dateLabel: string;
+  time: string;
+  timeLabel: string;
+  partySize: number;
+  guestsLabel: string;
+  offer: TStandardOffer;
+}
+
+export type TGuestDetailsResult =
+  | { kind: "confirmed"; reference: string; summary: IHoldSummary }
+  | {
+      kind: "payment";
+      amountCents: number;
+      amountText: string;
+      stripe: IResDiaryStripeStep;
+      summary: IHoldSummary;
+    }
+  | {
+      kind: "card";
+      amountText: string;
+      stripe: IResDiaryStripeStep;
+      summary: IHoldSummary;
+    };
+
+export type THoldState = "pending" | "confirmed" | "expired" | "failed";
+
+export interface IHoldStatusResult {
+  status: THoldState;
+  reference: string;
+  summary: IHoldSummary;
+  clearHold: boolean;
+}
+
+export interface IHoldCookieOptions {
+  httpOnly: boolean;
+  secure: boolean;
+  sameSite: "lax";
+  path: string;
+  maxAge: number;
+}
+
+export interface IHoldCookieStore {
+  get(name: string): { value: string } | undefined;
+  set(name: string, value: string, options: IHoldCookieOptions): unknown;
+  delete(cookie: { name: string; path: string }): unknown;
+}
+
+export interface IRateLimitWindow {
+  limit(identifier: string): Promise<{ success: boolean; reason?: string }>;
+}
+
+export type THoldGate = () => Promise<boolean>;
+
+export interface IHoldLimiterDeps {
+  windows: readonly IRateLimitWindow[];
+  secret: string;
+}
+
+export type TBookingResponse<T> =
+  | { ok: true; data: T }
+  | { ok: false; error: IBookingResponseError };
+
+export interface IBookingResponseError {
+  code: TBookingErrorCode | ErrorCode.InternalError;
+  message: string;
+  fieldErrors?: IBookingError["fieldErrors"];
+}
+
+export type THeldTable = Pick<IHoldResult, "expiresInMs" | "summary">;
+
+export interface IHoldResult {
+  holdToken: string;
+  cookieMaxAgeSeconds: number;
+  expiresInMs: number;
+  summary: IHoldSummary;
+}
 
 // ─── Component Prop Types ──────────────────────────────────────────────
 

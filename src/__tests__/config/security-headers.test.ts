@@ -12,6 +12,17 @@ async function getGlobalHeaders(): Promise<Map<string, string>> {
   return new Map(headers.map((header) => [header.key, header.value]));
 }
 
+async function getBookingPagePolicy(): Promise<string | undefined> {
+  const headerRules = (await nextConfig.headers?.()) ?? [];
+  const policies = headerRules
+    .filter(
+      (rule) => rule.source === "/(.*)" || rule.source === "/book-a-table",
+    )
+    .flatMap((rule) => rule.headers)
+    .filter((header) => header.key === "Content-Security-Policy");
+  return policies.at(-1)?.value;
+}
+
 describe("security headers", function securityHeaderTests() {
   afterEach(function restoreEnvironment() {
     vi.unstubAllEnvs();
@@ -102,5 +113,27 @@ describe("security headers", function securityHeaderTests() {
 
     expect(headers.get("Content-Security-Policy")).toContain("'unsafe-eval'");
     expect(headers.has("Strict-Transport-Security")).toBe(false);
+  });
+
+  it("allows Stripe.js only on the booking page, with 3-D Secure frames", async function stripeOnBookingPageTest() {
+    vi.stubEnv("NODE_ENV", "production");
+
+    const globalPolicy = (await getGlobalHeaders()).get(
+      "Content-Security-Policy",
+    );
+    const bookingPolicy = await getBookingPagePolicy();
+
+    expect(globalPolicy).not.toContain("stripe.com");
+    expect(bookingPolicy).toContain(
+      "script-src 'self' 'unsafe-inline' https://js.stripe.com https://*.js.stripe.com",
+    );
+    expect(bookingPolicy).toContain(
+      "frame-src https://js.stripe.com https://*.js.stripe.com https://hooks.stripe.com",
+    );
+    expect(bookingPolicy).toContain(
+      "connect-src 'self' https://api.stripe.com",
+    );
+    expect(bookingPolicy).toContain("frame-ancestors 'none'");
+    expect(bookingPolicy).toContain("object-src 'none'");
   });
 });

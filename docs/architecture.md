@@ -25,8 +25,8 @@ never imports an action or route handler.
 ## Module boundaries and names
 
 The directory states the technical role; the filename states the domain. Use
-`src/dal/examples.ts`, not `src/dal/example-dal.ts`, and apply the same rule to
-services and actions. Component and hook filenames use kebab-case.
+`src/services/bookings/`, not `src/services/booking-service/`, and apply the
+same rule to the DAL and actions. Component and hook filenames use kebab-case.
 
 Use `index.ts` only as a deliberate public entry point with consumers outside
 its directory. Do not create empty barrels or barrels that only duplicate
@@ -117,7 +117,7 @@ creates the shared Postgres client from validated environment values.
 deployments.
 
 DAL modules live in `src/dal/` and are server-only. Name them for the domain,
-such as `examples.ts`. Every query should:
+such as `bookings.ts`. Every query should:
 
 - select the columns its caller needs;
 - convert thrown database failures to an `IError`;
@@ -159,8 +159,9 @@ Avoid repeating the same session and permission queries in sibling components. A
 fresh request or mutation must verify authority again. This is request-local
 work reduction, not cross-request session caching.
 
-The example service validates with `createExampleSchema`, calls the examples
-DAL, and converts `Date` to an ISO string. That is enough work to justify the
+The bookings service (`src/services/bookings/`) checks input with the shared
+booking schema, applies Peploe's rules on top of the ResDiary provider, and
+maps its replies to screen-ready DTOs. That is enough work to justify the
 layer. A service that only forwards one call should be questioned.
 
 ## Server Actions
@@ -174,6 +175,17 @@ roles and account lifecycle for that application; the starter supplies none.
 The wrapper authenticates first, parses input, calls the handler, and converts
 unexpected failures to a safe internal error. Feature actions translate that
 result to the shape needed by `useActionState` and revalidate affected routes.
+
+`createPublicAction` is the one exception: the same parsing and catch without
+the sign-in check, for guest flows such as booking a table. Use it only when
+the flow limits its writes per visitor (booking rate-limits holds by IP) and
+never for data that belongs to an account. Next.js already refuses Server
+Actions posted from another origin.
+
+The booking actions (`src/actions/bookings.ts`) are called from a client
+transition, not a form, so they return plain `{ ok, data | error }` data
+through `toBookingResponse`, the same body as the booking routes. They do not
+revalidate: setting the hold cookie already re-renders the current page.
 
 ## Errors
 
@@ -216,7 +228,9 @@ and validation are available.
 
 The default CSP supports static rendering, so scripts and styles still allow
 inline content. It allows `unsafe-eval` only in development and adds monitoring
-or analytics origins only when their public configuration exists. Projects that
+or analytics origins only when their public configuration exists. The booking
+page (`/book-a-table`) gets the same policy plus Stripe.js and its 3-D Secure
+frames, from a later header rule that replaces the site-wide one on that path. Projects that
 need nonce-based CSP must accept dynamic rendering as described in the
 [Next.js CSP guide](https://nextjs.org/docs/app/guides/content-security-policy).
 

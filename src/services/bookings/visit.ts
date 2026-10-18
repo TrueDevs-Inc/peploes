@@ -1,0 +1,123 @@
+import "server-only";
+
+import { err, ok } from "neverthrow";
+
+import { BOOKING_LOG, BOOKING_MESSAGES } from "@/lib/constants/booking";
+import {
+  addDays,
+  dublinNow,
+  isInPeriod,
+  shortDateLabel,
+  weekdayOf,
+} from "@/lib/dates";
+import { LogContext } from "@/lib/enums";
+import { logger } from "@/lib/logger";
+import type {
+  IBookingError,
+  IBookingVisit,
+  IBookingWindow,
+  IResDiaryClosedDates,
+  IResDiaryRules,
+  IResDiaryTimeSearchInput,
+  TBookingProvider,
+  TBookingResult,
+} from "@/lib/types";
+import { invalid, unavailable } from "@/services/bookings/errors";
+
+export function impossibleLimits(rules: IResDiaryRules): IBookingError | null {
+  if (rules.maxPartySize >= rules.minPartySize) {
+    return null;
+  }
+  logger.error(LogContext.Api, BOOKING_LOG.impossiblePartyLimits, {
+    minPartySize: rules.minPartySize,
+    maxPartySize: rules.maxPartySize,
+  });
+  return unavailable();
+}
+
+export function guestLimitError(
+  partySize: number,
+  rules: IResDiaryRules,
+): IBookingError | null {
+  if (partySize < rules.minPartySize) {
+    return invalid(
+      "partySize",
+      BOOKING_MESSAGES.tooFewGuests(rules.minPartySize),
+    );
+  }
+  if (partySize > rules.maxPartySize) {
+    return invalid(
+      "partySize",
+      BOOKING_MESSAGES.tooManyGuests(rules.maxPartySize),
+    );
+  }
+  return null;
+}
+
+export function isClosed(date: string, closed: IResDiaryClosedDates): boolean {
+  return (
+    closed.closedWeekdays.includes(weekdayOf(date)) ||
+    closed.closedPeriods.some((period) => isInPeriod(date, period))
+  );
+}
+
+export async function loadWindow(
+  provider: TBookingProvider,
+  today: string,
+  deadlineAt: number,
+): TBookingResult<IBookingWindow> {
+  const options = { deadlineAt };
+  const [rules, closedReply] = await Promise.all([
+    provider.getRules(today, options),
+    provider.getClosedDates(options),
+  ]);
+  if (rules.isErr()) {
+    return err(unavailable());
+  }
+  if (closedReply.isErr()) {
+    logger.warn(LogContext.Api, BOOKING_LOG.closedDatesFailed, {
+      kind: closedReply.error.kind,
+    });
+  }
+  const { maxDaysAhead } = rules.value;
+  return ok({
+    rules: rules.value,
+    lastDate: maxDaysAhead ? addDays(today, maxDaysAhead) : null,
+    closed: closedReply.unwrapOr({ closedWeekdays: [], closedPeriods: [] }),
+  });
+}
+
+export async function checkVisit(
+  provider: TBookingProvider,
+  input: IResDiaryTimeSearchInput,
+  deadlineAt: number,
+): TBookingResult<IBookingVisit> {
+  const { date: today, time: now } = dublinNow();
+  if (input.date < today) {
+    return err(invalid("date", BOOKING_MESSAGES.pastDate));
+  }
+  const window = await loadWindow(provider, today, deadlineAt);
+  if (window.isErr()) {
+    return err(window.error);
+  }
+  const { lastDate, closed } = window.value;
+  if (lastDate !== null && input.date > lastDate) {
+    return err(
+      invalid("date", BOOKING_MESSAGES.tooFarAhead(shortDateLabel(lastDate))),
+    );
+  }
+  if (isClosed(input.date, closed)) {
+    return ok({ today, now, lastDate, closed: true });
+  }
+  const rules = await provider.getRules(input.date, { deadlineAt });
+  if (rules.isErr()) {
+    return err(unavailable());
+  }
+  const refused =
+    impossibleLimits(rules.value) ??
+    guestLimitError(input.partySize, rules.value);
+  if (refused) {
+    return err(refused);
+  }
+  return ok({ today, now, lastDate, closed: false });
+}

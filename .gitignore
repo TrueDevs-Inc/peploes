@@ -43,5 +43,6 @@ yarn-error.log*
 next-env.d.ts
 *tmp
 
-# local booking plan documents
+# local booking plan documents and review reports
 /docs/api/
+/docs/reports/booking-*.html

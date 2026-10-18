@@ -3,8 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createResDiaryProvider } from "@/lib/resdiary-provider";
 import type { IResDiaryConfig, IResDiaryReply } from "@/lib/types";
 
-// ─── Fake ResDiary ────────────────────────────────────────────────────────
-
 interface IRecordedRequest {
   method: string;
   path: string;
@@ -65,7 +63,6 @@ function hangs(): THandler {
   };
 }
 
-/** Answers after `ms`, unless the request is cancelled first, as a real fetch would. */
 function delayed(ms: number, handler: THandler): THandler {
   return function delayedReply(request) {
     return new Promise((resolve, reject) => {
@@ -88,7 +85,6 @@ function failsWith(code: string): THandler {
   };
 }
 
-/** Routes are "METHOD path-suffix"; a list of handlers is used in order, the last one repeats. */
 function fakeResDiary(routes: Record<string, THandler | THandler[]>) {
   const requests: IRecordedRequest[] = [];
   const queues = new Map(
@@ -132,7 +128,6 @@ function fakeResDiary(routes: Record<string, THandler | THandler[]>) {
   return { fetch, requests, count };
 }
 
-/** Runs every pending timer, so retries, back-offs and timeouts happen instantly. */
 async function settle<T>(promise: Promise<T>): Promise<T> {
   await vi.runAllTimersAsync();
   return promise;
@@ -190,8 +185,6 @@ beforeEach(function useFakeClock() {
 afterEach(function useRealClock() {
   vi.useRealTimers();
 });
-
-// ─── Slice 1: configuration, sign-in, booking rules ──────────────────────
 
 describe("ResDiary settings", function settingsTests() {
   afterEach(function resetEnv() {
@@ -507,8 +500,6 @@ describe("getRules", function getRulesTests() {
   });
 });
 
-// ─── Slice 2: transport, retries, caching, redaction ─────────────────────
-
 function loggedText(): string {
   return JSON.stringify([
     vi.mocked(console.log).mock.calls,
@@ -772,8 +763,6 @@ describe("reading from ResDiary", function readTransportTests() {
   });
 });
 
-// ─── Slice 3: dates and times ─────────────────────────────────────────────
-
 const DATE_RANGE = {
   AvailableDates: [
     {
@@ -1027,6 +1016,20 @@ describe("searchTimes", function searchTimesTests() {
     });
   });
 
+  it("reads a missing fee as no deposit", async function readsNoFee() {
+    const slot = {
+      ...TIME_SEARCH.TimeSlots[0],
+      StandardAvailabilityFeeAmount: null,
+    };
+    const { provider: resdiary } = provider(reply(200, { TimeSlots: [slot] }));
+
+    const result = await settle(
+      resdiary.searchTimes({ date: "2026-10-23", partySize: 2 }),
+    );
+
+    expect(result._unsafeUnwrap().slots).toMatchObject([{ feeCents: 0 }]);
+  });
+
   it("refuses a malformed date before calling ResDiary", async function refusesBadDate() {
     const { fake, provider: resdiary } = provider(reply(200, TIME_SEARCH));
 
@@ -1042,8 +1045,6 @@ describe("searchTimes", function searchTimesTests() {
     expect(fake.requests).toHaveLength(0);
   });
 });
-
-// ─── Slice 4: holding a table ─────────────────────────────────────────────
 
 const HOLD = {
   BookingId: 425740,
@@ -1210,8 +1211,6 @@ describe("createHold", function createHoldTests() {
   });
 });
 
-// ─── Slice 5: guest details and hold status ───────────────────────────────
-
 const GUEST_PATH = "/api/Restaurant/PeploesTest/UpdateTableHoldWithCustomer";
 const GUEST_INPUT = {
   holdId: 425742,
@@ -1299,7 +1298,11 @@ describe("submitHoldGuest", function submitHoldGuestTests() {
     await settle(
       resdiary.submitHoldGuest({
         ...GUEST_INPUT,
-        guest: { ...GUEST_INPUT.guest, mobile: "0871234567" },
+        guest: {
+          ...GUEST_INPUT.guest,
+          mobile: "871234567",
+          mobileCountryCode: 353,
+        },
         specialRequests: undefined,
       }),
     );
@@ -1310,7 +1313,8 @@ describe("submitHoldGuest", function submitHoldGuestTests() {
         FirstName: "Test",
         Surname: "Guest",
         Email: "guest@example.test",
-        Mobile: "0871234567",
+        Mobile: "871234567",
+        MobileCountryCode: 353,
       },
       RedirectUrl: "https://peploes.example/booking/return",
       CancelUrl: "https://peploes.example/booking/cancel",
@@ -1517,6 +1521,18 @@ describe("getHoldStatus", function getHoldStatusTests() {
     });
   });
 
+  it("warns once about a status it does not know, naming it", async function warnsUnknownStatus() {
+    const { provider: resdiary } = provider(
+      reply(200, { Status: "Rescheduled", Booking: { Reference: "B9GXWPLY" } }),
+    );
+
+    await settle(resdiary.getHoldStatus(425742));
+
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(loggedText()).toContain("ResDiary sent an unknown hold status");
+    expect(loggedText()).toContain("Rescheduled");
+  });
+
   it("maps 404 to not_found", async function notFound() {
     const { provider: resdiary } = provider(reply(404));
 
@@ -1546,8 +1562,6 @@ describe("getHoldStatus", function getHoldStatusTests() {
     expect(fake.requests).toHaveLength(0);
   });
 });
-
-// ─── Slice 6: reading and cancelling a booking ────────────────────────────
 
 const BOOKING = {
   Id: 425761,
@@ -1623,7 +1637,6 @@ describe("getBooking", function getBookingTests() {
 
       expect(result._unsafeUnwrapErr()).toMatchObject({ kind: "not_found" });
       expect(fake.count("GET /Booking/BQZ9X967")).toBe(0);
-      // A 401 may mean our own token was revoked, so it is renewed once first.
       expect(fake.count("POST /api/Jwt/v2/Authenticate")).toBe(
         status === 401 ? 2 : 1,
       );
@@ -1825,8 +1838,6 @@ describe("cancelBooking", function cancelBookingTests() {
   });
 });
 
-// ─── Review fixes ─────────────────────────────────────────────────────────
-
 describe("review fixes", function reviewFixTests() {
   it("returns a failure instead of throwing when something unexpected breaks", async function catchesUnexpected() {
     const fake = fakeResDiary({ "POST /api/Jwt/v2/Authenticate": signedIn() });
@@ -1991,5 +2002,125 @@ describe("second review fixes", function secondReviewFixTests() {
     const result = await settle(resdiary.getCancellationReasons());
 
     expect(result._unsafeUnwrap()).toEqual([]);
+  });
+});
+
+describe("getClosedDates", function getClosedDatesTests() {
+  function provider(closed: THandler | THandler[]) {
+    const fake = fakeResDiary({
+      "POST /api/Jwt/v2/Authenticate": signedIn(),
+      "GET /ClosedDates": closed,
+    });
+    return {
+      fake,
+      provider: createResDiaryProvider({ config: CONFIG, fetch: fake.fetch }),
+    };
+  }
+
+  it("reads ResDiary's closed weekdays as numbers, 0 = Sunday", async function readsWeekdays() {
+    const { fake, provider: resdiary } = provider(
+      reply(200, { ClosedDays: ["Monday"], ClosedPeriods: [] }),
+    );
+
+    const result = await settle(resdiary.getClosedDates());
+
+    expect(result._unsafeUnwrap()).toEqual({
+      closedWeekdays: [1],
+      closedPeriods: [],
+    });
+    expect(fake.requests.at(-1)?.path).toBe(`${RESTAURANT}/ClosedDates`);
+  });
+
+  it("reads closed periods and skips ones it cannot read", async function readsPeriods() {
+    const { provider: resdiary } = provider(
+      reply(200, {
+        ClosedDays: ["sunday", "Funday", "Monday"],
+        ClosedPeriods: [
+          {
+            StartDate: "2026-12-24T00:00:00",
+            EndDate: "2026-12-26T00:00:00.0000000",
+          },
+          { Begins: "2027-01-01" },
+          { StartDate: "2027-02-01", EndDate: "2027-01-31" },
+        ],
+      }),
+    );
+
+    const result = await settle(resdiary.getClosedDates());
+
+    expect(result._unsafeUnwrap()).toEqual({
+      closedWeekdays: [0, 1],
+      closedPeriods: [{ from: "2026-12-24", to: "2026-12-26" }],
+    });
+    expect(loggedText()).toContain(
+      "ResDiary sent closed dates the provider skipped",
+    );
+  });
+
+  it("reads empty or missing lists as nothing closed", async function readsEmpty() {
+    const { provider: resdiary } = provider(reply(200, {}));
+
+    const result = await settle(resdiary.getClosedDates());
+
+    expect(result._unsafeUnwrap()).toEqual({
+      closedWeekdays: [],
+      closedPeriods: [],
+    });
+  });
+
+  it("keeps closed dates for 5 minutes", async function cachesClosedDates() {
+    const { fake, provider: resdiary } = provider(
+      reply(200, { ClosedDays: ["Monday"], ClosedPeriods: [] }),
+    );
+
+    await settle(resdiary.getClosedDates());
+    await settle(resdiary.getClosedDates());
+    expect(fake.count("GET /ClosedDates")).toBe(1);
+
+    vi.setSystemTime(NOW.getTime() + 5 * 60_000 + 1);
+    await settle(resdiary.getClosedDates());
+    expect(fake.count("GET /ClosedDates")).toBe(2);
+  });
+
+  it("reports a failed read as unavailable", async function failsCleanly() {
+    const { provider: resdiary } = provider(reply(503));
+
+    const result = await settle(resdiary.getClosedDates());
+
+    expect(result._unsafeUnwrapErr()).toMatchObject({
+      kind: "unavailable",
+      operation: "getClosedDates",
+    });
+  });
+});
+
+describe("searchTimes with one unreadable slot", function badSlotTests() {
+  it("drops that slot with a warning and keeps the rest", async function dropsBadSlot() {
+    const fake = fakeResDiary({
+      "POST /api/Jwt/v2/Authenticate": signedIn(),
+      "POST /AvailabilitySearch": reply(200, {
+        ...TIME_SEARCH,
+        TimeSlots: [
+          TIME_SEARCH.TimeSlots[0],
+          { ...TIME_SEARCH.TimeSlots[2], TimeSlot: "sample string 3" },
+          { ...TIME_SEARCH.TimeSlots[2], LeaveTime: "25:99" },
+          TIME_SEARCH.TimeSlots[2],
+        ],
+      }),
+    });
+    const resdiary = createResDiaryProvider({
+      config: CONFIG,
+      fetch: fake.fetch,
+    });
+
+    const result = await settle(
+      resdiary.searchTimes({ date: "2026-10-23", partySize: 2 }),
+    );
+
+    expect(result._unsafeUnwrap().slots.map((slot) => slot.time)).toEqual([
+      "12:30",
+      "22:00",
+    ]);
+    expect(loggedText()).toContain("ResDiary sent unreadable time slots");
   });
 });

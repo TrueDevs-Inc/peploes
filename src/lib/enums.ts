@@ -13,6 +13,9 @@ export enum ErrorCode {
   DbListFailed = "DB_LIST_FAILED",
   DbCreateFailed = "DB_CREATE_FAILED",
   TooManyRequests = "TOO_MANY_REQUESTS",
+  ServiceUnavailable = "SERVICE_UNAVAILABLE",
+  OutcomeUnknown = "OUTCOME_UNKNOWN",
+  HoldExpired = "HOLD_EXPIRED",
 }
 
 // ─── HTTP ─────────────────────────────────────────────────────────────────

@@ -1,6 +1,20 @@
 import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
+const BOOKING_PAGE = "/book-a-table";
+
+const STRIPE_SOURCES = {
+  script: ["https://js.stripe.com", "https://*.js.stripe.com"],
+  frame: [
+    "https://js.stripe.com",
+    "https://*.js.stripe.com",
+    "https://hooks.stripe.com",
+  ],
+  connect: ["https://api.stripe.com"],
+} as const;
+
+const NO_EXTRA_SOURCES = { script: [], frame: [], connect: [] } as const;
+
 function getConfiguredOrigin(value: string | undefined): string | undefined {
   if (!value || !URL.canParse(value)) return undefined;
 
@@ -45,7 +59,7 @@ const nextConfig: NextConfig = {
       "'unsafe-inline'",
       ...(isDevelopment ? ["'unsafe-eval'"] : []),
       ...(hasClientAnalytics ? ["https://www.googletagmanager.com"] : []),
-    ].join(" ");
+    ];
     const connectionSources = [
       "connect-src",
       "'self'",
@@ -53,7 +67,7 @@ const nextConfig: NextConfig = {
       ...(hasClientAnalytics
         ? ["https://*.google-analytics.com", "https://analytics.google.com"]
         : []),
-    ].join(" ");
+    ];
     const imageSources = [
       "img-src",
       "'self'",
@@ -61,6 +75,25 @@ const nextConfig: NextConfig = {
       "blob:",
       ...(hasClientAnalytics ? ["https://*.google-analytics.com"] : []),
     ].join(" ");
+
+    function contentSecurityPolicy(stripe: boolean): string {
+      const extra = stripe ? STRIPE_SOURCES : NO_EXTRA_SOURCES;
+      return [
+        "default-src 'self'",
+        [...scriptSources, ...extra.script].join(" "),
+        "style-src 'self' 'unsafe-inline'",
+        imageSources,
+        "font-src 'self' data:",
+        [...connectionSources, ...extra.connect].join(" "),
+        ...(extra.frame.length > 0
+          ? [["frame-src", ...extra.frame].join(" ")]
+          : []),
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+        "frame-ancestors 'none'",
+      ].join("; ");
+    }
 
     return [
       {
@@ -89,18 +122,16 @@ const nextConfig: NextConfig = {
           },
           {
             key: "Content-Security-Policy",
-            value: [
-              "default-src 'self'",
-              scriptSources,
-              "style-src 'self' 'unsafe-inline'",
-              imageSources,
-              "font-src 'self' data:",
-              connectionSources,
-              "object-src 'none'",
-              "base-uri 'self'",
-              "form-action 'self'",
-              "frame-ancestors 'none'",
-            ].join("; "),
+            value: contentSecurityPolicy(false),
+          },
+        ],
+      },
+      {
+        source: BOOKING_PAGE,
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value: contentSecurityPolicy(true),
           },
         ],
       },

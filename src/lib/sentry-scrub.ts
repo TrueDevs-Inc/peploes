@@ -1,6 +1,3 @@
-// Outgoing request URLs can carry secrets, such as the ResDiary guest token in
-// a booking read, so Sentry keeps only the scheme, host and path of each URL.
-
 const QUERY_KEYS = new Set([
   "http.query",
   "http.fragment",
@@ -24,7 +21,6 @@ function scrubData(data: Record<string, unknown>): void {
   }
 }
 
-/** `beforeBreadcrumb`: Sentry stores a fetch's query beside its URL. */
 export function scrubBreadcrumb<T extends { data?: Record<string, unknown> }>(
   breadcrumb: T,
 ): T {
@@ -34,7 +30,6 @@ export function scrubBreadcrumb<T extends { data?: Record<string, unknown> }>(
   return breadcrumb;
 }
 
-/** `beforeSendSpan`: span attributes and names can hold the full URL. */
 export function scrubSpan<
   T extends { description?: string; data: Record<string, unknown> },
 >(span: T): T {

@@ -1,12 +1,14 @@
-import { ok } from "neverthrow";
+import { err, ok } from "neverthrow";
 import { describe, expect, it, vi } from "vitest";
 
 import {
   createAction,
+  createPublicAction,
   getActionContext,
   requireAuthContext,
 } from "@/actions/base";
 import { ErrorCode } from "@/lib/enums";
+import { createError } from "@/lib/errors";
 
 describe("action authentication", function actionAuthenticationTests() {
   it("starts unauthenticated until a verified session resolver is installed", async function startsUnauthenticated() {
@@ -48,5 +50,102 @@ describe("action authentication", function actionAuthenticationTests() {
       parseCalls: 0,
       handlerCalls: 0,
     });
+  });
+});
+
+describe("public actions", function publicActionTests() {
+  it("runs for a guest with no sign-in, handing the handler the parsed input", async function runsForGuest() {
+    const action = createPublicAction<
+      number,
+      string,
+      ErrorCode.ValidationError
+    >({
+      parse: function parseGuests(rawInput) {
+        return ok(Number(rawInput));
+      },
+      handler: function holdTable({ input }) {
+        return Promise.resolve(ok(`held for ${input} guests`));
+      },
+    });
+
+    const result = await action("2");
+
+    expect(result).toEqual(ok("held for 2 guests"));
+  });
+
+  it("returns the parser's error for bad input, without running the handler", async function refusesBadInput() {
+    const refusal = createError(
+      ErrorCode.ValidationError,
+      "Choose the number of guests.",
+    );
+    const handler = vi.fn(function holdTable() {
+      return Promise.resolve(ok("held"));
+    });
+    const action = createPublicAction<
+      number,
+      string,
+      ErrorCode.ValidationError
+    >({
+      parse: function parseGuests() {
+        return err(refusal);
+      },
+      handler,
+    });
+
+    const result = await action("abc");
+
+    expect(result).toEqual(err(refusal));
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it("turns a crash into a safe error and logs the details once", async function catchesCrash() {
+    const log = vi
+      .spyOn(console, "error")
+      .mockImplementation(function silence() {});
+    const action = createPublicAction<
+      number,
+      string,
+      ErrorCode.ValidationError
+    >({
+      parse: function parseGuests(rawInput) {
+        return ok(Number(rawInput));
+      },
+      handler: function holdTable() {
+        throw new Error("cookie store unavailable");
+      },
+    });
+
+    const result = await action("2");
+
+    expect(result).toEqual(
+      err(
+        createError(ErrorCode.InternalError, "Unable to complete the request."),
+      ),
+    );
+    expect(log).toHaveBeenCalledTimes(1);
+    expect(JSON.stringify(log.mock.calls)).toContain(
+      "cookie store unavailable",
+    );
+  });
+
+  it("also catches an async handler that fails later", async function catchesRejection() {
+    vi.spyOn(console, "error").mockImplementation(function silence() {});
+    const action = createPublicAction<
+      number,
+      string,
+      ErrorCode.ValidationError
+    >({
+      parse: function parseGuests(rawInput) {
+        return ok(Number(rawInput));
+      },
+      handler: async function holdTable() {
+        await Promise.resolve();
+        throw new Error("ResDiary timed out");
+      },
+    });
+
+    const result = await action("2");
+
+    expect(result.isErr() && result.error.code).toBe(ErrorCode.InternalError);
   });
 });

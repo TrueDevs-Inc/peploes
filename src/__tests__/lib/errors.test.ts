@@ -10,8 +10,11 @@ describe("mapErrorStatus", function mapErrorStatusTests() {
     [ErrorCode.Forbidden, HTTP_STATUS.FORBIDDEN],
     [ErrorCode.NotFound, HTTP_STATUS.NOT_FOUND],
     [ErrorCode.Conflict, HTTP_STATUS.CONFLICT],
+    [ErrorCode.HoldExpired, HTTP_STATUS.GONE],
     [ErrorCode.ValidationError, HTTP_STATUS.UNPROCESSABLE],
     [ErrorCode.TooManyRequests, HTTP_STATUS.TOO_MANY_REQUESTS],
+    [ErrorCode.ServiceUnavailable, HTTP_STATUS.SERVICE_UNAVAILABLE],
+    [ErrorCode.OutcomeUnknown, HTTP_STATUS.BAD_GATEWAY],
     [ErrorCode.DatabaseError, HTTP_STATUS.INTERNAL_ERROR],
   ])("maps %s to %i", function mapsErrorCode(code, expectedStatus) {
     expect(mapErrorStatus(code)).toBe(expectedStatus);

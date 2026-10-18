@@ -4,12 +4,14 @@ import { err, ok, type Result } from "neverthrow";
 import type { z } from "zod/v4";
 
 import {
+  CALENDAR_NAMES,
   HTTP_CONTENT_TYPE,
   HTTP_STATUS,
   MILLISECONDS_PER_DAY,
 } from "@/lib/constants";
 import {
   RESDIARY_BOOKING_STATUSES,
+  RESDIARY_CLOSED_DATES_CACHE_KEY,
   RESDIARY_DETAILS,
   RESDIARY_ENDPOINTS,
   RESDIARY_EXPECTED_FAILURES,
@@ -28,12 +30,12 @@ import {
   RESDIARY_REFUSED_GUEST_STATUSES,
   RESDIARY_REQUEST_ID,
   RESDIARY_SIGN_IN_SUCCESS,
-  RESDIARY_TIME_SUFFIX,
   RESDIARY_TIMING,
   RESDIARY_URL_FIELD_TYPE,
   RESDIARY_UTC_ZONE,
   RESDIARY_WRITE_OPERATIONS,
 } from "@/lib/constants/resdiary";
+import { isCalendarDate, isClockTime, utcMidnight } from "@/lib/dates";
 import { LogContext } from "@/lib/enums";
 import { env } from "@/lib/env";
 import { UNSENT_NETWORK_CODES } from "@/lib/errors";
@@ -41,6 +43,8 @@ import { logger } from "@/lib/logger";
 import {
   bookingReplySchema,
   cancelReasonsReplySchema,
+  closedDatesReplySchema,
+  closedPeriodReplySchema,
   dateRangeBody,
   dateRangeReplySchema,
   errorReplySchema,
@@ -56,6 +60,7 @@ import {
   signInReplySchema,
   timeSearchBody,
   timeSearchReplySchema,
+  timeSlotReplySchema,
 } from "@/lib/resdiary-schema";
 import type {
   IResDiaryBooking,
@@ -65,6 +70,7 @@ import type {
   IResDiaryCancelled,
   IResDiaryCancelReason,
   IResDiaryClock,
+  IResDiaryClosedDates,
   IResDiaryConfig,
   IResDiaryConnection,
   IResDiaryDateRange,
@@ -81,9 +87,11 @@ import type {
   IResDiaryStripeStep,
   IResDiaryTimeSearchInput,
   IResDiaryTimes,
+  IResDiaryWeekdays,
   TResDiaryAttempt,
   TResDiaryBookingReply,
   TResDiaryCache,
+  TResDiaryClosedDatesReply,
   TResDiaryDateRangeReply,
   TResDiaryFailure,
   TResDiaryGuestOutcome,
@@ -97,12 +105,6 @@ import type {
   TResDiaryTimeSlotReply,
 } from "@/lib/types";
 
-// The one module that talks to ResDiary.
-// Constants: src/lib/constants/resdiary.ts. Wire format: src/lib/resdiary-schema.ts.
-
-// ─── Formats ──────────────────────────────────────────────────────────────
-
-/** ResDiary instants carry up to seven fractional digits and sometimes no zone; no zone means UTC. */
 function parseInstant(value: string): number | null {
   const match = RESDIARY_PATTERNS.wireInstant.exec(value);
   if (!match) {
@@ -116,7 +118,6 @@ function parseInstant(value: string): number | null {
   return Number.isNaN(millis) ? null : millis;
 }
 
-/** `Retry-After` in seconds or as an HTTP date. */
 function parseRetryAfter(value: string | null): number | null {
   if (!value) {
     return null;
@@ -147,25 +148,8 @@ function toClock(value: string): IResDiaryClock {
   return { time: `${hours}:${minutes}`, nextDay: Number(days) > 0 };
 }
 
-/** Euro amounts arrive as numbers such as 20 or 19.99. */
 function toCents(amount: number | null | undefined): number {
   return Math.round((amount ?? 0) * RESDIARY_LIMITS.centsPerEuro);
-}
-
-/** Midnight UTC of a YYYY-MM-DD date, for calendar arithmetic only. */
-function utcMidnight(value: string): number {
-  return Date.parse(
-    `${value}${RESDIARY_TIME_SUFFIX.midnight}${RESDIARY_UTC_ZONE}`,
-  );
-}
-
-/** A real calendar date in YYYY-MM-DD form. */
-function isDate(value: string): boolean {
-  if (!RESDIARY_PATTERNS.date.test(value)) {
-    return false;
-  }
-  const at = utcMidnight(value);
-  return !Number.isNaN(at) && new Date(at).toISOString().startsWith(value);
 }
 
 function isPartySize(value: number): boolean {
@@ -182,9 +166,6 @@ function invalidFields(checks: Record<string, boolean>): string[] {
     .map(([field]) => field);
 }
 
-// ─── Failures and logging ─────────────────────────────────────────────────
-
-/** Keeps only the id part of a ResDiary request id, never the API account email. */
 function redactRequestId(value: string | null | undefined): string | undefined {
   if (!value) {
     return undefined;
@@ -251,8 +232,6 @@ function logFailure(failure: TResDiaryFailure, durationMs: number): void {
 function truncateForLog(value: string): string {
   return value.slice(0, RESDIARY_LIMITS.loggedValueMaxLength);
 }
-
-// ─── Transport ────────────────────────────────────────────────────────────
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -321,7 +300,6 @@ function jsonHeaders(token?: string): HeadersInit {
   };
 }
 
-/** Waits for a promise until the deadline, then gives up without cancelling it. */
 async function waitUntil<T>(
   promise: Promise<T>,
   deadlineAt: number,
@@ -365,8 +343,6 @@ function createCache<T>(): TResDiaryCache<T> {
     if (hit && hit.expiresAt > Date.now()) {
       return Promise.resolve(ok(hit.value));
     }
-    // A shared load gets at least the full budget, so a hurried first caller
-    // cannot cut it short for a later caller with more time.
     const pending =
       loading.get(key) ??
       load(Math.max(caller.deadlineAt, Date.now() + RESDIARY_TIMING.budgetMs))
@@ -387,8 +363,6 @@ function createCache<T>(): TResDiaryCache<T> {
     );
   };
 }
-
-// ─── Sign-in and token ────────────────────────────────────────────────────
 
 function pauseSignIn(connection: IResDiaryConnection, detail: string): string {
   connection.signInPausedUntil = Date.now() + RESDIARY_TIMING.signInPauseMs;
@@ -421,7 +395,6 @@ function acceptToken(
   connection: IResDiaryConnection,
   reply: IResDiaryHttpReply,
 ): Result<string, string> {
-  // Only a 401 says the account was refused; a 403 can be a firewall page.
   if (reply.status === HTTP_STATUS.UNAUTHORIZED) {
     return err(pauseSignIn(connection, `sign-in ${reply.status}`));
   }
@@ -444,7 +417,6 @@ function acceptToken(
   return ok(body.Token);
 }
 
-/** One sign-in attempt, plus one more after a network failure, 5xx or 429. */
 async function signIn(
   connection: IResDiaryConnection,
 ): Promise<Result<string, string>> {
@@ -513,12 +485,6 @@ function forgetToken(connection: IResDiaryConnection, rejected: string): void {
   }
 }
 
-// ─── Requests ─────────────────────────────────────────────────────────────
-
-/**
- * How long to wait before retrying, or null when the attempt must not be retried.
- * Takes the next delay from `delays`.
- */
 function retryWait(
   result: TResDiaryAttempt,
   delays: number[],
@@ -579,10 +545,6 @@ function attemptRequest(
   );
 }
 
-/**
- * Sends one request with the shared token. Reads retry network failures, 5xx
- * and 429; a 401 gets one new sign-in and one resend.
- */
 async function send(
   connection: IResDiaryConnection,
   request: IResDiaryRequest,
@@ -621,7 +583,6 @@ function isSuccessStatus(status: number): boolean {
   );
 }
 
-/** Turns a reply into parsed data, or the failure its status and body mean. */
 function readReply<T>(
   request: IResDiaryRequest,
   reply: IResDiaryHttpReply,
@@ -678,8 +639,6 @@ function rejectedInput(
   return { kind: "rejected", operation, fields };
 }
 
-// ─── Booking rules ────────────────────────────────────────────────────────
-
 function toStripe(setup: TResDiarySetupReply): IResDiaryRules["stripe"] {
   const stripe = setup.StripeInfo;
   if (
@@ -722,7 +681,6 @@ function toRules(setup: TResDiarySetupReply): IResDiaryRules {
     minPartySize,
     maxPartySize: setup.MaxOnlinePartySize,
     defaultPartySize: setup.OnlinePartySizeDefault ?? minPartySize,
-    // ResDiary uses both null and 0 for "no limit".
     maxDaysAhead: setup.AcceptBookingsDaysInAdvance || null,
     services: (setup.Services ?? []).map((service) => ({
       id: service.ServiceId,
@@ -755,7 +713,7 @@ function getRules(
   date: string,
   deadlineAt: number,
 ): TResDiaryResult<IResDiaryRules> {
-  if (!isDate(date)) {
+  if (!isCalendarDate(date)) {
     return Promise.resolve(err(rejectedInput("getRules", ["date"])));
   }
   const caller = { operation: "getRules" as const, deadlineAt };
@@ -778,7 +736,77 @@ function getRules(
   });
 }
 
-// ─── Dates and times ──────────────────────────────────────────────────────
+function readWeekdays(names: string[]): IResDiaryWeekdays {
+  const weekdays = new Set<number>();
+  let skipped = 0;
+  for (const name of names) {
+    const weekday = CALENDAR_NAMES.weekdays.findIndex(
+      (day) => day.toLowerCase() === name.trim().toLowerCase(),
+    );
+    if (weekday === -1) {
+      skipped += 1;
+    } else {
+      weekdays.add(weekday);
+    }
+  }
+  return { weekdays: [...weekdays].sort((a, b) => a - b), skipped };
+}
+
+function readPeriods(
+  periods: unknown[],
+): IResDiaryClosedDates["closedPeriods"] {
+  const kept: IResDiaryClosedDates["closedPeriods"] = [];
+  for (const period of periods) {
+    const parsed = closedPeriodReplySchema.safeParse(period);
+    if (parsed.success) {
+      const from = datePart(parsed.data.StartDate);
+      const to = datePart(parsed.data.EndDate);
+      if (from <= to) {
+        kept.push({ from, to });
+      }
+    }
+  }
+  return kept;
+}
+
+function toClosedDates(reply: TResDiaryClosedDatesReply): IResDiaryClosedDates {
+  const periods = reply.ClosedPeriods ?? [];
+  const days = readWeekdays(reply.ClosedDays ?? []);
+  const closedPeriods = readPeriods(periods);
+  const skippedPeriods = periods.length - closedPeriods.length;
+  if (days.skipped > 0 || skippedPeriods > 0) {
+    logger.warn(LogContext.Api, RESDIARY_LOG.skippedClosedDates, {
+      provider: RESDIARY_LOG.provider,
+      skippedDays: days.skipped,
+      skippedPeriods,
+    });
+  }
+  return { closedWeekdays: days.weekdays, closedPeriods };
+}
+
+function getClosedDates(
+  connection: IResDiaryConnection,
+  deadlineAt: number,
+): TResDiaryResult<IResDiaryClosedDates> {
+  const caller = { operation: "getClosedDates" as const, deadlineAt };
+  return connection.closedDates(
+    RESDIARY_CLOSED_DATES_CACHE_KEY,
+    caller,
+    async (loadDeadlineAt) => {
+      const reply = await call(
+        connection,
+        {
+          operation: "getClosedDates",
+          method: "GET",
+          path: restaurantPath(connection, RESDIARY_ENDPOINTS.closedDates),
+          deadlineAt: loadDeadlineAt,
+        },
+        closedDatesReplySchema,
+      );
+      return reply.map(toClosedDates);
+    },
+  );
+}
 
 function toDateRange(range: TResDiaryDateRangeReply): IResDiaryDateRange {
   const start = range.MissingDatesStart;
@@ -793,14 +821,14 @@ function toDateRange(range: TResDiaryDateRangeReply): IResDiaryDateRange {
 }
 
 function rangeFields(input: IResDiaryDateRangeInput): string[] {
-  const fromValid = isDate(input.from);
+  const fromValid = isCalendarDate(input.from);
   const days =
     (utcMidnight(input.to) - utcMidnight(input.from)) / MILLISECONDS_PER_DAY +
     1;
   return invalidFields({
     from: fromValid,
     to:
-      isDate(input.to) &&
+      isCalendarDate(input.to) &&
       (!fromValid || (days >= 1 && days <= RESDIARY_LIMITS.maxRangeDays)),
     partySize: isPartySize(input.partySize),
   });
@@ -843,13 +871,36 @@ function toSlot(slot: TResDiaryTimeSlotReply): IResDiarySlot {
   };
 }
 
+function readSlots(slots: unknown[]): IResDiarySlot[] {
+  const kept: IResDiarySlot[] = [];
+  const fields = new Set<string>();
+  for (const slot of slots) {
+    const parsed = timeSlotReplySchema.safeParse(slot);
+    if (parsed.success) {
+      kept.push(toSlot(parsed.data));
+    } else {
+      for (const issue of parsed.error.issues) {
+        fields.add(issue.path.join(".") || RESDIARY_DETAILS.root);
+      }
+    }
+  }
+  if (kept.length < slots.length) {
+    logger.warn(LogContext.Api, RESDIARY_LOG.unreadableSlots, {
+      provider: RESDIARY_LOG.provider,
+      dropped: slots.length - kept.length,
+      fields: [...fields],
+    });
+  }
+  return kept;
+}
+
 async function searchTimes(
   connection: IResDiaryConnection,
   input: IResDiaryTimeSearchInput,
   deadlineAt: number,
 ): TResDiaryResult<IResDiaryTimes> {
   const fields = invalidFields({
-    date: isDate(input.date),
+    date: isCalendarDate(input.date),
     partySize: isPartySize(input.partySize),
   });
   if (fields.length > 0) {
@@ -868,16 +919,10 @@ async function searchTimes(
   );
   return search.map((times) => ({
     mayRequireCard: Boolean(times.StandardAvailabilityMayRequireCreditCard),
-    slots: (times.TimeSlots ?? []).map(toSlot),
+    slots: readSlots(times.TimeSlots ?? []),
   }));
 }
 
-// ─── Holding a table ──────────────────────────────────────────────────────
-
-/**
- * Times the hold on ResDiary's own clock (its Date header) when it can, so our
- * server's clock drift cannot shorten or stretch the guest's countdown.
- */
 function toHold(
   hold: TResDiaryHoldReply,
   reply: IResDiaryHttpReply,
@@ -888,8 +933,6 @@ function toHold(
   if (expiresAt === null) {
     return err(RESDIARY_DETAILS.unreadableExpiry);
   }
-  // ResDiary stamped its Date somewhere inside our request, so taking off the
-  // whole request time can only shorten the countdown, never stretch it.
   const expiresInMs =
     reply.date === null
       ? expiresAt - Date.now()
@@ -914,8 +957,8 @@ async function createHold(
   deadlineAt: number,
 ): TResDiaryResult<IResDiaryHold> {
   const fields = invalidFields({
-    date: isDate(input.date),
-    time: RESDIARY_PATTERNS.time.test(input.time),
+    date: isCalendarDate(input.date),
+    time: isClockTime(input.time),
     partySize: isPartySize(input.partySize),
   });
   if (fields.length > 0) {
@@ -944,9 +987,6 @@ async function createHold(
   );
 }
 
-// ─── Guest details and hold status ────────────────────────────────────────
-
-/** The Stripe step the browser needs, or null when we cannot take this payment. */
 function stripeStep(
   reply: TResDiaryGuestReply,
   clientSecret: string | null | undefined,
@@ -1014,7 +1054,6 @@ function toGuestOutcome(
   }
 }
 
-/** Sends once. Whether to resend after an unknown outcome is the service's call. */
 async function submitHoldGuest(
   connection: IResDiaryConnection,
   input: IResDiaryGuestInput,
@@ -1087,8 +1126,6 @@ async function getHoldStatus(
   return reply.map(toHoldStatus);
 }
 
-// ─── Bookings and cancelling ──────────────────────────────────────────────
-
 function toBooking(booking: TResDiaryBookingReply): IResDiaryBooking {
   const visitAtUtc = booking.VisitDateTimeUtc
     ? parseInstant(booking.VisitDateTimeUtc)
@@ -1116,11 +1153,6 @@ function bookingPath(
   );
 }
 
-/**
- * Signs in as the guest with their email. The guest token never leaves this
- * module. A refused email and an unknown reference both answer not_found, so
- * callers cannot probe which references exist.
- */
 async function signInGuest(
   connection: IResDiaryConnection,
   lookup: IResDiaryBookingLookup,
@@ -1223,7 +1255,6 @@ function getCancellationReasons(
           operation: "getCancellationReasons",
           method: "GET",
           path: `${restaurantPath(connection, RESDIARY_ENDPOINTS.cancellationReasons)}?${query}`,
-          // ResDiary may answer an empty list with no body.
           emptyBody: [],
           deadlineAt: loadDeadlineAt,
         },
@@ -1240,7 +1271,6 @@ function getCancellationReasons(
   );
 }
 
-/** Sends the cancel. A lost reply or a 5xx is left to the read-back to judge. */
 async function sendCancel(
   connection: IResDiaryConnection,
   input: IResDiaryCancelInput,
@@ -1276,7 +1306,6 @@ async function sendCancel(
   return ok(undefined);
 }
 
-/** Reads the booking back a few times; true once ResDiary shows it cancelled. */
 async function confirmCancelled(
   connection: IResDiaryConnection,
   reference: string,
@@ -1322,7 +1351,6 @@ async function cancelBooking(
     reference: input.reference,
     status: "cancelled",
   };
-  // One guest sign-in serves the first read and every read-back.
   const guestToken = await signInGuest(connection, input, deadlineAt);
   if (guestToken.isErr()) {
     return err({ ...guestToken.error, operation });
@@ -1367,8 +1395,6 @@ async function cancelBooking(
   });
 }
 
-// ─── Provider ─────────────────────────────────────────────────────────────
-
 function readConfigFromEnv(): IResDiaryConfig | null {
   const apiUrl = env.RESDIARY_API_URL;
   const micrositeName = env.RESDIARY_MICROSITE_NAME;
@@ -1388,7 +1414,6 @@ function deadline(
   return options?.deadlineAt ?? Date.now() + budgetMs;
 }
 
-/** Tests pass their own config and fetch; the app uses `resdiary` below. */
 export function createResDiaryProvider(deps: IResDiaryDeps = {}) {
   const config = deps.config === undefined ? readConfigFromEnv() : deps.config;
   const connection: IResDiaryConnection | null = config
@@ -1403,6 +1428,7 @@ export function createResDiaryProvider(deps: IResDiaryDeps = {}) {
         signInPausedUntil: 0,
         rules: createCache(),
         cancelReasons: createCache(),
+        closedDates: createCache(),
       }
     : null;
 
@@ -1418,7 +1444,6 @@ export function createResDiaryProvider(deps: IResDiaryDeps = {}) {
     try {
       result = await work(connection);
     } catch (error) {
-      // Never throw to callers. A write may have reached ResDiary before the throw.
       result = err({
         kind: RESDIARY_WRITE_OPERATIONS.has(operation)
           ? "outcome_unknown"
@@ -1475,11 +1500,14 @@ export function createResDiaryProvider(deps: IResDiaryDeps = {}) {
       run("getBooking", (connected) =>
         getBooking(connected, lookup, deadline(options)),
       ),
+    getClosedDates: (options?: IResDiaryCallOptions) =>
+      run("getClosedDates", (connected) =>
+        getClosedDates(connected, deadline(options)),
+      ),
     getCancellationReasons: (options?: IResDiaryCallOptions) =>
       run("getCancellationReasons", (connected) =>
         getCancellationReasons(connected, deadline(options)),
       ),
-    /** Default deadline 15 s: the read-back after the cancel needs the time. */
     cancelBooking: (
       input: IResDiaryCancelInput,
       options?: IResDiaryCallOptions,

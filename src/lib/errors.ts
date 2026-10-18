@@ -1,6 +1,7 @@
 import type { Result } from "neverthrow";
 
-import { ErrorCode } from "@/lib/enums";
+import { ERROR_HTTP_STATUS } from "@/lib/constants";
+import type { ErrorCode } from "@/lib/enums";
 import type { IAppError, IError, TResult } from "@/lib/types";
 
 // ─── Transient Network Error Detection ────────────────────────────────────
@@ -14,7 +15,6 @@ export const TRANSIENT_NETWORK_CODES = new Set([
   "ENOTFOUND",
 ]);
 
-/** Failures before the request left this server, so a write did not reach it. */
 export const UNSENT_NETWORK_CODES = new Set([
   "ENOTFOUND",
   "EAI_AGAIN",
@@ -43,6 +43,16 @@ export async function tryCatch<T, E = unknown>(
   }
 }
 
+export function getErrorMetadata(error: unknown): Record<string, unknown> {
+  if (!(error instanceof Error)) return { error };
+
+  return {
+    name: error.name,
+    message: error.message,
+    stack: error.stack,
+  };
+}
+
 export function createError<TCode extends ErrorCode>(
   code: TCode,
   message: string,
@@ -60,29 +70,7 @@ export function createAppError(
 }
 
 export function mapErrorStatus(code: ErrorCode): number {
-  switch (code) {
-    case ErrorCode.Unauthorized:
-      return 401;
-    case ErrorCode.Forbidden:
-      return 403;
-    case ErrorCode.NotFound:
-      return 404;
-    case ErrorCode.Conflict:
-      return 409;
-    case ErrorCode.ValidationError:
-    case ErrorCode.InvalidForm:
-      return 422;
-    case ErrorCode.TooManyRequests:
-      return 429;
-    case ErrorCode.DatabaseError:
-    case ErrorCode.DbListFailed:
-    case ErrorCode.DbCreateFailed:
-    case ErrorCode.InternalError:
-    case ErrorCode.NotImplemented:
-      return 500;
-    default:
-      return 500;
-  }
+  return ERROR_HTTP_STATUS[code];
 }
 
 export function unwrapResultOrThrow<T, E>(

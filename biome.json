@@ -260,7 +260,8 @@
                       "postgres",
                       "postgres/**",
                       "drizzle-orm",
-                      "drizzle-orm/**"
+                      "drizzle-orm/**",
+                      "@upstash/**"
                     ],
                     "message": "Services own domain rules. Use the DAL or a concrete provider adapter; keep framework and SDK configuration outside services."
                   }
@@ -330,6 +331,10 @@
                       "drizzle-orm/**"
                     ],
                     "message": "Application entry points call domain services rather than querying persistence directly."
+                  },
+                  {
+                    "group": ["@upstash/**"],
+                    "message": "Configure Upstash in src/lib/rate-limit-provider.ts and pass its allowHold to the service."
                   }
                 ]
               }

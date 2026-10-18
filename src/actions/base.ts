@@ -4,24 +4,27 @@ import { err, ok, type Result } from "neverthrow";
 
 import { ACTION_MESSAGES } from "@/lib/constants";
 import { ErrorCode, LogContext } from "@/lib/enums";
-import { createError } from "@/lib/errors";
+import { createError, getErrorMetadata } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 import type {
   IActionContext,
   IActionDefinition,
   IAuthenticatedContext,
   IError,
+  IPublicActionDefinition,
   TAuthErrorCodes,
 } from "@/lib/types";
 
-function getErrorMetadata(error: unknown): Record<string, unknown> {
-  if (!(error instanceof Error)) return { error };
-
-  return {
-    name: error.name,
-    message: error.message,
-    stack: error.stack,
-  };
+function unexpectedFailure(error: unknown): IError<ErrorCode.InternalError> {
+  logger.error(
+    LogContext.ErrorHandler,
+    ACTION_MESSAGES.UNEXPECTED_FAILURE_LOG,
+    getErrorMetadata(error),
+  );
+  return createError(
+    ErrorCode.InternalError,
+    ACTION_MESSAGES.UNEXPECTED_FAILURE_PUBLIC,
+  );
 }
 
 export function getActionContext(): Promise<IActionContext> {
@@ -73,17 +76,25 @@ export function createAction<TInput, TOutput, TCode extends ErrorCode>(
         context: authResult.value,
       });
     } catch (error) {
-      logger.error(
-        LogContext.ErrorHandler,
-        ACTION_MESSAGES.UNEXPECTED_FAILURE_LOG,
-        getErrorMetadata(error),
-      );
-      return err(
-        createError(
-          ErrorCode.InternalError,
-          ACTION_MESSAGES.UNEXPECTED_FAILURE_PUBLIC,
-        ),
-      );
+      return err(unexpectedFailure(error));
+    }
+  };
+}
+
+export function createPublicAction<TInput, TOutput, TCode extends ErrorCode>(
+  definition: IPublicActionDefinition<TInput, TOutput, TCode>,
+): (
+  rawInput: unknown,
+) => Promise<Result<TOutput, IError<TCode | ErrorCode.InternalError>>> {
+  return async (rawInput: unknown) => {
+    try {
+      const inputResult = definition.parse(rawInput);
+      if (inputResult.isErr()) {
+        return err(inputResult.error);
+      }
+      return await definition.handler({ input: inputResult.value });
+    } catch (error) {
+      return err(unexpectedFailure(error));
     }
   };
 }
