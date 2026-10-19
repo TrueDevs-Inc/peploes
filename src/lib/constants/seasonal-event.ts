@@ -69,8 +69,14 @@ export const SEASONAL_EVENT_CONTENT: ISeasonalEventContent = {
     eyebrow: "Section Eyebrow",
     heading: "Section Heading",
     paragraphs: [
-      "This is a space for a more detailed description of the campaign. You can share the story, highlight what makes it special, and give visitors a sense of what to expect.",
-      "Add a second paragraph here to include any further details, such as menus, experiences, or why it’s the perfect occasion to visit Peploe’s.",
+      {
+        _key: "paragraph-7",
+        text: "This is a space for a more detailed description of the campaign. You can share the story, highlight what makes it special, and give visitors a sense of what to expect.",
+      },
+      {
+        _key: "paragraph-184",
+        text: "Add a second paragraph here to include any further details, such as menus, experiences, or why it’s the perfect occasion to visit Peploe’s.",
+      },
     ],
     image: {
       src: "/peploes-event-candlelit-room.jpg",

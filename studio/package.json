@@ -11,9 +11,11 @@
     "dev": "sanity dev",
     "start": "sanity start",
     "type-check": "tsc --noEmit",
-    "seed:preview": "sanity exec seed-menus.ts --with-user-token",
-    "seed:development": "sanity exec seed-menus.ts --with-user-token -- --apply",
-    "audit": "bun audit --audit-level high"
+    "seed:preview": "node seed.cjs menus preview",
+    "seed:development": "node seed.cjs menus apply",
+    "audit": "bun audit --audit-level high",
+    "seed:events:preview": "node seed.cjs events preview",
+    "seed:events:development": "node seed.cjs events apply"
   },
   "keywords": [
     "sanity"

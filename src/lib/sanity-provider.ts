@@ -37,12 +37,58 @@ export function fetchMenuCollections(): ResultAsync<unknown, IError> {
   }`);
 }
 
+const SEASONAL_CARD_PROJECTION = `{
+ _id,_updatedAt,kind,title,"slug":slug.current,date,endDate,category,summary,action,"noIndex":coalesce(noIndex,true),
+ hero{...,image{alt,"src":asset->url}}
+}`;
+const SEASONAL_ENTRY_PROJECTION = `{
+ ...,"slug":slug.current,
+ hero{...,image{alt,"src":asset->url}},
+ menu{..., "cards": cards[_type == "seasonalMenuHighlight" || defined(menu->slug.current)]{
+  ...,"menu":menu->slug.current,image{alt,"src":asset->url}
+ }},
+ story{...,image{alt,"src":asset->url}},
+ gallery{...,images[]{_key,alt,"src":asset->url}},
+ invitation{...,image{alt,"src":asset->url}},
+ related{..., "cards": cards[_type == "seasonalRelatedPage" || (@->enabled != false && defined(@->slug.current))]{
+  ...select(
+    _type == "seasonalRelatedPage" => {_type,_key,title,description,action,href,image{alt,"src":asset->url}},
+    @->${SEASONAL_CARD_PROJECTION}
+  )
+ }}
+}`;
+export function fetchSeasonalEntries() {
+  return requestContent(
+    `*[_type == "seasonalEntry" && enabled != false] | order(date asc, title asc)${SEASONAL_CARD_PROJECTION}`,
+  );
+}
+export function fetchSeasonalEntryExists(slug: string) {
+  return requestContent(
+    'defined(*[_type == "seasonalEntry" && enabled != false && slug.current == $slug][0]._id)',
+    { slug },
+  );
+}
+
+export function fetchSeasonalEntry(slug: string) {
+  return requestContent(
+    `*[_type == "seasonalEntry" && enabled != false && slug.current == $slug][0..1]${SEASONAL_ENTRY_PROJECTION}`,
+    { slug },
+  );
+}
+export function fetchWhatsOnPage() {
+  return requestContent(`*[_type == "whatsOnPage" && _id == "whats-on-page"][0]{
+  ...,hero{...,image{alt,"src":asset->url}},
+  terrace{...,image{alt,"src":asset->url}},
+  join{...,image{alt,"src":asset->url}}
+ }`);
+}
+
 function requestContent(
   query: string,
   params: Record<string, string> = {},
 ): ResultAsync<unknown, IError> {
   return ResultAsync.fromPromise(fetchContent(query, params), (cause) =>
-    createError(ErrorCode.InternalError, "Unable to load menu content.", cause),
+    createError(ErrorCode.InternalError, "Unable to load CMS content.", cause),
   );
 }
 

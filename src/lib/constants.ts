@@ -416,3 +416,29 @@ export const MENU_SLUGS = [
   "group-set-menu",
   "seasonal",
 ] as const;
+
+export const SEASONAL_DETAIL_ICONS = {
+  date: { src: "/peploes-event-calendar.svg", width: 48, height: 48 },
+  time: { src: "/peploes-visit-clock.svg", width: 48, height: 48 },
+  price: { src: "/peploes-events-deposit.svg", width: 48, height: 48 },
+  menu: { src: "/peploes-events-menu.svg", width: 48, height: 48 },
+} as const;
+
+export const SEASONAL_RELATED_PAGES = {
+  "Lunch menu": ROUTES.LUNCH,
+  "Dinner menu": ROUTES.DINNER,
+  "Pre-Theatre menu": ROUTES.PRE_THEATRE,
+  "Wine menu": ROUTES.WINE,
+  Cocktails: ROUTES.COCKTAILS,
+  "Group Set Menu": ROUTES.GROUP_SET_MENU,
+  "Seasonal menus": ROUTES.SEASONAL,
+  "Private Dining & Events": ROUTES.PRIVATE_DINING,
+  "Groups & Celebrations": ROUTES.CELEBRATIONS,
+  "Corporate & Exclusive Hire": ROUTES.CORPORATE_EVENTS,
+  Weddings: ROUTES.WEDDINGS,
+} as const;
+
+export const SEASONAL_GALLERY_LIMITS = {
+  MIN_IMAGES: 3,
+  MAX_IMAGES: 5,
+} as const;

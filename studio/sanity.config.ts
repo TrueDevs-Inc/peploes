@@ -16,6 +16,22 @@ export default defineConfig({
           .title("Content")
           .items([
             S.listItem()
+              .title("What’s On")
+              .child(
+                S.list()
+                  .title("What’s On")
+                  .items([
+                    S.documentTypeListItem("seasonalEntry"),
+                    S.listItem()
+                      .title("Page settings")
+                      .child(
+                        S.document()
+                          .schemaType("whatsOnPage")
+                          .documentId("whats-on-page"),
+                      ),
+                  ]),
+              ),
+            S.listItem()
               .id("menus")
               .title("Menus")
               .child(
@@ -42,9 +58,11 @@ export default defineConfig({
   schema: { types: schemaTypes },
   document: {
     newDocumentOptions: (options) =>
-      options.filter((option) => option.templateId !== "menusPage"),
+      options.filter(
+        (option) => !["menusPage", "whatsOnPage"].includes(option.templateId),
+      ),
     actions: (actions, context) =>
-      context.schemaType === "menusPage"
+      ["menusPage", "whatsOnPage"].includes(context.schemaType)
         ? actions.filter(
             (action) =>
               action.action !== "duplicate" && action.action !== "delete",

@@ -7,6 +7,7 @@ import { MENU_PAGE_CONTENT } from "@/lib/constants/menu-page";
 import { PRE_THEATRE_MENU } from "@/lib/constants/pre-theatre-menu";
 import { SEASONAL_MENU } from "@/lib/constants/seasonal-menu";
 import { WINE_MENU } from "@/lib/constants/wine-menu";
+import { seasonalFixtures, seasonalPageFixture } from "./seasonal-fixtures";
 
 // Preloaded only by Playwright's server command, never by the application.
 if (
@@ -63,6 +64,15 @@ const collections = [GROUP_SET_MENU, SEASONAL_MENU].map((menu) => ({
 function queryResult(url: URL): unknown {
   const query = url.searchParams.get("query") ?? "";
   const slug = url.searchParams.get("$slug");
+  if (query.includes('_type == "whatsOnPage"'))
+    return project(seasonalPageFixture);
+  if (query.includes('_type == "seasonalEntry"')) {
+    const events = slug
+      ? seasonalFixtures.filter((entry) => entry.slug === JSON.parse(slug))
+      : seasonalFixtures;
+    if (query.startsWith("defined(")) return events.length > 0;
+    return project(events);
+  }
   if (slug) {
     const menu = menus.get(JSON.parse(slug));
     return menu ? [menu] : [];

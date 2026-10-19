@@ -9,13 +9,12 @@ import { SeasonalEventRelated } from "@/components/app/compounds/seasonal-event-
 import { SeasonalEventAction } from "@/components/app/molecules/seasonal-event-action";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/lib/constants";
-import { SEASONAL_EVENT_CONTENT } from "@/lib/constants/seasonal-event";
 import { dmSans, ebGaramond } from "@/lib/fonts";
+import type { ISeasonalEventProps } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-export function SeasonalEvent() {
-  const { hero, details, menu, story, gallery, invitation, related } =
-    SEASONAL_EVENT_CONTENT;
+export function SeasonalEvent({ content, join }: ISeasonalEventProps) {
+  const { hero, details, menu, story, gallery, invitation, related } = content;
 
   return (
     <main
@@ -48,7 +47,7 @@ export function SeasonalEvent() {
         <section className={styles.details} aria-label="Event information">
           <dl className={cn("site-container", styles.detailsList)}>
             {details.map((detail) => (
-              <div key={detail.label} className={styles.detail}>
+              <div key={detail._key ?? detail.label} className={styles.detail}>
                 <dt>
                   <Image
                     {...detail.icon}
@@ -74,7 +73,10 @@ export function SeasonalEvent() {
             <p className={styles.menuDescription}>{menu.description}</p>
             <div className={styles.menuCards}>
               {menu.cards.map((card) => (
-                <article key={card.title} className={styles.menuCard}>
+                <article
+                  key={card.id ?? card.title}
+                  className={styles.menuCard}
+                >
                   <div className={styles.menuImage}>
                     <Image
                       {...card.image}
@@ -86,7 +88,12 @@ export function SeasonalEvent() {
                   <div className={styles.menuCardCopy}>
                     <h3>{card.title}</h3>
                     <p>{card.description}</p>
-                    <SeasonalEventAction label={card.action} href={card.href} />
+                    {card.href && (
+                      <SeasonalEventAction
+                        label={card.action}
+                        href={card.href}
+                      />
+                    )}
                   </div>
                 </article>
               ))}
@@ -104,8 +111,8 @@ export function SeasonalEvent() {
               </p>
               <h2 id="event-story">{story.heading}</h2>
               {story.paragraphs.map((paragraph) => (
-                <p key={paragraph} className={styles.storyParagraph}>
-                  {paragraph}
+                <p key={paragraph._key} className={styles.storyParagraph}>
+                  {paragraph.text}
                 </p>
               ))}
             </div>
@@ -130,7 +137,10 @@ export function SeasonalEvent() {
             <h2 id="event-gallery">{gallery.heading}</h2>
             <div className={styles.galleryImages}>
               {gallery.images.map((photo) => (
-                <div key={photo.src} className={styles.galleryImage}>
+                <div
+                  key={photo._key ?? photo.src}
+                  className={styles.galleryImage}
+                >
                   <Image
                     {...photo}
                     fill
@@ -144,41 +154,55 @@ export function SeasonalEvent() {
         </section>
       )}
 
-      <section className={styles.invitation} aria-labelledby="event-invitation">
-        <Image
-          {...invitation.image}
-          fill
-          sizes="100vw"
-          className={styles.cover}
-        />
-        <div className="site-container">
-          <div className={styles.invitationCopy}>
-            <h2 id="event-invitation">{invitation.heading}</h2>
-            <p>{invitation.description}</p>
-            <div className={styles.invitationActions}>
-              <Button
-                type="button"
-                aria-disabled="true"
-                variant="brand-primary"
-              >
-                {invitation.bookingAction}
-                <ArrowRight aria-hidden="true" className="size-4" />
-              </Button>
-              <Button asChild variant="brand-secondary-inverse">
-                <Link href={ROUTES.VISIT_CONTACT}>
-                  {invitation.enquiryAction}
+      {invitation && (
+        <section
+          className={styles.invitation}
+          aria-labelledby="event-invitation"
+        >
+          <Image
+            {...invitation.image}
+            fill
+            sizes="100vw"
+            className={styles.cover}
+          />
+          <div className="site-container">
+            <div className={styles.invitationCopy}>
+              <h2 id="event-invitation">{invitation.heading}</h2>
+              <p>{invitation.description}</p>
+              <div className="mt-6 flex flex-col gap-2.5 sm:mt-7 sm:flex-row sm:flex-wrap sm:gap-4">
+                <Button
+                  type="button"
+                  aria-disabled="true"
+                  variant="brand-primary"
+                  className="h-auto min-h-11 w-full max-w-full gap-2 whitespace-normal rounded-[4px] px-6 py-2.5 text-base leading-[22px] has-[>svg]:px-6 sm:min-h-12 sm:w-auto sm:text-lg sm:leading-[26px] lg:min-w-[249px] lg:px-5 lg:has-[>svg]:px-5"
+                >
+                  <span className="min-w-0 [overflow-wrap:anywhere]">
+                    {invitation.bookingAction}
+                  </span>
                   <ArrowRight aria-hidden="true" className="size-4" />
-                </Link>
-              </Button>
+                </Button>
+                <Button
+                  asChild
+                  variant="brand-secondary-inverse"
+                  className="h-auto min-h-11 w-full max-w-full gap-2 whitespace-normal rounded-none px-6 py-2.5 text-base leading-[22px] has-[>svg]:px-6 sm:min-h-12 sm:w-auto sm:text-lg sm:leading-[26px] lg:min-w-[206px] lg:px-5 lg:has-[>svg]:px-5"
+                >
+                  <Link href={ROUTES.VISIT_CONTACT}>
+                    <span className="min-w-0 [overflow-wrap:anywhere]">
+                      {invitation.enquiryAction}
+                    </span>
+                    <ArrowRight aria-hidden="true" className="size-4" />
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {related && related.cards.length > 0 && (
         <SeasonalEventRelated content={related} />
       )}
-      <SeasonalJoin />
+      <SeasonalJoin join={join} />
     </main>
   );
 }

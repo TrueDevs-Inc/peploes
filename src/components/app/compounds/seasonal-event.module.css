@@ -262,28 +262,6 @@
   line-height: 28px;
 }
 
-.invitationActions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-top: 28px;
-}
-
-.invitationActions :is(a, button) {
-  gap: 8px;
-  height: auto;
-  min-height: 48px;
-  padding: 10px 24px;
-  border-radius: 0;
-  font-size: 18px;
-  line-height: 26px;
-  white-space: normal;
-}
-
-.invitationActions button {
-  border-radius: 4px;
-}
-
 .related {
   padding-block: 24px 38px;
 }
@@ -457,19 +435,6 @@
     flex-direction: column;
     justify-content: flex-end;
     padding-block: 128px 40px;
-  }
-
-  .invitationActions {
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 24px;
-  }
-
-  .invitationActions :is(a, button) {
-    width: 100%;
-    min-height: 44px;
-    font-size: 16px;
-    line-height: 22px;
   }
 
   .related {
@@ -723,16 +688,6 @@
     line-height: 30px;
   }
 
-  .invitationActions {
-    gap: 16px;
-    margin-top: 28px;
-  }
-
-  .invitationActions :is(a, button) {
-    padding-inline: 20px;
-    white-space: nowrap;
-  }
-
   .related {
     padding-top: 14px;
   }
@@ -740,14 +695,6 @@
   .relatedCards {
     margin-top: 12px;
     padding-block: 4px 0;
-  }
-
-  .invitationActions button {
-    width: 249px;
-  }
-
-  .invitationActions a {
-    width: 206px;
   }
 
   .relatedCard {

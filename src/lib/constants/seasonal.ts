@@ -17,7 +17,9 @@ export const SEASONAL_CONTENT = {
     heading: "In the diary.",
     description:
       "From seasonal dishes to special evenings, there’s always something to look forward to at Peploe’s.",
-    // Figma’s example programme remains static until event publishing is built.
+    emptyMessage: "New dates will be announced here soon.",
+    action: "Find Out More",
+    // Design fixtures for browser tests; the website diary reads Sanity.
     months: [
       {
         name: "October",

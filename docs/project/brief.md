@@ -472,13 +472,19 @@ are 437, 1729, 256 and 444px high. The diary uses 72px gutters, 45px month bars,
 224px event rows and 1px Soft Stone dividers. Its empty right column and the
 absence of decorative eyebrow rules are intentional.
 
-Comment #65 approves this hub and asks for rugby fixtures to be added during
-the year. Comment #63 describes future Campaign, Event and Menu Moment CMS
-variants. This frontend keeps Figma’s example programme in a static catalog;
-the dates are not a live schedule and do not produce Event structured data.
-The six diary actions open the individual event template. Booking actions
-remain inactive until the booking flow is built.
-Contact Us opens Visit & Contact. Navigation and footer links, plus the homepage’s
+The hub reads published Sanity `seasonalEntry` documents. Each entry selects
+Campaign, Event or Menu Moment; a separate category label supports Rugby,
+Wine Dinner and other programme labels. Start/end dates control the upcoming
+diary in Europe/Dublin time. Entries are grouped by month and year internally,
+with the original month-only visible headings, sorted by start date, and shows the configured empty message when no dates remain. Past detail
+pages remain accessible until unpublished or disabled. No static event fixtures
+are shown when Sanity is empty or unavailable.
+
+The `whatsOnPage` singleton controls the hero, diary introduction, optional
+terrace feature and shared closing invitation. Until settings are first
+published, existing shared design copy is used. Invalid settings and API failures
+reach the error boundary instead of silently showing fallback events.
+Booking actions remain inactive. Contact Us opens Visit & Contact. Navigation and footer links, plus the homepage’s
 “View what’s on” action, open the new hub.
 
 Use the three original Figma photos. The terrace source is only 243×244px;
@@ -499,10 +505,15 @@ image loading and horizontal overflow when changing this page.
 
 `/seasonal/[slug]` follows Final Pages `3889:13660`, “Peploe’s luxury dining
 campaign.” Comment #69 identifies it as the page for individual events. The
-approved implementation keeps the exact Figma placeholder copy, including
-“Campaign/Event Title,” for all six diary destinations. Unknown slugs return
-404. These placeholders use `noindex` and stay out of the sitemap and
-`llms.txt` until real event content is approved.
+CMS implementation uses this layout for each published entry's own content.
+New slugs work without a code change or rebuild. Unknown, unpublished or
+disabled entries return HTTP 404 and show the not-found page. A route-specific
+proxy checks only the published document’s existence before the shared loading
+boundary can stream a response. This adds one small Sanity read per detail
+request; full content is still loaded once per render. Provider failures reach
+the page error boundary, not a false 404. Search indexing is off by default for test content.
+Approved entries with indexing enabled appear in the sitemap; metadata uses
+their title, description and hero. No unverified Event structured data is emitted.
 
 The template includes optional event information, menu cards, a story block,
 gallery and related content, followed by the existing invitation banner.
@@ -521,8 +532,14 @@ a 72px/73px heading and 22px/31px paragraphs. Both headings use -1px letter spac
 Keep desktop type sizes fixed; allow narrower columns to wrap and the section
 to grow beyond its 470px minimum rather than shrinking or clipping the copy.
 
-Make an Inquiry and Contact Us open Visit & Contact. Menu, related-content
-and booking actions remain inactive until their destinations are approved.
+Make an Inquiry and Contact Us open Visit & Contact. Linked menu cards open the selected published menu. Related cards open their
+selected published event or an existing menu/group page; unpublished or disabled
+event references are omitted. Journal destinations remain pending until those
+pages are implemented. Each diary entry can override its link label; leaving
+it empty uses the shared diary label.
+Booking actions remain inactive. Invitation buttons grow to fit CMS labels and
+wrap onto another row when needed. On phones they remain full-width; long labels
+wrap inside the button instead of overflowing its border.
 At tablet widths, the related row scrolls with touch or its arrow controls.
 No separate mobile design is supplied. Below 640px, use the established 24px
 gutters, 42px/44px section headings, 16px/24px body copy and 12px eyebrows.
@@ -533,8 +550,69 @@ single vertical column, with a full-width 3:2 photo above the copy on each
 card and 32px between cards. Hide carousel controls on phones.
 Tablet and desktop sizing stays unchanged. Check the six routes, unknown-route 404,
 image loading, navigation, carousel controls and horizontal overflow when
-changing this template. No CMS integration or Event structured data is added
-for the placeholder programme.
+changing this template.
+
+### Figma CMS notes and reference alignment
+
+Comments #63 and #65 confirm Campaign, Event and Menu Moment variants and
+support for rugby fixtures throughout the year. In comment #69, Gina asks to
+edit all event elements; Rabia confirms editable content and optional sections
+for smaller events. The six sticky notes alongside the individual template
+specify optional information fields, linked menus or on-page menu highlights,
+an optional story section, three to five gallery images, and related cards that
+can point to events, menus, Journal articles or group pages.
+
+The implementation keeps the fixed section order, typography, gutters, image
+crops and responsive CSS. A highlight card has no navigation action. Extra
+gallery photos use the existing grid. Samsu's Sanity setup is a reference for
+editorial documents, references, singleton settings and mapping published data
+to fixed UI components; Peploe's keeps its existing provider, validation and
+service boundaries. It does not copy Samsu's project configuration or content.
+
+The development dataset currently contains one labelled test event. Its shorter
+diary is a content difference, not a change to the original six-row layout.
+Real event dates and copy must be supplied and published before launch.
+
+### Editing What’s On in development
+
+1. Open this branch's Studio. Choose **What’s On → Events and campaigns**.
+2. Create an entry and choose Campaign, Event or Menu Moment.
+3. Fill in the title, URL name, start date, category, diary description and page
+   introduction. Upload a photo and give it descriptive alternative text.
+4. Use an end date for a campaign spanning several days. The dates control the
+   diary; the optional Event information fields control the displayed details.
+5. Optional sections may be left unset. When adding one, complete its required
+   fields. In Menu & Experience, choose a linked menu, an on-page highlight, or
+   one of each. Linked menus and related events must be published first.
+   Galleries accept three to five photographs. More to Explore accepts event
+   references and cards linking to existing menu or group pages.
+6. Keep **Keep out of search engines** on for testing. Click **Publish**, then
+   refresh `/seasonal` and click the entry. Draft edits do not change the website.
+7. To remove an entry, unpublish it or turn **Show on website** off and publish.
+   To change shared headings/photos, edit **What’s On → Page settings**.
+
+For an initial example, from `studio` run
+`bun run seed:events:preview` to preview, then
+`bun run seed:events:development` to create it. This command is restricted to
+`3ggctsor/development`, creates only missing settings and one labelled test
+event, and never replaces existing documents. The example is not a real event.
+No production content is copied automatically.
+The package commands use a Node launcher to set `PEPLOES_SEED_APPLY` explicitly: preview commands force
+`0`, and development commands set `1`. Do not pass `--apply` to `sanity exec`;
+the installed CLI rejects that flag. The launcher overrides inherited mode
+values directly in the child environment, including on Windows.
+
+The What’s On branch builds on `feat/ali/sanity-setup`
+([PR #14](https://github.com/TrueDevs-Inc/peploes/pull/14)). Its PR targets
+`dev`, so the diff includes the parent menu CMS commit until that work is
+integrated. Merge the menu CMS work first, then update this branch against
+`dev` and review the remaining diff.
+
+**Studio audit blocker:** `braces@3.0.3` is brought in by Sanity’s code generation
+dependencies. [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)
+has no published patched version as of 19 October 2026. The latest Sanity CLI
+and code generation packages still depend on the affected package. Keep the
+audit gate enabled and include this blocker in the PR description.
 
 ## Our Story implementation
 

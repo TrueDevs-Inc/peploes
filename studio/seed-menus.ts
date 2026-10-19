@@ -71,7 +71,7 @@ async function main() {
       `${seed.content.slug}: ${matches.length ? "keep existing fields; add missing fields" : "create from website preview content"}\n`,
     );
   }
-  if (!process.argv.includes("--apply")) {
+  if (process.env.PEPLOES_SEED_APPLY !== "1") {
     process.stdout.write(
       "Preview only. Run seed:development to apply. Existing field values are never replaced.\n",
     );

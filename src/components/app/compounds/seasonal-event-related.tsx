@@ -86,7 +86,7 @@ export function SeasonalEventRelated({ content }: ISeasonalEventRelatedProps) {
           className={styles.relatedCards}
         >
           {content.cards.map((card) => (
-            <li key={card.title} className={styles.relatedCard}>
+            <li key={card.id ?? card.title} className={styles.relatedCard}>
               <div className={styles.relatedImage}>
                 <Image
                   {...card.image}

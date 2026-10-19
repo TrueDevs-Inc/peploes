@@ -1,48 +1,33 @@
-import { notFound } from "next/navigation";
-
 import { SeasonalEvent } from "@/components/app/compounds/seasonal-event";
-import { ROUTES } from "@/lib/constants";
-import { SEASONAL_CONTENT } from "@/lib/constants/seasonal";
-import { SEASONAL_EVENT_CONTENT } from "@/lib/constants/seasonal-event";
+import { loadSeasonalEntry, loadWhatsOnPage } from "@/lib/seasonal-content";
+import { getSeasonalEventContent, seasonalPath } from "@/lib/seasonal-data";
 import { buildSeoMetadata } from "@/lib/seo";
+import type { ISeasonalRouteProps } from "@/lib/types";
 
-export const dynamicParams = false;
-
-export function generateStaticParams() {
-  return SEASONAL_CONTENT.diary.months.flatMap((month) =>
-    month.events.map(({ slug }) => ({ slug })),
-  );
-}
-
-function validateEventSlug(slug: string) {
-  const exists = SEASONAL_CONTENT.diary.months.some((month) =>
-    month.events.some((event) => event.slug === slug),
-  );
-
-  if (!exists) notFound();
-}
-
-export async function generateMetadata({
-  params,
-}: PageProps<"/seasonal/[slug]">) {
+export async function generateMetadata({ params }: ISeasonalRouteProps) {
   const { slug } = await params;
-  validateEventSlug(slug);
-
+  const content = await loadSeasonalEntry(slug);
   return buildSeoMetadata({
-    title: SEASONAL_EVENT_CONTENT.title,
-    description: SEASONAL_EVENT_CONTENT.seoDescription,
-    url: `${ROUTES.WHATS_ON}/${slug}`,
-    image: SEASONAL_EVENT_CONTENT.hero.image.src,
-    imageAlt: SEASONAL_EVENT_CONTENT.hero.image.alt,
-    noIndex: true,
+    title: content.title,
+    description: content.seoDescription,
+    url: seasonalPath(content.slug),
+    image: content.hero.image.src,
+    imageAlt: content.hero.image.alt,
+    noIndex: content.noIndex,
   });
 }
-
 export default async function SeasonalEventPage({
   params,
-}: PageProps<"/seasonal/[slug]">) {
+}: ISeasonalRouteProps) {
   const { slug } = await params;
-  validateEventSlug(slug);
-
-  return <SeasonalEvent />;
+  const [entry, settings] = await Promise.all([
+    loadSeasonalEntry(slug),
+    loadWhatsOnPage(),
+  ]);
+  return (
+    <SeasonalEvent
+      content={getSeasonalEventContent(entry)}
+      join={settings.join}
+    />
+  );
 }

@@ -1,8 +1,10 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./menu-test";
+
+import { seasonalFixtures, seasonalPageFixture } from "./seasonal-fixtures";
 
 const eventPath = "/seasonal/rugby-at-peploes";
 
-test("each diary destination serves the approved template without indexing placeholder copy", async ({
+test("each published diary entry serves its own content and keeps test copy out of search", async ({
   page,
 }) => {
   for (const slug of [
@@ -17,7 +19,7 @@ test("each diary destination serves the approved template without indexing place
     expect(response?.status()).toBe(200);
     await expect(
       page.getByRole("main").getByRole("heading", {
-        name: "Campaign/Event Title",
+        name: seasonalFixtures.find((entry) => entry.slug === slug)?.title,
         level: 1,
         exact: true,
       }),
@@ -28,10 +30,20 @@ test("each diary destination serves the approved template without indexing place
     );
   }
 
-  const missingEvent = await page.goto("/seasonal/not-an-event");
-  expect(missingEvent?.status()).toBe(404);
+  const missingPage = await page.goto("/seasonal/not-an-event");
+  expect(missingPage?.status()).toBe(404);
   await expect(
-    page.getByRole("heading", { name: "Campaign/Event Title", level: 1 }),
+    page.getByRole("heading", { name: "Page Not Found", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.locator('meta[name="robots"][content="noindex"]').first(),
+  ).toBeAttached();
+  const missingEvent = await page.request.get("/seasonal/not-an-event", {
+    headers: { "User-Agent": "Twitterbot/1.0" },
+  });
+  expect(missingEvent.status()).toBe(404);
+  await expect(
+    page.getByRole("heading", { name: "Rugby at Peploe’s", level: 1 }),
   ).toHaveCount(0);
 });
 
@@ -51,7 +63,7 @@ test("event photographs load with preserved proportions and content fits without
   }
 
   const heading = page.getByRole("heading", {
-    name: "Campaign/Event Title",
+    name: "Rugby at Peploe’s",
     level: 1,
     exact: true,
   });
@@ -130,7 +142,10 @@ test("What's On remains the active section and returns from an event to the diar
 test("event enquiry and contact links reach Visit & Contact", async ({
   page,
 }) => {
-  for (const name of ["Make an Inquiry", "Contact Us"]) {
+  for (const name of [
+    "Make an Inquiry",
+    seasonalPageFixture.join.contactAction,
+  ]) {
     await page.goto(eventPath);
     const contact = page
       .getByRole("main")
@@ -147,17 +162,15 @@ test("event enquiry and contact links reach Visit & Contact", async ({
   }
 });
 
-test("unfinished menu, related and booking actions remain inert placeholders", async ({
+test("booking actions remain unavailable until their booking flow is connected", async ({
   page,
 }) => {
   await page.goto(eventPath);
   const main = page.getByRole("main");
 
   for (const name of [
-    "View Menu",
-    "Find Out More",
     "Book this Experience",
-    "Book a Table",
+    seasonalPageFixture.join.bookingAction,
   ]) {
     const actions = main.getByRole("button", { name, exact: true });
     expect(await actions.count()).toBeGreaterThan(0);
@@ -188,11 +201,11 @@ test("related items stack on phones and remain navigable on tablets", async ({
     exact: true,
   });
   const first = related.getByRole("heading", {
-    name: "Related Campaign",
+    name: "An Evening with Italian Wines",
     exact: true,
   });
   const last = related.getByRole("heading", {
-    name: "Special Event",
+    name: "Sunday at Peploe’s",
     exact: true,
   });
 
@@ -236,4 +249,103 @@ test("related items stack on phones and remain navigable on tablets", async ({
     await expect(first).toBeInViewport();
     await expect(previous).toBeDisabled();
   }
+});
+
+test("menu and related event links open their published destinations", async ({
+  page,
+}) => {
+  await page.goto(eventPath);
+  await expect(
+    page
+      .getByRole("main")
+      .getByRole("link", { name: "View Menu", exact: true }),
+  ).toHaveAttribute("href", "/menus/dinner");
+  const related = page.getByRole("region", { name: "More to Explore" });
+  await related.getByRole("link").first().click();
+  await expect(page).toHaveURL("/seasonal/italian-wine-dinner");
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "An Evening with Italian Wines",
+    }),
+  ).toBeVisible();
+});
+
+test("encoded event URLs resolve and malformed encodings stay unavailable", async ({
+  page,
+}) => {
+  const response = await page.goto("/seasonal/rugby%2Dat%2Dpeploes");
+  expect(response?.status()).toBe(200);
+  await expect(
+    page.getByRole("heading", {
+      name: "Rugby at Peploe’s",
+      level: 1,
+      exact: true,
+    }),
+  ).toBeVisible();
+
+  const malformed = await page.request.get("/seasonal/%E0%A4%A");
+  expect(malformed.status()).toBe(404);
+});
+
+test("CMS optional sections, five-photo galleries, highlights and related pages render together", async ({
+  page,
+}) => {
+  await page.goto("/seasonal/italian-wine-dinner");
+  const main = page.getByRole("main");
+  await expect(
+    main.getByRole("region", { name: "Event information" }),
+  ).toHaveCount(0);
+  await expect(
+    main.getByRole("region", { name: "Section Heading", exact: true }),
+  ).toHaveCount(0);
+  const highlight = main.getByRole("article").filter({
+    has: page.getByRole("heading", {
+      name: "A Taste of What to Expect",
+      exact: true,
+    }),
+  });
+  await expect(highlight).toBeVisible();
+  await expect(highlight.getByRole("link")).toHaveCount(0);
+  await expect(highlight.getByRole("button")).toHaveCount(0);
+  const enquiry = main.getByRole("link", {
+    name: "Enquire about a gathering",
+    exact: true,
+  });
+  await expect(enquiry).toHaveAttribute("href", "/visit-contact");
+  await expect
+    .poll(() =>
+      enquiry.evaluate((element) => {
+        const button = element.getBoundingClientRect();
+        const content = document.createRange();
+        content.selectNodeContents(element);
+        return Array.from(content.getClientRects()).every(
+          (rect) =>
+            rect.left >= button.left &&
+            rect.right <= button.right &&
+            rect.top >= button.top &&
+            rect.bottom <= button.bottom,
+        );
+      }),
+    )
+    .toBe(true);
+  await expect(
+    main
+      .getByRole("region", { name: "Moments at Peploe’s", exact: true })
+      .getByRole("img"),
+  ).toHaveCount(5);
+  const related = main.getByRole("region", { name: "More to Explore" });
+  await expect(
+    related.getByRole("link", { name: "Explore wines" }),
+  ).toHaveAttribute("href", "/menus/wine");
+  await expect(
+    related.getByRole("link", { name: "Explore groups" }),
+  ).toHaveAttribute("href", "/private-dining/groups-celebrations");
+  expect(
+    await page.evaluate(
+      () =>
+        document.documentElement.scrollWidth <=
+        document.documentElement.clientWidth,
+    ),
+  ).toBe(true);
 });

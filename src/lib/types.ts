@@ -35,6 +35,11 @@ import type {
   signInReplySchema,
   timeSlotReplySchema,
 } from "@/lib/resdiary-schema";
+import type {
+  seasonalCardSchema,
+  seasonalEntrySchema,
+  whatsOnPageSchema,
+} from "@/lib/seasonal-schema";
 
 // ─── Core Framework Types ─────────────────────────────────────────────────
 
@@ -857,6 +862,7 @@ export interface ICookieConsentRecord {
 // ─── Homepage Content ───────────────────────────────────────────────────
 
 export interface ISectionImage {
+  _key?: string;
   src: string;
   alt: string;
 }
@@ -1526,6 +1532,7 @@ export interface IPolicyPageProps {
 }
 
 export interface ISeasonalEventCard {
+  id?: string;
   title: string;
   description: string;
   action: string;
@@ -1543,6 +1550,7 @@ export interface ISeasonalEventContent {
     image: ISectionImage;
   };
   details?: readonly {
+    _key?: string;
     label: string;
     description: string;
     icon: { src: string; width: number; height: number };
@@ -1556,7 +1564,7 @@ export interface ISeasonalEventContent {
   story?: {
     eyebrow: string;
     heading: string;
-    paragraphs: readonly string[];
+    paragraphs: readonly { _key: string; text: string }[];
     image: ISectionImage;
   };
   gallery?: {
@@ -1564,7 +1572,7 @@ export interface ISeasonalEventContent {
     heading: string;
     images: readonly ISectionImage[];
   };
-  invitation: {
+  invitation?: {
     heading: string;
     description: string;
     bookingAction: string;
@@ -1649,4 +1657,29 @@ export interface IMenuHeroProps {
 }
 export interface IMenuLayoutProps {
   children: ReactNode;
+}
+
+// ─── What’s On CMS ───────────────────────────────────────────────────────
+export type TSeasonalCard = InferSchema<typeof seasonalCardSchema>;
+export type TSeasonalEntry = InferSchema<typeof seasonalEntrySchema>;
+export type TWhatsOnPage = InferSchema<typeof whatsOnPageSchema>;
+export interface ISeasonalMonth {
+  key: string;
+  name: string;
+  abbreviation: string;
+  events: (TSeasonalCard & { day: string })[];
+}
+export interface ISeasonalProps {
+  content: TWhatsOnPage;
+  months: ISeasonalMonth[];
+}
+export interface ISeasonalJoinProps {
+  join: TWhatsOnPage["join"];
+}
+export interface ISeasonalEventProps {
+  content: ISeasonalEventContent;
+  join: TWhatsOnPage["join"];
+}
+export interface ISeasonalRouteProps {
+  params: Promise<{ slug: string }>;
 }
