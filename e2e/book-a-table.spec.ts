@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./menu-test";
 
 test("navbar booking navigation works and closes the mobile drawer", async ({
   page,

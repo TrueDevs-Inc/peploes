@@ -283,3 +283,32 @@ export const MOBILE_HOME_CONTENT = {
   ginaEyebrow: "From the cellar",
   ginaHeading: "Wine things just happen.",
 } as const;
+
+export const MENU_DOCUMENT_TYPES = {
+  lunch: "restaurantMenu",
+  dinner: "restaurantMenu",
+  "pre-theatre": "restaurantMenu",
+  wine: "wineMenu",
+  cocktails: "drinksMenu",
+  "group-set-menu": "setMenuCollection",
+  seasonal: "setMenuCollection",
+} as const;
+export const MENU_ROUTES = {
+  lunch: ROUTES.LUNCH,
+  dinner: ROUTES.DINNER,
+  "pre-theatre": ROUTES.PRE_THEATRE,
+  wine: ROUTES.WINE,
+  cocktails: ROUTES.COCKTAILS,
+  "group-set-menu": ROUTES.GROUP_SET_MENU,
+  seasonal: ROUTES.SEASONAL,
+} as const;
+
+export const MENU_SLUGS = [
+  "lunch",
+  "dinner",
+  "pre-theatre",
+  "wine",
+  "cocktails",
+  "group-set-menu",
+  "seasonal",
+] as const;

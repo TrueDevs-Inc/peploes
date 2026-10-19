@@ -19,7 +19,9 @@
       "!**/next-env.d.ts",
       "!**/src/db/migrations",
       "!**/playwright-report",
-      "!**/test-results"
+      "!**/test-results",
+      "!**/.sanity",
+      "!studio/dist"
     ]
   },
   "formatter": {
@@ -260,7 +262,9 @@
                       "postgres",
                       "postgres/**",
                       "drizzle-orm",
-                      "drizzle-orm/**"
+                      "drizzle-orm/**",
+                      "@sanity/client",
+                      "@sanity/client/**"
                     ],
                     "message": "Services own domain rules. Use the DAL or a concrete provider adapter; keep framework and SDK configuration outside services."
                   }
@@ -327,7 +331,9 @@
                       "postgres",
                       "postgres/**",
                       "drizzle-orm",
-                      "drizzle-orm/**"
+                      "drizzle-orm/**",
+                      "@sanity/client",
+                      "@sanity/client/**"
                     ],
                     "message": "Application entry points call domain services rather than querying persistence directly."
                   }

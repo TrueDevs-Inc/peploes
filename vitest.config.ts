@@ -20,6 +20,9 @@ export default defineConfig({
     ],
     environment: "node",
     env: {
+      SANITY_PROJECT_ID: "testproject",
+      SANITY_DATASET: "development",
+      SANITY_API_VERSION: "2026-10-06",
       DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/app",
       NEXT_PUBLIC_SITE_URL: "http://localhost:3000",
     },

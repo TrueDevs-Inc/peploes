@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Peploe's menu CMS — implementation review</title>
+<style>
+:root{color-scheme:dark;--bg:#17191e;--panel:#22252c;--text:#ebe7e0;--muted:#beb8af;--accent:#a7c8ff;--border:#535965}
+:root[data-theme="light"]{color-scheme:light;--bg:#faf8f4;--panel:#fff;--text:#23252b;--muted:#535963;--accent:#244f87;--border:#b8bec7}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:400 1.125rem/1.7 "Source Sans 3",system-ui,sans-serif}
+main{width:calc(100% - 2rem);max-width:68ch;margin:auto;padding:2rem 0 4rem}h1,h2,h3{font-family:Inter,system-ui,sans-serif;font-weight:650;letter-spacing:-.02em;line-height:1.25}h1{font-size:clamp(1.9rem,5vw,2.6rem)}h2{margin-top:2.3rem;font-size:1.5rem}h3{font-size:1.15rem}
+a{color:var(--accent);text-decoration:underline;overflow-wrap:anywhere}code{font-family:"JetBrains Mono",Consolas,monospace;font-size:.87em;overflow-wrap:anywhere}
+.note{background:var(--panel);border-left:4px solid var(--accent);padding:1rem 1.25rem;margin:1.5rem 0}.muted{color:var(--muted)}li{margin:.5rem 0}button{min-height:44px;padding:.5rem 1rem;border:1px solid var(--border);background:var(--panel);color:var(--text);font:inherit;cursor:pointer}button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:4px}
+@media print{:root,:root[data-theme="light"]{--bg:#fff;--panel:#fff;--text:#111;--muted:#333;--accent:#111;--border:#999}body{font-size:11pt}button{display:none}main{width:100%;max-width:none;padding:0}.note{break-inside:avoid}a[href]::after{content:" (" attr(href) ")";font-size:.8em;overflow-wrap:anywhere}}
+</style></head><body><main>
+<button id="theme" type="button">Use light theme</button>
+<article>
+<p class="muted">17 October 2026 · Local implementation review</p>
+<h1>Seven menu pages connected to Sanity</h1>
+<section aria-labelledby="dev-sync-update">
+<h2 id="dev-sync-update">Dev sync · 17 October 2026</h2>
+<p><code>feat/ali/sanity-setup</code> was fast-forwarded from <code>c11bed6</code> to <code>origin/dev</code> at <code>064be2b</code>, bringing in 21 commits. Uncommitted work and its staged/unstaged selection were restored from a retained backup. Four overlaps were resolved while keeping the latest menu design changes and the CMS connection.</p>
+<p>The updated booking links are retained for CMS menus: five menus open Book a Table, Group opens the private dining enquiry, and Seasonal keeps its inactive gathering action. Seven focused regression cases cover these destinations.</p>
+<ul>
+<li><strong>Passed:</strong> frozen-lockfile installation, formatting/lint, website and Studio TypeScript, 115 tests across 22 files, website high-severity audit, and whitespace checks.</li>
+<li><strong>Passed:</strong> all seven local menu pages render content, and their banner actions match the expected destinations. No unaffected saved working file was changed unexpectedly.</li>
+<li><strong>Standards review:</strong> no blocking code findings; a stale guide sentence was corrected.</li>
+<li><strong>Spec review:</strong> no blocking sync findings. CMS data, latest dev behavior and local work were preserved.</li>
+<li><strong>Still blocked:</strong> Studio audit reports the same high-severity <code>braces@3.0.3</code> advisory.</li>
+<li><strong>Not rerun:</strong> production builds and browser E2E tests after this sync. Earlier successful builds apply to the pre-sync code.</li>
+</ul>
+<p>Some optional presentation fields introduced by dev are not yet exposed through the Studio schemas and projections; this coverage gap is recorded in the menu guide. No production content was changed, and no implementation commit, push or PR was created.</p>
+</section>
+<section aria-labelledby="development-update">
+<h2 id="development-update">Development content update · 17 October 2026</h2>
+<p>Following Ali's later request to add data to every menu page, the prepared import was applied to <code>3ggctsor/development</code>. All seven menus and shared menu settings now have published sample content. Production was not changed.</p>
+<p>Existing Lunch, Dinner and Pre-Theatre content was preserved. The import added missing fields, created Wine, Cocktails, Group Set Menu and Seasonal, and uploaded the preview images. The document backup is <code>studio/.sanity/menu-backups/before-1792234841549.json</code>; comparison confirmed no original content values were overwritten.</p>
+<p>All eight published documents passed content validation. All seven local menu pages rendered menu content without a not-found or content-load error. Wine was also checked visually in the browser and now displays its menu.</p>
+<div class="note"><strong>Sample content is ready for testing.</strong> Prices, vintages and seasonal dates still need restaurant approval before production use. The Studio dependency advisory described below remains unresolved.</div>
+</section>
+<h2>Initial implementation review — before the import</h2>
+<p class="muted">The remaining sections record the earlier review. Statements about missing content or an unapplied import describe that earlier state; the update above is the current content status.</p>
+<p>The code is implemented and both production builds pass. This report records what was checked and what still prevents release. The development import was <strong>not applied</strong>, following Ali's decision.</p>
+<div class="note"><strong>Release gate remains blocked.</strong> Studio has one high-severity dependency advisory without an upstream patch. Four menu documents also need approved content published before their pages can be checked end to end.</div>
+<h2>Scope and result</h2>
+<p>Worktree: <code>D:\JavaScript\peploes-sanity</code>, branch <code>feat/ali/sanity-setup</code>, starting HEAD <code>c11bed6</code>. Review included staged, unstaged and new files. The existing tutorial already supplied three menu documents, Studio and a basic provider/service. This work extends the schemas and shared renderer to Lunch, Dinner, Pre-Theatre, Wine, Cocktails, Group Set Menu and Seasonal.</p>
+<p>Menus read published content at request time. Drafts stay hidden. Missing documents use the not-found page; failed requests and invalid content produce errors. Shared settings alone use the existing website design until that optional singleton is published.</p>
+<p>The website still runs at <a href="http://localhost:3000/menus/lunch">localhost:3000</a>. The website and Studio builds are local artifacts, not deployments. No content import, commit, push or pull request was performed by this task.</p>
+<h2>Standards review</h2>
+<p>Four findings were corrected: restrict the first-column override to two-column sections; include Studio build/audit in both local and GitHub CI; enforce Sanity SDK access through the provider; derive menu names from one shared list.</p>
+<p>The provider import rule was exercised with temporary examples: a service import was rejected and a provider import passed. The final source review found no remaining implementation blocker. The dependency audit below remains unresolved.</p>
+<h2>Spec review</h2>
+<p>Three findings were corrected: prevent layout settings from omitting dishes; require uploaded assets for hero/banner images while keeping introductory images optional; display optional spirit descriptions. Existing menu layouts, wine availability filtering and dynamic collection navigation are retained.</p>
+<h2>Checks and evidence</h2>
+<ul>
+<li><strong>Passed:</strong> formatting/lint, website and Studio TypeScript, 88 unit tests across 16 files, website production build, Studio production build.</li>
+<li><strong>Passed:</strong> frozen-lockfile installation for both packages and the website high-severity audit. Next.js was patched from 16.3.3 to 16.3.8 and affected transitive dependencies were patched. One inherited moderate website advisory remains below the configured high-severity gate.</li>
+<li><strong>Passed:</strong> read-only production HTTP checks for all seven routes. Lunch, Dinner and Pre-Theatre rendered menu content. The four missing menus rendered not-found with noindex. Next's streamed responses can have HTTP 200 while showing not-found; the page result and robots marker were checked.</li>
+<li><strong>Browser checked:</strong> Dinner on desktop and phone, Lunch and Pre-Theatre navigation and content; phone viewport had no document overflow and one H1. Pre-Theatre's included course did not show an individual price. An unpublished Wine menu showed the not-found page.</li>
+<li><strong>Prepared only:</strong> the import preview confirmed the existing three menus and four missing documents. No images or documents were written.</li>
+<li><strong>Not verified:</strong> real Wine, Cocktails, Group and Seasonal rendering with published CMS content; client permissions, deployment, and production content replication.</li>
+</ul>
+<h2>Remaining blocker</h2>
+<h3>P2 · Studio tooling dependency</h3>
+<p><code>braces@3.0.3</code> is pulled through Sanity CLI tooling. The high-severity <a href="https://github.com/advisories/GHSA-vfj7-8cjw-p6xm">stack-exhaustion advisory</a> lists no patched version. Studio's audit fails, so the complete <code>bun run ci</code> gate fails. No advisory was suppressed and no check was weakened.</p>
+<p>Patched overrides address the available <code>js-yaml</code> and <code>smol-toml</code> fixes. Recheck the unpatched dependency when upstream publishes a fix or removes it; test any replacement before release.</p>
+<h2>Next steps recorded at the initial review</h2>
+<ol><li>Publish approved Wine, Cocktails, Group and Seasonal content manually in Studio, or separately approve the prepared development import later.</li><li>Verify those four pages, menu images, wine index, collection dropdowns, allergens and responsive layouts with the published content.</li><li>Resolve the Studio advisory, rerun the full gate, then review any separately requested release/production setup.</li></ol>
+<h2>Source links</h2>
+<ul>
+<li><a href="../project/menus.md">Menu requirements and step-by-step editing guide</a></li>
+<li><a href="../../src/services/restaurant-menus.ts">Menu service and failure handling</a></li>
+<li><a href="../../studio/seed-menus.ts">Prepared development import</a></li>
+<li><a href="../guides/quality-guide.md">Repository quality and review requirements</a></li>
+<li><a href="https://github.com/advisories/GHSA-2883-xcg3-v3hh">Patched YAML dependency advisory</a></li>
+<li><a href="https://github.com/advisories/GHSA-7w5x-hrqm-74c2">Patched TOML dependency advisory</a></li>
+</ul>
+<p class="muted">Evidence reflects the local files and development dataset at review time. Further code, dependency or CMS changes require the affected checks again. Browser checks are limited to the states listed above. The report HTML was checked for source structure and links; its rendered preview was blocked by the browser's local-file policy.</p>
+</article></main>
+<script>document.getElementById("theme").addEventListener("click",function(){const light=document.documentElement.dataset.theme!=="light";document.documentElement.dataset.theme=light?"light":"dark";this.textContent=light?"Use dark theme":"Use light theme";});</script>
+</body></html>

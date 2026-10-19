@@ -26,6 +26,14 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   images: {
     formats: ["image/avif", "image/webp"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "cdn.sanity.io",
+        pathname: `/images/${process.env.SANITY_PROJECT_ID}/${process.env.SANITY_DATASET}/**`,
+        search: "",
+      },
+    ],
     minimumCacheTTL: 2_592_000, // 30 days
     deviceSizes: [640, 768, 1024, 1280, 1536],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
@@ -60,6 +68,7 @@ const nextConfig: NextConfig = {
       "data:",
       "blob:",
       ...(hasClientAnalytics ? ["https://*.google-analytics.com"] : []),
+      "https://cdn.sanity.io",
     ].join(" ");
 
     return [

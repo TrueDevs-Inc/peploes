@@ -68,10 +68,16 @@ describe("security headers", function securityHeaderTests() {
     const headers = await getGlobalHeaders();
     const contentSecurityPolicy = headers.get("Content-Security-Policy");
 
-    expect(contentSecurityPolicy).toContain("img-src 'self' data: blob:");
-    expect(contentSecurityPolicy).not.toContain(
-      "img-src 'self' data: blob: https:",
-    );
+    const imageDirective = contentSecurityPolicy
+      ?.split("; ")
+      .find((directive) => directive.startsWith("img-src "));
+    expect(imageDirective?.split(" ")).toEqual([
+      "img-src",
+      "'self'",
+      "data:",
+      "blob:",
+      "https://cdn.sanity.io",
+    ]);
   });
 
   it("allows explicitly configured monitoring and analytics providers", async function configuredProviderTest() {

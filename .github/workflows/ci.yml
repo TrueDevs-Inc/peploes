@@ -17,6 +17,9 @@ env:
   NEXT_PUBLIC_SITE_URL: http://localhost:3000
   NEXT_PUBLIC_API_BASE_URL: http://localhost:3000
   NODE_ENV: test
+  SANITY_PROJECT_ID: testproject
+  SANITY_DATASET: development
+  SANITY_API_VERSION: '2026-10-06'
 
 jobs:
   verify:
@@ -53,6 +56,9 @@ jobs:
       - name: Install locked dependencies
         run: bun ci
 
+      - name: Install locked Studio dependencies
+        run: bun install --cwd studio --frozen-lockfile
+
       - name: Check formatting and lint
         run: bun run lint
 
@@ -75,6 +81,12 @@ jobs:
         run: bun run test:e2e
         env:
           NODE_ENV: production
+
+      - name: Build production Studio
+        run: bun run --cwd studio build
+
+      - name: Audit Studio high-severity vulnerabilities
+        run: bun run --cwd studio audit
 
       - name: Audit high-severity vulnerabilities
         run: bun audit --audit-level high

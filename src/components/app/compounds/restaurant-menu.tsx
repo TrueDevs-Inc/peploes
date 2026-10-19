@@ -95,7 +95,7 @@ export function RestaurantMenu({ menu }: IMenuContentProps) {
         ))}
       </div>
       <MenuNotes menu={menu} />
-      <MenuBooking />
+      <MenuBooking booking={menu.booking} />
     </article>
   );
 }

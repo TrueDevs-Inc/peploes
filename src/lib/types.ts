@@ -2,10 +2,15 @@ import type { VariantProps } from "class-variance-authority";
 import type { Result as NeverthrowResult } from "neverthrow";
 import type { Route } from "next";
 import type { ComponentProps, CSSProperties, ReactNode } from "react";
+import type { infer as InferSchema } from "zod";
 import type { z } from "zod/v4";
-
 import type { examples } from "@/db/schema";
-import type { ROUTES } from "@/lib/constants";
+import type {
+  cmsMenuSchema,
+  menuCollectionNavigationSchema,
+  menusPageSchema,
+} from "@/lib/cms-menu-schema";
+import type { MENU_SLUGS, ROUTES } from "@/lib/constants";
 import type { buttonVariants } from "@/lib/constants/button";
 import type { ErrorCode, HttpVerb, LogLevel } from "@/lib/enums";
 import type { createExampleSchema } from "@/lib/examples-schema";
@@ -552,6 +557,7 @@ export interface IMenuContent extends IMenuEditorialContent, IMenuNotesContent {
   serviceTimes: string;
   courses: readonly IMenuCourse[];
   introLayout?: "editorial";
+  booking?: IMenuBooking;
 }
 
 export interface IMenuEditorialContent {
@@ -1159,4 +1165,20 @@ export interface ITableBookingTimesProps {
   onReturnChange: (accepted: boolean) => void;
   onBack: () => void;
   onContinue: () => void;
+}
+
+export type TMenuSlug = (typeof MENU_SLUGS)[number];
+export type TCmsMenu = InferSchema<typeof cmsMenuSchema>;
+export type TMenusPageDocument = InferSchema<typeof menusPageSchema>;
+export type TMenuCollections = InferSchema<
+  typeof menuCollectionNavigationSchema
+>;
+export interface ICmsMenuPageProps {
+  slug: TMenuSlug;
+}
+export interface IMenuHeroProps {
+  content: TMenusPageDocument;
+}
+export interface IMenuLayoutProps {
+  children: ReactNode;
 }

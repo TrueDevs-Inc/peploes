@@ -103,6 +103,13 @@ server at `http://127.0.0.1:3107`. Keep that port free; the suite refuses to reu
 an existing server. Pull-request CI installs Chromium and its system dependencies
 before running the same command. Failure traces stay in ignored `test-results/`.
 
+The build and test server use a fake Sanity project. The test-only
+`e2e/mock-sanity.ts` preload supplies menu documents from the local design
+catalogs; it rejects unexpected CMS queries and never reads a live dataset.
+Menu journeys import `test` from `e2e/menu-test.ts` so their synthetic CMS image
+URLs reach local photographs through the real Next image optimizer. These
+fixtures are not imported by the application or used as production fallbacks.
+
 Test the production build, locate controls by accessible role or label, and give
 each test isolated data. Add coverage for critical journeys such as sign-in,
 checkout, permission enforcement or a destructive workflow as they are built.
