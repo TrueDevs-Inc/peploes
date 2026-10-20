@@ -185,14 +185,12 @@ describe("submitGuestDetails", function submitGuestDetailsTests() {
         answered({ kind: "table_taken" }),
         ErrorCode.Conflict,
         "That time is no longer available. Please choose another.",
-        false,
       ],
       [
         "the guest is blocked",
         answered({ kind: "guest_blocked" }),
         ErrorCode.Forbidden,
         "Please contact us to make this booking.",
-        false,
       ],
       [
         "a payment we cannot take",
@@ -202,7 +200,6 @@ describe("submitGuestDetails", function submitGuestDetailsTests() {
         }),
         ErrorCode.ServiceUnavailable,
         undefined,
-        true,
       ],
       [
         "a refusal naming fields",
@@ -213,7 +210,6 @@ describe("submitGuestDetails", function submitGuestDetailsTests() {
         }),
         ErrorCode.ValidationError,
         "Please check your details.",
-        false,
       ],
       [
         "a refusal naming no fields",
@@ -224,7 +220,6 @@ describe("submitGuestDetails", function submitGuestDetailsTests() {
         }),
         ErrorCode.ServiceUnavailable,
         undefined,
-        true,
       ],
       [
         "a failure before sending",
@@ -235,31 +230,32 @@ describe("submitGuestDetails", function submitGuestDetailsTests() {
         }),
         ErrorCode.ServiceUnavailable,
         undefined,
-        false,
       ],
       [
         "a 404, which may also mean a moved endpoint",
         failed({ kind: "not_found", operation: "submitHoldGuest" }),
         ErrorCode.HoldExpired,
         "Your table hold ran out. Please choose a time again.",
-        true,
       ],
-    ])("maps %s", async function maps(_case, reply, code, message, errorLog) {
-      const { provider, token } = await held();
-      provider.submitHoldGuest.mockResolvedValue(reply);
+    ])(
+      "maps %s without logging it again",
+      async function maps(_case, reply, code, message) {
+        const { provider, token } = await held();
+        provider.submitHoldGuest.mockResolvedValue(reply);
 
-      const result = await service(provider).submitGuestDetails(
-        GUEST_DETAILS,
-        token,
-      );
+        const result = await service(provider).submitGuestDetails(
+          GUEST_DETAILS,
+          token,
+        );
 
-      const error = result._unsafeUnwrapErr();
-      expect(error.code).toBe(code);
-      if (message) {
-        expect(error.message).toBe(message);
-      }
-      expect(vi.mocked(console.error).mock.calls.length).toBe(errorLog ? 1 : 0);
-    });
+        const error = result._unsafeUnwrapErr();
+        expect(error.code).toBe(code);
+        if (message) {
+          expect(error.message).toBe(message);
+        }
+        expect(console.error).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe("whether the hold cookie is still any use", function clearHoldTests() {

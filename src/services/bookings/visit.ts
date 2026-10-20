@@ -107,11 +107,6 @@ export async function loadWindow(
   if (rules.isErr()) {
     return err(unavailable());
   }
-  if (closedReply.isErr()) {
-    logger.warn(LogContext.Api, BOOKING_LOG.closedDatesFailed, {
-      kind: closedReply.error.kind,
-    });
-  }
   const { maxDaysAhead } = rules.value;
   return ok({
     rules: rules.value,

@@ -607,4 +607,17 @@ describe("a guest books a table", function journeyTests() {
     expect(fake.count(ROUTES.guest)).toBe(2);
     expect(second).toEqual(first);
   });
+
+  it("logs one error, with the hold id, when ResDiary cannot find the hold for the details", async function oneDiagnostic() {
+    const { bookings } = peploes({ [ROUTES.guest]: reply(404) });
+
+    const { result } = await confirm(bookings, "12:30");
+
+    expect(result._unsafeUnwrapErr().code).toBe(ErrorCode.HoldExpired);
+    expect(console.warn).not.toHaveBeenCalled();
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(JSON.stringify(vi.mocked(console.error).mock.calls)).toContain(
+      '\\"holdId\\":425742',
+    );
+  });
 });

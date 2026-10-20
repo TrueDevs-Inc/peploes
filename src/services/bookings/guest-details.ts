@@ -107,26 +107,12 @@ function fromOutcome(
   }
 }
 
-function fromFailure(
-  failure: TResDiaryFailure,
-  hold: THoldToken,
-): IBookingError {
-  const reference = hold.reference;
+function fromFailure(failure: TResDiaryFailure): IBookingError {
   if (failure.kind === "rejected" && failure.fields.length > 0) {
     return checkDetails();
   }
-  if (failure.kind === "rejected") {
-    logger.error(LogContext.Api, BOOKING_LOG.guestRejected, { reference });
-    return unavailable();
-  }
   if (failure.kind === "not_found") {
-    logger.error(LogContext.Api, BOOKING_LOG.guestHoldMissing, { reference });
     return holdExpired();
-  }
-  if (failure.kind === "payment_unsupported") {
-    logger.error(LogContext.Api, BOOKING_LOG.paymentUnsupported, {
-      reference,
-    });
   }
   return unavailable();
 }
@@ -163,7 +149,7 @@ async function afterUnclearReply(
       return fromOutcome(again.value, hold);
     }
     if (again.error.kind !== "outcome_unknown") {
-      return err(fromFailure(again.error, hold));
+      return err(fromFailure(again.error));
     }
   }
   logger.error(LogContext.Api, BOOKING_LOG.guestOutcomeUnknown, {
@@ -186,7 +172,7 @@ async function sendDetails(
   if (reply.error.kind === "outcome_unknown") {
     return afterUnclearReply(provider, hold, guest, startedAt);
   }
-  return err(fromFailure(reply.error, hold));
+  return err(fromFailure(reply.error));
 }
 
 function markDetailsSent(

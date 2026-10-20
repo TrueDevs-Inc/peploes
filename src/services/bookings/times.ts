@@ -25,7 +25,7 @@ import type {
   TBookingSkipReason,
   TTimesEmptyReason,
 } from "@/lib/types";
-import { invalidInput, searchFailed } from "@/services/bookings/errors";
+import { invalidInput, unavailable } from "@/services/bookings/errors";
 import { checkVisit } from "@/services/bookings/visit";
 
 function withDay(label: string, nextDay: boolean): string {
@@ -162,7 +162,7 @@ export async function findTimes(
     { deadlineAt },
   );
   if (search.isErr()) {
-    return err(searchFailed(search.error));
+    return err(unavailable());
   }
   const times = bookableTimes(search.value, date, visit.value);
   return ok({

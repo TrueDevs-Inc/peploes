@@ -49,6 +49,12 @@ Add operation, module, and stage tags that help group an event. Include record
 IDs only when policy allows it. Sanitize request bodies, headers, cookies,
 tokens, email addresses, and user-entered text before adding context.
 
+The ResDiary provider is the outer boundary for exceptions thrown inside it:
+its `run` turns each one into a typed result, so no caller ever sees the
+exception. `run` therefore captures it once, with the provider and operation as
+context. The booking services' wrapper captures only exceptions thrown in the
+services themselves.
+
 Avoid capturing the same error in a service, action, route, and global handler.
 One event with useful context is easier to investigate than four copies.
 

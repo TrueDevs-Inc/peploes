@@ -163,7 +163,6 @@ export const RESDIARY_WRITE_OPERATIONS = new Set<TResDiaryOperation>([
 ]);
 
 export const RESDIARY_EXPECTED_FAILURES = new Set<TResDiaryFailure["kind"]>([
-  "rejected",
   "not_found",
   "not_allowed",
 ]);

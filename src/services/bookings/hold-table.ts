@@ -8,13 +8,10 @@ import { HTTP_STATUS, MILLISECONDS_PER_SECOND } from "@/lib/constants";
 import {
   BOOKING_BUDGET_MS,
   BOOKING_HOLD,
-  BOOKING_LOG,
   BOOKING_LOST_REPLY_STATUSES,
   BOOKING_MESSAGES,
 } from "@/lib/constants/booking";
 import { guestsLabel, shortDateLabel, timeLabel } from "@/lib/dates";
-import { LogContext } from "@/lib/enums";
-import { logger } from "@/lib/logger";
 import type {
   IBookingError,
   IBookingVisit,
@@ -38,7 +35,6 @@ import {
   holdUnclear,
   invalid,
   invalidInput,
-  searchFailed,
   timeGone,
   tooManyHolds,
   unavailable,
@@ -118,7 +114,7 @@ async function currentOffer(
     { deadlineAt },
   );
   if (search.isErr()) {
-    return err(searchFailed(search.error));
+    return err(unavailable());
   }
   const time = bookableTimes(search.value, choice.searchDate, visit).find(
     (bookable) => bookable.time === choice.time,
@@ -150,12 +146,6 @@ async function afterFailedHold(
   visit: IBookingVisit,
   failure: TResDiaryFailure,
 ): Promise<IBookingError> {
-  if (failure.kind === "rejected") {
-    logger.error(LogContext.Api, BOOKING_LOG.holdRejected, {
-      operation: failure.operation,
-      fields: failure.fields,
-    });
-  }
   const unclear =
     failure.kind === "outcome_unknown" ||
     (failure.kind === "unavailable" && failure.httpStatus !== undefined);
@@ -207,16 +197,9 @@ async function afterFailedMove(
   failure: TResDiaryFailure,
 ): TBookingResult<null> {
   if (failure.kind === "not_found") {
-    logger.error(LogContext.Api, BOOKING_LOG.holdMoveMissing, {
-      holdId: move.holdId,
-    });
     return err(holdExpired());
   }
   if (failure.kind === "rejected") {
-    logger.error(LogContext.Api, BOOKING_LOG.holdRejected, {
-      operation: failure.operation,
-      fields: failure.fields,
-    });
     return err(unavailable());
   }
   if (isLostReply(failure)) {

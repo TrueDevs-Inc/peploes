@@ -36,9 +36,10 @@ import {
   RESDIARY_WRITE_OPERATIONS,
 } from "@/lib/constants/resdiary";
 import { isCalendarDate, isClockTime, utcMidnight } from "@/lib/dates";
-import { LogContext } from "@/lib/enums";
+import { AppModule, LogContext, SentryContext, Stage } from "@/lib/enums";
 import { env } from "@/lib/env";
-import { UNSENT_NETWORK_CODES } from "@/lib/errors";
+import { logToSentry } from "@/lib/error-handler";
+import { getErrorMetadata, UNSENT_NETWORK_CODES } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 import {
   bookingReplySchema,
@@ -79,6 +80,7 @@ import type {
   IResDiaryDateRange,
   IResDiaryDateRangeInput,
   IResDiaryDeps,
+  IResDiaryFailureContext,
   IResDiaryGuestInput,
   IResDiaryHold,
   IResDiaryHoldExpiry,
@@ -224,9 +226,28 @@ function replyFailure(
   }
 }
 
-function logFailure(failure: TResDiaryFailure, durationMs: number): void {
-  const metadata = { provider: RESDIARY_LOG.provider, ...failure, durationMs };
-  if (RESDIARY_EXPECTED_FAILURES.has(failure.kind)) {
+function isExpectedFailure(failure: TResDiaryFailure): boolean {
+  if (failure.kind === "not_found") {
+    return !RESDIARY_WRITE_OPERATIONS.has(failure.operation);
+  }
+  if (failure.kind === "rejected") {
+    return failure.operation === "submitHoldGuest" && failure.fields.length > 0;
+  }
+  return RESDIARY_EXPECTED_FAILURES.has(failure.kind);
+}
+
+function logFailure(
+  failure: TResDiaryFailure,
+  durationMs: number,
+  context: Record<string, unknown>,
+): void {
+  const metadata = {
+    provider: RESDIARY_LOG.provider,
+    ...failure,
+    durationMs,
+    ...context,
+  };
+  if (isExpectedFailure(failure)) {
     logger.warn(LogContext.Api, RESDIARY_LOG.refused, metadata);
   } else {
     logger.error(LogContext.Api, RESDIARY_LOG.failed, metadata);
@@ -1473,15 +1494,28 @@ export function createResDiaryProvider(deps: IResDiaryDeps = {}) {
   async function run<T>(
     operation: TResDiaryOperation,
     work: (connected: IResDiaryConnection) => TResDiaryResult<T>,
+    failureContext?: IResDiaryFailureContext,
   ): TResDiaryResult<T> {
     if (!connection) {
       return err({ kind: "not_configured", operation });
     }
     const started = Date.now();
     let result: Result<T, TResDiaryFailure>;
+    let exception: Record<string, unknown> | undefined;
     try {
       result = await work(connection);
     } catch (error) {
+      exception = getErrorMetadata(error);
+      logToSentry(error, {
+        module: AppModule.Api,
+        stage: Stage.ServiceCall,
+        context: {
+          [SentryContext.OperationData]: {
+            provider: RESDIARY_LOG.provider,
+            operation,
+          },
+        },
+      });
       result = err({
         kind: RESDIARY_WRITE_OPERATIONS.has(operation)
           ? "outcome_unknown"
@@ -1491,7 +1525,10 @@ export function createResDiaryProvider(deps: IResDiaryDeps = {}) {
       });
     }
     if (result.isErr()) {
-      logFailure(result.error, Date.now() - started);
+      logFailure(result.error, Date.now() - started, {
+        ...failureContext,
+        ...exception,
+      });
     }
     return result;
   }
@@ -1524,19 +1561,25 @@ export function createResDiaryProvider(deps: IResDiaryDeps = {}) {
       input: IResDiaryChangeHoldInput,
       options?: IResDiaryCallOptions,
     ) =>
-      run("changeHold", (connected) =>
-        changeHold(connected, input, deadline(options)),
+      run(
+        "changeHold",
+        (connected) => changeHold(connected, input, deadline(options)),
+        { holdId: input.holdId },
       ),
     submitHoldGuest: (
       input: IResDiaryGuestInput,
       options?: IResDiaryCallOptions,
     ) =>
-      run("submitHoldGuest", (connected) =>
-        submitHoldGuest(connected, input, deadline(options)),
+      run(
+        "submitHoldGuest",
+        (connected) => submitHoldGuest(connected, input, deadline(options)),
+        { holdId: input.holdId },
       ),
     getHoldStatus: (holdId: number, options?: IResDiaryCallOptions) =>
-      run("getHoldStatus", (connected) =>
-        getHoldStatus(connected, holdId, deadline(options)),
+      run(
+        "getHoldStatus",
+        (connected) => getHoldStatus(connected, holdId, deadline(options)),
+        { holdId },
       ),
     getBooking: (
       lookup: IResDiaryBookingLookup,

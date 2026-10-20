@@ -514,6 +514,10 @@ export interface IResDiaryCancelled {
 
 export type TResDiaryProvider = ReturnType<typeof createResDiaryProvider>;
 
+export interface IResDiaryFailureContext {
+  holdId: number;
+}
+
 export interface IResDiaryCallOptions {
   deadlineAt?: number;
 }

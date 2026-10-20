@@ -450,7 +450,7 @@ describe("holdTable", function holdTableTests() {
       expect(provider.searchTimes).toHaveBeenCalledTimes(1);
     });
 
-    it("logs an error when ResDiary refuses a hold our checks allowed", async function holdRejected() {
+    it("leaves the log to the provider when ResDiary refuses a hold", async function holdRejected() {
       const provider = fakeProvider();
       provider.createHold.mockResolvedValue(
         err({
@@ -463,7 +463,7 @@ describe("holdTable", function holdTableTests() {
       const result = await service(provider).holdTable(DINNER, ALLOW_HOLDS);
 
       expect(result._unsafeUnwrapErr().code).toBe(ErrorCode.ServiceUnavailable);
-      expect(console.error).toHaveBeenCalledTimes(1);
+      expect(console.error).not.toHaveBeenCalled();
     });
 
     it("answers outcome unknown when something throws, since a hold may exist", async function unexpectedThrow() {
@@ -885,7 +885,7 @@ describe("holdTable", function holdTableTests() {
           undefined,
         ],
       ] as const)(
-        "logs one error for %s",
+        "maps %s and leaves the log to the provider",
         async function refusedForGood(_case, answer, code, clearHold) {
           const { provider, token } = await moving(answer);
 
@@ -897,7 +897,7 @@ describe("holdTable", function holdTableTests() {
 
           expect(again._unsafeUnwrapErr()).toMatchObject({ code });
           expect(again._unsafeUnwrapErr().clearHold).toBe(clearHold);
-          expect(console.error).toHaveBeenCalledTimes(1);
+          expect(console.error).not.toHaveBeenCalled();
           expect(provider.changeHold).toHaveBeenCalledTimes(1);
         },
       );

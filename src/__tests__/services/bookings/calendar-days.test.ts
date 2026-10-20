@@ -206,7 +206,7 @@ describe("getCalendarDays", function calendarDaysTests() {
       expect(console.error).not.toHaveBeenCalled();
     });
 
-    it("logs an error when ResDiary refuses a range our checks allowed", async function rangeRejected() {
+    it("leaves the log to the provider when ResDiary refuses a range", async function rangeRejected() {
       const provider = fakeProvider();
       provider.getAvailableDates.mockResolvedValue(
         err({
@@ -219,7 +219,7 @@ describe("getCalendarDays", function calendarDaysTests() {
       const result = await service(provider).getCalendarDays(NOVEMBER);
 
       expect(result._unsafeUnwrapErr().code).toBe(ErrorCode.ServiceUnavailable);
-      expect(console.error).toHaveBeenCalledTimes(1);
+      expect(console.error).not.toHaveBeenCalled();
     });
 
     it("answers unavailable when today's rules fail", async function rulesFail() {

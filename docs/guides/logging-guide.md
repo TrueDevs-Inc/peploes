@@ -39,6 +39,12 @@ The [Sentry guide](sentry-guide.md) owns exception-capture policy. A failure may
 need an operational log, a Sentry event, or neither; do not record it in every
 layer.
 
+The ResDiary provider's `run` owns ResDiary failure logs. It logs each failed
+call once, with the operation, HTTP status, ResDiary's request ID and the hold
+ID when there is one. Booking services map the typed result to a guest message
+without logging it again. A service logs only its own conclusions, such as
+skipped times or a booking whose outcome stays unknown after its checks.
+
 Sentry initialization files use `console` because the shared logger may not be
 available during startup. Analytics modules also contain provider diagnostics.
 Application code should still use the logger.

@@ -524,7 +524,7 @@ describe("getTimes", function getTimesTests() {
       expect(console.error).not.toHaveBeenCalled();
     });
 
-    it("logs an error when ResDiary refuses a search our checks allowed", async function searchRejected() {
+    it("leaves the log to the provider when ResDiary refuses a search", async function searchRejected() {
       const provider = fakeProvider();
       provider.searchTimes.mockResolvedValue(
         err({
@@ -540,7 +540,7 @@ describe("getTimes", function getTimesTests() {
       });
 
       expect(result._unsafeUnwrapErr().code).toBe(ErrorCode.ServiceUnavailable);
-      expect(console.error).toHaveBeenCalledTimes(1);
+      expect(console.error).not.toHaveBeenCalled();
     });
 
     it("logs and captures an unexpected throw once", async function unexpectedThrow() {

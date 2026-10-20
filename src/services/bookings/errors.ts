@@ -21,7 +21,6 @@ import type {
   IBookingError,
   TBookingField,
   TBookingOperation,
-  TResDiaryFailure,
 } from "@/lib/types";
 
 export function unavailable(): IBookingError {
@@ -113,16 +112,6 @@ export function alreadyBooked(reference: string): IBookingError {
     ErrorCode.Conflict,
     BOOKING_MESSAGES.alreadyBooked(reference),
   );
-}
-
-export function searchFailed(failure: TResDiaryFailure): IBookingError {
-  if (failure.kind === "rejected") {
-    logger.error(LogContext.Api, BOOKING_LOG.searchRejected, {
-      operation: failure.operation,
-      fields: failure.fields,
-    });
-  }
-  return unavailable();
 }
 
 export function logUnexpected(

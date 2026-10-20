@@ -82,23 +82,16 @@ export const BOOKING_MESSAGES = {
 export const BOOKING_NEXT_DAY_LABEL = " (next day)";
 
 export const BOOKING_LOG = {
-  closedDatesFailed: "Booking calendar shown without closed days",
   impossiblePartyLimits: "ResDiary's party limits cannot work",
   partyCapConflict:
     "ResDiary allows more online guests than Peploe's limit; review its settings",
   everyWeekdayClosed: "ResDiary closes every weekday",
   unexpected: "Booking failed unexpectedly",
-  searchRejected: "ResDiary refused a search the booking checks allowed",
   rangeUnchecked: "ResDiary left part of a date range unchecked",
   skippedTimes: "Booking skipped times ResDiary sent",
-  holdRejected: "ResDiary refused a hold the booking checks allowed",
-  holdMoveMissing: "ResDiary could not find the hold to move",
   badHoldToken: "Booking ignored an unreadable hold token",
   formUnsupported:
     "ResDiary's settings need something the booking form cannot give",
-  guestRejected: "ResDiary refused guest details without naming a field",
-  guestHoldMissing: "ResDiary could not find the hold for guest details",
-  paymentUnsupported: "ResDiary asked for a payment the site cannot take",
   guestOutcomeUnknown: "Unclear whether the booking was made",
   holdLimitOff: "Booking holds are not rate-limited: Upstash is not configured",
   holdLimited: "Booking refused a hold over the visitor limit",

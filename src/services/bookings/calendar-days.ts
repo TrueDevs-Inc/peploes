@@ -18,11 +18,7 @@ import type {
   TBookingProvider,
   TBookingResult,
 } from "@/lib/types";
-import {
-  invalid,
-  invalidInput,
-  searchFailed,
-} from "@/services/bookings/errors";
+import { invalid, invalidInput, unavailable } from "@/services/bookings/errors";
 import {
   isClosed,
   loadWindow,
@@ -64,7 +60,7 @@ export async function findCalendarDays(
     { deadlineAt },
   );
   if (range.isErr()) {
-    return err(searchFailed(range.error));
+    return err(unavailable());
   }
   if (range.value.missing) {
     logger.warn(LogContext.Api, BOOKING_LOG.rangeUnchecked, {

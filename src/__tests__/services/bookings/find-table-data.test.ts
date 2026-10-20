@@ -249,7 +249,7 @@ describe("getFindTableData", function findTableDataTests() {
       closedPeriods: [],
       defaultDate: "2026-10-15",
     });
-    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).not.toHaveBeenCalled();
     expect(console.error).not.toHaveBeenCalled();
   });
 

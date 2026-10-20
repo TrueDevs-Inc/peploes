@@ -1,7 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { logToSentry } from "@/lib/error-handler";
 import { createResDiaryProvider } from "@/lib/resdiary-provider";
 import type { IResDiaryConfig, IResDiaryReply } from "@/lib/types";
+
+vi.mock("@/lib/error-handler", () => ({ logToSentry: vi.fn() }));
 
 interface IRecordedRequest {
   method: string;
@@ -672,6 +675,22 @@ describe("reading from ResDiary", function readTransportTests() {
     expect(loggedText()).not.toContain("secret detail");
   });
 
+  it.each([
+    [400, "error"],
+    [404, "warn"],
+  ] as const)(
+    "logs a %i reply once, as %s",
+    async function logsRefusal(status, level) {
+      const { provider: resdiary } = provider(reply(status));
+
+      await settle(resdiary.getRules("2026-10-23"));
+
+      const other = level === "error" ? "warn" : "error";
+      expect(console[level]).toHaveBeenCalledTimes(1);
+      expect(console[other]).not.toHaveBeenCalled();
+    },
+  );
+
   it("maps 404 to not_found", async function notFound() {
     const { provider: resdiary } = provider(reply(404));
 
@@ -1332,6 +1351,15 @@ describe("changeHold", function changeHoldTests() {
     expect(result._unsafeUnwrapErr()).toMatchObject({ kind });
   });
 
+  it("logs a 404 on a hold write as an error, since ResDiary answers a lost hold with 500", async function writeNotFound() {
+    const { provider: resdiary } = provider(reply(404));
+
+    await settle(resdiary.changeHold(MOVE_INPUT));
+
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(console.warn).not.toHaveBeenCalled();
+  });
+
   it.each([
     ["a hold id of 0", { ...MOVE_INPUT, holdId: 0 }, "holdId"],
     ["the time 25:00", { ...MOVE_INPUT, time: "25:00" }, "time"],
@@ -1402,6 +1430,28 @@ describe("submitHoldGuest", function submitHoldGuestTests() {
       provider: createResDiaryProvider({ config: CONFIG, fetch: fake.fetch }),
     };
   }
+
+  it.each([
+    [
+      "a guest's detail, as a warning",
+      [{ PropertyName: "Customer.Email", ErrorMessage: "invalid" }],
+      "warn",
+    ],
+    ["nothing it names, as an error", null, "error"],
+  ] as const)(
+    "logs ResDiary refusing %s",
+    async function logsGuestRefusal(_case, validationErrors, level) {
+      const { provider: resdiary } = provider(
+        reply(400, { ValidationErrors: validationErrors }),
+      );
+
+      await settle(resdiary.submitHoldGuest(GUEST_INPUT));
+
+      const other = level === "error" ? "warn" : "error";
+      expect(console[level]).toHaveBeenCalledTimes(1);
+      expect(console[other]).not.toHaveBeenCalled();
+    },
+  );
 
   it("sends the guest to the hold on ResDiary's unprefixed path", async function sendsGuest() {
     const { fake, provider: resdiary } = provider(
@@ -2020,6 +2070,57 @@ describe("review fixes", function reviewFixTests() {
       operation: "submitHoldGuest",
     });
     expect(loggedText()).toContain("ResDiary request failed");
+  });
+
+  it("logs and reports an unexpected exception once, with its stack but no guest details", async function keepsDiagnostics() {
+    const fake = fakeResDiary({ "POST /api/Jwt/v2/Authenticate": signedIn() });
+    const resdiary = createResDiaryProvider({
+      config: CONFIG,
+      fetch: fake.fetch,
+    });
+    const broken = {
+      ...GUEST_INPUT,
+      guest: { firstName: "Unloggable", surname: "Guest" },
+    } as unknown as typeof GUEST_INPUT;
+
+    const result = await settle(resdiary.submitHoldGuest(broken));
+
+    expect(result._unsafeUnwrapErr()).toMatchObject({
+      kind: "outcome_unknown",
+      operation: "submitHoldGuest",
+    });
+    const logged = loggedText();
+    expect(logged).toContain("reading 'trim'");
+    expect(logged).toContain("resdiary-provider");
+    expect(logged).not.toContain("Unloggable");
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(logToSentry).toHaveBeenCalledTimes(1);
+    expect(logToSentry).toHaveBeenCalledWith(
+      expect.any(TypeError),
+      expect.objectContaining({
+        context: {
+          operation_data: {
+            provider: "resdiary",
+            operation: "submitHoldGuest",
+          },
+        },
+      }),
+    );
+  });
+
+  it("does not report a failed ResDiary reply to Sentry", async function noSentryForReplies() {
+    const fake = fakeResDiary({
+      "POST /api/Jwt/v2/Authenticate": signedIn(),
+      "GET /Setup": reply(503),
+    });
+    const resdiary = createResDiaryProvider({
+      config: CONFIG,
+      fetch: fake.fetch,
+    });
+
+    await settle(resdiary.getRules("2026-10-23"));
+
+    expect(logToSentry).not.toHaveBeenCalled();
   });
 
   it("ignores a trailing slash on the API URL", async function trailingSlash() {
