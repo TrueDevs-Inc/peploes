@@ -4,6 +4,7 @@ import {
   calendarQuerySchema,
   guestDetailsSchema,
   holdInputSchema,
+  holdReferenceSchema,
   timesQuerySchema,
 } from "@/lib/booking-schema";
 
@@ -25,22 +26,32 @@ describe("timesQuerySchema", function timesQueryTests() {
     },
   );
 
-  it.each(["2.5", "abc", "0", "-1", "", undefined])(
-    "refuses the guest count %o",
-    function refusesGuests(partySize) {
-      const result = timesQuerySchema.safeParse({
-        date: "2026-10-23",
-        partySize,
-      });
+  it.each([
+    "2.5",
+    "abc",
+    "0",
+    "-1",
+    "",
+    undefined,
+    true,
+    [5],
+    "0x10",
+    "1e1",
+    " 3 ",
+    Number.NaN,
+  ])("refuses the guest count %o", function refusesGuests(partySize) {
+    const result = timesQuerySchema.safeParse({
+      date: "2026-10-23",
+      partySize,
+    });
 
-      expect(result.error?.issues).toEqual([
-        expect.objectContaining({
-          path: ["partySize"],
-          message: "Choose the number of guests.",
-        }),
-      ]);
-    },
-  );
+    expect(result.error?.issues).toEqual([
+      expect.objectContaining({
+        path: ["partySize"],
+        message: "Choose the number of guests.",
+      }),
+    ]);
+  });
 });
 
 describe("calendarQuerySchema", function calendarQueryTests() {
@@ -81,6 +92,12 @@ describe("holdInputSchema", function holdInputTests() {
     ).toEqual({ ...CHOICE, partySize: 2 });
   });
 
+  it("reads the guest count sent as a number, as from the page", function readsNumber() {
+    expect(holdInputSchema.parse({ ...CHOICE, partySize: 2 }).partySize).toBe(
+      2,
+    );
+  });
+
   it("keeps only the offer's kind, dropping a return time the browser adds", function dropsBrowserReturnBy() {
     expect(
       holdInputSchema.parse({
@@ -103,6 +120,30 @@ describe("holdInputSchema", function holdInputTests() {
       expect(
         result.error?.issues.map((issue) => [issue.path[0], issue.message]),
       ).toEqual([[field, "Choose a time."]]);
+    },
+  );
+});
+
+describe("holdReferenceSchema", function holdReferenceTests() {
+  it.each([1, "1"])(
+    "reads the revision %o",
+    function readsRevision(holdRevision) {
+      expect(
+        holdReferenceSchema.parse({ holdReference: "B9GXWPLY", holdRevision })
+          .holdRevision,
+      ).toBe(1);
+    },
+  );
+
+  it.each([true, [1], "0x1", "1e0", 0, 1.5])(
+    "refuses the revision %o",
+    function refusesRevision(holdRevision) {
+      expect(
+        holdReferenceSchema.safeParse({
+          holdReference: "B9GXWPLY",
+          holdRevision,
+        }).success,
+      ).toBe(false);
     },
   );
 });

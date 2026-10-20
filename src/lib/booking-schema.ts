@@ -12,10 +12,19 @@ const dateField = z
   .string({ error: BOOKING_MESSAGES.chooseDate })
   .refine(isCalendarDate, { error: BOOKING_MESSAGES.chooseDate });
 
-const partySizeField = z.coerce
-  .number({ error: BOOKING_MESSAGES.chooseGuests })
-  .int({ error: BOOKING_MESSAGES.chooseGuests })
-  .positive({ error: BOOKING_MESSAGES.chooseGuests });
+function wholeNumberField(message?: string) {
+  return z
+    .union(
+      [
+        z.number(),
+        z.string().regex(BOOKING_PATTERNS.digitsOnly).transform(Number),
+      ],
+      { error: message },
+    )
+    .pipe(z.number().int({ error: message }).positive({ error: message }));
+}
+
+const partySizeField = wholeNumberField(BOOKING_MESSAGES.chooseGuests);
 
 export const timesQuerySchema = z.object({
   date: dateField,
@@ -73,7 +82,7 @@ export const pageHoldSchema = z.object({
 });
 
 export const holdReferenceSchema = pageHoldSchema.extend({
-  holdRevision: z.coerce.number().int().positive(),
+  holdRevision: wholeNumberField(),
 });
 
 export const guestDetailsSchema = z.object({
