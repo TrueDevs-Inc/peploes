@@ -96,13 +96,11 @@ export interface IActionDefinition<
 }
 
 export interface IPublicActionDefinition<
-  TInput,
   TOutput,
   TCode extends ErrorCode = ErrorCode,
 > {
-  parse: (rawInput: unknown) => NeverthrowResult<TInput, IError<TCode>>;
   handler: (
-    payload: IPublicActionPayload<TInput>,
+    payload: IPublicActionPayload,
   ) => Promise<NeverthrowResult<TOutput, IError<TCode>>>;
 }
 
@@ -121,11 +119,12 @@ export interface IAuthenticatedContext {
   role: string | null;
 }
 
-export interface IPublicActionPayload<TInput> {
-  input: TInput;
+export interface IPublicActionPayload {
+  input: unknown;
 }
 
-export interface IActionPayload<TInput> extends IPublicActionPayload<TInput> {
+export interface IActionPayload<TInput> {
+  input: TInput;
   context: IAuthenticatedContext;
 }
 

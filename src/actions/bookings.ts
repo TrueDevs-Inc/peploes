@@ -24,12 +24,7 @@ import type {
 } from "@/lib/types";
 import { bookings } from "@/services/bookings";
 
-const holdTableAction = createPublicAction<
-  unknown,
-  THeldTable,
-  TBookingErrorCode
->({
-  parse: (rawInput) => ok(rawInput),
+const holdTableAction = createPublicAction<THeldTable, TBookingErrorCode>({
   handler: async ({ input }) => {
     const [cookieStore, requestHeaders] = await Promise.all([
       cookies(),
@@ -77,11 +72,9 @@ function guestDetailsView(result: TGuestDetailsResult): TGuestDetailsView {
 }
 
 const submitGuestDetailsAction = createPublicAction<
-  unknown,
   TGuestDetailsView,
   TBookingErrorCode
 >({
-  parse: (rawInput) => ok(rawInput),
   handler: async ({ input }) => {
     const cookieStore = await cookies();
     const holdReference = pageHoldReference(input);

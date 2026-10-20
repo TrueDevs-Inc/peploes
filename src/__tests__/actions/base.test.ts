@@ -54,17 +54,10 @@ describe("action authentication", function actionAuthenticationTests() {
 });
 
 describe("public actions", function publicActionTests() {
-  it("runs for a guest with no sign-in, handing the handler the parsed input", async function runsForGuest() {
-    const action = createPublicAction<
-      number,
-      string,
-      ErrorCode.ValidationError
-    >({
-      parse: function parseGuests(rawInput) {
-        return ok(Number(rawInput));
-      },
+  it("runs for a guest with no sign-in, handing the handler the raw input to validate", async function runsForGuest() {
+    const action = createPublicAction<string, ErrorCode.ValidationError>({
       handler: function holdTable({ input }) {
-        return Promise.resolve(ok(`held for ${input} guests`));
+        return Promise.resolve(ok(`held for ${String(input)} guests`));
       },
     });
 
@@ -73,43 +66,27 @@ describe("public actions", function publicActionTests() {
     expect(result).toEqual(ok("held for 2 guests"));
   });
 
-  it("returns the parser's error for bad input, without running the handler", async function refusesBadInput() {
+  it("returns the handler's own refusal unchanged", async function passesRefusal() {
     const refusal = createError(
       ErrorCode.ValidationError,
       "Choose the number of guests.",
     );
-    const handler = vi.fn(function holdTable() {
-      return Promise.resolve(ok("held"));
-    });
-    const action = createPublicAction<
-      number,
-      string,
-      ErrorCode.ValidationError
-    >({
-      parse: function parseGuests() {
-        return err(refusal);
+    const action = createPublicAction<string, ErrorCode.ValidationError>({
+      handler: function holdTable() {
+        return Promise.resolve(err(refusal));
       },
-      handler,
     });
 
     const result = await action("abc");
 
     expect(result).toEqual(err(refusal));
-    expect(handler).not.toHaveBeenCalled();
   });
 
   it("turns a crash into a safe error and logs the details once", async function catchesCrash() {
     const log = vi
       .spyOn(console, "error")
       .mockImplementation(function silence() {});
-    const action = createPublicAction<
-      number,
-      string,
-      ErrorCode.ValidationError
-    >({
-      parse: function parseGuests(rawInput) {
-        return ok(Number(rawInput));
-      },
+    const action = createPublicAction<string, ErrorCode.ValidationError>({
       handler: function holdTable() {
         throw new Error("cookie store unavailable");
       },
@@ -130,14 +107,7 @@ describe("public actions", function publicActionTests() {
 
   it("also catches an async handler that fails later", async function catchesRejection() {
     vi.spyOn(console, "error").mockImplementation(function silence() {});
-    const action = createPublicAction<
-      number,
-      string,
-      ErrorCode.ValidationError
-    >({
-      parse: function parseGuests(rawInput) {
-        return ok(Number(rawInput));
-      },
+    const action = createPublicAction<string, ErrorCode.ValidationError>({
       handler: async function holdTable() {
         await Promise.resolve();
         throw new Error("ResDiary timed out");

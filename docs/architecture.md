@@ -176,10 +176,11 @@ The wrapper authenticates first, parses input, calls the handler, and converts
 unexpected failures to a safe internal error. Feature actions translate that
 result to the shape needed by `useActionState` and revalidate affected routes.
 
-`createPublicAction` is the one exception: the same parsing and catch without
-the sign-in check, for guest flows such as booking a table. Use it only when
-the flow limits its writes per visitor (booking rate-limits holds by IP) and
-never for data that belongs to an account. Next.js already refuses Server
+`createPublicAction` is the one exception: the same catch without the sign-in
+check or a parse step, for guest flows such as booking a table. Its handler
+passes the raw input to a service, which validates it. Use it only when the
+flow limits its writes per visitor (booking rate-limits holds by IP) and never
+for data that belongs to an account. Next.js already refuses Server
 Actions posted from another origin.
 
 The booking hold limit fails open on purpose, so an Upstash outage does not

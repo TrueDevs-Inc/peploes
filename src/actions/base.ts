@@ -81,18 +81,14 @@ export function createAction<TInput, TOutput, TCode extends ErrorCode>(
   };
 }
 
-export function createPublicAction<TInput, TOutput, TCode extends ErrorCode>(
-  definition: IPublicActionDefinition<TInput, TOutput, TCode>,
+export function createPublicAction<TOutput, TCode extends ErrorCode>(
+  definition: IPublicActionDefinition<TOutput, TCode>,
 ): (
   rawInput: unknown,
 ) => Promise<Result<TOutput, IError<TCode | ErrorCode.InternalError>>> {
   return async (rawInput: unknown) => {
     try {
-      const inputResult = definition.parse(rawInput);
-      if (inputResult.isErr()) {
-        return err(inputResult.error);
-      }
-      return await definition.handler({ input: inputResult.value });
+      return await definition.handler({ input: rawInput });
     } catch (error) {
       return err(unexpectedFailure(error));
     }
