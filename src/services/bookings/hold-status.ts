@@ -41,7 +41,11 @@ export async function holdStatus(
     return err(holdMissing());
   }
   const page = holdReferenceSchema.safeParse(query);
-  if (!page.success || page.data.holdReference !== hold.reference) {
+  if (
+    !page.success ||
+    page.data.holdReference !== hold.reference ||
+    page.data.holdRevision !== hold.rev
+  ) {
     return err(otherTab());
   }
   const reply = await provider.getHoldStatus(hold.holdId, {

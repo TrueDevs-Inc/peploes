@@ -18,6 +18,7 @@ import type {
   TBookingErrorCode,
   TBookingResponse,
   TGuestDetailsResult,
+  TGuestDetailsView,
   THeldTable,
 } from "@/lib/types";
 import { bookings } from "@/services/bookings";
@@ -40,6 +41,9 @@ const holdTableAction = createPublicAction<
       readHoldToken(cookieStore),
     );
     if (hold.isErr()) {
+      if (hold.error.clearHold) {
+        forgetHoldToken(cookieStore);
+      }
       return err(hold.error);
     }
     const { holdToken, cookieMaxAgeSeconds, expiresInMs, summary } = hold.value;
@@ -54,9 +58,17 @@ export async function holdTable(
   return toBookingResponse(await holdTableAction(choice));
 }
 
+function guestDetailsView(result: TGuestDetailsResult): TGuestDetailsView {
+  if (result.kind === "confirmed") {
+    return result;
+  }
+  const { holdCookie, ...view } = result;
+  return view;
+}
+
 const submitGuestDetailsAction = createPublicAction<
   unknown,
-  TGuestDetailsResult,
+  TGuestDetailsView,
   TBookingErrorCode
 >({
   parse: (rawInput) => ok(rawInput),
@@ -69,15 +81,22 @@ const submitGuestDetailsAction = createPublicAction<
     const holdDone = result.isOk()
       ? result.value.kind === "confirmed"
       : result.error.clearHold === true;
+    const holdCookie = result.isOk()
+      ? "holdCookie" in result.value
+        ? result.value.holdCookie
+        : undefined
+      : result.error.holdCookie;
     if (holdDone) {
       forgetHoldToken(cookieStore);
+    } else if (holdCookie) {
+      storeHoldToken(cookieStore, holdCookie.token, holdCookie.maxAgeSeconds);
     }
-    return result;
+    return result.map(guestDetailsView);
   },
 });
 
 export async function submitGuestDetails(
   details: unknown,
-): Promise<TBookingResponse<TGuestDetailsResult>> {
+): Promise<TBookingResponse<TGuestDetailsView>> {
   return toBookingResponse(await submitGuestDetailsAction(details));
 }

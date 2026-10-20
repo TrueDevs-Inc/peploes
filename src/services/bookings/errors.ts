@@ -61,8 +61,15 @@ export function timeGone(): IBookingError {
   return createError(ErrorCode.Conflict, BOOKING_MESSAGES.timeGone);
 }
 
+export function tooManyHolds(): IBookingError {
+  return createError(ErrorCode.TooManyRequests, BOOKING_MESSAGES.tooManyHolds);
+}
+
 export function holdUnclear(): IBookingError {
-  return createError(ErrorCode.OutcomeUnknown, BOOKING_MESSAGES.holdUnclear);
+  return {
+    ...createError(ErrorCode.OutcomeUnknown, BOOKING_MESSAGES.holdUnclear),
+    clearHold: true,
+  };
 }
 
 export function holdMissing(): IBookingError {

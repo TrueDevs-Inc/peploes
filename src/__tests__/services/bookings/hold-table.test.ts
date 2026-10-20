@@ -7,6 +7,7 @@ import {
   FRIDAY,
   fakeProvider,
   HOLD,
+  HOLD_SECRET,
   LUNCH,
   NOW,
   rulesReadFor,
@@ -16,8 +17,10 @@ import {
   slot,
   TIMES,
 } from "@/__tests__/services/bookings/fixtures";
+import { readHold, signHold } from "@/lib/booking-token";
 import { ErrorCode } from "@/lib/enums";
 import { logToSentry } from "@/lib/error-handler";
+import type { THoldToken } from "@/lib/types";
 import { createBookingService } from "@/services/bookings";
 
 vi.mock("@/lib/error-handler", () => ({ logToSentry: vi.fn() }));
@@ -29,15 +32,15 @@ const REFUSE_HOLDS = () => Promise.resolve(false);
 
 describe("holdTable", function holdTableTests() {
   describe("the visitor's hold limit", function holdLimitTests() {
-    it("refuses a new hold over the limit before ResDiary holds anything", async function overLimit() {
+    it("refuses a new hold over the limit as too many requests, with the honest reason", async function overLimit() {
       const provider = fakeProvider();
 
       const result = await service(provider).holdTable(DINNER, REFUSE_HOLDS);
 
       expect(result._unsafeUnwrapErr()).toEqual({
-        code: ErrorCode.ServiceUnavailable,
+        code: ErrorCode.TooManyRequests,
         message:
-          "Online booking isn't available right now. Please call us on +353 1 676 3144 or email reception@peploes.ie.",
+          "You've held several tables in the last few minutes. Please wait a few minutes or call us on +353 1 676 3144.",
       });
       expect(provider.createHold).not.toHaveBeenCalled();
     });
@@ -122,6 +125,7 @@ describe("holdTable", function holdTableTests() {
           required: true,
         },
       },
+      revision: 1,
     });
     expect(provider.createHold).toHaveBeenCalledWith(
       { date: FRIDAY, time: "19:30", partySize: 2 },
@@ -556,18 +560,354 @@ describe("holdTable", function holdTableTests() {
       expect(provider.createHold).toHaveBeenCalledTimes(1);
     });
 
-    it("makes a new hold for a different time, leaving the old one to expire", async function differentTime() {
+    function changed(token: string, change: Partial<THoldToken>) {
+      const hold = readHold(token, HOLD_SECRET);
+      if (!hold) {
+        throw new Error("the test token did not read back");
+      }
+      return signHold({ ...hold, ...change }, HOLD_SECRET);
+    }
+
+    it.each([
+      ["60 seconds or less are left", 238_200, {}],
+      ["its details were sent", 60_000, { detailsSent: true }],
+      ["it has been moved 20 times", 60_000, { rev: 20 }],
+    ] as const)(
+      "makes a new hold, asking the limit, when %s",
+      async function cannotMove(_case, later, change) {
+        const { provider, token } = await firstHold(fakeProvider(), LUNCH);
+        const gate = vi.fn(ALLOW_HOLDS);
+        vi.setSystemTime(NOW.getTime() + later);
+
+        const again = await service(provider).holdTable(
+          DINNER,
+          gate,
+          changed(token, change),
+        );
+
+        expect(again._unsafeUnwrap().summary.revision).toBe(1);
+        expect(provider.changeHold).not.toHaveBeenCalled();
+        expect(provider.createHold).toHaveBeenCalledTimes(2);
+        expect(gate).toHaveBeenCalledTimes(1);
+      },
+    );
+
+    it.each([
+      ["a closed day", { searchDate: "2026-10-19" }, ErrorCode.ValidationError],
+      ["11 guests", { partySize: 11 }, ErrorCode.ValidationError],
+      ["a time no longer offered", { time: "15:00" }, ErrorCode.Conflict],
+    ])(
+      "checks %s before moving anything",
+      async function checksFirst(_case, change, code) {
+        const { provider, token } = await firstHold(fakeProvider(), LUNCH);
+
+        const again = await service(provider).holdTable(
+          { ...DINNER, ...change },
+          ALLOW_HOLDS,
+          token,
+        );
+
+        expect(again._unsafeUnwrapErr().code).toBe(code);
+        expect(provider.changeHold).not.toHaveBeenCalled();
+      },
+    );
+
+    it("moves the hold to another day and party size, reading that day's rules", async function movesDateAndParty() {
       const { provider, token } = await firstHold(fakeProvider(), LUNCH);
+      provider.searchTimes.mockResolvedValue(
+        ok({ ...TIMES, slots: [slot("19:30", { date: "2026-10-24" })] }),
+      );
 
       const again = await service(provider).holdTable(
-        DINNER,
+        { ...DINNER, searchDate: "2026-10-24", partySize: 4 },
         ALLOW_HOLDS,
         token,
       );
 
-      expect(again._unsafeUnwrap().summary.time).toBe("19:30");
+      expect(again._unsafeUnwrap().summary).toMatchObject({
+        date: "2026-10-24",
+        partySize: 4,
+        revision: 2,
+      });
+      expect(provider.changeHold.mock.calls[0]?.[0]).toEqual({
+        holdId: 425742,
+        date: "2026-10-24",
+        time: "19:30",
+        partySize: 4,
+      });
+      expect(rulesReadFor(provider, "2026-10-24")).toBe(true);
+    });
+
+    it("times the move from when the checks end, and its recovery from when it fails", async function slidingMoveBudget() {
+      const { provider, token } = await firstHold(fakeProvider(), LUNCH);
+      provider.searchTimes.mockImplementationOnce(function slowCheck() {
+        vi.setSystemTime(NOW.getTime() + 3000);
+        return Promise.resolve(ok(TIMES));
+      });
+      provider.changeHold.mockImplementation(function slowMove() {
+        vi.setSystemTime(NOW.getTime() + 7500);
+        return Promise.resolve(
+          err({
+            kind: "outcome_unknown",
+            operation: "changeHold",
+            httpStatus: 500,
+          }),
+        );
+      });
+
+      await service(provider).holdTable(DINNER, ALLOW_HOLDS, token);
+
+      expect(provider.changeHold.mock.calls[0]?.[1]).toEqual({
+        deadlineAt: NOW.getTime() + 3000 + 5000,
+      });
+      expect(provider.searchTimes.mock.lastCall?.[1]).toEqual({
+        deadlineAt: NOW.getTime() + 7500 + 2500,
+      });
+    });
+
+    it("hands back the same hold for the same time after its details were sent", async function reuseAfterSend() {
+      const { provider, token } = await firstHold(fakeProvider(), LUNCH);
+
+      const again = await service(provider).holdTable(
+        LUNCH,
+        ALLOW_HOLDS,
+        changed(token, { detailsSent: true }),
+      );
+
+      expect(again._unsafeUnwrap().summary.revision).toBe(1);
+      expect(provider.getHoldStatus).toHaveBeenCalledTimes(1);
+      expect(provider.createHold).toHaveBeenCalledTimes(1);
+      expect(provider.changeHold).not.toHaveBeenCalled();
+    });
+
+    it("gives the second try of a lost move 2.5 seconds", async function recoveryBudget() {
+      const { provider, token } = await firstHold(fakeProvider(), LUNCH);
+      provider.changeHold
+        .mockResolvedValueOnce(
+          err({
+            kind: "outcome_unknown",
+            operation: "changeHold",
+            detail: "timeout",
+          }),
+        )
+        .mockResolvedValueOnce(
+          err({
+            kind: "outcome_unknown",
+            operation: "changeHold",
+            httpStatus: 500,
+          }),
+        );
+
+      await service(provider).holdTable(DINNER, ALLOW_HOLDS, token);
+
+      expect(provider.changeHold.mock.calls[1][1]).toEqual({
+        deadlineAt: NOW.getTime() + 2500,
+      });
+    });
+
+    it("hands back the moved hold when the guest picks its time again", async function reuseAfterMove() {
+      const { provider, token } = await firstHold(fakeProvider(), LUNCH);
+      const moved = (
+        await service(provider).holdTable(DINNER, ALLOW_HOLDS, token)
+      )._unsafeUnwrap();
+
+      const again = await service(provider).holdTable(
+        DINNER,
+        ALLOW_HOLDS,
+        moved.holdToken,
+      );
+
+      expect(again._unsafeUnwrap().holdToken).toBe(moved.holdToken);
+      expect(provider.changeHold).toHaveBeenCalledTimes(1);
+      expect(provider.createHold).toHaveBeenCalledTimes(1);
+    });
+
+    it("moves twice, safely, when a double click sends the old hold twice", async function doubleClick() {
+      const { provider, token } = await firstHold(fakeProvider(), LUNCH);
+      const bookings = service(provider);
+
+      const [first, second] = await Promise.all([
+        bookings.holdTable(DINNER, ALLOW_HOLDS, token),
+        bookings.holdTable(DINNER, ALLOW_HOLDS, token),
+      ]);
+
+      expect(first._unsafeUnwrap().summary).toEqual(
+        second._unsafeUnwrap().summary,
+      );
+      expect(provider.changeHold).toHaveBeenCalledTimes(2);
+      expect(provider.createHold).toHaveBeenCalledTimes(1);
+    });
+
+    describe("when the move fails", function moveFailureTests() {
+      const REFUSED = err({
+        kind: "outcome_unknown" as const,
+        operation: "changeHold" as const,
+        httpStatus: 500,
+      });
+      const LOST = err({
+        kind: "outcome_unknown" as const,
+        operation: "changeHold" as const,
+        detail: "timeout",
+      });
+
+      async function moving(
+        ...replies: Parameters<
+          ReturnType<typeof fakeProvider>["changeHold"]["mockResolvedValueOnce"]
+        >[0][]
+      ) {
+        const { provider, token } = await firstHold(fakeProvider(), LUNCH);
+        for (const answer of replies) {
+          provider.changeHold.mockResolvedValueOnce(answer);
+        }
+        return { provider, token };
+      }
+
+      it.each([
+        ["gone when searched again", [slot("12:30")], ErrorCode.Conflict],
+        ["still offered", TIMES.slots, ErrorCode.ServiceUnavailable],
+      ])(
+        "keeps the hold where it was when ResDiary refuses and the time is %s",
+        async function refused(_case, slotsAfter, code) {
+          const { provider, token } = await moving(REFUSED);
+          provider.searchTimes
+            .mockResolvedValueOnce(ok(TIMES))
+            .mockResolvedValueOnce(ok({ ...TIMES, slots: slotsAfter }));
+
+          const again = await service(provider).holdTable(
+            DINNER,
+            ALLOW_HOLDS,
+            token,
+          );
+
+          const error = again._unsafeUnwrapErr();
+          expect(error.code).toBe(code);
+          expect(error.clearHold).toBeUndefined();
+          expect(provider.changeHold).toHaveBeenCalledTimes(1);
+        },
+      );
+
+      it.each([
+        [
+          "moves on the second try",
+          [LOST, ok({ expiresAt: HOLD.expiresAt })],
+          true,
+          undefined,
+        ],
+        [
+          "clears the hold when the second try is refused",
+          [LOST, REFUSED],
+          ErrorCode.OutcomeUnknown,
+          true,
+        ],
+        [
+          "clears the hold when both replies are lost",
+          [LOST, LOST],
+          ErrorCode.OutcomeUnknown,
+          true,
+        ],
+      ] as const)(
+        "sends the same move once more after a lost reply, and %s",
+        async function lost(_case, replies, outcome, clearHold) {
+          const { provider, token } = await moving(...replies);
+
+          const again = await service(provider).holdTable(
+            DINNER,
+            ALLOW_HOLDS,
+            token,
+          );
+
+          expect(provider.changeHold).toHaveBeenCalledTimes(2);
+          expect(provider.changeHold.mock.calls[1][0]).toEqual(
+            provider.changeHold.mock.calls[0][0],
+          );
+          if (outcome === true) {
+            expect(again._unsafeUnwrap().summary.time).toBe("19:30");
+          } else {
+            expect(again._unsafeUnwrapErr()).toMatchObject({ code: outcome });
+            expect(again._unsafeUnwrapErr().clearHold).toBe(clearHold);
+          }
+        },
+      );
+
+      it("treats a reply it cannot read as lost, and sends the move once more", async function unreadable() {
+        const { provider, token } = await moving(
+          err({
+            kind: "outcome_unknown" as const,
+            operation: "changeHold" as const,
+            httpStatus: 200,
+            detail: "unreadable: ExpiryTimestamp",
+          }),
+        );
+
+        const again = await service(provider).holdTable(
+          DINNER,
+          ALLOW_HOLDS,
+          token,
+        );
+
+        expect(provider.changeHold).toHaveBeenCalledTimes(2);
+        expect(again._unsafeUnwrap().summary.time).toBe("19:30");
+      });
+
+      it.each([
+        [
+          "a 404",
+          err({ kind: "not_found" as const, operation: "changeHold" as const }),
+          ErrorCode.HoldExpired,
+          true,
+        ],
+        [
+          "a 400",
+          err({
+            kind: "rejected" as const,
+            operation: "changeHold" as const,
+            fields: ["VisitTime"],
+          }),
+          ErrorCode.ServiceUnavailable,
+          undefined,
+        ],
+      ] as const)(
+        "logs one error for %s",
+        async function refusedForGood(_case, answer, code, clearHold) {
+          const { provider, token } = await moving(answer);
+
+          const again = await service(provider).holdTable(
+            DINNER,
+            ALLOW_HOLDS,
+            token,
+          );
+
+          expect(again._unsafeUnwrapErr()).toMatchObject({ code });
+          expect(again._unsafeUnwrapErr().clearHold).toBe(clearHold);
+          expect(console.error).toHaveBeenCalledTimes(1);
+          expect(provider.changeHold).toHaveBeenCalledTimes(1);
+        },
+      );
+    });
+
+    it("moves the hold to a different time instead of making another, without asking the limit", async function movesHold() {
+      const { provider, token } = await firstHold(fakeProvider(), LUNCH);
+      const gate = vi.fn(ALLOW_HOLDS);
+      vi.setSystemTime(NOW.getTime() + 60_000);
+
+      const again = await service(provider).holdTable(DINNER, gate, token);
+
+      const moved = again._unsafeUnwrap();
+      expect(moved.summary).toMatchObject({
+        reference: "B9GXWPLY",
+        time: "19:30",
+        revision: 2,
+        offer: { feeCents: 2000 },
+      });
+      expect(moved.expiresInMs).toBe(238_200);
+      expect(moved.holdToken).not.toBe(token);
+      expect(provider.changeHold).toHaveBeenCalledWith(
+        { holdId: 425742, date: FRIDAY, time: "19:30", partySize: 2 },
+        { deadlineAt: NOW.getTime() + 60_000 + 5000 },
+      );
+      expect(provider.createHold).toHaveBeenCalledTimes(1);
       expect(provider.getHoldStatus).not.toHaveBeenCalled();
-      expect(provider.createHold).toHaveBeenCalledTimes(2);
+      expect(gate).not.toHaveBeenCalled();
     });
 
     it.each([

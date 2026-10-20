@@ -117,9 +117,9 @@ describe("the holdTable action", function holdTableActionTests() {
     expect(response).toStrictEqual({
       ok: false,
       error: {
-        code: ErrorCode.ServiceUnavailable,
+        code: ErrorCode.TooManyRequests,
         message:
-          "Online booking isn't available right now. Please call us on +353 1 676 3144 or email reception@peploes.ie.",
+          "You've held several tables in the last few minutes. Please wait a few minutes or call us on +353 1 676 3144.",
       },
     });
     expect(allowHold).toHaveBeenCalledWith("198.51.100.20");
@@ -157,14 +157,74 @@ describe("the holdTable action", function holdTableActionTests() {
     await holdTable(LUNCH);
     const lunchToken = cookies.get(COOKIE)?.value;
     allowHold.mockResolvedValue(false);
+    vi.setSystemTime(NOW.getTime() + 238_200);
 
     const response = await holdTable(DINNER);
 
     expect(response).toMatchObject({
       ok: false,
-      error: { code: ErrorCode.ServiceUnavailable },
+      error: { code: ErrorCode.TooManyRequests },
     });
     expect(cookies.get(COOKIE)?.value).toBe(lunchToken);
+  });
+
+  it("moves the one hold on lunch, dinner, lunch, dinner, asking the limit once", async function alternates() {
+    const { provider, cookies, allowHold } = setUp();
+    const holdTable = await holdTableAction();
+
+    const replies = [];
+    for (const choice of [LUNCH, DINNER, LUNCH, DINNER]) {
+      replies.push(await holdTable(choice));
+    }
+
+    expect(
+      replies.map((reply) =>
+        reply.ok ? reply.data.summary.revision : reply.error.code,
+      ),
+    ).toEqual([1, 2, 3, 4]);
+    expect(
+      new Set(replies.map((reply) => reply.ok && reply.data.summary.reference)),
+    ).toEqual(new Set(["B9GXWPLY"]));
+    expect(provider.createHold).toHaveBeenCalledTimes(1);
+    expect(provider.changeHold).toHaveBeenCalledTimes(3);
+    expect(allowHold).toHaveBeenCalledTimes(1);
+    expect(cookies.has(COOKIE)).toBe(true);
+  });
+
+  it("deletes the cookie when a move throws", async function throwingMove() {
+    const { provider, cookies } = setUp();
+    const holdTable = await holdTableAction();
+    await holdTable(LUNCH);
+    provider.changeHold.mockRejectedValue(new Error("boom"));
+
+    const response = await holdTable(DINNER);
+
+    expect(response).toMatchObject({
+      ok: false,
+      error: { code: ErrorCode.OutcomeUnknown },
+    });
+    expect(cookies.has(COOKIE)).toBe(false);
+  });
+
+  it("deletes the cookie when a move's outcome cannot be known", async function unclearMove() {
+    const { provider, cookies } = setUp();
+    const holdTable = await holdTableAction();
+    await holdTable(LUNCH);
+    provider.changeHold.mockResolvedValue(
+      err({
+        kind: "outcome_unknown",
+        operation: "changeHold",
+        detail: "timeout",
+      }),
+    );
+
+    const response = await holdTable(DINNER);
+
+    expect(response).toMatchObject({
+      ok: false,
+      error: { code: ErrorCode.OutcomeUnknown },
+    });
+    expect(cookies.has(COOKIE)).toBe(false);
   });
 
   it("asks the limit without an IP when the request has none", async function noIp() {
@@ -234,6 +294,27 @@ describe("the submitGuestDetails action", function guestDetailsActionTests() {
       },
     });
     expect(cookies.has(COOKIE)).toBe(false);
+  });
+
+  it("marks the cookie once the details are sent, and never hands the browser its token", async function marksSent() {
+    const { provider, cookies, actions } = await held();
+    const before = cookies.get(COOKIE)?.value;
+    provider.submitHoldGuest.mockResolvedValue(
+      ok<TResDiaryGuestOutcome, TResDiaryFailure>({
+        kind: "payment",
+        amountCents: 2000,
+        amountText: "€20.00",
+        stripe: STRIPE_STEP,
+      }),
+    );
+
+    const response = await actions.submitGuestDetails(GUEST_DETAILS);
+
+    const after = cookies.get(COOKIE);
+    expect(after?.value).not.toBe(before);
+    expect(after?.options.maxAge).toBe(1199);
+    expect(JSON.stringify(response)).not.toContain(after?.value);
+    expect(JSON.stringify(response)).not.toContain("holdCookie");
   });
 
   it("keeps the hold while the guest pays, sending Stripe's step", async function payment() {

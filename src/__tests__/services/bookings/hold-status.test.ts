@@ -129,20 +129,26 @@ describe("getHoldStatus", function getHoldStatusTests() {
       expect(provider.getHoldStatus).not.toHaveBeenCalled();
     });
 
-    it("answers not found without asking ResDiary when the page's hold is another one", async function otherTab() {
-      const { provider, token } = await held();
-      provider.getHoldStatus.mockClear();
+    it.each([
+      ["another hold", { holdReference: "BOTHERTAB", holdRevision: 1 }],
+      [
+        "the hold before another tab moved it",
+        { ...HOLD_QUERY, holdRevision: 2 },
+      ],
+    ])(
+      "answers not found without asking ResDiary when the page waits for %s",
+      async function otherTab(_case, query) {
+        const { provider, token } = await held();
+        provider.getHoldStatus.mockClear();
 
-      const result = await service(provider).getHoldStatus(
-        { holdReference: "BOTHERTAB" },
-        token,
-      );
+        const result = await service(provider).getHoldStatus(query, token);
 
-      const error = result._unsafeUnwrapErr();
-      expect(error.code).toBe(ErrorCode.NotFound);
-      expect(error.clearHold).toBeUndefined();
-      expect(provider.getHoldStatus).not.toHaveBeenCalled();
-    });
+        const error = result._unsafeUnwrapErr();
+        expect(error.code).toBe(ErrorCode.NotFound);
+        expect(error.clearHold).toBeUndefined();
+        expect(provider.getHoldStatus).not.toHaveBeenCalled();
+      },
+    );
 
     it("answers not found for a tampered token, with a warning", async function tampered() {
       const { provider, token } = await held();

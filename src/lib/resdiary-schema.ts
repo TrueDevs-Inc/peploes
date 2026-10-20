@@ -8,6 +8,7 @@ import {
 } from "@/lib/constants/resdiary";
 import type {
   IResDiaryBookingLookup,
+  IResDiaryChangeHoldInput,
   IResDiaryConfig,
   IResDiaryDateRangeInput,
   IResDiaryGuestInput,
@@ -112,6 +113,10 @@ export const holdReplySchema = z.object({
   ExpiryTimestamp: z.string().nullish(),
 });
 
+export const changeHoldReplySchema = holdReplySchema.pick({
+  ExpiryTimestamp: true,
+});
+
 export const guestReplySchema = z.object({
   Status: z.string(),
   Booking: z.object({ Reference: z.string().nullish() }).nullish(),
@@ -188,6 +193,13 @@ export function holdBody(config: IResDiaryConfig, input: IResDiaryHoldInput) {
     PartySize: input.partySize,
     ChannelCode: config.channelCode,
   };
+}
+
+export function changeHoldBody(
+  config: IResDiaryConfig,
+  input: IResDiaryChangeHoldInput,
+) {
+  return { BookingId: input.holdId, ...holdBody(config, input) };
 }
 
 export function guestBody(input: IResDiaryGuestInput) {

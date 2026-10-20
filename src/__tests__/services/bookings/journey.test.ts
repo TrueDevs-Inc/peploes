@@ -216,6 +216,7 @@ const ROUTES = {
   closedDates: "GET /ClosedDates",
   search: "POST /AvailabilitySearch",
   hold: "POST /CreateTableHold",
+  move: "PUT /UpdateTableHoldBookingDetails",
   guest: "PUT /UpdateTableHoldWithCustomer",
   status: "GET /TableHoldBookingStatus/425742",
 } as const;
@@ -227,6 +228,7 @@ function peploes(overrides: Record<string, THandler | THandler[]> = {}) {
     [ROUTES.closedDates]: reply(200, CLOSED_DATES),
     [ROUTES.search]: reply(200, TIMES),
     [ROUTES.hold]: reply(200, HOLD_REPLY, RESDIARY_CLOCK),
+    [ROUTES.move]: reply(200, { ExpiryTimestamp: HOLD_REPLY.ExpiryTimestamp }),
     [ROUTES.guest]: reply(200, { ...GUEST_REPLY, Status: "Success" }),
     [ROUTES.status]: holdStatus("Pending"),
     ...overrides,
@@ -281,7 +283,11 @@ async function confirm(
   const { hold } = await chooseTime(bookings, time);
   const { holdToken, summary } = hold._unsafeUnwrap();
   const result = await bookings.submitGuestDetails(
-    { ...DETAILS, holdReference: summary.reference },
+    {
+      ...DETAILS,
+      holdReference: summary.reference,
+      holdRevision: summary.revision,
+    },
     holdToken,
   );
   return { holdToken, result };
@@ -303,7 +309,11 @@ describe("a guest books a table", function journeyTests() {
     const { holdToken, summary, expiresInMs, cookieMaxAgeSeconds } =
       hold._unsafeUnwrap();
     const booked = await bookings.submitGuestDetails(
-      { ...DETAILS, holdReference: summary.reference },
+      {
+        ...DETAILS,
+        holdReference: summary.reference,
+        holdRevision: summary.revision,
+      },
       holdToken,
     );
 
@@ -346,12 +356,58 @@ describe("a guest books a table", function journeyTests() {
           required: false,
         },
       },
+      revision: 1,
     });
     expect(booked._unsafeUnwrap()).toEqual({
       kind: "confirmed",
       reference: "B9GXWPLY",
       summary,
     });
+  });
+
+  it("moves the one hold when the guest picks another time, then books it there", async function movesThenBooks() {
+    const { fake, bookings } = peploes();
+    const { hold } = await chooseTime(bookings, "19:30");
+    const first = hold._unsafeUnwrap();
+
+    const moved = (
+      await bookings.holdTable(
+        {
+          searchDate: FRIDAY,
+          time: "12:30",
+          partySize: 2,
+          offer: { kind: "standard" },
+        },
+        ALLOW_HOLDS,
+        first.holdToken,
+      )
+    )._unsafeUnwrap();
+    const booked = await bookings.submitGuestDetails(
+      {
+        ...DETAILS,
+        holdReference: moved.summary.reference,
+        holdRevision: moved.summary.revision,
+      },
+      moved.holdToken,
+    );
+
+    expect(booked._unsafeUnwrap()).toMatchObject({
+      kind: "confirmed",
+      summary: { timeLabel: "12:30 pm", revision: 2 },
+    });
+    expect(fake.count(ROUTES.hold)).toBe(1);
+    expect(fake.bodies(ROUTES.move)).toEqual([
+      {
+        BookingId: 425742,
+        VisitDate: FRIDAY,
+        VisitTime: "12:30:00",
+        PartySize: 2,
+        ChannelCode: "ONLINE",
+      },
+    ]);
+    expect(fake.bodies(ROUTES.guest)).toEqual([
+      expect.objectContaining({ BookingId: 425742 }),
+    ]);
   });
 
   it("sends ResDiary the hold and the cleaned details on the wire", async function sendsWire() {
@@ -427,6 +483,10 @@ describe("a guest books a table", function journeyTests() {
     const secondPoll = await bookings.getHoldStatus(HOLD_QUERY, holdToken);
 
     expect(result._unsafeUnwrap()).toEqual({
+      holdCookie: {
+        token: expect.any(String),
+        maxAgeSeconds: expect.any(Number),
+      },
       kind: "payment",
       amountCents: 2000,
       amountText: "€20.00",
@@ -477,6 +537,10 @@ describe("a guest books a table", function journeyTests() {
     const { result } = await confirm(bookings, "19:30");
 
     expect(result._unsafeUnwrap()).toEqual({
+      holdCookie: {
+        token: expect.any(String),
+        maxAgeSeconds: expect.any(Number),
+      },
       kind: "card",
       amountText: "€0.00",
       stripe: {

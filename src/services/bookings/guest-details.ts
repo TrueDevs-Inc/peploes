@@ -3,7 +3,7 @@ import "server-only";
 import { err, ok, type Result } from "neverthrow";
 
 import { guestDetailsSchema, holdReferenceSchema } from "@/lib/booking-schema";
-import { readHold } from "@/lib/booking-token";
+import { readHold, signHold } from "@/lib/booking-token";
 import { ROUTES } from "@/lib/constants";
 import {
   BOOKING_BUDGET_MS,
@@ -18,12 +18,14 @@ import { logger } from "@/lib/logger";
 import type {
   IBookingError,
   IBookingGuestContext,
+  IHoldCookie,
   IResDiaryGuestInput,
   IResDiaryRules,
   TBookingProvider,
   TBookingResult,
   TGuestDetails,
   TGuestDetailsResult,
+  TGuestDetailsView,
   THoldToken,
   TResDiaryFailure,
   TResDiaryGuestOutcome,
@@ -40,7 +42,10 @@ import {
   timeGone,
   unavailable,
 } from "@/services/bookings/errors";
-import { holdSummary } from "@/services/bookings/hold-table";
+import {
+  cookieMaxAgeSeconds,
+  holdSummary,
+} from "@/services/bookings/hold-table";
 
 function withoutTrunkZero(mobile: string): string {
   return mobile.startsWith(BOOKING_TRUNK_PREFIX)
@@ -87,7 +92,7 @@ function unsupportedSetting(
 function fromOutcome(
   outcome: TResDiaryGuestOutcome,
   hold: THoldToken,
-): Result<TGuestDetailsResult, IBookingError> {
+): Result<TGuestDetailsView, IBookingError> {
   const summary = holdSummary(hold);
   switch (outcome.kind) {
     case "confirmed":
@@ -131,7 +136,7 @@ async function afterUnclearReply(
   hold: THoldToken,
   input: IResDiaryGuestInput,
   startedAt: number,
-): TBookingResult<TGuestDetailsResult> {
+): TBookingResult<TGuestDetailsView> {
   const status = await provider.getHoldStatus(hold.holdId, {
     deadlineAt: Date.now() + BOOKING_BUDGET_MS.guestStatus,
   });
@@ -167,6 +172,45 @@ async function afterUnclearReply(
   return err(stillConfirming());
 }
 
+async function sendDetails(
+  provider: TBookingProvider,
+  hold: THoldToken,
+  guest: IResDiaryGuestInput,
+  startedAt: number,
+  sendBy: number,
+): TBookingResult<TGuestDetailsView> {
+  const reply = await provider.submitHoldGuest(guest, { deadlineAt: sendBy });
+  if (reply.isOk()) {
+    return fromOutcome(reply.value, hold);
+  }
+  if (reply.error.kind === "outcome_unknown") {
+    return afterUnclearReply(provider, hold, guest, startedAt);
+  }
+  return err(fromFailure(reply.error, hold));
+}
+
+function markDetailsSent(
+  sent: Result<TGuestDetailsView, IBookingError>,
+  hold: THoldToken,
+  secret: string,
+): Result<TGuestDetailsResult, IBookingError> {
+  const holdCookie = (): IHoldCookie => ({
+    token: signHold({ ...hold, detailsSent: true }, secret),
+    maxAgeSeconds: cookieMaxAgeSeconds(hold, Date.now()),
+  });
+  if (sent.isErr()) {
+    return err(
+      sent.error.clearHold
+        ? sent.error
+        : { ...sent.error, holdCookie: holdCookie() },
+    );
+  }
+  const view = sent.value;
+  return ok(
+    view.kind === "confirmed" ? view : { ...view, holdCookie: holdCookie() },
+  );
+}
+
 export async function submitGuestDetails(
   context: IBookingGuestContext,
   input: unknown,
@@ -179,7 +223,11 @@ export async function submitGuestDetails(
     return err(holdMissing());
   }
   const form = holdReferenceSchema.safeParse(input);
-  if (!form.success || form.data.holdReference !== hold.reference) {
+  if (
+    !form.success ||
+    form.data.holdReference !== hold.reference ||
+    form.data.holdRevision !== hold.rev
+  ) {
     return err(otherTab());
   }
   if (hold.expiresAt - startedAt <= BOOKING_HOLD.submitMinRemainingMs) {
@@ -203,12 +251,6 @@ export async function submitGuestDetails(
   }
 
   const guest = guestInput(hold, details.data);
-  const reply = await provider.submitHoldGuest(guest, { deadlineAt: sendBy });
-  if (reply.isOk()) {
-    return fromOutcome(reply.value, hold);
-  }
-  if (reply.error.kind === "outcome_unknown") {
-    return afterUnclearReply(provider, hold, guest, startedAt);
-  }
-  return err(fromFailure(reply.error, hold));
+  const sent = await sendDetails(provider, hold, guest, startedAt, sendBy);
+  return markDetailsSent(sent, hold, secret);
 }

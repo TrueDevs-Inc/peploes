@@ -67,7 +67,10 @@ function isMobileNumber(value: string): boolean {
   );
 }
 
-export const holdReferenceSchema = z.object({ holdReference: z.string() });
+export const holdReferenceSchema = z.object({
+  holdReference: z.string(),
+  holdRevision: z.coerce.number().int().positive(),
+});
 
 export const guestDetailsSchema = z.object({
   firstName: nameField(BOOKING_MESSAGES.enterFirstName),

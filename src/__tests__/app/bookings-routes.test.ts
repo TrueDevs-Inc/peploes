@@ -114,7 +114,7 @@ describe("with online booking off", function bookingOffTests() {
     ],
     [
       "hold-status",
-      `/api/bookings/hold-status?holdReference=${HOLD.reference}`,
+      `/api/bookings/hold-status?holdReference=${HOLD.reference}&holdRevision=1`,
     ],
   ])(
     "%s answers 503 without asking ResDiary",
@@ -169,7 +169,9 @@ describe("GET /api/bookings/calendar", function calendarRouteTests() {
 
 describe("GET /api/bookings/hold-status", function holdStatusRouteTests() {
   function statusFor(holdReference: string) {
-    return get(`/api/bookings/hold-status?holdReference=${holdReference}`);
+    return get(
+      `/api/bookings/hold-status?holdReference=${holdReference}&holdRevision=1`,
+    );
   }
 
   async function holding(status: "pending" | "confirmed" | "failed") {

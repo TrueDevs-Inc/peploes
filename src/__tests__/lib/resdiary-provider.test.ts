@@ -1211,6 +1211,118 @@ describe("createHold", function createHoldTests() {
   });
 });
 
+const MOVE_INPUT = {
+  holdId: 425740,
+  date: "2026-10-23",
+  time: "12:30",
+  partySize: 2,
+};
+
+describe("changeHold", function changeHoldTests() {
+  function provider(move: THandler | THandler[]) {
+    const fake = fakeResDiary({
+      "POST /api/Jwt/v2/Authenticate": signedIn(),
+      "PUT /UpdateTableHoldBookingDetails": move,
+    });
+    return {
+      fake,
+      provider: createResDiaryProvider({ config: CONFIG, fetch: fake.fetch }),
+    };
+  }
+
+  it("moves the hold to the new slot and reads back its expiry", async function movesHold() {
+    const { fake, provider: resdiary } = provider(
+      reply(200, { ExpiryTimestamp: "2026-10-15T08:05:00.4343581Z" }),
+    );
+
+    const result = await settle(resdiary.changeHold(MOVE_INPUT));
+
+    expect(result._unsafeUnwrap()).toEqual({
+      expiresAt: Date.parse("2026-10-15T08:05:00.434Z"),
+    });
+    expect(fake.requests.at(-1)).toMatchObject({
+      method: "PUT",
+      body: {
+        BookingId: 425740,
+        VisitDate: "2026-10-23",
+        VisitTime: "12:30:00",
+        PartySize: 2,
+        ChannelCode: "ONLINE",
+      },
+    });
+  });
+
+  it("counts an empty 200 as moved, with no expiry", async function emptyReply() {
+    const { provider: resdiary } = provider(reply(200));
+
+    const result = await settle(resdiary.changeHold(MOVE_INPUT));
+
+    expect(result._unsafeUnwrap()).toEqual({ expiresAt: null });
+  });
+
+  it("never retries, and reports ResDiary's 500 as an unknown outcome", async function noRetryOn500() {
+    const { fake, provider: resdiary } = provider(
+      reply(500, {
+        Message: "An unexpected error has occurred (id: 891fce84).",
+        ValidationErrors: null,
+        ApiRequestId: "2516099135231110919_3ed4873b_api-account@example.test",
+      }),
+    );
+
+    const result = await settle(resdiary.changeHold(MOVE_INPUT));
+
+    expect(result._unsafeUnwrapErr()).toEqual({
+      kind: "outcome_unknown",
+      operation: "changeHold",
+      httpStatus: 500,
+      requestId: "2516099135231110919_3ed4873b",
+    });
+    expect(fake.count("PUT /UpdateTableHoldBookingDetails")).toBe(1);
+  });
+
+  it("reports a move that timed out as an unknown outcome", async function timeout() {
+    const { provider: resdiary } = provider(hangs());
+
+    const result = await settle(resdiary.changeHold(MOVE_INPUT));
+
+    expect(result._unsafeUnwrapErr()).toMatchObject({
+      kind: "outcome_unknown",
+      detail: "timeout",
+    });
+  });
+
+  it.each([
+    [404, "not_found"],
+    [400, "rejected"],
+  ])("reports %i as %s", async function refused(status, kind) {
+    const { provider: resdiary } = provider(
+      reply(status, { ValidationErrors: [{ Field: "VisitTime" }] }),
+    );
+
+    const result = await settle(resdiary.changeHold(MOVE_INPUT));
+
+    expect(result._unsafeUnwrapErr()).toMatchObject({ kind });
+  });
+
+  it.each([
+    ["a hold id of 0", { ...MOVE_INPUT, holdId: 0 }, "holdId"],
+    ["the time 25:00", { ...MOVE_INPUT, time: "25:00" }, "time"],
+  ])(
+    "refuses %s before calling ResDiary",
+    async function refusesInput(_case, input, field) {
+      const { fake, provider: resdiary } = provider(reply(200));
+
+      const result = await resdiary.changeHold(input);
+
+      expect(result._unsafeUnwrapErr()).toMatchObject({
+        kind: "rejected",
+        fields: [field],
+      });
+      expect(fake.requests).toHaveLength(0);
+    },
+  );
+});
+
 const GUEST_PATH = "/api/Restaurant/PeploesTest/UpdateTableHoldWithCustomer";
 const GUEST_INPUT = {
   holdId: 425742,

@@ -201,11 +201,11 @@ describe("the site's hold limit", function siteLimitTests() {
     vi.stubEnv("BOOKING_HOLD_SECRET", SECRET);
   }
 
-  it("asks the configured Upstash for 3 holds in 5 minutes, then 5 in 10", async function usesUpstash() {
+  it("asks the configured Upstash for 5 holds in 5 minutes, then 10 in 10", async function usesUpstash() {
     configureUpstash();
     const upstash = vi.fn(function answer(url: string, init: RequestInit) {
       const reply = (command: unknown) => ({
-        result: JSON.stringify(command).includes(":10m:") ? [-1, 5] : [2, 3],
+        result: JSON.stringify(command).includes(":10m:") ? [-1, 10] : [4, 5],
       });
       const body: unknown[] = JSON.parse(String(init.body));
       return Promise.resolve(
@@ -222,8 +222,8 @@ describe("the site's hold limit", function siteLimitTests() {
     const hosts = upstash.mock.calls.map(([url]) => new URL(url).host);
     const sent = upstash.mock.calls.map(([, init]) => init.body).join();
     expect(new Set(hosts)).toEqual(new Set(["limits.example.upstash.io"]));
-    expect(sent).toMatch(/"peploes:holds:5m:[^"]+",3,\d+,300000,/);
-    expect(sent).toMatch(/"peploes:holds:10m:[^"]+",5,\d+,600000,/);
+    expect(sent).toMatch(/"peploes:holds:5m:[^"]+",5,\d+,300000,/);
+    expect(sent).toMatch(/"peploes:holds:10m:[^"]+",10,\d+,600000,/);
     expect(sent).not.toContain(GUEST_IP);
     expect(console.warn).toHaveBeenCalledTimes(1);
   });

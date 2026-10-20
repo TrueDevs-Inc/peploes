@@ -18,6 +18,7 @@ export const RESDIARY_ENDPOINTS = {
   dateRange: "AvailabilityForDateRangeV2",
   timeSearch: "AvailabilitySearch",
   createHold: "CreateTableHold",
+  changeHold: "UpdateTableHoldBookingDetails",
   guestDetails: "UpdateTableHoldWithCustomer",
   holdStatus: "TableHoldBookingStatus",
   booking: "Booking",
@@ -156,6 +157,7 @@ export const RESDIARY_REFUSED_GUEST_STATUSES = new Set<number>([
 
 export const RESDIARY_WRITE_OPERATIONS = new Set<TResDiaryOperation>([
   "createHold",
+  "changeHold",
   "submitHoldGuest",
   "cancelBooking",
 ]);

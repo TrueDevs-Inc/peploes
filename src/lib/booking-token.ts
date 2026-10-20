@@ -36,6 +36,8 @@ export const holdTokenSchema = z.object({
   }),
   issuedAt: z.number(),
   expiresAt: z.number(),
+  rev: z.number().int().positive(),
+  detailsSent: z.boolean(),
 });
 
 function signature(payload: string, secret: string): string {

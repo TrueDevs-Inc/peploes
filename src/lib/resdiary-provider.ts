@@ -43,6 +43,8 @@ import { logger } from "@/lib/logger";
 import {
   bookingReplySchema,
   cancelReasonsReplySchema,
+  changeHoldBody,
+  changeHoldReplySchema,
   closedDatesReplySchema,
   closedPeriodReplySchema,
   dateRangeBody,
@@ -69,6 +71,7 @@ import type {
   IResDiaryCancelInput,
   IResDiaryCancelled,
   IResDiaryCancelReason,
+  IResDiaryChangeHoldInput,
   IResDiaryClock,
   IResDiaryClosedDates,
   IResDiaryConfig,
@@ -78,6 +81,7 @@ import type {
   IResDiaryDeps,
   IResDiaryGuestInput,
   IResDiaryHold,
+  IResDiaryHoldExpiry,
   IResDiaryHoldInput,
   IResDiaryHoldStatus,
   IResDiaryHttpReply,
@@ -987,6 +991,40 @@ async function createHold(
   );
 }
 
+async function changeHold(
+  connection: IResDiaryConnection,
+  input: IResDiaryChangeHoldInput,
+  deadlineAt: number,
+): TResDiaryResult<IResDiaryHoldExpiry> {
+  const fields = invalidFields({
+    holdId: isPositiveId(input.holdId),
+    date: isCalendarDate(input.date),
+    time: isClockTime(input.time),
+    partySize: isPartySize(input.partySize),
+  });
+  if (fields.length > 0) {
+    return err(rejectedInput("changeHold", fields));
+  }
+  const reply = await call(
+    connection,
+    {
+      operation: "changeHold",
+      method: "PUT",
+      path: restaurantPath(connection, RESDIARY_ENDPOINTS.changeHold),
+      body: changeHoldBody(connection.config, input),
+      write: true,
+      emptyBody: {},
+      deadlineAt,
+    },
+    changeHoldReplySchema,
+  );
+  return reply.map((moved) => ({
+    expiresAt: moved.ExpiryTimestamp
+      ? parseInstant(moved.ExpiryTimestamp)
+      : null,
+  }));
+}
+
 function stripeStep(
   reply: TResDiaryGuestReply,
   clientSecret: string | null | undefined,
@@ -1481,6 +1519,13 @@ export function createResDiaryProvider(deps: IResDiaryDeps = {}) {
     createHold: (input: IResDiaryHoldInput, options?: IResDiaryCallOptions) =>
       run("createHold", (connected) =>
         createHold(connected, input, deadline(options)),
+      ),
+    changeHold: (
+      input: IResDiaryChangeHoldInput,
+      options?: IResDiaryCallOptions,
+    ) =>
+      run("changeHold", (connected) =>
+        changeHold(connected, input, deadline(options)),
       ),
     submitHoldGuest: (
       input: IResDiaryGuestInput,

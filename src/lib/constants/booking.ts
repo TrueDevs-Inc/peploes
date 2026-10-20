@@ -1,4 +1,4 @@
-import { RESTAURANT_CONTACT } from "@/lib/constants";
+import { HTTP_STATUS, RESTAURANT_CONTACT } from "@/lib/constants";
 
 export const BOOKING_BUDGET_MS = {
   findTable: 8000,
@@ -7,6 +7,7 @@ export const BOOKING_BUDGET_MS = {
   holdStatus: 3000,
   holdCheck: 5000,
   holdCreate: 5000,
+  holdChange: 5000,
   holdRecovery: 2500,
   guestSend: 9000,
   guestStatus: 3000,
@@ -14,9 +15,17 @@ export const BOOKING_BUDGET_MS = {
   guestTotal: 15_000,
 } as const;
 
+export const BOOKING_LOST_REPLY_STATUSES: ReadonlySet<number> = new Set([
+  HTTP_STATUS.BAD_GATEWAY,
+  HTTP_STATUS.SERVICE_UNAVAILABLE,
+  HTTP_STATUS.GATEWAY_TIMEOUT,
+]);
+
 export const BOOKING_HOLD = {
-  tokenVersion: 1,
+  tokenVersion: 2,
   reuseMinRemainingMs: 30_000,
+  moveMinRemainingMs: 60_000,
+  maxMovesPerHold: 20,
   cookieGraceMs: 15 * 60_000,
   submitMinRemainingMs: 5000,
 } as const;
@@ -37,6 +46,7 @@ export const BOOKING_DEFAULT_DATE_SEARCH_DAYS = 31;
 
 export const BOOKING_MESSAGES = {
   unavailable: `Online booking isn't available right now. Please call us on ${RESTAURANT_CONTACT.phoneLabel} or email ${RESTAURANT_CONTACT.email}.`,
+  tooManyHolds: `You've held several tables in the last few minutes. Please wait a few minutes or call us on ${RESTAURANT_CONTACT.phoneLabel}.`,
   termsMissing: `For our booking terms, please call us on ${RESTAURANT_CONTACT.phoneLabel} or email ${RESTAURANT_CONTACT.email}.`,
   chooseDate: "Choose a date.",
   chooseGuests: "Choose the number of guests.",
@@ -79,6 +89,7 @@ export const BOOKING_LOG = {
   rangeUnchecked: "ResDiary left part of a date range unchecked",
   skippedTimes: "Booking skipped times ResDiary sent",
   holdRejected: "ResDiary refused a hold the booking checks allowed",
+  holdMoveMissing: "ResDiary could not find the hold to move",
   badHoldToken: "Booking ignored an unreadable hold token",
   formUnsupported:
     "ResDiary's settings need something the booking form cannot give",
@@ -127,8 +138,8 @@ export const BOOKING_UNSUPPORTED_SETTINGS = {
 
 export const BOOKING_HOLD_LIMITS = {
   windows: [
-    { name: "5m", holds: 3, window: "5 m" },
-    { name: "10m", holds: 5, window: "10 m" },
+    { name: "5m", holds: 5, window: "5 m" },
+    { name: "10m", holds: 10, window: "10 m" },
   ],
   timeoutMs: 1000,
   redisRetries: 1,

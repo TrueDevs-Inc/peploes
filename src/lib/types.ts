@@ -325,6 +325,7 @@ export type TResDiaryOperation =
   | "getAvailableDates"
   | "searchTimes"
   | "createHold"
+  | "changeHold"
   | "submitHoldGuest"
   | "getHoldStatus"
   | "getBooking"
@@ -421,6 +422,14 @@ export interface IResDiaryHold {
   reference: string;
   expiresAt: number;
   expiresInMs: number;
+}
+
+export interface IResDiaryChangeHoldInput extends IResDiaryHoldInput {
+  holdId: number;
+}
+
+export interface IResDiaryHoldExpiry {
+  expiresAt: number | null;
 }
 
 export interface IResDiaryGuest {
@@ -592,6 +601,7 @@ export type TBookingProvider = Pick<
   | "getAvailableDates"
   | "searchTimes"
   | "createHold"
+  | "changeHold"
   | "submitHoldGuest"
   | "getHoldStatus"
 >;
@@ -624,6 +634,7 @@ export interface IBookingServiceDeps {
 
 export type TBookingErrorCode =
   | ErrorCode.ServiceUnavailable
+  | ErrorCode.TooManyRequests
   | ErrorCode.ValidationError
   | ErrorCode.Conflict
   | ErrorCode.Forbidden
@@ -646,6 +657,7 @@ export type TBookingField =
 export interface IBookingError extends IError<TBookingErrorCode> {
   fieldErrors?: Partial<Record<TBookingField, string>>;
   clearHold?: true;
+  holdCookie?: IHoldCookie;
 }
 
 export type TBookingResult<T> = Promise<NeverthrowResult<T, IBookingError>>;
@@ -739,6 +751,10 @@ export interface ITimesData {
   emptyReason: TTimesEmptyReason | null;
 }
 
+export interface ICheckedOffer extends ICurrentOffer {
+  visit: IBookingVisit;
+}
+
 export interface IHoldSummary {
   reference: string;
   date: string;
@@ -748,9 +764,15 @@ export interface IHoldSummary {
   partySize: number;
   guestsLabel: string;
   offer: TStandardOffer;
+  revision: number;
 }
 
-export type TGuestDetailsResult =
+export interface IHoldCookie {
+  token: string;
+  maxAgeSeconds: number;
+}
+
+export type TGuestDetailsView =
   | { kind: "confirmed"; reference: string; summary: IHoldSummary }
   | {
       kind: "payment";
@@ -765,6 +787,12 @@ export type TGuestDetailsResult =
       stripe: IResDiaryStripeStep;
       summary: IHoldSummary;
     };
+
+export type TGuestDetailsResult =
+  | Extract<TGuestDetailsView, { kind: "confirmed" }>
+  | (Exclude<TGuestDetailsView, { kind: "confirmed" }> & {
+      holdCookie: IHoldCookie;
+    });
 
 export type THoldState = "pending" | "confirmed" | "expired" | "failed";
 

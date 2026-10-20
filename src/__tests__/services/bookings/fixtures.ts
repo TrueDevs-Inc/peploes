@@ -100,6 +100,9 @@ export function fakeProvider(
     createHold: vi.fn<TBookingProvider["createHold"]>(function holdReply() {
       return Promise.resolve(ok(HOLD));
     }),
+    changeHold: vi.fn<TBookingProvider["changeHold"]>(function moveReply() {
+      return Promise.resolve(ok({ expiresAt: HOLD.expiresAt }));
+    }),
     getHoldStatus: vi.fn<TBookingProvider["getHoldStatus"]>(
       function statusReply() {
         return Promise.resolve(
@@ -168,6 +171,7 @@ export function rulesReadFor(
 
 export const GUEST_DETAILS = {
   holdReference: "B9GXWPLY",
+  holdRevision: 1,
   firstName: "Test",
   surname: "Guest",
   email: "guest@example.test",
@@ -183,7 +187,7 @@ export const STRIPE_STEP = {
   clientSecret: "pi_fixture_secret_never_logged",
 };
 
-export const HOLD_QUERY = { holdReference: HOLD.reference };
+export const HOLD_QUERY = { holdReference: HOLD.reference, holdRevision: 1 };
 
 export const ALLOW_HOLDS = () => Promise.resolve(true);
 

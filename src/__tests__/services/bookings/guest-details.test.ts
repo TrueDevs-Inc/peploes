@@ -9,13 +9,14 @@ import {
   GUEST_DETAILS,
   HOLD,
   HOLD_SECRET,
+  LUNCH,
   NOW,
   RULES,
   STRIPE_STEP,
   service,
   setUpBookingTests,
 } from "@/__tests__/services/bookings/fixtures";
-import { signHold } from "@/lib/booking-token";
+import { readHold, signHold } from "@/lib/booking-token";
 import { ErrorCode } from "@/lib/enums";
 import { logToSentry } from "@/lib/error-handler";
 import type {
@@ -53,6 +54,7 @@ const SUMMARY = {
       required: true,
     },
   },
+  revision: 1,
 };
 
 async function held(provider = fakeProvider()) {
@@ -167,7 +169,11 @@ describe("submitGuestDetails", function submitGuestDetailsTests() {
         token,
       );
 
-      expect(result._unsafeUnwrap()).toEqual({ ...outcome, summary: SUMMARY });
+      expect(result._unsafeUnwrap()).toEqual({
+        ...outcome,
+        summary: SUMMARY,
+        holdCookie: { token: expect.any(String), maxAgeSeconds: 1199 },
+      });
       expect(logged()).not.toContain(STRIPE_STEP.clientSecret);
     },
   );
@@ -350,6 +356,118 @@ describe("submitGuestDetails", function submitGuestDetailsTests() {
     );
   });
 
+  describe("marking a hold whose details were sent", function detailsSentTests() {
+    type TProvider = ReturnType<typeof fakeProvider>;
+    const keepsCookie: Array<[string, (provider: TProvider) => void]> = [
+      [
+        "a deposit step",
+        (provider) =>
+          provider.submitHoldGuest.mockResolvedValue(
+            answered({
+              kind: "payment",
+              amountCents: 2000,
+              amountText: "€20.00",
+              stripe: STRIPE_STEP,
+            }),
+          ),
+      ],
+      [
+        "a card step",
+        (provider) =>
+          provider.submitHoldGuest.mockResolvedValue(
+            answered({
+              kind: "card",
+              amountText: "€0.00",
+              stripe: STRIPE_STEP,
+            }),
+          ),
+      ],
+      [
+        "ResDiary refusing a field",
+        (provider) =>
+          provider.submitHoldGuest.mockResolvedValue(
+            failed({
+              kind: "rejected",
+              operation: "submitHoldGuest",
+              fields: ["Customer.Email"],
+            }),
+          ),
+      ],
+      [
+        "an unclear outcome",
+        (provider) =>
+          provider.submitHoldGuest.mockResolvedValue(err(unclear())),
+      ],
+    ];
+
+    it.each(keepsCookie)(
+      "hands back a cookie marked as sent after %s, which a change of time then never moves",
+      async function marksSent(_case, arrange) {
+        const { provider, token } = await held();
+        arrange(provider);
+
+        const result = await service(provider).submitGuestDetails(
+          GUEST_DETAILS,
+          token,
+        );
+
+        const holdCookie = result.isOk()
+          ? "holdCookie" in result.value
+            ? result.value.holdCookie
+            : undefined
+          : result.error.holdCookie;
+        expect(holdCookie?.maxAgeSeconds).toBe(1199);
+        expect(readHold(holdCookie?.token ?? "", HOLD_SECRET)).toMatchObject({
+          holdId: HOLD.holdId,
+          rev: 1,
+          detailsSent: true,
+        });
+        const again = await service(provider).holdTable(
+          LUNCH,
+          ALLOW_HOLDS,
+          holdCookie?.token,
+        );
+        expect(again.isOk()).toBe(true);
+        expect(provider.changeHold).not.toHaveBeenCalled();
+        expect(provider.createHold).toHaveBeenCalledTimes(2);
+      },
+    );
+
+    it.each([
+      ["a confirmed booking", () => undefined, GUEST_DETAILS],
+      [
+        "a table ResDiary gave away",
+        (provider: TProvider) =>
+          provider.submitHoldGuest.mockResolvedValue(
+            answered({ kind: "table_taken" }),
+          ),
+        GUEST_DETAILS,
+      ],
+      [
+        "details refused before sending",
+        () => undefined,
+        { ...GUEST_DETAILS, email: "x" },
+      ],
+    ])(
+      "hands back no marked cookie for %s",
+      async function noMark(_case, arrange, details) {
+        const { provider, token } = await held();
+        arrange(provider);
+
+        const result = await service(provider).submitGuestDetails(
+          details,
+          token,
+        );
+
+        expect(
+          result.isOk()
+            ? "holdCookie" in result.value
+            : "holdCookie" in result.error,
+        ).toBe(false);
+      },
+    );
+  });
+
   describe("the hold, checked before anything is sent", function holdTests() {
     it.each([
       [
@@ -362,6 +480,12 @@ describe("submitGuestDetails", function submitGuestDetailsTests() {
         "a hold from another tab",
         "token",
         { holdReference: "BOTHERTAB" },
+        "Your booking changed in another tab. Please start again here.",
+      ],
+      [
+        "a hold another tab has since moved",
+        "token",
+        { holdRevision: 2 },
         "Your booking changed in another tab. Please start again here.",
       ],
     ])(

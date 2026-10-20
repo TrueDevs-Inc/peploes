@@ -4,11 +4,12 @@ import { err, ok } from "neverthrow";
 
 import { holdInputSchema } from "@/lib/booking-schema";
 import { readHold, signHold } from "@/lib/booking-token";
-import { MILLISECONDS_PER_SECOND } from "@/lib/constants";
+import { HTTP_STATUS, MILLISECONDS_PER_SECOND } from "@/lib/constants";
 import {
   BOOKING_BUDGET_MS,
   BOOKING_HOLD,
   BOOKING_LOG,
+  BOOKING_LOST_REPLY_STATUSES,
   BOOKING_MESSAGES,
 } from "@/lib/constants/booking";
 import { guestsLabel, shortDateLabel, timeLabel } from "@/lib/dates";
@@ -17,9 +18,11 @@ import { logger } from "@/lib/logger";
 import type {
   IBookingError,
   IBookingVisit,
+  ICheckedOffer,
   ICurrentOffer,
   IHoldResult,
   IHoldSummary,
+  IResDiaryChangeHoldInput,
   IResDiaryHoldStatus,
   TBookingProvider,
   TBookingResult,
@@ -31,10 +34,13 @@ import type {
 } from "@/lib/types";
 import {
   alreadyBooked,
+  holdExpired,
+  holdUnclear,
   invalid,
   invalidInput,
   searchFailed,
   timeGone,
+  tooManyHolds,
   unavailable,
 } from "@/services/bookings/errors";
 import { bookableTimes } from "@/services/bookings/times";
@@ -50,7 +56,15 @@ export function holdSummary(hold: THoldToken): IHoldSummary {
     partySize: hold.partySize,
     guestsLabel: guestsLabel(hold.partySize),
     offer: hold.offer,
+    revision: hold.rev,
   };
+}
+
+export function cookieMaxAgeSeconds(hold: THoldToken, now: number): number {
+  return Math.ceil(
+    (hold.expiresAt + BOOKING_HOLD.cookieGraceMs - now) /
+      MILLISECONDS_PER_SECOND,
+  );
 }
 
 function holdResult(
@@ -60,28 +74,33 @@ function holdResult(
 ): IHoldResult {
   return {
     holdToken,
-    cookieMaxAgeSeconds: Math.ceil(
-      (hold.expiresAt + BOOKING_HOLD.cookieGraceMs - now) /
-        MILLISECONDS_PER_SECOND,
-    ),
+    cookieMaxAgeSeconds: cookieMaxAgeSeconds(hold, now),
     expiresInMs: hold.expiresAt - now,
     summary: holdSummary(hold),
   };
 }
 
-async function sameChoiceStatus(
-  provider: TBookingProvider,
-  hold: THoldToken,
-  choice: THoldInput,
-): Promise<IResDiaryHoldStatus["status"] | null> {
-  const sameChoice =
+function isSameChoice(hold: THoldToken, choice: THoldInput): boolean {
+  return (
     hold.searchDate === choice.searchDate &&
     hold.time === choice.time &&
     hold.partySize === choice.partySize &&
-    hold.offer.kind === choice.offer.kind;
-  if (!sameChoice) {
-    return null;
-  }
+    hold.offer.kind === choice.offer.kind
+  );
+}
+
+function canMove(hold: THoldToken, now: number): boolean {
+  return (
+    !hold.detailsSent &&
+    hold.rev < BOOKING_HOLD.maxMovesPerHold &&
+    hold.expiresAt - now > BOOKING_HOLD.moveMinRemainingMs
+  );
+}
+
+async function currentStatus(
+  provider: TBookingProvider,
+  hold: THoldToken,
+): Promise<IResDiaryHoldStatus["status"] | null> {
   const status = await provider.getHoldStatus(hold.holdId, {
     deadlineAt: Date.now() + BOOKING_BUDGET_MS.holdStatus,
   });
@@ -111,23 +130,11 @@ async function currentOffer(
   return ok(time && offer ? { time, offer } : null);
 }
 
-async function afterFailedHold(
+async function offerAfterRefusal(
   provider: TBookingProvider,
   choice: THoldInput,
   visit: IBookingVisit,
-  failure: TResDiaryFailure,
 ): Promise<IBookingError> {
-  if (failure.kind === "rejected") {
-    logger.error(LogContext.Api, BOOKING_LOG.holdRejected, {
-      fields: failure.fields,
-    });
-  }
-  const unclear =
-    failure.kind === "outcome_unknown" ||
-    (failure.kind === "unavailable" && failure.httpStatus !== undefined);
-  if (!unclear) {
-    return unavailable();
-  }
   const again = await currentOffer(
     provider,
     choice,
@@ -137,12 +144,30 @@ async function afterFailedHold(
   return again.isOk() && again.value === null ? timeGone() : unavailable();
 }
 
-async function newHold(
+async function afterFailedHold(
   provider: TBookingProvider,
-  secret: string,
   choice: THoldInput,
-  mayHoldAnother: THoldGate,
-): TBookingResult<IHoldResult> {
+  visit: IBookingVisit,
+  failure: TResDiaryFailure,
+): Promise<IBookingError> {
+  if (failure.kind === "rejected") {
+    logger.error(LogContext.Api, BOOKING_LOG.holdRejected, {
+      operation: failure.operation,
+      fields: failure.fields,
+    });
+  }
+  const unclear =
+    failure.kind === "outcome_unknown" ||
+    (failure.kind === "unavailable" && failure.httpStatus !== undefined);
+  return unclear
+    ? await offerAfterRefusal(provider, choice, visit)
+    : unavailable();
+}
+
+async function checkedOffer(
+  provider: TBookingProvider,
+  choice: THoldInput,
+): TBookingResult<ICheckedOffer> {
   const checkBy = Date.now() + BOOKING_BUDGET_MS.holdCheck;
   const visit = await checkVisit(
     provider,
@@ -162,19 +187,117 @@ async function newHold(
   if (current.value === null) {
     return err(timeGone());
   }
-  const { time, offer } = current.value;
+  return ok({ visit: visit.value, ...current.value });
+}
+
+function isLostReply(failure: TResDiaryFailure): boolean {
+  return (
+    failure.kind === "outcome_unknown" &&
+    (failure.httpStatus === undefined ||
+      failure.httpStatus < HTTP_STATUS.BAD_REQUEST ||
+      BOOKING_LOST_REPLY_STATUSES.has(failure.httpStatus))
+  );
+}
+
+async function afterFailedMove(
+  provider: TBookingProvider,
+  choice: THoldInput,
+  visit: IBookingVisit,
+  move: IResDiaryChangeHoldInput,
+  failure: TResDiaryFailure,
+): TBookingResult<null> {
+  if (failure.kind === "not_found") {
+    logger.error(LogContext.Api, BOOKING_LOG.holdMoveMissing, {
+      holdId: move.holdId,
+    });
+    return err(holdExpired());
+  }
+  if (failure.kind === "rejected") {
+    logger.error(LogContext.Api, BOOKING_LOG.holdRejected, {
+      operation: failure.operation,
+      fields: failure.fields,
+    });
+    return err(unavailable());
+  }
+  if (isLostReply(failure)) {
+    const again = await provider.changeHold(move, {
+      deadlineAt: Date.now() + BOOKING_BUDGET_MS.holdRecovery,
+    });
+    return again.isOk() ? ok(null) : err(holdUnclear());
+  }
+  if (failure.kind !== "outcome_unknown") {
+    return err(unavailable());
+  }
+  return err(await offerAfterRefusal(provider, choice, visit));
+}
+
+async function movedHold(
+  provider: TBookingProvider,
+  secret: string,
+  hold: THoldToken,
+  choice: THoldInput,
+): TBookingResult<IHoldResult> {
+  const checked = await checkedOffer(provider, choice);
+  if (checked.isErr()) {
+    return err(checked.error);
+  }
+  const { visit, time, offer } = checked.value;
+  const move = {
+    holdId: hold.holdId,
+    date: choice.searchDate,
+    time: choice.time,
+    partySize: choice.partySize,
+  };
+  const moved = await provider.changeHold(move, {
+    deadlineAt: Date.now() + BOOKING_BUDGET_MS.holdChange,
+  });
+  if (moved.isErr()) {
+    const recovered = await afterFailedMove(
+      provider,
+      choice,
+      visit,
+      move,
+      moved.error,
+    );
+    if (recovered.isErr()) {
+      return err(recovered.error);
+    }
+  }
+  const now = Date.now();
+  const token: THoldToken = {
+    ...hold,
+    searchDate: choice.searchDate,
+    date: time.date,
+    time: time.time,
+    partySize: choice.partySize,
+    offer,
+    rev: hold.rev + 1,
+    detailsSent: false,
+  };
+  return ok(holdResult(signHold(token, secret), token, now));
+}
+
+async function newHold(
+  provider: TBookingProvider,
+  secret: string,
+  choice: THoldInput,
+  mayHoldAnother: THoldGate,
+): TBookingResult<IHoldResult> {
+  const checked = await checkedOffer(provider, choice);
+  if (checked.isErr()) {
+    return err(checked.error);
+  }
+  const { visit, time, offer } = checked.value;
 
   if (!(await mayHoldAnother())) {
-    return err(unavailable());
+    return err(tooManyHolds());
   }
   const hold = await provider.createHold(
     { date: choice.searchDate, time: choice.time, partySize: choice.partySize },
     { deadlineAt: Date.now() + BOOKING_BUDGET_MS.holdCreate },
   );
   if (hold.isErr()) {
-    return err(
-      await afterFailedHold(provider, choice, visit.value, hold.error),
-    );
+    return err(await afterFailedHold(provider, choice, visit, hold.error));
   }
   const now = Date.now();
   const token: THoldToken = {
@@ -188,6 +311,8 @@ async function newHold(
     offer,
     issuedAt: now,
     expiresAt: now + hold.value.expiresInMs,
+    rev: 1,
+    detailsSent: false,
   };
   return ok(holdResult(signHold(token, secret), token, now));
 }
@@ -203,9 +328,10 @@ export async function holdTable(
   if (!parsed.success) {
     return err(invalidInput(parsed.error));
   }
+  const choice = parsed.data;
   const existing = existingToken ? readHold(existingToken, secret) : null;
-  if (existingToken && existing) {
-    const status = await sameChoiceStatus(provider, existing, parsed.data);
+  if (existingToken && existing && isSameChoice(existing, choice)) {
+    const status = await currentStatus(provider, existing);
     if (status === "confirmed") {
       return err(alreadyBooked(existing.reference));
     }
@@ -216,6 +342,8 @@ export async function holdTable(
     ) {
       return ok(holdResult(existingToken, existing, now));
     }
+  } else if (existing && canMove(existing, Date.now())) {
+    return movedHold(provider, secret, existing, choice);
   }
-  return newHold(provider, secret, parsed.data, mayHoldAnother);
+  return newHold(provider, secret, choice, mayHoldAnother);
 }

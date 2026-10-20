@@ -22,6 +22,7 @@ export const HTTP_STATUS = {
   INTERNAL_ERROR: 500,
   BAD_GATEWAY: 502,
   SERVICE_UNAVAILABLE: 503,
+  GATEWAY_TIMEOUT: 504,
 } as const;
 
 export const ERROR_HTTP_STATUS = {
