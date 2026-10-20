@@ -9,7 +9,6 @@ import {
 } from "@/lib/constants/resdiary";
 import { isCalendarDate } from "@/lib/dates";
 import type {
-  IResDiaryBookingLookup,
   IResDiaryChangeHoldInput,
   IResDiaryConfig,
   IResDiaryDateRangeInput,
@@ -145,29 +144,6 @@ export const holdStatusReplySchema = z.object({
   Booking: z.object({ Reference: z.string().nullish() }).nullish(),
 });
 
-export const guestTokenReplySchema = z.object({ Result: z.string().min(1) });
-
-export const bookingReplySchema = z.object({
-  Reference: z.string(),
-  VisitDate: wireDateField(RESDIARY_PATTERNS.wireDate),
-  VisitTime: z.string().regex(RESDIARY_PATTERNS.wireClock),
-  PartySize: z.number().int(),
-  BookingStatus: z.string(),
-  CanCancel: z.boolean().nullish(),
-  CanEdit: z.boolean().nullish(),
-  DepositPaidAmount: z.number().nullish(),
-  VisitDateTimeUtc: z.string().nullish(),
-});
-
-export const cancelReasonsReplySchema = z.array(
-  z.object({
-    Id: z.number().int(),
-    Description: z.string(),
-    DisplayOnline: z.boolean().nullish(),
-    ApplyToStandardBookings: z.boolean().nullish(),
-  }),
-);
-
 export function signInBody(config: IResDiaryConfig) {
   return { Username: config.username, Password: config.password };
 }
@@ -232,8 +208,4 @@ export function guestBody(input: IResDiaryGuestInput) {
     RedirectUrl: input.returnUrl,
     CancelUrl: input.cancelUrl,
   };
-}
-
-export function guestTokenBody(lookup: IResDiaryBookingLookup) {
-  return { Email: lookup.email };
 }

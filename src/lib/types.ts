@@ -20,7 +20,6 @@ import type { buttonVariants } from "@/lib/constants/button";
 import type { ErrorCode, HttpVerb, LogLevel } from "@/lib/enums";
 import type { createResDiaryProvider } from "@/lib/resdiary-provider";
 import type {
-  bookingReplySchema,
   closedDatesReplySchema,
   dateRangeReplySchema,
   guestReplySchema,
@@ -328,9 +327,6 @@ export type TResDiaryOperation =
   | "changeHold"
   | "submitHoldGuest"
   | "getHoldStatus"
-  | "getBooking"
-  | "getCancellationReasons"
-  | "cancelBooking"
   | "getClosedDates";
 
 interface IResDiaryFailureBase {
@@ -347,12 +343,10 @@ export type TResDiaryFailure = IResDiaryFailureBase &
           | "not_configured"
           | "unavailable"
           | "not_found"
-          | "not_allowed"
           | "outcome_unknown"
           | "payment_unsupported";
       }
     | { kind: "rejected"; fields: string[] }
-    | { kind: "cancel_not_applied"; reference: string }
   );
 
 export interface IResDiaryClock {
@@ -471,32 +465,6 @@ export interface IResDiaryHoldStatus {
   reference: string | null;
 }
 
-export interface IResDiaryBooking {
-  reference: string;
-  date: string;
-  time: string;
-  partySize: number;
-  status: "booked" | "cancelled" | "other";
-  canCancel: boolean;
-  canEdit: boolean;
-  depositPaidCents: number;
-  visitAtUtc: number | null;
-}
-
-export interface IResDiaryCancelReason {
-  id: number;
-  label: string;
-}
-
-export interface IResDiaryBookingLookup {
-  reference: string;
-  email: string;
-}
-
-export interface IResDiaryCancelInput extends IResDiaryBookingLookup {
-  reasonId: number;
-}
-
 export interface IResDiaryClosedDates {
   closedWeekdays: number[];
   closedPeriods: IDatePeriod[];
@@ -505,11 +473,6 @@ export interface IResDiaryClosedDates {
 export interface IResDiaryWeekdays {
   weekdays: number[];
   skipped: number;
-}
-
-export interface IResDiaryCancelled {
-  reference: string;
-  status: "cancelled";
 }
 
 export type TResDiaryProvider = ReturnType<typeof createResDiaryProvider>;
@@ -561,7 +524,6 @@ export interface IResDiaryConnection {
   signingIn: Promise<NeverthrowResult<string, string>> | null;
   signInPausedUntil: number;
   rules: TResDiaryCache<IResDiaryRules>;
-  cancelReasons: TResDiaryCache<IResDiaryCancelReason[]>;
   closedDates: TResDiaryCache<IResDiaryClosedDates>;
 }
 
@@ -596,7 +558,6 @@ export type TResDiaryClosedDatesReply = z.infer<typeof closedDatesReplySchema>;
 export type TResDiaryHoldReply = z.infer<typeof holdReplySchema>;
 export type TResDiaryGuestReply = z.infer<typeof guestReplySchema>;
 export type TResDiaryHoldStatusReply = z.infer<typeof holdStatusReplySchema>;
-export type TResDiaryBookingReply = z.infer<typeof bookingReplySchema>;
 
 export type TBookingProvider = Pick<
   TResDiaryProvider,

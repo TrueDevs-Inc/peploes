@@ -10,11 +10,9 @@ import {
   MILLISECONDS_PER_DAY,
 } from "@/lib/constants";
 import {
-  RESDIARY_BOOKING_STATUSES,
   RESDIARY_CLOSED_DATES_CACHE_KEY,
   RESDIARY_DETAILS,
   RESDIARY_ENDPOINTS,
-  RESDIARY_EXPECTED_FAILURES,
   RESDIARY_GUEST_STATUS,
   RESDIARY_HEADERS,
   RESDIARY_HOLD_STATUSES,
@@ -25,9 +23,6 @@ import {
   RESDIARY_PATTERNS,
   RESDIARY_PAYMENT_PROVIDERS,
   RESDIARY_QUERY,
-  RESDIARY_REASONS_CACHE_KEY,
-  RESDIARY_REFUSED_CANCEL_STATUSES,
-  RESDIARY_REFUSED_GUEST_STATUSES,
   RESDIARY_REQUEST_ID,
   RESDIARY_SIGN_IN_SUCCESS,
   RESDIARY_TIMING,
@@ -42,8 +37,6 @@ import { logToSentry } from "@/lib/error-handler";
 import { getErrorMetadata, UNSENT_NETWORK_CODES } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 import {
-  bookingReplySchema,
-  cancelReasonsReplySchema,
   changeHoldBody,
   changeHoldReplySchema,
   closedDatesReplySchema,
@@ -53,8 +46,6 @@ import {
   errorReplySchema,
   guestBody,
   guestReplySchema,
-  guestTokenBody,
-  guestTokenReplySchema,
   holdBody,
   holdReplySchema,
   holdStatusReplySchema,
@@ -66,12 +57,7 @@ import {
   timeSlotReplySchema,
 } from "@/lib/resdiary-schema";
 import type {
-  IResDiaryBooking,
-  IResDiaryBookingLookup,
   IResDiaryCallOptions,
-  IResDiaryCancelInput,
-  IResDiaryCancelled,
-  IResDiaryCancelReason,
   IResDiaryChangeHoldInput,
   IResDiaryClock,
   IResDiaryClosedDates,
@@ -95,7 +81,6 @@ import type {
   IResDiaryTimes,
   IResDiaryWeekdays,
   TResDiaryAttempt,
-  TResDiaryBookingReply,
   TResDiaryCache,
   TResDiaryClosedDatesReply,
   TResDiaryDateRangeReply,
@@ -233,7 +218,7 @@ function isExpectedFailure(failure: TResDiaryFailure): boolean {
   if (failure.kind === "rejected") {
     return failure.operation === "submitHoldGuest" && failure.fields.length > 0;
   }
-  return RESDIARY_EXPECTED_FAILURES.has(failure.kind);
+  return false;
 }
 
 function logFailure(
@@ -1185,275 +1170,6 @@ async function getHoldStatus(
   return reply.map(toHoldStatus);
 }
 
-function toBooking(booking: TResDiaryBookingReply): IResDiaryBooking {
-  const visitAtUtc = booking.VisitDateTimeUtc
-    ? parseInstant(booking.VisitDateTimeUtc)
-    : null;
-  return {
-    reference: booking.Reference,
-    date: datePart(booking.VisitDate),
-    time: toClock(booking.VisitTime).time,
-    partySize: booking.PartySize,
-    status: RESDIARY_BOOKING_STATUSES.get(booking.BookingStatus) ?? "other",
-    canCancel: Boolean(booking.CanCancel),
-    canEdit: Boolean(booking.CanEdit),
-    depositPaidCents: toCents(booking.DepositPaidAmount),
-    visitAtUtc,
-  };
-}
-
-function bookingPath(
-  connection: IResDiaryConnection,
-  reference: string,
-): string {
-  return restaurantPath(
-    connection,
-    `${RESDIARY_ENDPOINTS.booking}/${encodeURIComponent(reference)}`,
-  );
-}
-
-async function signInGuest(
-  connection: IResDiaryConnection,
-  lookup: IResDiaryBookingLookup,
-  deadlineAt: number,
-): TResDiaryResult<string> {
-  const operation = "getBooking";
-  const guestToken = await call(
-    connection,
-    {
-      operation,
-      method: "POST",
-      path: `${bookingPath(connection, lookup.reference)}/${RESDIARY_ENDPOINTS.guestSignIn}`,
-      body: guestTokenBody(lookup),
-      deadlineAt,
-    },
-    guestTokenReplySchema,
-  );
-  if (guestToken.isErr()) {
-    const refused = RESDIARY_REFUSED_GUEST_STATUSES.has(
-      guestToken.error.httpStatus ?? 0,
-    );
-    return err(refused ? { kind: "not_found", operation } : guestToken.error);
-  }
-  return ok(guestToken.value.Result);
-}
-
-async function fetchBooking(
-  connection: IResDiaryConnection,
-  reference: string,
-  guestToken: string,
-  deadlineAt: number,
-): TResDiaryResult<IResDiaryBooking> {
-  const query = new URLSearchParams({
-    [RESDIARY_QUERY.authenticationToken]: guestToken,
-  });
-  const booking = await call(
-    connection,
-    {
-      operation: "getBooking",
-      method: "GET",
-      path: `${bookingPath(connection, reference)}?${query}`,
-      deadlineAt,
-    },
-    bookingReplySchema,
-  );
-  return booking.map(toBooking);
-}
-
-async function readBooking(
-  connection: IResDiaryConnection,
-  lookup: IResDiaryBookingLookup,
-  deadlineAt: number,
-): TResDiaryResult<IResDiaryBooking> {
-  const guestToken = await signInGuest(connection, lookup, deadlineAt);
-  if (guestToken.isErr()) {
-    return err(guestToken.error);
-  }
-  return fetchBooking(
-    connection,
-    lookup.reference,
-    guestToken.value,
-    deadlineAt,
-  );
-}
-
-function lookupFields(lookup: IResDiaryBookingLookup): string[] {
-  return invalidFields({
-    reference: RESDIARY_PATTERNS.reference.test(lookup.reference),
-    email: Boolean(lookup.email.trim()),
-  });
-}
-
-function getBooking(
-  connection: IResDiaryConnection,
-  lookup: IResDiaryBookingLookup,
-  deadlineAt: number,
-): TResDiaryResult<IResDiaryBooking> {
-  const fields = lookupFields(lookup);
-  if (fields.length > 0) {
-    return Promise.resolve(err(rejectedInput("getBooking", fields)));
-  }
-  return readBooking(connection, lookup, deadlineAt);
-}
-
-function getCancellationReasons(
-  connection: IResDiaryConnection,
-  deadlineAt: number,
-): TResDiaryResult<IResDiaryCancelReason[]> {
-  const caller = { operation: "getCancellationReasons" as const, deadlineAt };
-  return connection.cancelReasons(
-    RESDIARY_REASONS_CACHE_KEY,
-    caller,
-    async (loadDeadlineAt) => {
-      const query = new URLSearchParams({
-        [RESDIARY_QUERY.onlyEnabledReasons]: "true",
-      });
-      const reasons = await call(
-        connection,
-        {
-          operation: "getCancellationReasons",
-          method: "GET",
-          path: `${restaurantPath(connection, RESDIARY_ENDPOINTS.cancellationReasons)}?${query}`,
-          emptyBody: [],
-          deadlineAt: loadDeadlineAt,
-        },
-        cancelReasonsReplySchema,
-      );
-      return reasons.map((list) =>
-        list
-          .filter(
-            (reason) => reason.DisplayOnline && reason.ApplyToStandardBookings,
-          )
-          .map((reason) => ({ id: reason.Id, label: reason.Description })),
-      );
-    },
-  );
-}
-
-async function sendCancel(
-  connection: IResDiaryConnection,
-  input: IResDiaryCancelInput,
-  deadlineAt: number,
-): TResDiaryResult<void> {
-  const query = new URLSearchParams({
-    [RESDIARY_QUERY.cancellationReasonId]: String(input.reasonId),
-  });
-  const request: IResDiaryRequest = {
-    operation: "cancelBooking",
-    method: "POST",
-    path: `${bookingPath(connection, input.reference)}/${RESDIARY_ENDPOINTS.cancel}?${query}`,
-    write: true,
-    deadlineAt,
-  };
-  const reply = await send(connection, request);
-  if (reply.isErr()) {
-    return reply.error.kind === "outcome_unknown"
-      ? ok(undefined)
-      : err(reply.error);
-  }
-  const { status } = reply.value;
-  if (status === HTTP_STATUS.FORBIDDEN) {
-    return err({
-      kind: "not_allowed",
-      operation: "cancelBooking",
-      httpStatus: status,
-    });
-  }
-  if (RESDIARY_REFUSED_CANCEL_STATUSES.has(status)) {
-    return err(replyFailure(request, reply.value));
-  }
-  return ok(undefined);
-}
-
-async function confirmCancelled(
-  connection: IResDiaryConnection,
-  reference: string,
-  guestToken: string,
-  deadlineAt: number,
-): TResDiaryResult<boolean> {
-  for (const delay of RESDIARY_TIMING.cancelCheckDelaysMs) {
-    await sleep(delay);
-    const booking = await fetchBooking(
-      connection,
-      reference,
-      guestToken,
-      deadlineAt,
-    );
-    if (booking.isErr()) {
-      return err({
-        kind: "outcome_unknown",
-        operation: "cancelBooking",
-        detail: `check ${booking.error.kind}`,
-      });
-    }
-    if (booking.value.status === "cancelled") {
-      return ok(true);
-    }
-  }
-  return ok(false);
-}
-
-async function cancelBooking(
-  connection: IResDiaryConnection,
-  input: IResDiaryCancelInput,
-  deadlineAt: number,
-): TResDiaryResult<IResDiaryCancelled> {
-  const operation = "cancelBooking";
-  const fields = [
-    ...lookupFields(input),
-    ...invalidFields({ reasonId: isPositiveId(input.reasonId) }),
-  ];
-  if (fields.length > 0) {
-    return err(rejectedInput(operation, fields));
-  }
-  const cancelled: IResDiaryCancelled = {
-    reference: input.reference,
-    status: "cancelled",
-  };
-  const guestToken = await signInGuest(connection, input, deadlineAt);
-  if (guestToken.isErr()) {
-    return err({ ...guestToken.error, operation });
-  }
-  const before = await fetchBooking(
-    connection,
-    input.reference,
-    guestToken.value,
-    deadlineAt,
-  );
-  if (before.isErr()) {
-    return err({ ...before.error, operation });
-  }
-  if (before.value.status === "cancelled") {
-    return ok(cancelled);
-  }
-  if (!before.value.canCancel) {
-    return err({ kind: "not_allowed", operation });
-  }
-  for (let round = 0; round < RESDIARY_LIMITS.cancelRounds; round += 1) {
-    const sent = await sendCancel(connection, input, deadlineAt);
-    if (sent.isErr()) {
-      return err(sent.error);
-    }
-    const confirmed = await confirmCancelled(
-      connection,
-      input.reference,
-      guestToken.value,
-      deadlineAt,
-    );
-    if (confirmed.isErr()) {
-      return err(confirmed.error);
-    }
-    if (confirmed.value) {
-      return ok(cancelled);
-    }
-  }
-  return err({
-    kind: "cancel_not_applied",
-    operation,
-    reference: input.reference,
-  });
-}
-
 function readConfigFromEnv(): IResDiaryConfig | null {
   const apiUrl = env.RESDIARY_API_URL;
   const micrositeName = env.RESDIARY_MICROSITE_NAME;
@@ -1486,7 +1202,6 @@ export function createResDiaryProvider(deps: IResDiaryDeps = {}) {
         signingIn: null,
         signInPausedUntil: 0,
         rules: createCache(),
-        cancelReasons: createCache(),
         closedDates: createCache(),
       }
     : null;
@@ -1581,31 +1296,9 @@ export function createResDiaryProvider(deps: IResDiaryDeps = {}) {
         (connected) => getHoldStatus(connected, holdId, deadline(options)),
         { holdId },
       ),
-    getBooking: (
-      lookup: IResDiaryBookingLookup,
-      options?: IResDiaryCallOptions,
-    ) =>
-      run("getBooking", (connected) =>
-        getBooking(connected, lookup, deadline(options)),
-      ),
     getClosedDates: (options?: IResDiaryCallOptions) =>
       run("getClosedDates", (connected) =>
         getClosedDates(connected, deadline(options)),
-      ),
-    getCancellationReasons: (options?: IResDiaryCallOptions) =>
-      run("getCancellationReasons", (connected) =>
-        getCancellationReasons(connected, deadline(options)),
-      ),
-    cancelBooking: (
-      input: IResDiaryCancelInput,
-      options?: IResDiaryCallOptions,
-    ) =>
-      run("cancelBooking", (connected) =>
-        cancelBooking(
-          connected,
-          input,
-          deadline(options, RESDIARY_TIMING.cancelBudgetMs),
-        ),
       ),
   };
 }

@@ -1177,6 +1177,20 @@ describe("createHold", function createHoldTests() {
     },
   );
 
+  it("reports an expiry on an impossible date as an unknown outcome", async function impossibleExpiryDate() {
+    vi.setSystemTime(Date.parse("2026-12-01T08:00:00Z"));
+    const { provider: resdiary } = provider(
+      reply(200, { ...HOLD, ExpiryTimestamp: "2026-11-31T08:05:00Z" }),
+    );
+
+    const result = await settle(resdiary.createHold(HOLD_INPUT));
+
+    expect(result._unsafeUnwrapErr()).toMatchObject({
+      kind: "outcome_unknown",
+      operation: "createHold",
+    });
+  });
+
   it("never retries, and reports ResDiary's 500 as an unknown outcome", async function noRetryOn500() {
     const { fake, provider: resdiary } = provider(
       reply(500, {
@@ -1760,304 +1774,6 @@ describe("getHoldStatus", function getHoldStatusTests() {
   });
 });
 
-const BOOKING = {
-  Id: 425761,
-  Reference: "BQZ9X967",
-  RestaurantName: "Peploes Test",
-  VisitDate: "2026-10-23T00:00:00.0000000",
-  VisitTime: "12:30:00",
-  PartySize: 2,
-  ChannelCode: "ONLINE",
-  SpecialRequests: "Window seat please",
-  BookingStatus: "Booked",
-  CanEdit: true,
-  CanCancel: true,
-  DepositPaidAmount: 0,
-  VisitDateTimeUtc: "2026-10-23T11:30:00.0000000",
-};
-const CANCELLED = {
-  ...BOOKING,
-  BookingStatus: "Cancelled",
-  CanCancel: false,
-  CanEdit: false,
-};
-const LOOKUP = { reference: "BQZ9X967", email: "guest@example.test" };
-
-function bookingRoutes(
-  booking: THandler | THandler[],
-  extra: Record<string, THandler | THandler[]> = {},
-) {
-  const fake = fakeResDiary({
-    "POST /api/Jwt/v2/Authenticate": signedIn(),
-    "POST /Booking/BQZ9X967/AuthenticateV2": reply(200, {
-      Result: "guest-token-fixture",
-    }),
-    "GET /Booking/BQZ9X967": booking,
-    ...extra,
-  });
-  return {
-    fake,
-    provider: createResDiaryProvider({ config: CONFIG, fetch: fake.fetch }),
-  };
-}
-
-describe("getBooking", function getBookingTests() {
-  it("signs in as the guest and reads the booking", async function readsBooking() {
-    const { fake, provider: resdiary } = bookingRoutes(reply(200, BOOKING));
-
-    const result = await settle(resdiary.getBooking(LOOKUP));
-
-    expect(result._unsafeUnwrap()).toEqual({
-      reference: "BQZ9X967",
-      date: "2026-10-23",
-      time: "12:30",
-      partySize: 2,
-      status: "booked",
-      canCancel: true,
-      canEdit: true,
-      depositPaidCents: 0,
-      visitAtUtc: Date.parse("2026-10-23T11:30:00Z"),
-    });
-    const [, auth, read] = fake.requests;
-    expect(auth.body).toEqual({ Email: "guest@example.test" });
-    expect(read.search.get("authenticationToken")).toBe("guest-token-fixture");
-  });
-
-  it.each([400, 401, 403, 404])(
-    "answers not_found when ResDiary refuses the email with %i",
-    async function refusedEmail(status) {
-      const { fake, provider: resdiary } = bookingRoutes(reply(200, BOOKING), {
-        "POST /Booking/BQZ9X967/AuthenticateV2": reply(status),
-      });
-
-      const result = await settle(resdiary.getBooking(LOOKUP));
-
-      expect(result._unsafeUnwrapErr()).toMatchObject({ kind: "not_found" });
-      expect(fake.count("GET /Booking/BQZ9X967")).toBe(0);
-      expect(fake.count("POST /api/Jwt/v2/Authenticate")).toBe(
-        status === 401 ? 2 : 1,
-      );
-    },
-  );
-
-  it("treats an impossible visit date as an unreadable reply", async function impossibleVisitDate() {
-    const { provider: resdiary } = bookingRoutes(
-      reply(200, { ...BOOKING, VisitDate: "2026-11-31T00:00:00" }),
-    );
-
-    const result = await settle(resdiary.getBooking(LOOKUP));
-
-    expect(result._unsafeUnwrapErr()).toMatchObject({ kind: "unavailable" });
-  });
-
-  it("leaves the visit instant unknown when its date is impossible", async function impossibleVisitInstant() {
-    const { provider: resdiary } = bookingRoutes(
-      reply(200, {
-        ...BOOKING,
-        VisitDateTimeUtc: "2026-11-31T11:30:00.0000000",
-      }),
-    );
-
-    const result = await settle(resdiary.getBooking(LOOKUP));
-
-    expect(result._unsafeUnwrap().visitAtUtc).toBeNull();
-  });
-
-  it("never logs the guest's token or email", async function noGuestTokenInLogs() {
-    const { provider: resdiary } = bookingRoutes(reply(500));
-
-    await settle(resdiary.getBooking(LOOKUP));
-
-    const logged = loggedText();
-    expect(logged).toContain("ResDiary request failed");
-    expect(logged).not.toContain("guest-token-fixture");
-    expect(logged).not.toContain("guest@example.test");
-  });
-
-  it("refuses a reference that cannot be a booking reference", async function refusesBadReference() {
-    const { fake, provider: resdiary } = bookingRoutes(reply(200, BOOKING));
-
-    const result = await resdiary.getBooking({
-      ...LOOKUP,
-      reference: "../B9GX",
-    });
-
-    expect(result._unsafeUnwrapErr()).toMatchObject({
-      kind: "rejected",
-      fields: ["reference"],
-    });
-    expect(fake.requests).toHaveLength(0);
-  });
-});
-
-describe("getCancellationReasons", function getCancellationReasonsTests() {
-  it("returns only the reasons guests may pick, and keeps them for 5 minutes", async function readsReasons() {
-    const fake = fakeResDiary({
-      "POST /api/Jwt/v2/Authenticate": signedIn(),
-      "GET /CancellationReasons": reply(200, [
-        {
-          Id: 26950,
-          Description: "Illness",
-          DisplayOnline: true,
-          ApplyToStandardBookings: true,
-        },
-        {
-          Id: 26951,
-          Description: "Staff only",
-          DisplayOnline: false,
-          ApplyToStandardBookings: true,
-        },
-        {
-          Id: 26952,
-          Description: "Change of plans",
-          DisplayOnline: true,
-          ApplyToStandardBookings: true,
-        },
-        {
-          Id: 26953,
-          Description: "Events only",
-          DisplayOnline: true,
-          ApplyToStandardBookings: false,
-        },
-      ]),
-    });
-    const resdiary = createResDiaryProvider({
-      config: CONFIG,
-      fetch: fake.fetch,
-    });
-
-    const result = await settle(resdiary.getCancellationReasons());
-    await settle(resdiary.getCancellationReasons());
-
-    expect(result._unsafeUnwrap()).toEqual([
-      { id: 26950, label: "Illness" },
-      { id: 26952, label: "Change of plans" },
-    ]);
-    expect(fake.requests.at(-1)?.search.get("onlyEnabledReasons")).toBe("true");
-    expect(fake.count("GET /CancellationReasons")).toBe(1);
-  });
-});
-
-describe("cancelBooking", function cancelBookingTests() {
-  const CANCEL = { ...LOOKUP, reasonId: 26952 };
-
-  it("cancels, then checks that the booking really is cancelled", async function cancelsAndChecks() {
-    const { fake, provider: resdiary } = bookingRoutes(
-      [reply(200, BOOKING), reply(200, CANCELLED)],
-      { "POST /Booking/BQZ9X967/Cancel": reply(204) },
-    );
-
-    const result = await settle(resdiary.cancelBooking(CANCEL));
-
-    expect(result._unsafeUnwrap()).toEqual({
-      reference: "BQZ9X967",
-      status: "cancelled",
-    });
-    const cancel = fake.requests.find((request) =>
-      request.path.endsWith("/Cancel"),
-    );
-    expect(cancel?.search.get("cancellationReasonId")).toBe("26952");
-  });
-
-  it("sends the cancel once more when ResDiary's 204 changed nothing", async function resendsIgnoredCancel() {
-    const { fake, provider: resdiary } = bookingRoutes(
-      [
-        reply(200, BOOKING),
-        reply(200, BOOKING),
-        reply(200, BOOKING),
-        reply(200, CANCELLED),
-      ],
-      { "POST /Booking/BQZ9X967/Cancel": reply(204) },
-    );
-
-    const result = await settle(resdiary.cancelBooking(CANCEL));
-
-    expect(result.isOk()).toBe(true);
-    expect(fake.count("POST /Booking/BQZ9X967/Cancel")).toBe(2);
-    expect(fake.count("POST /Booking/BQZ9X967/AuthenticateV2")).toBe(1);
-  });
-
-  it("reports a cancel that ResDiary keeps ignoring", async function cancelNotApplied() {
-    const { fake, provider: resdiary } = bookingRoutes(reply(200, BOOKING), {
-      "POST /Booking/BQZ9X967/Cancel": reply(204),
-    });
-
-    const result = await settle(resdiary.cancelBooking(CANCEL));
-
-    expect(result._unsafeUnwrapErr()).toMatchObject({
-      kind: "cancel_not_applied",
-      reference: "BQZ9X967",
-    });
-    expect(fake.count("POST /Booking/BQZ9X967/Cancel")).toBe(2);
-  });
-
-  it("does not cancel a booking that is already cancelled", async function alreadyCancelled() {
-    const { fake, provider: resdiary } = bookingRoutes(reply(200, CANCELLED), {
-      "POST /Booking/BQZ9X967/Cancel": reply(204),
-    });
-
-    const result = await settle(resdiary.cancelBooking(CANCEL));
-
-    expect(result.isOk()).toBe(true);
-    expect(fake.count("POST /Booking/BQZ9X967/Cancel")).toBe(0);
-  });
-
-  it("refuses when ResDiary says the booking cannot be cancelled", async function cannotCancel() {
-    const { fake, provider: resdiary } = bookingRoutes(
-      reply(200, { ...BOOKING, CanCancel: false }),
-      { "POST /Booking/BQZ9X967/Cancel": reply(204) },
-    );
-
-    const result = await settle(resdiary.cancelBooking(CANCEL));
-
-    expect(result._unsafeUnwrapErr()).toMatchObject({ kind: "not_allowed" });
-    expect(fake.count("POST /Booking/BQZ9X967/Cancel")).toBe(0);
-  });
-
-  it.each([
-    [403, "not_allowed"],
-    [404, "not_found"],
-  ])("maps a %i on cancel to %s", async function cancelRefused(status, kind) {
-    const { provider: resdiary } = bookingRoutes(reply(200, BOOKING), {
-      "POST /Booking/BQZ9X967/Cancel": reply(status),
-    });
-
-    const result = await settle(resdiary.cancelBooking(CANCEL));
-
-    expect(result._unsafeUnwrapErr()).toMatchObject({
-      kind,
-      operation: "cancelBooking",
-    });
-  });
-
-  it("checks the booking even when the cancel reply was lost", async function lostCancelReply() {
-    const { provider: resdiary } = bookingRoutes(
-      [reply(200, BOOKING), reply(200, CANCELLED)],
-      { "POST /Booking/BQZ9X967/Cancel": failsWith("ECONNRESET") },
-    );
-
-    const result = await settle(resdiary.cancelBooking(CANCEL));
-
-    expect(result.isOk()).toBe(true);
-  });
-
-  it("reports an unknown outcome when the check itself fails", async function checkFails() {
-    const { provider: resdiary } = bookingRoutes(
-      [reply(200, BOOKING), reply(503)],
-      {
-        "POST /Booking/BQZ9X967/Cancel": reply(204),
-      },
-    );
-
-    const result = await settle(resdiary.cancelBooking(CANCEL));
-
-    expect(result._unsafeUnwrapErr()).toMatchObject({
-      kind: "outcome_unknown",
-      operation: "cancelBooking",
-    });
-  });
-});
-
 describe("review fixes", function reviewFixTests() {
   it("returns a failure instead of throwing when something unexpected breaks", async function catchesUnexpected() {
     const fake = fakeResDiary({ "POST /api/Jwt/v2/Authenticate": signedIn() });
@@ -2168,22 +1884,6 @@ describe("review fixes", function reviewFixTests() {
     expect(loggedText()).not.toContain("peploes_api");
   });
 
-  it("reports a cancel ResDiary refused with 429 as unavailable, without resending", async function refusedCancel() {
-    const { fake, provider: resdiary } = bookingRoutes(reply(200, BOOKING), {
-      "POST /Booking/BQZ9X967/Cancel": reply(429),
-    });
-
-    const result = await settle(
-      resdiary.cancelBooking({ ...LOOKUP, reasonId: 26952 }),
-    );
-
-    expect(result._unsafeUnwrapErr()).toMatchObject({
-      kind: "unavailable",
-      httpStatus: 429,
-    });
-    expect(fake.count("POST /Booking/BQZ9X967/Cancel")).toBe(1);
-  });
-
   it("does not mistake built-in object keys for hold statuses", async function prototypeKeys() {
     const fake = fakeResDiary({
       "POST /api/Jwt/v2/Authenticate": signedIn(),
@@ -2258,21 +1958,6 @@ describe("second review fixes", function secondReviewFixTests() {
     const result = await settle(resdiary.createHold(HOLD_INPUT));
 
     expect(result._unsafeUnwrap().expiresInMs).toBe(300_434 - 1000 - 3000);
-  });
-
-  it("reads an empty cancellation-reason reply as no reasons", async function emptyReasons() {
-    const fake = fakeResDiary({
-      "POST /api/Jwt/v2/Authenticate": signedIn(),
-      "GET /CancellationReasons": reply(204),
-    });
-    const resdiary = createResDiaryProvider({
-      config: CONFIG,
-      fetch: fake.fetch,
-    });
-
-    const result = await settle(resdiary.getCancellationReasons());
-
-    expect(result._unsafeUnwrap()).toEqual([]);
   });
 });
 

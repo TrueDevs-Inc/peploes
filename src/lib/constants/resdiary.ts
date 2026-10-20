@@ -1,9 +1,7 @@
-import { DURATION, HTTP_STATUS } from "@/lib/constants";
+import { DURATION } from "@/lib/constants";
 import type {
-  IResDiaryBooking,
   IResDiaryHoldStatus,
   IResDiaryRules,
-  TResDiaryFailure,
   TResDiaryOperation,
 } from "@/lib/types";
 
@@ -21,23 +19,15 @@ export const RESDIARY_ENDPOINTS = {
   changeHold: "UpdateTableHoldBookingDetails",
   guestDetails: "UpdateTableHoldWithCustomer",
   holdStatus: "TableHoldBookingStatus",
-  booking: "Booking",
-  guestSignIn: "AuthenticateV2",
-  cancel: "Cancel",
-  cancellationReasons: "CancellationReasons",
   closedDates: "ClosedDates",
 } as const;
 
 export const RESDIARY_QUERY = {
   date: "date",
   channelCode: "channelCode",
-  onlyEnabledReasons: "onlyEnabledReasons",
-  authenticationToken: "authenticationToken",
-  cancellationReasonId: "cancellationReasonId",
 } as const;
 
 export const RESDIARY_AVAILABILITY_TYPE = "Reservation";
-export const RESDIARY_REASONS_CACHE_KEY = "all";
 export const RESDIARY_CLOSED_DATES_CACHE_KEY = "all";
 
 export const RESDIARY_HEADERS = {
@@ -51,7 +41,6 @@ export const RESDIARY_HEADERS = {
 
 export const RESDIARY_TIMING = {
   budgetMs: 8000,
-  cancelBudgetMs: 15_000,
   signInTimeoutMs: 10_000,
   readAttemptMs: 4000,
   minAttemptMs: 250,
@@ -62,7 +51,6 @@ export const RESDIARY_TIMING = {
   cacheTtlMs: DURATION.FIVE_MINUTES_MS,
   maxHoldMs: DURATION.FIFTEEN_MINUTES_MS,
   dateHeaderMarginMs: 1000,
-  cancelCheckDelaysMs: [500, 1500],
   msPerSecond: 1000,
 } as const;
 
@@ -70,7 +58,6 @@ export const RESDIARY_LIMITS = {
   minPartySize: 1,
   maxRangeDays: 120,
   cacheMaxEntries: 100,
-  cancelRounds: 2,
   centsPerEuro: 100,
   isoDateLength: 10,
   loggedValueMaxLength: 40,
@@ -125,14 +112,6 @@ export const RESDIARY_HOLD_STATUSES = new Map<
   ["Cancelled", "cancelled"],
 ]);
 
-export const RESDIARY_BOOKING_STATUSES = new Map<
-  string,
-  IResDiaryBooking["status"]
->([
-  ["Booked", "booked"],
-  ["Cancelled", "cancelled"],
-]);
-
 export const RESDIARY_PAYMENT_PROVIDERS = new Map<
   string,
   NonNullable<IResDiaryRules["paymentProvider"]>
@@ -141,30 +120,10 @@ export const RESDIARY_PAYMENT_PROVIDERS = new Map<
   ["GuestPay", "guestpay"],
 ]);
 
-export const RESDIARY_REFUSED_CANCEL_STATUSES = new Set<number>([
-  HTTP_STATUS.BAD_REQUEST,
-  HTTP_STATUS.UNAUTHORIZED,
-  HTTP_STATUS.NOT_FOUND,
-  HTTP_STATUS.TOO_MANY_REQUESTS,
-]);
-
-export const RESDIARY_REFUSED_GUEST_STATUSES = new Set<number>([
-  HTTP_STATUS.BAD_REQUEST,
-  HTTP_STATUS.UNAUTHORIZED,
-  HTTP_STATUS.FORBIDDEN,
-  HTTP_STATUS.NOT_FOUND,
-]);
-
 export const RESDIARY_WRITE_OPERATIONS = new Set<TResDiaryOperation>([
   "createHold",
   "changeHold",
   "submitHoldGuest",
-  "cancelBooking",
-]);
-
-export const RESDIARY_EXPECTED_FAILURES = new Set<TResDiaryFailure["kind"]>([
-  "not_found",
-  "not_allowed",
 ]);
 
 export const RESDIARY_DETAILS = {
