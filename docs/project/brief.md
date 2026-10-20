@@ -9,6 +9,8 @@ documented in [Private dining and events](private-dining.md).
 ## Book a Table design preview
 
 The /book-a-table page follows the desktop and mobile booking frames in Figma.
+Its server contract, hold timer and failure behaviour are documented in
+[Booking page and the table hold](booking-page.md).
 Its four steps run in browser memory: choose a date and party size, select a
 sample time, enter guest details, and view the confirmation layout. The page
 stays noindex. A visible notice identifies the flow as a design preview.
