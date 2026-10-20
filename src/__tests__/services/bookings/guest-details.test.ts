@@ -710,7 +710,7 @@ describe("submitGuestDetails", function submitGuestDetailsTests() {
       },
     );
 
-    it("carries on when the rules cannot be read; ResDiary decides", async function rulesFail() {
+    it("sends nothing when the settings cannot be read, so their checks never get skipped", async function rulesFail() {
       const { provider, token } = await held();
       provider.getRules.mockResolvedValue(
         err({ kind: "unavailable", operation: "getRules" }),
@@ -721,7 +721,9 @@ describe("submitGuestDetails", function submitGuestDetailsTests() {
         token,
       );
 
-      expect(result.isOk()).toBe(true);
+      expect(result._unsafeUnwrapErr().code).toBe(ErrorCode.ServiceUnavailable);
+      expect(provider.submitHoldGuest).not.toHaveBeenCalled();
+      expect(console.error).not.toHaveBeenCalled();
     });
   });
 

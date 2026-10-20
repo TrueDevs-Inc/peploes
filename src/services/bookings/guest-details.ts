@@ -228,9 +228,10 @@ export async function submitGuestDetails(
   const rules = await provider.getRules(hold.searchDate, {
     deadlineAt: sendBy,
   });
-  const setting = rules.isOk()
-    ? unsupportedSetting(rules.value, liveSite)
-    : null;
+  if (rules.isErr()) {
+    return err(unavailable());
+  }
+  const setting = unsupportedSetting(rules.value, liveSite);
   if (setting) {
     logger.error(LogContext.Api, BOOKING_LOG.formUnsupported, { setting });
     return err(unavailable());
