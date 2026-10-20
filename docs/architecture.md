@@ -189,9 +189,17 @@ configured (one warning per server instance), and when the request has no
 visitor IP or Redis errors or times out (an error log each time). While the
 limit cannot check, nothing caps how many holds one visitor makes; each hold
 without guest details still ends at its ResDiary expiry. The booking checks
-still run on every request: party size, dates, the signed hold token, guest details
-and the live-site Stripe key check. Do not reuse `createPublicAction` for a
-flow that is unsafe without a working limit.
+still run on every request: party size, dates, the signed hold token, guest
+details and the live-site Stripe key check. Do not reuse `createPublicAction`
+for a flow that is unsafe without a working limit.
+
+The hold limit keys on the first `x-forwarded-for` address. That is safe only
+on Vercel, which overwrites the header with the connecting client's address and
+does not forward addresses from a proxy in front of it. On another host a
+visitor could set the header and get a fresh limit with every request, and a
+proxy such as Cloudflare in front of Vercel would put every visitor behind the
+proxy's address and one shared limit. Review `allowHold` before changing host
+or adding a proxy.
 
 The booking actions (`src/actions/bookings.ts`) are called from a client
 transition, not a form, so they return plain `{ ok, data | error }` data
