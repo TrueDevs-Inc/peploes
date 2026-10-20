@@ -140,6 +140,7 @@ export const BOOKING_HOLD_LIMITS = {
   timeoutMs: 1000,
   redisRetries: 1,
   keyPrefix: "peploes:holds",
+  visitorKeyLabel: "peploes:holds:visitor-key",
   visitorHeader: "x-forwarded-for",
   upstashTimedOut: "timeout",
   noVisitorIp: "no_visitor_ip",

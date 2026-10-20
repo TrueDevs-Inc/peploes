@@ -127,7 +127,9 @@ function upstashHoldLimits(): IHoldLimiterDeps | null {
     retry: { retries: BOOKING_HOLD_LIMITS.redisRetries },
   });
   return {
-    secret,
+    secret: createHmac("sha256", secret)
+      .update(BOOKING_HOLD_LIMITS.visitorKeyLabel)
+      .digest("base64url"),
     windows: BOOKING_HOLD_LIMITS.windows.map(
       ({ name, holds, window }) =>
         new Ratelimit({

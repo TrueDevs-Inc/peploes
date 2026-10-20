@@ -1,3 +1,5 @@
+import { createHmac } from "node:crypto";
+
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createHoldLimiter } from "@/lib/rate-limit-provider";
@@ -226,6 +228,28 @@ describe("the site's hold limit", function siteLimitTests() {
     expect(sent).toMatch(/"peploes:holds:10m:[^"]+",10,\d+,600000,/);
     expect(sent).not.toContain(GUEST_IP);
     expect(console.warn).toHaveBeenCalledTimes(1);
+  });
+
+  it("hashes the visitor with a key of its own, not the hold-cookie secret itself", async function ownVisitorKey() {
+    configureUpstash();
+    const upstash = vi.fn(function answer(url: string, init: RequestInit) {
+      const body: unknown[] = JSON.parse(String(init.body));
+      const reply = () => ({ result: [4, 5] });
+      return Promise.resolve(
+        Response.json(url.endsWith("/pipeline") ? body.map(reply) : reply()),
+      );
+    });
+    vi.stubGlobal("fetch", upstash);
+    const allowHold = await siteLimiter();
+
+    await allowHold(GUEST_IP);
+
+    const sent = upstash.mock.calls.map(([, init]) => init.body).join();
+    const withCookieSecret = createHmac("sha256", SECRET)
+      .update(`peploes:holds:${GUEST_IP}`)
+      .digest("base64url");
+    expect(sent).toMatch(/"peploes:holds:5m:[^"]+"/);
+    expect(sent).not.toContain(withCookieSecret);
   });
 
   it("logs Upstash's own error when it cannot be reached, within its time limit", async function unreachable() {
