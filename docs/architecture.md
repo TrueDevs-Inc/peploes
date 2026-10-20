@@ -182,6 +182,16 @@ the flow limits its writes per visitor (booking rate-limits holds by IP) and
 never for data that belongs to an account. Next.js already refuses Server
 Actions posted from another origin.
 
+The booking hold limit fails open on purpose, so an Upstash outage does not
+stop guests booking. `allowHold` lets the hold through when Upstash is not
+configured (one warning per server instance), and when the request has no
+visitor IP or Redis errors or times out (an error log each time). While the
+limit cannot check, nothing caps how many holds one visitor makes; each hold
+without guest details still ends at its ResDiary expiry. The booking checks
+still run on every request: party size, dates, the signed hold token, guest details
+and the live-site Stripe key check. Do not reuse `createPublicAction` for a
+flow that is unsafe without a working limit.
+
 The booking actions (`src/actions/bookings.ts`) are called from a client
 transition, not a form, so they return plain `{ ok, data | error }` data
 through `toBookingResponse`, the same body as the booking routes. They do not
