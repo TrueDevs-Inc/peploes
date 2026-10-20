@@ -30,15 +30,6 @@ export const RESDIARY_QUERY = {
 export const RESDIARY_AVAILABILITY_TYPE = "Reservation";
 export const RESDIARY_CLOSED_DATES_CACHE_KEY = "all";
 
-export const RESDIARY_HEADERS = {
-  accept: "accept",
-  contentType: "content-type",
-  authorization: "authorization",
-  date: "date",
-  retryAfter: "retry-after",
-  bearerPrefix: "Bearer ",
-} as const;
-
 export const RESDIARY_TIMING = {
   budgetMs: 8000,
   signInTimeoutMs: 10_000,
@@ -51,7 +42,6 @@ export const RESDIARY_TIMING = {
   cacheTtlMs: DURATION.FIVE_MINUTES_MS,
   maxHoldMs: DURATION.FIFTEEN_MINUTES_MS,
   dateHeaderMarginMs: 1000,
-  msPerSecond: 1000,
 } as const;
 
 export const RESDIARY_LIMITS = {

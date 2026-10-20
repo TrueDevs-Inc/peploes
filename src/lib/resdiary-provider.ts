@@ -8,13 +8,13 @@ import {
   HTTP_CONTENT_TYPE,
   HTTP_STATUS,
   MILLISECONDS_PER_DAY,
+  MILLISECONDS_PER_SECOND,
 } from "@/lib/constants";
 import {
   RESDIARY_CLOSED_DATES_CACHE_KEY,
   RESDIARY_DETAILS,
   RESDIARY_ENDPOINTS,
   RESDIARY_GUEST_STATUS,
-  RESDIARY_HEADERS,
   RESDIARY_HOLD_STATUSES,
   RESDIARY_LIMITS,
   RESDIARY_LOG,
@@ -62,29 +62,24 @@ import type {
   IResDiaryClock,
   IResDiaryClosedDates,
   IResDiaryConfig,
-  IResDiaryConnection,
   IResDiaryDateRange,
   IResDiaryDateRangeInput,
   IResDiaryDeps,
-  IResDiaryFailureContext,
   IResDiaryGuestInput,
   IResDiaryHold,
   IResDiaryHoldExpiry,
   IResDiaryHoldInput,
   IResDiaryHoldStatus,
-  IResDiaryHttpReply,
-  IResDiaryRequest,
   IResDiaryRules,
   IResDiarySlot,
   IResDiaryStripeStep,
   IResDiaryTimeSearchInput,
   IResDiaryTimes,
   IResDiaryWeekdays,
-  TResDiaryAttempt,
-  TResDiaryCache,
   TResDiaryClosedDatesReply,
   TResDiaryDateRangeReply,
   TResDiaryFailure,
+  TResDiaryFetch,
   TResDiaryGuestOutcome,
   TResDiaryGuestReply,
   TResDiaryHoldReply,
@@ -95,6 +90,49 @@ import type {
   TResDiarySignInReply,
   TResDiaryTimeSlotReply,
 } from "@/lib/types";
+
+type TResDiaryCache<T> = (
+  key: string,
+  caller: { operation: TResDiaryOperation; deadlineAt: number },
+  load: (loadDeadlineAt: number) => TResDiaryResult<T>,
+) => TResDiaryResult<T>;
+
+interface IResDiaryConnection {
+  config: IResDiaryConfig;
+  fetch: TResDiaryFetch;
+  token: { value: string; renewAt: number } | null;
+  signingIn: Promise<Result<string, string>> | null;
+  signInPausedUntil: number;
+  rules: TResDiaryCache<IResDiaryRules>;
+  closedDates: TResDiaryCache<IResDiaryClosedDates>;
+}
+
+interface IResDiaryRequest {
+  operation: TResDiaryOperation;
+  method: "GET" | "POST" | "PUT";
+  path: string;
+  body?: unknown;
+  write?: boolean;
+  noRetry?: boolean;
+  emptyBody?: unknown;
+  deadlineAt: number;
+}
+
+interface IResDiaryHttpReply {
+  status: number;
+  text: string;
+  date: number | null;
+  retryAfterMs: number | null;
+  elapsedMs: number;
+}
+
+type TResDiaryAttempt =
+  | { reply: IResDiaryHttpReply }
+  | { lost: "not_sent" | "unknown"; detail: string };
+
+interface IResDiaryFailureContext {
+  holdId: number;
+}
 
 function parseInstant(value: string): number | null {
   const match = RESDIARY_PATTERNS.wireInstant.exec(value);
@@ -114,7 +152,7 @@ function parseRetryAfter(value: string | null): number | null {
     return null;
   }
   if (RESDIARY_PATTERNS.retryAfterSeconds.test(value)) {
-    return Number(value) * RESDIARY_TIMING.msPerSecond;
+    return Number(value) * MILLISECONDS_PER_SECOND;
   }
   const at = Date.parse(value);
   return Number.isNaN(at) ? null : Math.max(0, at - Date.now());
@@ -284,10 +322,8 @@ async function attempt(
       reply: {
         status: response.status,
         text,
-        date: parseHttpDate(response.headers.get(RESDIARY_HEADERS.date)),
-        retryAfterMs: parseRetryAfter(
-          response.headers.get(RESDIARY_HEADERS.retryAfter),
-        ),
+        date: parseHttpDate(response.headers.get("date")),
+        retryAfterMs: parseRetryAfter(response.headers.get("retry-after")),
         elapsedMs: Date.now() - startedAt,
       },
     };
@@ -300,11 +336,11 @@ async function attempt(
 
 function jsonHeaders(token?: string): HeadersInit {
   return {
-    [RESDIARY_HEADERS.accept]: HTTP_CONTENT_TYPE.JSON,
-    [RESDIARY_HEADERS.contentType]: HTTP_CONTENT_TYPE.JSON,
+    accept: HTTP_CONTENT_TYPE.JSON,
+    "content-type": HTTP_CONTENT_TYPE.JSON,
     ...(token
       ? {
-          [RESDIARY_HEADERS.authorization]: `${RESDIARY_HEADERS.bearerPrefix}${token}`,
+          authorization: `Bearer ${token}`,
         }
       : {}),
   };

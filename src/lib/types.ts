@@ -477,10 +477,6 @@ export interface IResDiaryWeekdays {
 
 export type TResDiaryProvider = ReturnType<typeof createResDiaryProvider>;
 
-export interface IResDiaryFailureContext {
-  holdId: number;
-}
-
 export interface IResDiaryCallOptions {
   deadlineAt?: number;
 }
@@ -510,45 +506,6 @@ export interface IResDiaryDeps {
 }
 
 export type TResDiaryResult<T> = Promise<NeverthrowResult<T, TResDiaryFailure>>;
-
-export type TResDiaryCache<T> = (
-  key: string,
-  caller: { operation: TResDiaryOperation; deadlineAt: number },
-  load: (loadDeadlineAt: number) => TResDiaryResult<T>,
-) => TResDiaryResult<T>;
-
-export interface IResDiaryConnection {
-  config: IResDiaryConfig;
-  fetch: TResDiaryFetch;
-  token: { value: string; renewAt: number } | null;
-  signingIn: Promise<NeverthrowResult<string, string>> | null;
-  signInPausedUntil: number;
-  rules: TResDiaryCache<IResDiaryRules>;
-  closedDates: TResDiaryCache<IResDiaryClosedDates>;
-}
-
-export interface IResDiaryRequest {
-  operation: TResDiaryOperation;
-  method: "GET" | "POST" | "PUT";
-  path: string;
-  body?: unknown;
-  write?: boolean;
-  noRetry?: boolean;
-  emptyBody?: unknown;
-  deadlineAt: number;
-}
-
-export interface IResDiaryHttpReply {
-  status: number;
-  text: string;
-  date: number | null;
-  retryAfterMs: number | null;
-  elapsedMs: number;
-}
-
-export type TResDiaryAttempt =
-  | { reply: IResDiaryHttpReply }
-  | { lost: "not_sent" | "unknown"; detail: string };
 
 export type TResDiarySignInReply = z.infer<typeof signInReplySchema>;
 export type TResDiarySetupReply = z.infer<typeof setupReplySchema>;
