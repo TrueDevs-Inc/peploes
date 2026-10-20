@@ -106,8 +106,8 @@ const SETUP = {
   MinOnlinePartySize: 1,
   OnlinePartySizeDefault: 2,
   Services: [
-    { ServiceId: 8855, Name: "Lunch" },
-    { ServiceId: 8856, Name: "Dinner" },
+    { ServiceId: 8855, Name: "Lunch", TimeFrom: "12:00:00" },
+    { ServiceId: 8856, Name: "Dinner", TimeFrom: "18:00:00" },
   ],
   IsMembershipIdEnabled: true,
   IsMembershipIdRequired: false,
@@ -163,6 +163,19 @@ const TIMES = {
   TimeSlots: [LUNCH_SLOT, PROMOTION_SLOT, DINNER_SLOT],
 };
 const TIMES_WITHOUT_DINNER = { ...TIMES, TimeSlots: [LUNCH_SLOT] };
+const LATE_SLOT = {
+  TimeSlot: "2026-10-23T00:15:00.0000000",
+  IsLeaveTimeRequired: true,
+  LeaveTime: "01:15:00",
+  ServiceId: 8856,
+  HasStandardAvailability: true,
+  AvailablePromotions: [],
+  StandardAvailabilityFeeAmount: 0,
+};
+const TIMES_WITH_LATE = {
+  ...TIMES,
+  TimeSlots: [LUNCH_SLOT, DINNER_SLOT, LATE_SLOT],
+};
 
 const HOLD_REPLY = {
   BookingId: 425742,
@@ -606,6 +619,29 @@ describe("a guest books a table", function journeyTests() {
     const [first, second] = fake.bodies(ROUTES.guest);
     expect(fake.count(ROUTES.guest)).toBe(2);
     expect(second).toEqual(first);
+  });
+
+  it("lists a time after midnight last and holds it on the evening ResDiary dated it", async function afterMidnight() {
+    const { fake, bookings } = peploes({
+      [ROUTES.search]: reply(200, TIMES_WITH_LATE),
+    });
+
+    const { times, hold } = await chooseTime(bookings, "00:15");
+
+    expect(times.times.at(-1)).toMatchObject({
+      searchDate: FRIDAY,
+      date: "2026-10-24",
+      time: "00:15",
+      label: "12:15 am (next day)",
+    });
+    expect(fake.bodies(ROUTES.hold).at(-1)).toMatchObject({
+      VisitDate: FRIDAY,
+      VisitTime: "00:15:00",
+    });
+    expect(hold._unsafeUnwrap().summary).toMatchObject({
+      dateLabel: "Sat, 24 Oct 2026",
+      timeLabel: "12:15 am",
+    });
   });
 
   it("logs one error, with the hold id, when ResDiary cannot find the hold for the details", async function oneDiagnostic() {

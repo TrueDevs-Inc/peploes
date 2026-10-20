@@ -45,7 +45,13 @@ export const setupReplySchema = z.object({
   OnlinePartySizeDefault: z.number().int().nullish(),
   AcceptBookingsDaysInAdvance: z.number().int().nullish(),
   Services: z
-    .array(z.object({ ServiceId: z.number().int(), Name: z.string() }))
+    .array(
+      z.object({
+        ServiceId: z.number().int(),
+        Name: z.string(),
+        TimeFrom: z.string().nullish(),
+      }),
+    )
     .nullish(),
   CurrencyCode: z.string(),
   TermsAndConditions: z.string().nullish(),

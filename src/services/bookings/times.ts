@@ -32,17 +32,38 @@ function withDay(label: string, nextDay: boolean): string {
   return nextDay ? `${label}${BOOKING_NEXT_DAY_LABEL}` : label;
 }
 
-function isPassed(slot: IResDiarySlot, visit: IBookingVisit): boolean {
-  return slot.date === visit.today && slot.time <= visit.now;
+function calendarDay(
+  slot: IResDiarySlot,
+  searchDate: string,
+  visit: IBookingVisit,
+): string {
+  const serviceStart = visit.serviceStarts.get(slot.serviceId);
+  const afterMidnight =
+    slot.date === searchDate &&
+    serviceStart !== undefined &&
+    slot.time < serviceStart;
+  return afterMidnight ? addDays(searchDate, 1) : slot.date;
 }
 
-function returnBy(slot: IResDiarySlot, searchDate: string): IReturnBy | null {
+function isPassed(
+  day: string,
+  slot: IResDiarySlot,
+  visit: IBookingVisit,
+): boolean {
+  return day === visit.today && slot.time <= visit.now;
+}
+
+function returnBy(
+  slot: IResDiarySlot,
+  day: string,
+  searchDate: string,
+): IReturnBy | null {
   if (slot.leaveTime === null) {
     return null;
   }
   const { time } = slot.leaveTime;
   const nextDay =
-    slot.leaveTime.nextDay || slot.date !== searchDate || time < slot.time;
+    slot.leaveTime.nextDay || day !== searchDate || time < slot.time;
   return {
     time,
     label: withDay(timeLabel(time), nextDay),
@@ -53,20 +74,21 @@ function returnBy(slot: IResDiarySlot, searchDate: string): IReturnBy | null {
 
 function toBookingTime(
   slot: IResDiarySlot,
+  day: string,
   searchDate: string,
   mayRequireCard: boolean,
 ): IBookingTime {
   return {
     searchDate,
-    date: slot.date,
+    date: day,
     time: slot.time,
-    label: withDay(timeLabel(slot.time), slot.date !== searchDate),
+    label: withDay(timeLabel(slot.time), day !== searchDate),
     offers: [
       {
         kind: "standard",
         feeCents: slot.feeCents,
         mayRequireCard,
-        returnBy: returnBy(slot, searchDate),
+        returnBy: returnBy(slot, day, searchDate),
       },
     ],
   };
@@ -85,14 +107,6 @@ function badSlotReason(
   return null;
 }
 
-function isBookable(slot: IResDiarySlot, visit: IBookingVisit): boolean {
-  return (
-    slot.standard &&
-    !isPassed(slot, visit) &&
-    (visit.lastDate === null || slot.date <= visit.lastDate)
-  );
-}
-
 export function bookableTimes(
   search: IResDiaryTimes,
   searchDate: string,
@@ -104,11 +118,14 @@ export function bookableTimes(
     const reason = badSlotReason(slot, searchDate);
     if (reason !== null) {
       skipped.push({ date: slot.date, time: slot.time, reason });
-    } else if (isBookable(slot, visit)) {
-      kept.set(
-        `${slot.date} ${slot.time}`,
-        toBookingTime(slot, searchDate, search.mayRequireCard),
-      );
+    } else {
+      const day = calendarDay(slot, searchDate, visit);
+      if (slot.standard && !isPassed(day, slot, visit)) {
+        kept.set(
+          `${day} ${slot.time}`,
+          toBookingTime(slot, day, searchDate, search.mayRequireCard),
+        );
+      }
     }
   }
   if (skipped.length > 0) {
@@ -122,6 +139,7 @@ export function bookableTimes(
 function emptyReason(
   times: IBookingTime[],
   search: IResDiaryTimes,
+  searchDate: string,
   visit: IBookingVisit,
 ): TTimesEmptyReason | null {
   if (times.length > 0) {
@@ -129,7 +147,9 @@ function emptyReason(
   }
   const allPassed =
     search.slots.length > 0 &&
-    search.slots.every((slot) => isPassed(slot, visit));
+    search.slots.every((slot) =>
+      isPassed(calendarDay(slot, searchDate, visit), slot, visit),
+    );
   return allPassed ? "all_passed" : "none_online";
 }
 
@@ -168,6 +188,6 @@ export async function findTimes(
   return ok({
     ...answer,
     times,
-    emptyReason: emptyReason(times, search.value, visit.value),
+    emptyReason: emptyReason(times, search.value, date, visit.value),
   });
 }

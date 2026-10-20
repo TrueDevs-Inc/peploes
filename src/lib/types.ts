@@ -358,7 +358,7 @@ export interface IResDiaryRules {
   maxPartySize: number;
   defaultPartySize: number;
   maxDaysAhead: number | null;
-  services: { id: number; name: string }[];
+  services: { id: number; name: string; start: string | null }[];
   currency: string;
   termsHtml: string;
   privacyHtml: string;
@@ -592,8 +592,8 @@ export interface IBookingWindow {
 export interface IBookingVisit {
   today: string;
   now: string;
-  lastDate: string | null;
   closed: boolean;
+  serviceStarts: ReadonlyMap<number, string>;
 }
 
 export interface IFindTableData {

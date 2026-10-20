@@ -174,8 +174,8 @@ describe("holdTable", function holdTableTests() {
     });
   });
 
-  it("holds an after-midnight time on the searched date", async function holdsAfterMidnight() {
-    const provider = searching([slot("00:15", { date: "2026-10-24" })]);
+  it("holds a time after midnight with the evening's date and shows the next day", async function holdsAfterMidnight() {
+    const provider = searching([slot("00:15", { serviceId: 8856 })]);
 
     const result = await service(provider).holdTable(
       {
@@ -482,6 +482,30 @@ describe("holdTable", function holdTableTests() {
       const result = await service(provider).holdTable(input, ALLOW_HOLDS);
       return { provider, token: result._unsafeUnwrap().holdToken };
     }
+
+    it("moves an evening hold to after midnight with the evening's date", async function movesAfterMidnight() {
+      const provider = searching([
+        slot("19:30", { serviceId: 8856 }),
+        slot("00:15", { serviceId: 8856 }),
+      ]);
+      const { token } = await firstHold(provider);
+
+      const moved = await service(provider).holdTable(
+        { ...DINNER, time: "00:15" },
+        ALLOW_HOLDS,
+        token,
+      );
+
+      expect(provider.changeHold).toHaveBeenCalledWith(
+        { holdId: 425742, date: FRIDAY, time: "00:15", partySize: 2 },
+        expect.anything(),
+      );
+      expect(moved._unsafeUnwrap().summary).toMatchObject({
+        date: "2026-10-24",
+        dateLabel: "Sat, 24 Oct 2026",
+        timeLabel: "12:15 am",
+      });
+    });
 
     it("hands back the same hold for the same choice while ResDiary still holds it", async function reuses() {
       const { provider, token } = await firstHold();

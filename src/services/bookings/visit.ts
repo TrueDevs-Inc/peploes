@@ -30,6 +30,7 @@ import type {
 import { invalid, unavailable } from "@/services/bookings/errors";
 
 const flaggedMaxima = new Set<number>();
+const flaggedServices = new Set<number>();
 
 export function partyLimits(rules: IResDiaryRules): IPartyLimits {
   return {
@@ -135,7 +136,7 @@ export async function checkVisit(
     );
   }
   if (isClosed(input.date, closed)) {
-    return ok({ today, now, lastDate, closed: true });
+    return ok({ today, now, closed: true, serviceStarts: new Map() });
   }
   const rules = await provider.getRules(input.date, { deadlineAt });
   if (rules.isErr()) {
@@ -148,5 +149,16 @@ export async function checkVisit(
   if (refused) {
     return err(refused);
   }
-  return ok({ today, now, lastDate, closed: false });
+  const serviceStarts = new Map<number, string>();
+  for (const { id, start } of rules.value.services) {
+    if (start !== null) {
+      serviceStarts.set(id, start);
+    } else if (!flaggedServices.has(id)) {
+      flaggedServices.add(id);
+      logger.warn(LogContext.Api, BOOKING_LOG.serviceStartMissing, {
+        serviceId: id,
+      });
+    }
+  }
+  return ok({ today, now, closed: false, serviceStarts });
 }

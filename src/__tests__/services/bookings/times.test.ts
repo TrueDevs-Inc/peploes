@@ -310,6 +310,24 @@ describe("getTimes", function getTimesTests() {
       });
     });
 
+    it("still offers tonight's time after midnight once the evening's times have passed", async function lateTimeLeft() {
+      vi.setSystemTime(new Date("2026-10-23T22:50:00Z"));
+      const provider = searching([
+        slot("22:00", { serviceId: 8856 }),
+        slot("00:15", { serviceId: 8856 }),
+      ]);
+
+      const result = await service(provider).getTimes({
+        date: FRIDAY,
+        partySize: 2,
+      });
+
+      expect(result._unsafeUnwrap()).toMatchObject({
+        times: [{ time: "00:15", date: "2026-10-24" }],
+        emptyReason: null,
+      });
+    });
+
     it.each([
       ["no times", []],
       ["only promotion times", [slot("18:30", { standard: false })]],
@@ -372,10 +390,10 @@ describe("getTimes", function getTimesTests() {
       },
     );
 
-    it("keeps an after-midnight time under the searched date, after the evening", async function afterMidnight() {
+    it("lists a Dinner time after midnight last, on the next day, as ResDiary dates it on the evening", async function afterMidnight() {
       const provider = searching([
-        slot("00:15", { date: "2026-10-24" }),
-        slot("22:00"),
+        slot("00:15", { serviceId: 8856 }),
+        slot("22:00", { serviceId: 8856 }),
       ]);
 
       const result = await service(provider).getTimes({
@@ -392,14 +410,40 @@ describe("getTimes", function getTimesTests() {
           label: "12:15 am (next day)",
         },
       ]);
+      expect(console.warn).not.toHaveBeenCalled();
     });
 
-    it("drops an after-midnight time past the last date", async function afterMidnightPastWindow() {
+    it.each([
+      [
+        "dated the next day by ResDiary",
+        slot("00:15", { date: "2026-10-24", serviceId: 8856 }),
+        { date: "2026-10-24", label: "12:15 am (next day)" },
+      ],
+      [
+        "at its service's start time",
+        slot("18:00", { serviceId: 8856 }),
+        { date: FRIDAY, label: "6:00 pm" },
+      ],
+    ])(
+      "places a time %s on the right day",
+      async function placesTime(_case, given, expected) {
+        const result = await service(searching([given])).getTimes({
+          date: FRIDAY,
+          partySize: 2,
+        });
+
+        expect(result._unsafeUnwrap().times).toMatchObject([
+          { searchDate: FRIDAY, ...expected },
+        ]);
+      },
+    );
+
+    it("keeps tonight's time after midnight during the evening", async function notPassedInEvening() {
+      vi.setSystemTime(new Date("2026-10-23T19:00:00Z"));
       const provider = searching([
-        slot("22:00"),
-        slot("00:15", { date: "2026-10-24" }),
+        slot("22:00", { serviceId: 8856 }),
+        slot("00:15", { serviceId: 8856 }),
       ]);
-      rulesOn(provider, "2026-10-15", { maxDaysAhead: 8 });
 
       const result = await service(provider).getTimes({
         date: FRIDAY,
@@ -408,7 +452,63 @@ describe("getTimes", function getTimesTests() {
 
       expect(result._unsafeUnwrap().times.map((time) => time.time)).toEqual([
         "22:00",
+        "00:15",
       ]);
+    });
+
+    it("warns once per service that ResDiary sends without a start time", async function warnsMissingStart() {
+      const provider = fakeProvider();
+      rulesOn(provider, FRIDAY, {
+        services: [{ id: 8857, name: "Late", start: null }],
+      });
+      const bookings = service(provider);
+
+      await bookings.getTimes({ date: FRIDAY, partySize: 2 });
+      await bookings.getTimes({ date: FRIDAY, partySize: 2 });
+
+      const flagged = vi
+        .mocked(console.warn)
+        .mock.calls.filter((call) => String(call).includes('"serviceId":8857'));
+      expect(flagged).toHaveLength(1);
+    });
+
+    it("keeps a time whose service start is unknown on its own date", async function unknownService() {
+      const provider = searching([
+        slot("00:15", { serviceId: 9999 }),
+        slot("22:00", { serviceId: 8856 }),
+      ]);
+
+      const result = await service(provider).getTimes({
+        date: FRIDAY,
+        partySize: 2,
+      });
+
+      expect(result._unsafeUnwrap().times).toMatchObject([
+        { date: FRIDAY, time: "00:15", label: "12:15 am" },
+        { date: FRIDAY, time: "22:00" },
+      ]);
+    });
+
+    it("puts the return time of a time after midnight on the next day", async function afterMidnightReturn() {
+      const provider = searching([
+        slot("00:15", {
+          serviceId: 8856,
+          leaveTimeRequired: true,
+          leaveTime: { time: "01:15", nextDay: false },
+        }),
+      ]);
+
+      const result = await service(provider).getTimes({
+        date: FRIDAY,
+        partySize: 2,
+      });
+
+      expect(result._unsafeUnwrap().times[0]?.offers[0]?.returnBy).toEqual({
+        time: "01:15",
+        label: "1:15 am (next day)",
+        nextDay: true,
+        required: true,
+      });
     });
 
     it("drops a time dated two days later, with a warning", async function wrongDate() {

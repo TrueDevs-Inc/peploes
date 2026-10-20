@@ -249,8 +249,8 @@ describe("getRules", function getRulesTests() {
       defaultPartySize: 2,
       maxDaysAhead: 365,
       services: [
-        { id: 8854, name: "Breakfast" },
-        { id: 8856, name: "Dinner" },
+        { id: 8854, name: "Breakfast", start: "09:00" },
+        { id: 8856, name: "Dinner", start: "18:00" },
       ],
       currency: "EUR",
       termsHtml: "<p>Please note we may require a valid credit card.</p>",
@@ -510,6 +510,36 @@ function loggedText(): string {
     vi.mocked(console.error).mock.calls,
   ]);
 }
+
+describe("getRules service start times", function serviceStartTests() {
+  it.each([
+    [{ TimeFrom: "18:00:00" }, "18:00"],
+    [{ TimeFrom: null }, null],
+    [{}, null],
+    [{ TimeFrom: "six pm" }, null],
+  ])(
+    "reads TimeFrom %o as the service start %o, never failing Setup",
+    async function readsStart(change, start) {
+      const fake = fakeResDiary({
+        "POST /api/Jwt/v2/Authenticate": signedIn(),
+        "GET /Setup": reply(200, {
+          ...SETUP,
+          Services: [{ ServiceId: 8856, Name: "Dinner", ...change }],
+        }),
+      });
+      const resdiary = createResDiaryProvider({
+        config: CONFIG,
+        fetch: fake.fetch,
+      });
+
+      const result = await settle(resdiary.getRules("2026-10-23"));
+
+      expect(result._unsafeUnwrap().services).toEqual([
+        { id: 8856, name: "Dinner", start },
+      ]);
+    },
+  );
+});
 
 describe("reading from ResDiary", function readTransportTests() {
   function provider(setup: THandler | THandler[], config = CONFIG) {

@@ -85,6 +85,8 @@ export const BOOKING_LOG = {
   impossiblePartyLimits: "ResDiary's party limits cannot work",
   partyCapConflict:
     "ResDiary allows more online guests than Peploe's limit; review its settings",
+  serviceStartMissing:
+    "ResDiary sent a service without a start time, so its times after midnight cannot be placed",
   everyWeekdayClosed: "ResDiary closes every weekday",
   unexpected: "Booking failed unexpectedly",
   rangeUnchecked: "ResDiary left part of a date range unchecked",

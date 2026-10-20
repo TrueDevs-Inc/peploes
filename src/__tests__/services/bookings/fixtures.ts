@@ -24,8 +24,8 @@ export const RULES: IResDiaryRules = {
   defaultPartySize: 2,
   maxDaysAhead: 365,
   services: [
-    { id: 8855, name: "Lunch" },
-    { id: 8856, name: "Dinner" },
+    { id: 8855, name: "Lunch", start: "12:00" },
+    { id: 8856, name: "Dinner", start: "18:00" },
   ],
   currency: "EUR",
   termsHtml: SANDBOX_TERMS_HTML,

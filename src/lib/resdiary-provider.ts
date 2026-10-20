@@ -731,6 +731,10 @@ function toRules(setup: TResDiarySetupReply): IResDiaryRules {
     services: (setup.Services ?? []).map((service) => ({
       id: service.ServiceId,
       name: service.Name,
+      start:
+        service.TimeFrom && RESDIARY_PATTERNS.wireClock.test(service.TimeFrom)
+          ? toClock(service.TimeFrom).time
+          : null,
     })),
     currency: setup.CurrencyCode,
     termsHtml: setup.TermsAndConditions ?? "",
