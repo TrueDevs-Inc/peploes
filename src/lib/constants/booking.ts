@@ -92,6 +92,7 @@ export const BOOKING_LOG = {
   rangeUnchecked: "ResDiary left part of a date range unchecked",
   skippedTimes: "Booking skipped times ResDiary sent",
   badHoldToken: "Booking ignored an unreadable hold token",
+  staleHoldToken: "Booking ignored a hold token kept past its lifetime",
   formUnsupported:
     "ResDiary's settings need something the booking form cannot give",
   guestOutcomeUnknown: "Unclear whether the booking was made",

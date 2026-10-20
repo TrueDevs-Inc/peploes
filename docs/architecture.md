@@ -212,7 +212,10 @@ request, so a late reply about one tab's hold cannot delete another tab's hold.
 The booking page must send the `holdReference` it is working on with every
 hold, guest details and hold-status request. It keeps `holdReference` and
 `holdRevision` per tab in `sessionStorage`, so a reload or a return from
-Stripe still moves or completes the same hold instead of making a new one.
+Stripe still moves or completes the same hold instead of making a new one. The
+server treats a hold token as missing once its hold has ended plus the
+15-minute payment grace, the cookie's own lifetime, so a cookie kept beyond
+that never reaches ResDiary.
 
 ## Errors
 

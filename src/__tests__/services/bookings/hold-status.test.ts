@@ -35,8 +35,35 @@ function resdiarySays(
 }
 
 const AFTER_EXPIRY = NOW.getTime() + 300_000;
+const TOKEN_EXPIRY = NOW.getTime() + HOLD.expiresInMs;
+const GRACE_MS = 15 * 60_000;
 
 describe("getHoldStatus", function getHoldStatusTests() {
+  it("still asks ResDiary during the 15 minutes of grace after the hold ends", async function withinGrace() {
+    const { provider, token } = await held();
+    resdiarySays(provider, "pending");
+    vi.setSystemTime(TOKEN_EXPIRY + GRACE_MS - 1000);
+
+    const result = await service(provider).getHoldStatus(HOLD_QUERY, token);
+
+    expect(result._unsafeUnwrap().status).toBe("pending");
+    expect(provider.getHoldStatus).toHaveBeenCalledTimes(1);
+  });
+
+  it("refuses a signed token kept past the grace, without asking ResDiary", async function pastGrace() {
+    const { provider, token } = await held();
+    resdiarySays(provider, "confirmed");
+    vi.setSystemTime(TOKEN_EXPIRY + GRACE_MS + 1);
+
+    const result = await service(provider).getHoldStatus(HOLD_QUERY, token);
+
+    expect(result._unsafeUnwrapErr()).toMatchObject({
+      code: ErrorCode.NotFound,
+      clearHold: true,
+    });
+    expect(provider.getHoldStatus).not.toHaveBeenCalled();
+  });
+
   it("reports a booking ResDiary confirmed, with the token's summary", async function confirmed() {
     const { provider, token } = await held();
     resdiarySays(provider, "confirmed");

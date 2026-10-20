@@ -82,5 +82,11 @@ export function readHold(token: string, secret: string): THoldToken | null {
     logger.warn(LogContext.Api, BOOKING_LOG.badHoldToken);
     return null;
   }
+  if (Date.now() > hold.data.expiresAt + BOOKING_HOLD.cookieGraceMs) {
+    logger.warn(LogContext.Api, BOOKING_LOG.staleHoldToken, {
+      reference: hold.data.reference,
+    });
+    return null;
+  }
   return hold.data;
 }
