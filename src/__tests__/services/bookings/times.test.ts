@@ -185,14 +185,14 @@ describe("getTimes", function getTimesTests() {
         FRIDAY,
         { maxPartySize: 10 },
         8,
-        "For more than 7 guests, please call us on +353 1 676 3144 or email reception@peploes.ie.",
+        "For more than 7 guests, please call us on +353 1 676 3144 or email reception@peploes.com.",
       ],
       [
         "7 guests when that day allows 6",
         FRIDAY,
         { maxPartySize: 6 },
         7,
-        "For more than 6 guests, please call us on +353 1 676 3144 or email reception@peploes.ie.",
+        "For more than 6 guests, please call us on +353 1 676 3144 or email reception@peploes.com.",
       ],
       [
         "2 guests when that day starts at 4",

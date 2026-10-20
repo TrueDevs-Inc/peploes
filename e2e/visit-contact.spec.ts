@@ -141,10 +141,13 @@ test("contact and map links point to the restaurant's public destinations", asyn
       main.getByRole("link", { name: label, exact: true }),
     ).toHaveAttribute("href", "tel:+35316763144");
   }
-  for (const label of ["reception@peploes.ie", "Email reception@peploes.ie"]) {
+  for (const label of [
+    "reception@peploes.com",
+    "Email reception@peploes.com",
+  ]) {
     await expect(
       main.getByRole("link", { name: label, exact: true }),
-    ).toHaveAttribute("href", "mailto:reception@peploes.ie");
+    ).toHaveAttribute("href", "mailto:reception@peploes.com");
   }
   for (const label of [
     "Get Directions",

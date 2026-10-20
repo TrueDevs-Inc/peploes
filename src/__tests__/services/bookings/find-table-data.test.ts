@@ -92,7 +92,7 @@ describe("getFindTableData", function findTableDataTests() {
       "gives the phone and email when ResDiary has %s",
       async function fallsBack(_case, termsHtml) {
         expect(await termsFrom(termsHtml)).toEqual([
-          "For our booking terms, please call us on +353 1 676 3144 or email reception@peploes.ie.",
+          "For our booking terms, please call us on +353 1 676 3144 or email reception@peploes.com.",
         ]);
       },
     );
@@ -268,7 +268,7 @@ describe("getFindTableData", function findTableDataTests() {
       const error = result._unsafeUnwrapErr();
       expect(error.code).toBe(ErrorCode.ServiceUnavailable);
       expect(error.message).toContain("+353 1 676 3144");
-      expect(error.message).toContain("reception@peploes.ie");
+      expect(error.message).toContain("reception@peploes.com");
       expect(console.warn).not.toHaveBeenCalled();
       expect(console.error).not.toHaveBeenCalled();
     });

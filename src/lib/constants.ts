@@ -77,7 +77,7 @@ export const DEFAULT_SEO = {
 export const RESTAURANT_CONTACT = {
   phone: "+35316763144",
   phoneLabel: "+353 1 676 3144",
-  email: "reception@peploes.ie",
+  email: "reception@peploes.com",
 } as const;
 
 export const RESTAURANT_OPENING_HOURS = [

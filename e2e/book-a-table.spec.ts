@@ -310,10 +310,10 @@ test("booking help offers the restaurant's contact and group dining destinations
   for (const link of await phoneLinks.all()) {
     await expect(link).toHaveAttribute("href", "tel:+35316763144");
   }
-  const emailLinks = main.locator('a[href="mailto:reception@peploes.ie"]');
+  const emailLinks = main.locator('a[href="mailto:reception@peploes.com"]');
   await expect(emailLinks.first()).toBeVisible();
   for (const link of await emailLinks.all()) {
-    await expect(link).toHaveAttribute("href", "mailto:reception@peploes.ie");
+    await expect(link).toHaveAttribute("href", "mailto:reception@peploes.com");
   }
   const groupsLink = main.getByRole("link", {
     name: "Private Dining & Events",

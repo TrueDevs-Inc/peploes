@@ -222,7 +222,7 @@ describe("holdTable", function holdTableTests() {
         { partySize: 11 },
         {
           partySize:
-            "For more than 7 guests, please call us on +353 1 676 3144 or email reception@peploes.ie.",
+            "For more than 7 guests, please call us on +353 1 676 3144 or email reception@peploes.com.",
         },
       ],
       [
@@ -271,7 +271,7 @@ describe("holdTable", function holdTableTests() {
 
       expect(result._unsafeUnwrapErr().fieldErrors).toEqual({
         partySize:
-          "For more than 7 guests, please call us on +353 1 676 3144 or email reception@peploes.ie.",
+          "For more than 7 guests, please call us on +353 1 676 3144 or email reception@peploes.com.",
       });
       expect(provider.createHold).not.toHaveBeenCalled();
     });
