@@ -918,6 +918,34 @@ describe("getAvailableDates", function getAvailableDatesTests() {
     expect(result.isOk()).toBe(true);
   });
 
+  it.each([
+    [{ AvailableDates: [{ Date: "2026-11-31", AvailableTimes: [] }] }],
+    [
+      {
+        MissingDatesStart: "2026-12-00T00:00:00",
+        MissingDatesEnd: "2026-12-05",
+      },
+    ],
+    [{ MissingDatesStart: "2026-12-01", MissingDatesEnd: "2026-02-30" }],
+  ])(
+    "treats an impossible date in %o as an unreadable reply",
+    async function impossibleRangeDate(change) {
+      const { provider: resdiary } = provider(
+        reply(200, { ...DATE_RANGE, ...change }),
+      );
+
+      const result = await settle(
+        resdiary.getAvailableDates({
+          from: "2026-10-22",
+          to: "2026-10-24",
+          partySize: 2,
+        }),
+      );
+
+      expect(result._unsafeUnwrapErr()).toMatchObject({ kind: "unavailable" });
+    },
+  );
+
   it("treats an unreadable time as an unreadable reply", async function unreadableTime() {
     const { provider: resdiary } = provider(
       reply(200, {
@@ -1755,6 +1783,29 @@ describe("getBooking", function getBookingTests() {
     },
   );
 
+  it("treats an impossible visit date as an unreadable reply", async function impossibleVisitDate() {
+    const { provider: resdiary } = bookingRoutes(
+      reply(200, { ...BOOKING, VisitDate: "2026-11-31T00:00:00" }),
+    );
+
+    const result = await settle(resdiary.getBooking(LOOKUP));
+
+    expect(result._unsafeUnwrapErr()).toMatchObject({ kind: "unavailable" });
+  });
+
+  it("leaves the visit instant unknown when its date is impossible", async function impossibleVisitInstant() {
+    const { provider: resdiary } = bookingRoutes(
+      reply(200, {
+        ...BOOKING,
+        VisitDateTimeUtc: "2026-11-31T11:30:00.0000000",
+      }),
+    );
+
+    const result = await settle(resdiary.getBooking(LOOKUP));
+
+    expect(result._unsafeUnwrap().visitAtUtc).toBeNull();
+  });
+
   it("never logs the guest's token or email", async function noGuestTokenInLogs() {
     const { provider: resdiary } = bookingRoutes(reply(500));
 
@@ -2169,6 +2220,25 @@ describe("getClosedDates", function getClosedDatesTests() {
     );
   });
 
+  it("skips a closed period with an impossible date", async function skipsImpossiblePeriod() {
+    const { provider: resdiary } = provider(
+      reply(200, {
+        ClosedDays: [],
+        ClosedPeriods: [
+          { StartDate: "2026-12-00", EndDate: "2026-12-26" },
+          { StartDate: "2026-11-30", EndDate: "2026-11-31T00:00:00" },
+          { StartDate: "2027-01-01", EndDate: "2027-01-02" },
+        ],
+      }),
+    );
+
+    const result = await settle(resdiary.getClosedDates());
+
+    expect(result._unsafeUnwrap().closedPeriods).toEqual([
+      { from: "2027-01-01", to: "2027-01-02" },
+    ]);
+  });
+
   it("reads empty or missing lists as nothing closed", async function readsEmpty() {
     const { provider: resdiary } = provider(reply(200, {}));
 
@@ -2215,6 +2285,7 @@ describe("searchTimes with one unreadable slot", function badSlotTests() {
         TimeSlots: [
           TIME_SEARCH.TimeSlots[0],
           { ...TIME_SEARCH.TimeSlots[2], TimeSlot: "sample string 3" },
+          { ...TIME_SEARCH.TimeSlots[2], TimeSlot: "2026-02-30T22:00:00" },
           { ...TIME_SEARCH.TimeSlots[2], LeaveTime: "25:99" },
           TIME_SEARCH.TimeSlots[2],
         ],

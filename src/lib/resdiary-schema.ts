@@ -3,9 +3,11 @@ import { z } from "zod/v4";
 
 import {
   RESDIARY_AVAILABILITY_TYPE,
+  RESDIARY_LIMITS,
   RESDIARY_PATTERNS,
   RESDIARY_TIME_SUFFIX,
 } from "@/lib/constants/resdiary";
+import { isCalendarDate } from "@/lib/dates";
 import type {
   IResDiaryBookingLookup,
   IResDiaryChangeHoldInput,
@@ -15,6 +17,15 @@ import type {
   IResDiaryHoldInput,
   IResDiaryTimeSearchInput,
 } from "@/lib/types";
+
+function wireDateField(pattern: RegExp) {
+  return z
+    .string()
+    .regex(pattern)
+    .refine((value) =>
+      isCalendarDate(value.slice(0, RESDIARY_LIMITS.isoDateLength)),
+    );
+}
 
 export const signInReplySchema = z.object({
   Status: z.string().nullish(),
@@ -68,7 +79,7 @@ export const dateRangeReplySchema = z.object({
   AvailableDates: z
     .array(
       z.object({
-        Date: z.string().regex(RESDIARY_PATTERNS.wireDate),
+        Date: wireDateField(RESDIARY_PATTERNS.wireDate),
         AvailableTimes: z
           .array(
             z.object({
@@ -79,12 +90,12 @@ export const dateRangeReplySchema = z.object({
       }),
     )
     .nullish(),
-  MissingDatesStart: z.string().regex(RESDIARY_PATTERNS.wireDate).nullish(),
-  MissingDatesEnd: z.string().regex(RESDIARY_PATTERNS.wireDate).nullish(),
+  MissingDatesStart: wireDateField(RESDIARY_PATTERNS.wireDate).nullish(),
+  MissingDatesEnd: wireDateField(RESDIARY_PATTERNS.wireDate).nullish(),
 });
 
 export const timeSlotReplySchema = z.object({
-  TimeSlot: z.string().regex(RESDIARY_PATTERNS.wireDateTime),
+  TimeSlot: wireDateField(RESDIARY_PATTERNS.wireDateTime),
   ServiceId: z.number().int(),
   HasStandardAvailability: z.boolean(),
   StandardAvailabilityFeeAmount: z.number().nullish(),
@@ -103,8 +114,8 @@ export const closedDatesReplySchema = z.object({
 });
 
 export const closedPeriodReplySchema = z.object({
-  StartDate: z.string().regex(RESDIARY_PATTERNS.wireDate),
-  EndDate: z.string().regex(RESDIARY_PATTERNS.wireDate),
+  StartDate: wireDateField(RESDIARY_PATTERNS.wireDate),
+  EndDate: wireDateField(RESDIARY_PATTERNS.wireDate),
 });
 
 export const holdReplySchema = z.object({
@@ -138,7 +149,7 @@ export const guestTokenReplySchema = z.object({ Result: z.string().min(1) });
 
 export const bookingReplySchema = z.object({
   Reference: z.string(),
-  VisitDate: z.string().regex(RESDIARY_PATTERNS.wireDate),
+  VisitDate: wireDateField(RESDIARY_PATTERNS.wireDate),
   VisitTime: z.string().regex(RESDIARY_PATTERNS.wireClock),
   PartySize: z.number().int(),
   BookingStatus: z.string(),

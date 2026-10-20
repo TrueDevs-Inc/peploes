@@ -111,7 +111,7 @@ import type {
 
 function parseInstant(value: string): number | null {
   const match = RESDIARY_PATTERNS.wireInstant.exec(value);
-  if (!match) {
+  if (!match || !isCalendarDate(datePart(value))) {
     return null;
   }
   const [, base, fraction = "", zone = RESDIARY_UTC_ZONE] = match;
