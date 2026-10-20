@@ -91,7 +91,7 @@ describe("getTimes", function getTimesTests() {
 
     const result = await service(provider).getTimes({
       date: FRIDAY,
-      partySize: 9,
+      partySize: 7,
     });
 
     const offers = result._unsafeUnwrap().times.flatMap((time) => time.offers);
@@ -181,18 +181,18 @@ describe("getTimes", function getTimesTests() {
 
     it.each([
       [
-        "11 guests when the most is 10",
+        "8 guests when ResDiary allows 10 but Peploe's online limit is 7",
         FRIDAY,
-        {},
-        11,
-        "For more than 10 guests, please call or email us.",
+        { maxPartySize: 10 },
+        8,
+        "For more than 7 guests, please call us on +353 1 676 3144 or email reception@peploes.ie.",
       ],
       [
         "7 guests when that day allows 6",
         FRIDAY,
         { maxPartySize: 6 },
         7,
-        "For more than 6 guests, please call or email us.",
+        "For more than 6 guests, please call us on +353 1 676 3144 or email reception@peploes.ie.",
       ],
       [
         "2 guests when that day starts at 4",
@@ -215,6 +215,22 @@ describe("getTimes", function getTimesTests() {
         expect(provider.searchTimes).not.toHaveBeenCalled();
       },
     );
+
+    it("flags a visit date whose ResDiary limit is above Peploe's 7, once", async function flagsVisitDateCap() {
+      const provider = fakeProvider();
+      rulesOn(provider, FRIDAY, { maxPartySize: 12 });
+      const bookings = service(provider);
+
+      await bookings.getTimes({ date: FRIDAY, partySize: 2 });
+      await bookings.getTimes({ date: FRIDAY, partySize: 2 });
+
+      const flagged = vi
+        .mocked(console.warn)
+        .mock.calls.filter((call) =>
+          String(call).includes('"maxPartySize":12,"siteMaxPartySize":7'),
+        );
+      expect(flagged).toHaveLength(1);
+    });
 
     it("takes the visit date's limits over today's", async function visitDateWins() {
       const provider = fakeProvider();
@@ -454,6 +470,19 @@ describe("getTimes", function getTimesTests() {
 
       expect(result._unsafeUnwrapErr().code).toBe(ErrorCode.ServiceUnavailable);
       expect(errorLogs()).toContain('\\"minPartySize\\":4');
+      expect(provider.searchTimes).not.toHaveBeenCalled();
+    });
+
+    it("answers unavailable when the visit date's limits start above Peploe's 7", async function visitMinimumAboveCap() {
+      const provider = fakeProvider();
+      rulesOn(provider, FRIDAY, { minPartySize: 8, maxPartySize: 10 });
+
+      const result = await service(provider).getTimes({
+        date: FRIDAY,
+        partySize: 8,
+      });
+
+      expect(result._unsafeUnwrapErr().code).toBe(ErrorCode.ServiceUnavailable);
       expect(provider.searchTimes).not.toHaveBeenCalled();
     });
 

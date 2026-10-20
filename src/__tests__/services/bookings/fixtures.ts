@@ -20,7 +20,7 @@ export const SANDBOX_TERMS_HTML =
 
 export const RULES: IResDiaryRules = {
   minPartySize: 1,
-  maxPartySize: 10,
+  maxPartySize: 7,
   defaultPartySize: 2,
   maxDaysAhead: 365,
   services: [

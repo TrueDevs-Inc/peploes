@@ -102,7 +102,7 @@ const SIGNED_IN = reply(200, {
 const SETUP = {
   RestaurantId: 3899,
   Name: "Peploes Test",
-  MaxOnlinePartySize: 10,
+  MaxOnlinePartySize: 7,
   MinOnlinePartySize: 1,
   OnlinePartySizeDefault: 2,
   Services: [
@@ -318,7 +318,7 @@ describe("a guest books a table", function journeyTests() {
     );
 
     expect(page).toEqual({
-      partySize: { min: 1, max: 10, default: 2 },
+      partySize: { min: 1, max: 7, default: 2 },
       calendar: {
         today: "2026-10-15",
         lastDate: "2027-10-15",

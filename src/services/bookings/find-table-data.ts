@@ -21,9 +21,11 @@ import type {
 import { htmlToParagraphs } from "@/lib/utils";
 import { unavailable } from "@/services/bookings/errors";
 import {
+  flagPartyCapConflict,
   impossibleLimits,
   isClosed,
   loadWindow,
+  partyLimits,
 } from "@/services/bookings/visit";
 
 function firstOpenDate(
@@ -65,7 +67,8 @@ export async function findTableData(
   if (impossible) {
     return err(impossible);
   }
-  const { minPartySize: min, maxPartySize: max } = rules;
+  flagPartyCapConflict(rules);
+  const { min, max } = partyLimits(rules);
   if (closed.closedWeekdays.length === CALENDAR_NAMES.weekdays.length) {
     logger.error(LogContext.Api, BOOKING_LOG.everyWeekdayClosed);
     return err(unavailable());

@@ -751,6 +751,11 @@ export interface ITimesData {
   emptyReason: TTimesEmptyReason | null;
 }
 
+export interface IPartyLimits {
+  min: number;
+  max: number;
+}
+
 export interface ICheckedOffer extends ICurrentOffer {
   visit: IBookingVisit;
 }

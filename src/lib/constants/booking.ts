@@ -31,6 +31,7 @@ export const BOOKING_HOLD = {
 } as const;
 
 export const BOOKING_GUEST_LIMITS = {
+  siteMaxPartySize: 7,
   nameMaxLength: 100,
   emailMaxLength: 254,
   mobileMinDigits: 6,
@@ -75,7 +76,7 @@ export const BOOKING_MESSAGES = {
     `Online booking is open up to ${lastDateLabel}.`,
   tooFewGuests: (min: number) => `Online bookings start at ${min} guests.`,
   tooManyGuests: (max: number) =>
-    `For more than ${max} guests, please call or email us.`,
+    `For more than ${max} guests, please call us on ${RESTAURANT_CONTACT.phoneLabel} or email ${RESTAURANT_CONTACT.email}.`,
 } as const;
 
 export const BOOKING_NEXT_DAY_LABEL = " (next day)";
@@ -83,6 +84,8 @@ export const BOOKING_NEXT_DAY_LABEL = " (next day)";
 export const BOOKING_LOG = {
   closedDatesFailed: "Booking calendar shown without closed days",
   impossiblePartyLimits: "ResDiary's party limits cannot work",
+  partyCapConflict:
+    "ResDiary allows more online guests than Peploe's limit; review its settings",
   everyWeekdayClosed: "ResDiary closes every weekday",
   unexpected: "Booking failed unexpectedly",
   searchRejected: "ResDiary refused a search the booking checks allowed",

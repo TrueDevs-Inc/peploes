@@ -218,9 +218,12 @@ describe("holdTable", function holdTableTests() {
         { date: "We're closed that day." },
       ],
       [
-        "11 guests when the most is 10",
+        "11 guests, over the online limit of 7",
         { partySize: 11 },
-        { partySize: "For more than 10 guests, please call or email us." },
+        {
+          partySize:
+            "For more than 7 guests, please call us on +353 1 676 3144 or email reception@peploes.ie.",
+        },
       ],
       [
         "a promotion while promotions are off",
@@ -257,6 +260,21 @@ describe("holdTable", function holdTableTests() {
         expect(provider.createHold).not.toHaveBeenCalled();
       },
     );
+
+    it("refuses 8 guests when ResDiary allows 10, before holding", async function siteCap() {
+      const provider = fakeProvider({ maxPartySize: 10 });
+
+      const result = await service(provider).holdTable(
+        { ...DINNER, partySize: 8 },
+        ALLOW_HOLDS,
+      );
+
+      expect(result._unsafeUnwrapErr().fieldErrors).toEqual({
+        partySize:
+          "For more than 7 guests, please call us on +353 1 676 3144 or email reception@peploes.ie.",
+      });
+      expect(provider.createHold).not.toHaveBeenCalled();
+    });
 
     it("never reads a closed day's rules", async function closedDayRules() {
       const provider = fakeProvider();

@@ -6,6 +6,7 @@ import {
   NOVEMBER_OPEN,
   NOW,
   openDays,
+  rulesOn,
   service,
   setUpBookingTests,
 } from "@/__tests__/services/bookings/fixtures";
@@ -163,16 +164,30 @@ describe("getCalendarDays", function calendarDaysTests() {
       },
     );
 
-    it("refuses a guest count outside today's limits", async function checksGuests() {
+    it("lets the range decide a future month when only today's limits are stricter", async function todaysLimitsAreNotGlobal() {
       const provider = fakeProvider();
+      rulesOn(provider, "2026-10-15", { maxPartySize: 2 });
 
       const result = await service(provider).getCalendarDays({
         ...NOVEMBER,
-        partySize: "11",
+        partySize: "6",
+      });
+
+      expect(result.isOk()).toBe(true);
+      expect(provider.getAvailableDates).toHaveBeenCalledTimes(1);
+    });
+
+    it("refuses more guests than Peploe's 7 when ResDiary allows 10, before asking it", async function checksGuests() {
+      const provider = fakeProvider({ maxPartySize: 10 });
+
+      const result = await service(provider).getCalendarDays({
+        ...NOVEMBER,
+        partySize: "8",
       });
 
       expect(result._unsafeUnwrapErr().fieldErrors).toEqual({
-        partySize: "For more than 10 guests, please call or email us.",
+        partySize:
+          "For more than 7 guests, please call us on +353 1 676 3144 or email reception@peploes.ie.",
       });
       expect(provider.getAvailableDates).not.toHaveBeenCalled();
     });

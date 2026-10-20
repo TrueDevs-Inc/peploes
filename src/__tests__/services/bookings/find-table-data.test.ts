@@ -21,7 +21,7 @@ describe("getFindTableData", function findTableDataTests() {
     const result = await service().getFindTableData();
 
     expect(result._unsafeUnwrap()).toEqual({
-      partySize: { min: 1, max: 10, default: 2 },
+      partySize: { min: 1, max: 7, default: 2 },
       calendar: {
         today: "2026-10-15",
         lastDate: "2027-10-15",
@@ -123,20 +123,35 @@ describe("getFindTableData", function findTableDataTests() {
     },
   );
 
-  it("takes ResDiary's maximum party size without a site cap", async function noSiteCap() {
-    const result = await service(
-      fakeProvider({ maxPartySize: 30 }),
-    ).getFindTableData();
+  it("caps the guests at Peploe's 7 when ResDiary allows more, flagging it once for review", async function siteCap() {
+    const bookings = service(fakeProvider({ maxPartySize: 30 }));
+
+    const result = await bookings.getFindTableData();
+    await bookings.getFindTableData();
 
     expect(result._unsafeUnwrap().partySize).toEqual({
       min: 1,
-      max: 30,
+      max: 7,
       default: 2,
     });
+    const flagged = vi
+      .mocked(console.warn)
+      .mock.calls.filter((call) =>
+        String(call).includes('"maxPartySize":30,"siteMaxPartySize":7'),
+      );
+    expect(flagged).toHaveLength(1);
+  });
+
+  it("keeps ResDiary's guest limit when it is stricter than Peploe's", async function stricterLimit() {
+    const result = await service(
+      fakeProvider({ maxPartySize: 5 }),
+    ).getFindTableData();
+
+    expect(result._unsafeUnwrap().partySize.max).toBe(5);
   });
 
   it.each([
-    [{ defaultPartySize: 12, maxPartySize: 10 }, 10],
+    [{ defaultPartySize: 12, maxPartySize: 10 }, 7],
     [{ defaultPartySize: 1, minPartySize: 2 }, 2],
   ])(
     "keeps the default party size inside the range (%o)",
@@ -293,6 +308,15 @@ describe("getFindTableData", function findTableDataTests() {
       expect(console.error).toHaveBeenCalledTimes(1);
       expect(errorLogs()).toContain('\\"minPartySize\\":4');
       expect(errorLogs()).toContain('\\"maxPartySize\\":2');
+    });
+
+    it("refuses party limits that start above Peploe's 7", async function minimumAboveCap() {
+      const result = await service(
+        fakeProvider({ minPartySize: 8, maxPartySize: 10 }),
+      ).getFindTableData();
+
+      expect(result._unsafeUnwrapErr().code).toBe(ErrorCode.ServiceUnavailable);
+      expect(errorLogs()).toContain('\\"siteMaxPartySize\\":7');
     });
 
     it("refuses a calendar with every weekday closed", async function everyDayClosed() {

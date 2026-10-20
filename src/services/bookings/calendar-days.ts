@@ -24,10 +24,9 @@ import {
   searchFailed,
 } from "@/services/bookings/errors";
 import {
-  guestLimitError,
-  impossibleLimits,
   isClosed,
   loadWindow,
+  siteLimitError,
 } from "@/services/bookings/visit";
 
 export async function findCalendarDays(
@@ -39,6 +38,10 @@ export async function findCalendarDays(
     return err(invalidInput(parsed.error));
   }
   const { from, to, partySize } = parsed.data;
+  const overCap = siteLimitError(partySize);
+  if (overCap) {
+    return err(overCap);
+  }
   const days = (utcMidnight(to) - utcMidnight(from)) / MILLISECONDS_PER_DAY + 1;
   if (days < 1 || days > BOOKING_CALENDAR_MAX_DAYS) {
     return err(invalid("date", BOOKING_MESSAGES.chooseDate));
@@ -49,11 +52,7 @@ export async function findCalendarDays(
   if (window.isErr()) {
     return err(window.error);
   }
-  const { rules, lastDate, closed } = window.value;
-  const refused = impossibleLimits(rules) ?? guestLimitError(partySize, rules);
-  if (refused) {
-    return err(refused);
-  }
+  const { lastDate, closed } = window.value;
 
   const start = from < today ? today : from;
   const end = lastDate !== null && to > lastDate ? lastDate : to;
