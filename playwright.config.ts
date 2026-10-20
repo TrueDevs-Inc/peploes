@@ -12,9 +12,13 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   projects: [
-    { name: "desktop", use: { viewport: { width: 1440, height: 900 } } },
+    {
+      name: "desktop",
+      use: { viewport: { width: 1440, height: 900 } },
+    },
     {
       name: "phone",
+      testIgnore: "**/desktop-navigation.spec.ts",
       use: {
         viewport: { width: 390, height: 844 },
         isMobile: true,
@@ -23,6 +27,7 @@ export default defineConfig({
     },
     {
       name: "small-phone",
+      testIgnore: "**/desktop-navigation.spec.ts",
       use: {
         viewport: { width: 320, height: 740 },
         isMobile: true,

@@ -251,9 +251,10 @@ that opens the private dining overview. The first destination is Celebrations &
 Gatherings; the shared mobile navigation uses the same label. The local shelf
 catalog owns its copy and the crops exported from Figma. Destination titles turn burgundy with a 32px underline on hover;
 retain visible keyboard focus and the shared reduced-motion-aware duration.
-The destinations now open their dedicated pages. Clicking Private Dining & Events
-opens the overview; hover and Arrow Down still open the shelf. On mobile, the
-entire row toggles the submenu like Menus; its first link opens the overview. See
+The destinations now open their dedicated pages. On desktop, clicking Private
+Dining & Events opens the overview; hover and Arrow Down open the shelf. On
+mobile, the entire row toggles the submenu, like Menus. The first submenu link,
+Overview, opens `/private-dining`. See
 [Private dining and events](private-dining.md) for the shared page sections.
 
 Both desktop shelves share one open state so switching triggers replaces the

@@ -28,6 +28,7 @@ export function MobileNavigation({
   const dialogId = useId();
   const titleId = useId();
   const [isOpen, setIsOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const isDesktop = useMediaQuery(DESKTOP_NAVIGATION_QUERY);
 
@@ -44,6 +45,27 @@ export function MobileNavigation({
     if (isDesktop) dialogRef.current?.close();
   }, [isDesktop]);
 
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!isClosing || !dialog) return;
+    let cancelled = false;
+    const animations = dialog
+      .getAnimations({ subtree: true })
+      .filter(
+        (animation) =>
+          animation.effect instanceof KeyframeEffect &&
+          animation.effect.target === dialog,
+      );
+    void Promise.allSettled(
+      animations.map((animation) => animation.finished),
+    ).then(() => {
+      if (!cancelled) dialog.close();
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isClosing]);
+
   function openMenu() {
     dialogRef.current?.showModal();
     closeButtonRef.current?.querySelector("button")?.focus();
@@ -51,7 +73,7 @@ export function MobileNavigation({
   }
 
   function closeMenu() {
-    dialogRef.current?.close();
+    setIsClosing(true);
   }
 
   return (
@@ -76,8 +98,10 @@ export function MobileNavigation({
         ref={dialogRef}
         id={dialogId}
         aria-labelledby={titleId}
+        data-closing={isClosing || undefined}
         onClose={() => {
           setIsOpen(false);
+          setIsClosing(false);
           setExpandedSection(null);
         }}
         onClick={(event) => {

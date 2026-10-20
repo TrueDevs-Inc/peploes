@@ -27,7 +27,7 @@ export function Hero() {
           fill
           sizes="(min-width: 1024px) 100vw, (min-width: 640px) 1080px, 990px"
           preload
-          className="object-cover"
+          className="object-cover object-[center_-64px] sm:object-center"
         />
         <div
           aria-hidden="true"
@@ -93,7 +93,7 @@ export function Hero() {
           width={4000}
           height={2667}
           sizes="100vw"
-          className="h-[520px] w-full object-cover"
+          className="h-[520px] w-full object-fill"
         />
         <figcaption
           className={cn(
