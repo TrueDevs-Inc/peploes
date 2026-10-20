@@ -120,7 +120,7 @@ export const closedPeriodReplySchema = z.object({
 
 export const holdReplySchema = z.object({
   BookingId: z.number().int(),
-  BookingReference: z.string().min(1),
+  BookingReference: z.string().regex(RESDIARY_PATTERNS.reference),
   ExpiryTimestamp: z.string().nullish(),
 });
 

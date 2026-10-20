@@ -187,6 +187,14 @@ transition, not a form, so they return plain `{ ok, data | error }` data
 through `toBookingResponse`, the same body as the booking routes. They do not
 revalidate: setting the hold cookie already re-renders the current page.
 
+Each hold has its own httpOnly cookie, named by its ResDiary reference. The
+server reads or deletes only the cookie named by the `holdReference` in the
+request, so a late reply about one tab's hold cannot delete another tab's hold.
+The booking page must send the `holdReference` it is working on with every
+hold, guest details and hold-status request. It keeps `holdReference` and
+`holdRevision` per tab in `sessionStorage`, so a reload or a return from
+Stripe still moves or completes the same hold instead of making a new one.
+
 ## Errors
 
 `src/lib/errors.ts` creates and maps typed errors.

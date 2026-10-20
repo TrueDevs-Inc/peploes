@@ -146,7 +146,7 @@ export const BOOKING_HOLD_LIMITS = {
 } as const;
 
 export const BOOKING_HOLD_COOKIE = {
-  name: "peploes_booking_hold",
+  namePrefix: "peploes_booking_hold_",
   sameSite: "lax",
   path: "/",
 } as const;

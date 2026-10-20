@@ -4,6 +4,7 @@ import { afterEach, describe, expect, expectTypeOf, it, vi } from "vitest";
 import { fakeCookieStore } from "@/__tests__/mocks/cookie-store";
 import {
   forgetHoldToken,
+  pageHoldReference,
   readHoldToken,
   storeHoldToken,
 } from "@/lib/booking-cookie";
@@ -21,12 +22,12 @@ describe("the hold cookie", function holdCookieTests() {
     >().toExtend<IHoldCookieStore>();
   });
 
-  it("stores the token where page scripts cannot read it, for the hold's lifetime", function storesToken() {
+  it("stores each hold's token in its own cookie, where page scripts cannot read it", function storesToken() {
     const { store, cookies } = fakeCookieStore();
 
-    storeHoldToken(store, "signed.token", 1199);
+    storeHoldToken(store, "B9GXWPLY", "signed.token", 1199);
 
-    expect(cookies.get("peploes_booking_hold")).toEqual({
+    expect(cookies.get("peploes_booking_hold_B9GXWPLY")).toEqual({
       value: "signed.token",
       options: {
         httpOnly: true,
@@ -46,30 +47,49 @@ describe("the hold cookie", function holdCookieTests() {
     );
     const { store, cookies } = fakeCookieStore();
 
-    storeInProduction(store, "signed.token", 1199);
+    storeInProduction(store, "B9GXWPLY", "signed.token", 1199);
 
-    expect(cookies.get("peploes_booking_hold")?.options).toMatchObject({
-      secure: true,
-    });
+    expect(cookies.get("peploes_booking_hold_B9GXWPLY")?.options).toMatchObject(
+      { secure: true },
+    );
   });
 
-  it("reads the stored token back, or nothing when there is no cookie", function readsToken() {
+  it("reads back only the named hold's token", function readsToken() {
     const { store } = fakeCookieStore();
 
-    const before = readHoldToken(store);
-    storeHoldToken(store, "signed.token", 1199);
+    const before = readHoldToken(store, "B9GXWPLY");
+    storeHoldToken(store, "B9GXWPLY", "signed.token", 1199);
 
     expect(before).toBeUndefined();
-    expect(readHoldToken(store)).toBe("signed.token");
+    expect(readHoldToken(store, "B9GXWPLY")).toBe("signed.token");
+    expect(readHoldToken(store, "BOTHERTAB")).toBeUndefined();
+    expect(readHoldToken(store, undefined)).toBeUndefined();
   });
 
-  it("forgets the token", function forgetsToken() {
+  it("forgets one hold and leaves another tab's hold alone", function forgetsToken() {
     const { store, cookies } = fakeCookieStore();
-    storeHoldToken(store, "signed.token", 1199);
+    storeHoldToken(store, "B9GXWPLY", "first.token", 1199);
+    storeHoldToken(store, "BOTHERTAB", "other.token", 1199);
 
-    forgetHoldToken(store);
+    forgetHoldToken(store, "B9GXWPLY");
+    forgetHoldToken(store, undefined);
 
-    expect(cookies.has("peploes_booking_hold")).toBe(false);
-    expect(readHoldToken(store)).toBeUndefined();
+    expect(cookies.has("peploes_booking_hold_B9GXWPLY")).toBe(false);
+    expect(readHoldToken(store, "BOTHERTAB")).toBe("other.token");
   });
+
+  it.each([
+    [{ holdReference: "B9GXWPLY", time: "19:30" }, "B9GXWPLY"],
+    [{ holdReference: "../B9GX" }, undefined],
+    [{ holdReference: "B9GX;path=/" }, undefined],
+    [{ holdReference: "" }, undefined],
+    [{ holdReference: 425_742 }, undefined],
+    [{}, undefined],
+    [null, undefined],
+  ])(
+    "takes the hold reference from %o only when it can be a booking reference",
+    function readsPageReference(input, reference) {
+      expect(pageHoldReference(input)).toBe(reference);
+    },
+  );
 });

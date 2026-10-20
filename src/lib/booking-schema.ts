@@ -5,6 +5,7 @@ import {
   BOOKING_MESSAGES,
   BOOKING_PATTERNS,
 } from "@/lib/constants/booking";
+import { RESDIARY_PATTERNS } from "@/lib/constants/resdiary";
 import { isCalendarDate, isClockTime } from "@/lib/dates";
 
 const dateField = z
@@ -67,8 +68,11 @@ function isMobileNumber(value: string): boolean {
   );
 }
 
-export const holdReferenceSchema = z.object({
-  holdReference: z.string(),
+export const pageHoldSchema = z.object({
+  holdReference: z.string().regex(RESDIARY_PATTERNS.reference),
+});
+
+export const holdReferenceSchema = pageHoldSchema.extend({
   holdRevision: z.coerce.number().int().positive(),
 });
 

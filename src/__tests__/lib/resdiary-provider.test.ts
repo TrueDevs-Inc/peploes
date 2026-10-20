@@ -1152,12 +1152,19 @@ describe("createHold", function createHoldTests() {
   });
 
   it.each([
-    ["missing", { ...HOLD, ExpiryTimestamp: null }],
-    ["unreadable", { ...HOLD, ExpiryTimestamp: "soon" }],
-    ["already past", { ...HOLD, ExpiryTimestamp: "2026-10-15T07:59:00Z" }],
-    ["two hours away", { ...HOLD, ExpiryTimestamp: "2026-10-15T10:00:00Z" }],
+    ["with no expiry", { ...HOLD, ExpiryTimestamp: null }],
+    ["with an unreadable expiry", { ...HOLD, ExpiryTimestamp: "soon" }],
+    [
+      "with an expiry already past",
+      { ...HOLD, ExpiryTimestamp: "2026-10-15T07:59:00Z" },
+    ],
+    [
+      "with an expiry two hours away",
+      { ...HOLD, ExpiryTimestamp: "2026-10-15T10:00:00Z" },
+    ],
+    ["for a reference with spaces", { ...HOLD, BookingReference: "B9 GX;x" }],
   ])(
-    "reports an expiry that is %s as an unknown outcome",
+    "reports a hold reply %s as an unknown outcome",
     async function unusableExpiry(_label, body) {
       const { provider: resdiary } = provider(reply(200, body, RESDIARY_CLOCK));
 

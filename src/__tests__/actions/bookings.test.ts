@@ -7,6 +7,7 @@ import {
   DINNER,
   fakeProvider,
   GUEST_DETAILS,
+  HOLD,
   HOLD_SECRET,
   LUNCH,
   NOW,
@@ -52,7 +53,8 @@ vi.mock("@/lib/error-handler", () => ({ logToSentry: vi.fn() }));
 
 setUpBookingTests();
 
-const COOKIE = "peploes_booking_hold";
+const COOKIE = "peploes_booking_hold_B9GXWPLY";
+const DINNER_AGAIN = { ...DINNER, holdReference: "B9GXWPLY" };
 
 async function holdTableAction() {
   vi.resetModules();
@@ -134,7 +136,7 @@ describe("the holdTable action", function holdTableActionTests() {
     const first = await holdTable(DINNER);
     const token = cookies.get(COOKIE)?.value;
     vi.setSystemTime(NOW.getTime() + 60_000);
-    const second = await holdTable(DINNER);
+    const second = await holdTable(DINNER_AGAIN);
 
     expect(second).toMatchObject({
       ok: true,
@@ -174,7 +176,7 @@ describe("the holdTable action", function holdTableActionTests() {
 
     const replies = [];
     for (const choice of [LUNCH, DINNER, LUNCH, DINNER]) {
-      replies.push(await holdTable(choice));
+      replies.push(await holdTable({ ...choice, holdReference: "B9GXWPLY" }));
     }
 
     expect(
@@ -191,13 +193,33 @@ describe("the holdTable action", function holdTableActionTests() {
     expect(cookies.has(COOKIE)).toBe(true);
   });
 
+  it("swaps the cookie when a new hold replaces the page's old one", async function replacesHold() {
+    const { provider, cookies } = setUp();
+    const holdTable = await holdTableAction();
+    await holdTable(LUNCH);
+    provider.createHold.mockResolvedValueOnce(
+      ok({ ...HOLD, holdId: 425_743, reference: "BNEWHOLD" }),
+    );
+    vi.setSystemTime(HOLD.expiresAt - 50_000);
+
+    const response = await holdTable(DINNER_AGAIN);
+
+    expect(response).toMatchObject({
+      ok: true,
+      data: { summary: { reference: "BNEWHOLD" } },
+    });
+    expect(provider.changeHold).not.toHaveBeenCalled();
+    expect(cookies.has(COOKIE)).toBe(false);
+    expect(cookies.has("peploes_booking_hold_BNEWHOLD")).toBe(true);
+  });
+
   it("deletes the cookie when a move throws", async function throwingMove() {
     const { provider, cookies } = setUp();
     const holdTable = await holdTableAction();
     await holdTable(LUNCH);
     provider.changeHold.mockRejectedValue(new Error("boom"));
 
-    const response = await holdTable(DINNER);
+    const response = await holdTable(DINNER_AGAIN);
 
     expect(response).toMatchObject({
       ok: false,
@@ -218,7 +240,7 @@ describe("the holdTable action", function holdTableActionTests() {
       }),
     );
 
-    const response = await holdTable(DINNER);
+    const response = await holdTable(DINNER_AGAIN);
 
     expect(response).toMatchObject({
       ok: false,
@@ -352,13 +374,24 @@ describe("the submitGuestDetails action", function guestDetailsActionTests() {
       false,
     ],
     [
-      "keeps the cookie for a form from another tab",
-      { ...GUEST_DETAILS, holdReference: "BOTHERTAB" },
+      "keeps the cookie for a form another tab has since moved on from",
+      { ...GUEST_DETAILS, holdRevision: 2 },
       null,
       {
         code: ErrorCode.NotFound,
         message:
           "Your booking changed in another tab. Please start again here.",
+      },
+      true,
+    ],
+    [
+      "keeps this hold's cookie for a form naming a hold the browser does not have",
+      { ...GUEST_DETAILS, holdReference: "BOTHERTAB" },
+      null,
+      {
+        code: ErrorCode.NotFound,
+        message:
+          "We couldn't find your table hold. Please choose a time again.",
       },
       true,
     ],
@@ -383,5 +416,53 @@ describe("the submitGuestDetails action", function guestDetailsActionTests() {
 
     expect(response).toStrictEqual({ ok: false, error });
     expect(cookies.has(COOKIE)).toBe(kept);
+  });
+});
+
+describe("two tabs", function twoTabTests() {
+  it("keeps tab B's newer hold when tab A's slower status reply ends tab A's hold", async function reversedReplies() {
+    const { provider, cookies } = setUp();
+    vi.resetModules();
+    const actions = await import("@/actions/bookings");
+    const { GET } = await import("@/app/api/bookings/hold-status/route");
+    await actions.holdTable(LUNCH);
+    const tabA =
+      Promise.withResolvers<
+        Awaited<ReturnType<TBookingProvider["getHoldStatus"]>>
+      >();
+    provider.getHoldStatus.mockReturnValueOnce(tabA.promise);
+    provider.createHold.mockResolvedValueOnce(
+      ok({ ...HOLD, holdId: 425_743, reference: "BTABTWO" }),
+    );
+
+    const tabAStatus = GET(
+      new Request(
+        `http://localhost/api/bookings/hold-status?holdReference=${HOLD.reference}&holdRevision=1`,
+      ),
+    );
+    await vi.waitFor(function statusAsked() {
+      expect(provider.getHoldStatus).toHaveBeenCalledTimes(1);
+    });
+    const tabBHold = await actions.holdTable(DINNER);
+    tabA.resolve(ok({ status: "cancelled", reference: HOLD.reference }));
+    const tabAReply = await (await tabAStatus).json();
+
+    expect(tabAReply).toMatchObject({ ok: true, data: { status: "failed" } });
+    expect(tabBHold).toMatchObject({
+      ok: true,
+      data: { summary: { reference: "BTABTWO" } },
+    });
+    expect(cookies.has(COOKIE)).toBe(false);
+    provider.submitHoldGuest.mockResolvedValueOnce(
+      ok({ kind: "confirmed", reference: "BTABTWO" }),
+    );
+    const booked = await actions.submitGuestDetails({
+      ...GUEST_DETAILS,
+      holdReference: "BTABTWO",
+    });
+    expect(booked).toMatchObject({
+      ok: true,
+      data: { kind: "confirmed", reference: "BTABTWO" },
+    });
   });
 });

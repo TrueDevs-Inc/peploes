@@ -38,7 +38,7 @@ afterEach(function resetEnv() {
   vi.unstubAllEnvs();
 });
 
-const COOKIE = "peploes_booking_hold";
+const COOKIE = "peploes_booking_hold_B9GXWPLY";
 
 function setUp(provider = fakeProvider()) {
   const browser = fakeCookieStore();
@@ -178,7 +178,12 @@ describe("GET /api/bookings/hold-status", function holdStatusRouteTests() {
     const { provider, browser } = setUp();
     const hold = await service(provider).holdTable(DINNER, ALLOW_HOLDS);
     const { holdToken, cookieMaxAgeSeconds } = hold._unsafeUnwrap();
-    storeHoldToken(browser.store, holdToken, cookieMaxAgeSeconds);
+    storeHoldToken(
+      browser.store,
+      HOLD.reference,
+      holdToken,
+      cookieMaxAgeSeconds,
+    );
     provider.getHoldStatus.mockResolvedValue(
       ok({ status, reference: HOLD.reference }),
     );
@@ -187,7 +192,7 @@ describe("GET /api/bookings/hold-status", function holdStatusRouteTests() {
 
   it("answers 404 and deletes a cookie it cannot read", async function unreadable() {
     const { browser } = setUp();
-    storeHoldToken(browser.store, "not-a-signed-token", 600);
+    storeHoldToken(browser.store, HOLD.reference, "not-a-signed-token", 600);
     const { GET } = await import("@/app/api/bookings/hold-status/route");
 
     const response = await GET(statusFor(HOLD.reference));
@@ -220,7 +225,7 @@ describe("GET /api/bookings/hold-status", function holdStatusRouteTests() {
     expect(cookies.has(COOKIE)).toBe(true);
   });
 
-  it("keeps the cookie when it holds another tab's newer hold", async function otherTab() {
+  it("leaves this hold's cookie alone when asked about a hold the browser does not have", async function otherTab() {
     const { cookies, provider } = await holding("failed");
     provider.getHoldStatus.mockClear();
     const { GET } = await import("@/app/api/bookings/hold-status/route");
