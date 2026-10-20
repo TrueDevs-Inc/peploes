@@ -17,9 +17,12 @@ import type {
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
+const HOVER_CLOSE_DELAY_MS = 350;
+
 export function DesktopNavigation({ items }: IDesktopNavigationProps) {
   const [openItem, setOpenItem] = useState<IOpenDesktopNavigation | null>(null);
   const activeItemRef = useRef<HTMLLIElement>(null);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigationId = useId();
   const isDesktop = useMediaQuery(DESKTOP_NAVIGATION_QUERY);
   const pathname = usePathname();
@@ -29,6 +32,13 @@ export function DesktopNavigation({ items }: IDesktopNavigationProps) {
     : pathname.startsWith(ROUTES.PRIVATE_DINING)
       ? NAVBAR_CONTENT.groupsId
       : null;
+
+  function cancelClose() {
+    if (closeTimerRef.current !== null) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  }
 
   useEffect(() => {
     if (!isDesktop) setOpenItem(null);
@@ -62,6 +72,10 @@ export function DesktopNavigation({ items }: IDesktopNavigationProps) {
     return () => {
       document.removeEventListener("pointerdown", handlePointerDown);
       document.removeEventListener("keydown", handleKeyDown);
+      if (closeTimerRef.current !== null) {
+        clearTimeout(closeTimerRef.current);
+        closeTimerRef.current = null;
+      }
     };
   }, [openItem]);
 
@@ -85,18 +99,29 @@ export function DesktopNavigation({ items }: IDesktopNavigationProps) {
             ref={isOpen ? activeItemRef : undefined}
             className="flex h-full items-center"
             onPointerEnter={(event) => {
-              if (event.pointerType === "mouse") {
+              if (event.pointerType === "mouse" && content) {
+                cancelClose();
                 setOpenItem((current) => {
-                  if (!content) return null;
                   return current?.id === id ? current : { id, source: "hover" };
                 });
               }
             }}
             onPointerLeave={(event) => {
-              if (!event.currentTarget.contains(document.activeElement)) {
-                setOpenItem((current) => (current?.id === id ? null : current));
+              if (
+                isOpen &&
+                event.pointerType === "mouse" &&
+                !event.currentTarget.contains(document.activeElement)
+              ) {
+                cancelClose();
+                closeTimerRef.current = setTimeout(() => {
+                  closeTimerRef.current = null;
+                  setOpenItem((current) =>
+                    current?.id === id ? null : current,
+                  );
+                }, HOVER_CLOSE_DELAY_MS);
               }
             }}
+            onFocus={cancelClose}
             onBlur={(event) => {
               if (!event.currentTarget.contains(event.relatedTarget)) {
                 setOpenItem((current) => (current?.id === id ? null : current));

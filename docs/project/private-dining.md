@@ -305,10 +305,11 @@ the new pages. Group lunch and dinner links target the existing sections of
 `/menus/group-set-menu`. Hero enquiry buttons scroll to their page's form.
 Telephone and email links use the shared restaurant contact details.
 
-The navbar's Private Dining & Events label links to `/private-dining`. On desktop,
-mouse hover or Arrow Down opens its three-page shelf; Enter follows the overview
+On desktop, the navbar's Private Dining & Events label links to `/private-dining`.
+Mouse hover or Arrow Down opens its three-page shelf; Enter follows the overview
 link. Escape closes the shelf and restores focus to the label. On mobile, the
-label opens the overview and its separate plus/minus button toggles the submenu.
+entire row toggles the submenu, including the label, empty space and plus/minus.
+The first submenu link, Overview, opens `/private-dining`.
 
 ## Enquiry preview
 
@@ -337,8 +338,9 @@ desktop references and the 390px overview. Check narrower phones, tablet and
 wide desktop for wrapping and horizontal overflow. Verify all new routes,
 navigation links, menu anchors, enquiry anchors, contact destinations, input
 labels and disabled submission. Inspect the browser console and image loading.
-Check the desktop overview link, Arrow Down, Tab and Escape, and the mobile
-overview link and submenu toggle separately. Confirm refactored sections retain
+Check the desktop overview link, Arrow Down, Tab and Escape. On mobile, verify
+the full row toggles by tap, Enter and Space, and the Overview submenu link
+opens the overview and closes the menu. Confirm refactored sections retain
 their desktop and phone dimensions.
 In forced-colors mode, check that corporate, celebration and wedding enquiry
 fields and contact links retain visible outlines, consent checkboxes retain
