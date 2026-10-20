@@ -50,7 +50,9 @@ const menus = new Map([
 const settings = project({
   ...MENU_PAGE_CONTENT,
   navigation: MENU_PAGE_CONTENT.navigation.map((item) => ({
-    label: item.label,
+    label: ["/menus/group-set-menu", "/menus/seasonal"].includes(item.href)
+      ? "Special menus"
+      : item.label,
     menu: item.href.split("/").at(-1),
   })),
 });

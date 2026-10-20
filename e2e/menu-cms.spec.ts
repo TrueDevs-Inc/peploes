@@ -39,3 +39,46 @@ test("CMS group menu retains its banner layout and inclusion heading", async ({
     )
     .toBe(true);
 });
+
+test("identically labeled collections open their own links and restore focus on Escape", async ({
+  page,
+}) => {
+  await page.goto("/menus/lunch");
+  const navigation = page.getByRole("navigation", { name: "Restaurant menus" });
+  const triggers = navigation.getByRole("button", {
+    name: "Special menus",
+    exact: true,
+  });
+  await expect(triggers).toHaveCount(2);
+
+  const destinations = [
+    [
+      "/menus/group-set-menu#group-set-lunch",
+      "/menus/group-set-menu#group-set-dinner",
+    ],
+    [
+      "/menus/seasonal#set-christmas-lunch",
+      "/menus/seasonal#set-christmas-dinner",
+    ],
+  ];
+  for (const [index, hrefs] of destinations.entries()) {
+    const trigger = triggers.nth(index);
+    await trigger.click();
+    await expect(trigger).toHaveAttribute("aria-expanded", "true");
+    await expect(triggers.nth(1 - index)).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+    const dropdown = navigation.getByRole("list", { name: "Special menus" });
+    const links = dropdown.getByRole("link");
+    await expect(links).toHaveCount(hrefs.length);
+    for (const [linkIndex, href] of hrefs.entries()) {
+      await expect(links.nth(linkIndex)).toHaveAttribute("href", href);
+    }
+    await links.first().focus();
+    await page.keyboard.press("Escape");
+    await expect(dropdown).toHaveCount(0);
+    await expect(trigger).toHaveAttribute("aria-expanded", "false");
+    await expect(trigger).toBeFocused();
+  }
+});
