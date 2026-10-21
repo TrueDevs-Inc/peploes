@@ -146,6 +146,11 @@ export function DrinksMenu({ menu }: IDrinksMenuProps) {
                                     className="py-1 pr-4 text-left leading-[21px] font-normal xl:leading-[22px]"
                                   >
                                     {dish.name}
+                                    {dish.description && (
+                                      <span className="mt-1 block text-sm text-text-secondary">
+                                        {dish.description}
+                                      </span>
+                                    )}
                                   </th>
                                   <td className="py-1 text-right align-top whitespace-nowrap text-sm leading-[21px] xl:leading-[22px]">
                                     {formatMenuPrice(

@@ -1,0 +1,84 @@
+diff --git a/dist/actions/typegenWatch.js b/dist/actions/typegenWatch.js
+index cc990bc8f35587c6ebe1e7d85de29f32316163f1..9577a311b61838b8dbc2e8f5d006548fd69195ac 100644
+--- a/dist/actions/typegenWatch.js
++++ b/dist/actions/typegenWatch.js
+@@ -4,6 +4,8 @@ import { styleText } from 'node:util';
+ import { watch } from 'chokidar';
+ import debounce from 'lodash-es/debounce.js';
+ import mean from 'lodash-es/mean.js';
++import picomatch from 'picomatch';
++import { normalizeGlobPattern } from '../typescript/helpers.js';
+ import { prepareConfig } from '../utils/config.js';
+ import { runTypegenGenerate } from './typegenGenerate.js';
+ const IGNORED_PATTERNS = [
+@@ -76,21 +78,34 @@ const IGNORED_PATTERNS = [
+     const paths = Array.isArray(path) ? path : [
+         path
+     ];
+-    const absoluteQueryPatterns = paths.map((pattern)=>isAbsolute(pattern) ? pattern : join(workDir, pattern));
+-    const absoluteSchemaPath = isAbsolute(schema) ? schema : join(workDir, schema);
+-    const watchTargets = [
+-        ...absoluteQueryPatterns,
+-        absoluteSchemaPath
+-    ];
++    const absoluteQueryPatterns = paths.map((pattern)=>{
++        const negated = pattern.startsWith('!') && !pattern.startsWith('!(');
++        const queryPath = negated ? pattern.slice(1) : pattern;
++        const absolutePath = normalizeGlobPattern(isAbsolute(queryPath) ? queryPath : join(workDir, queryPath));
++        return `${negated ? '!' : ''}${absolutePath}`;
++    });
++    const queryPatterns = absoluteQueryPatterns.filter((pattern)=>!pattern.startsWith('!'));
++    const ignoredQueries = absoluteQueryPatterns.filter((pattern)=>pattern.startsWith('!')).map((pattern)=>pattern.slice(1));
++    const queryRoots = queryPatterns.map((pattern)=>picomatch.scan(pattern).base);
++    const matchesQuery = picomatch(queryPatterns.flatMap((pattern)=>picomatch.scan(pattern).isGlob ? pattern : [
++        pattern,
++        `${pattern.replace(/\/+$/, '')}/**/*`
++    ]), { dot: true, ignore: ignoredQueries });
++    const isIgnored = picomatch(IGNORED_PATTERNS, { dot: true });
++    const absoluteSchemaPath = normalizeGlobPattern(isAbsolute(schema) ? schema : join(workDir, schema));
++    // Chokidar 5 watches paths, so retain glob matching for new and removed files here.
++    const watchTargets = [...new Set([...queryRoots, absoluteSchemaPath])];
+     // perform initial generation
+     debouncedGenerate();
+     // set up watcher
+     const watcher = watch(watchTargets, {
+         cwd: workDir,
+-        ignored: IGNORED_PATTERNS,
++        ignored: (filePath)=>isIgnored(normalizeGlobPattern(filePath)),
+         ignoreInitial: true
+     });
+     watcher.on('all', (event, filePath)=>{
++        const absolutePath = normalizeGlobPattern(isAbsolute(filePath) ? filePath : join(workDir, filePath));
++        if (absolutePath !== absoluteSchemaPath && !matchesQuery(absolutePath)) return;
+         const timestamp = new Date().toLocaleTimeString();
+         const relativePath = isAbsolute(filePath) ? relative(workDir, filePath) : filePath;
+         log(`[${timestamp}] ${event}: ${relativePath}`);
+diff --git a/dist/typescript/findQueriesInPath.js b/dist/typescript/findQueriesInPath.js
+index 98e2ac33fdbb2e901c984fc09056001127185fcf..e651f00984f4dece088edc935ad88224f8a79824 100644
+--- a/dist/typescript/findQueriesInPath.js
++++ b/dist/typescript/findQueriesInPath.js
+@@ -1,5 +1,5 @@
+ import fs from 'node:fs/promises';
+-import glob from 'globby';
++import { globSync } from 'globby';
+ import { createDebug } from 'obug';
+ import { getBabelConfig } from '../getBabelConfig.js';
+ import { findQueriesInSource } from './findQueriesInSource.js';
+@@ -21,13 +21,14 @@ const debug = createDebug('sanity:codegen:findQueries:debug');
+     debug(`Globing ${path}`);
+     // Normalize glob patterns to use forward slashes on all platforms
+     const normalizedPath = normalizeGlobPattern(path);
+-    const files = glob.sync(normalizedPath, {
+-        absolute: false,
++    const files = globSync(normalizedPath, {
++        absolute: true,
+         ignore: [
+             '**/node_modules/**'
+         ],
+         onlyFiles: true
+-    }).toSorted();
++    // tinyglobby cannot prune ignored folders on another Windows drive.
++    }).filter((filename)=>!filename.split('/').includes('node_modules')).toSorted();
+     async function* getQueries() {
+         for (const filename of files){
+             if (typeof filename !== 'string') {

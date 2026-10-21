@@ -17,6 +17,9 @@ env:
   NEXT_PUBLIC_SITE_URL: http://localhost:3000
   NEXT_PUBLIC_API_BASE_URL: http://localhost:3000
   NODE_ENV: test
+  SANITY_PROJECT_ID: testproject
+  SANITY_DATASET: development
+  SANITY_API_VERSION: '2026-10-06'
 
 jobs:
   verify:
@@ -34,14 +37,14 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U postgres -d app"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
 
@@ -52,6 +55,9 @@ jobs:
 
       - name: Install locked dependencies
         run: bun ci
+
+      - name: Install locked Studio dependencies
+        run: bun install --cwd studio --frozen-lockfile
 
       - name: Check formatting and lint
         run: bun run lint
@@ -75,6 +81,12 @@ jobs:
         run: bun run test:e2e
         env:
           NODE_ENV: production
+
+      - name: Build production Studio
+        run: bun run --cwd studio build
+
+      - name: Audit Studio high-severity vulnerabilities
+        run: bun run --cwd studio audit
 
       - name: Audit high-severity vulnerabilities
         run: bun audit --audit-level high

@@ -10,6 +10,10 @@ export const env = createEnv({
   },
 
   server: {
+    SANITY_PROJECT_ID: z.string().regex(/^[a-z0-9]+$/),
+    SANITY_DATASET: z.string().regex(/^[a-z0-9][a-z0-9_-]*$/),
+    SANITY_API_VERSION: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+
     DATABASE_URL: z.string().url(),
     DATABASE_POOL_SIZE: z.coerce.number().default(10),
     NODE_ENV: z

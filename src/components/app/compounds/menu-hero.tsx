@@ -1,10 +1,9 @@
 import Image from "next/image";
-
-import { MENU_PAGE_CONTENT } from "@/lib/constants/menu-page";
 import { dmSans, ebGaramond } from "@/lib/fonts";
+import type { IMenuHeroProps } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-export function MenuHero() {
+export function MenuHero({ content }: IMenuHeroProps) {
   return (
     <section
       className={cn(
@@ -14,8 +13,8 @@ export function MenuHero() {
       aria-labelledby="menus-hero-heading"
     >
       <Image
-        src={MENU_PAGE_CONTENT.image.src}
-        alt={MENU_PAGE_CONTENT.image.alt}
+        src={content.image.src}
+        alt={content.image.alt}
         fill
         preload
         sizes="100vw"
@@ -27,7 +26,7 @@ export function MenuHero() {
       />
       <div className="site-container py-[54px] xl:pt-[68px] xl:pb-[52px]">
         <p className="text-sm leading-5 font-medium tracking-[0.08em] uppercase">
-          {MENU_PAGE_CONTENT.eyebrow}
+          {content.eyebrow}
         </p>
         <p
           id="menus-hero-heading"
@@ -36,14 +35,14 @@ export function MenuHero() {
             "whitespace-pre-line text-[46px] leading-[44px] tracking-[-0.6px] xl:mt-4 xl:text-[62px] xl:leading-[0.96] xl:tracking-[-1.5px]",
           )}
         >
-          {MENU_PAGE_CONTENT.heading}
+          {content.heading}
         </p>
         <span
           aria-hidden="true"
           className="mt-5 block xl:mt-4 h-px w-[58px] bg-peploe-burgundy"
         />
         <p className="mt-3 max-w-[430px] xl:mt-4 text-base leading-[23px] xl:text-lg xl:leading-[1.35]">
-          {MENU_PAGE_CONTENT.description}
+          {content.description}
         </p>
       </div>
     </section>

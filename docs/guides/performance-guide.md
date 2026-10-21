@@ -40,6 +40,11 @@ Use `next/image` for application images. Supply dimensions or `fill` with a
 correct `sizes` value. Mark the actual largest-content image as high priority;
 do not mark every image.
 
+The Next.js 16.4.2 pin includes the fix for
+[interrupted image requests hanging later requests](https://github.com/vercel/next.js/issues/98402)
+in `next start`. Verify dependency upgrades with a cold image cache and the full
+browser suite; a warm cache can conceal this failure.
+
 Use `next/font` for project fonts. Remove unused weights and families. Do not
 load the same font through CSS and `next/font`.
 

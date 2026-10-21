@@ -1,20 +1,45 @@
-import type { ReactNode } from "react";
-
+import { Suspense } from "react";
 import { MenuHero } from "@/components/app/compounds/menu-hero";
 import { MenuNavigation } from "@/components/app/molecules/menu-navigation";
-import { MENU_PAGE_CONTENT } from "@/lib/constants/menu-page";
 import { ebGaramond } from "@/lib/fonts";
+import { loadMenuNavigation, loadMenusPage } from "@/lib/menu-content";
+import type { IMenuLayoutProps } from "@/lib/types";
 
-export default function MenusLayout({ children }: { children: ReactNode }) {
+export default function MenusLayout({ children }: IMenuLayoutProps) {
   return (
     <main className="[font-optical-sizing:none] [font-variation-settings:'opsz'_14]">
-      <MenuHero />
+      <Suspense
+        fallback={
+          <div
+            className="min-h-[492px] bg-ink xl:min-h-[454px]"
+            aria-busy="true"
+          />
+        }
+      >
+        <MenuShell />
+      </Suspense>
+      <Suspense
+        fallback={<div className="min-h-96 bg-warm-cream" aria-busy="true" />}
+      >
+        {children}
+      </Suspense>
+    </main>
+  );
+}
+
+async function MenuShell() {
+  const [content, navigation] = await Promise.all([
+    loadMenusPage(),
+    loadMenuNavigation(),
+  ]);
+  return (
+    <>
+      <MenuHero content={content} />
       <MenuNavigation
-        items={MENU_PAGE_CONTENT.navigation}
-        label={MENU_PAGE_CONTENT.navigationLabel}
+        items={navigation}
+        label={content.navigationLabel}
         className={ebGaramond.className}
       />
-      {children}
-    </main>
+    </>
   );
 }

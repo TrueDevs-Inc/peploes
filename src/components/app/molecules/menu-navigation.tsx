@@ -15,11 +15,11 @@ export function MenuNavigation({
   className,
 }: IMenuNavigationProps) {
   const pathname = usePathname();
-  const [openLabel, setOpenLabel] = useState<string | null>(null);
+  const [openHref, setOpenHref] = useState<string | null>(null);
   const navRef = useRef<HTMLElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
-  const openItem = items.find((item) => item.label === openLabel);
+  const openItem = items.find((item) => item.href === openHref);
   const compactDesktop = items.find(
     (item) => item.href === pathname,
   )?.compactDesktop;
@@ -38,31 +38,31 @@ export function MenuNavigation({
   }, [pathname]);
 
   useEffect(() => {
-    if (!openLabel) return;
+    if (!openHref) return;
     const closeOutside = (event: PointerEvent) => {
       if (
         event.target instanceof Node &&
         !navRef.current?.contains(event.target)
       )
-        setOpenLabel(null);
+        setOpenHref(null);
     };
     document.addEventListener("pointerdown", closeOutside);
     return () => document.removeEventListener("pointerdown", closeOutside);
-  }, [openLabel]);
+  }, [openHref]);
 
   return (
     <nav
       ref={navRef}
       aria-label={label}
       onKeyDown={(event) => {
-        if (event.key === "Escape" && openLabel) {
-          setOpenLabel(null);
+        if (event.key === "Escape" && openHref) {
+          setOpenHref(null);
           triggerRef.current?.focus();
         }
       }}
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget))
-          setOpenLabel(null);
+          setOpenHref(null);
       }}
       className={cn(
         className,
@@ -76,13 +76,13 @@ export function MenuNavigation({
       >
         <ul className="mx-2 flex h-12 min-w-max bg-[#fbf8f2] shadow-[inset_0_-1px_0_var(--soft-stone)] xl:site-container">
           {items.map((item) => {
-            const isOpen = openLabel === item.label;
+            const isOpen = openHref === item.href;
             const currentPage = pathname === item.href ? "page" : undefined;
             const controlsId = isOpen ? "menu-subnavigation" : undefined;
 
             return (
               <li
-                key={item.label}
+                key={item.href}
                 className={cn(
                   "flex shrink-0",
                   item.children &&
@@ -98,7 +98,7 @@ export function MenuNavigation({
                     data-menu-path={item.href}
                     onClick={(event) => {
                       triggerRef.current = event.currentTarget;
-                      setOpenLabel(isOpen ? null : item.label);
+                      setOpenHref(isOpen ? null : (item.href ?? null));
                     }}
                     className={cn(
                       FOCUS_RING,
@@ -116,7 +116,7 @@ export function MenuNavigation({
                     href={item.href}
                     aria-current={currentPage}
                     data-menu-path={item.href}
-                    onClick={() => setOpenLabel(null)}
+                    onClick={() => setOpenHref(null)}
                     className={cn(
                       FOCUS_RING,
                       "flex min-w-24 items-center xl:min-w-0 justify-center border-b-2 border-transparent px-[22px] text-xl leading-6 hover:text-[#8a1735] focus-visible:ring-peploe-burgundy aria-[current=page]:border-[#8a1735] aria-[current=page]:text-[#8a1735]",
@@ -144,7 +144,7 @@ export function MenuNavigation({
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  onClick={() => setOpenLabel(null)}
+                  onClick={() => setOpenHref(null)}
                   className={cn(
                     FOCUS_RING,
                     "block px-0 py-3 text-base hover:bg-peploe-burgundy/5 hover:text-peploe-burgundy focus-visible:ring-peploe-burgundy xl:px-6",

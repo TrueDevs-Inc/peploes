@@ -1,0 +1,48 @@
+{
+  "name": "peploes",
+  "private": true,
+  "version": "1.0.0",
+  "main": "package.json",
+  "license": "UNLICENSED",
+  "scripts": {
+    "build": "sanity build",
+    "deploy": "sanity deploy",
+    "deploy-graphql": "sanity graphql deploy",
+    "dev": "sanity dev",
+    "start": "sanity start",
+    "type-check": "tsc --noEmit",
+    "seed:preview": "sanity exec seed-menus.ts --with-user-token",
+    "seed:development": "sanity exec seed-menus.ts --with-user-token -- --apply",
+    "audit": "bun audit --audit-level high"
+  },
+  "keywords": [
+    "sanity"
+  ],
+  "dependencies": {
+    "@sanity/vision": "^6.17.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "sanity": "^6.17.0",
+    "styled-components": "^6.1.18",
+    "picomatch": "4.0.7"
+  },
+  "devDependencies": {
+    "@sanity/eslint-config-studio": "^7",
+    "@types/react": "^19.2.14",
+    "eslint": "^10.8.1",
+    "prettier": "^3.5",
+    "typescript": "^5.8"
+  },
+  "overrides": {
+    "js-yaml": "3.15.2",
+    "smol-toml": "1.9.1",
+    "@sanity/codegen": {
+      ".": "8.1.1",
+      "globby": "npm:tinyglobby@0.2.17",
+      "chokidar": "5.0.0"
+    }
+  },
+  "patchedDependencies": {
+    "@sanity/codegen@8.1.1": "patches/@sanity%2Fcodegen@8.1.1.patch"
+  }
+}
