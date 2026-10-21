@@ -3,7 +3,7 @@
   border-block: 1px solid var(--soft-stone);
 }
 
-.contents h2 {
+.contents > h2 {
   font-size: 24px;
   font-weight: 500;
   line-height: 32px;
@@ -46,7 +46,7 @@
   padding-bottom: 12px;
 }
 
-.contents a {
+.contents ol a {
   display: grid;
   grid-template-columns: 24px minmax(0, 1fr);
   align-items: start;
@@ -67,7 +67,7 @@
     border-right: 1px solid var(--soft-stone);
   }
 
-  .contents h2 {
+  .contents > h2 {
     width: 272px;
     padding-bottom: 12px;
     border-bottom: 1px solid var(--soft-stone);
@@ -87,7 +87,7 @@
     padding-bottom: 0;
   }
 
-  .contents a {
+  .contents ol a {
     padding-block: 8px 16px;
     font-size: 16px;
   }

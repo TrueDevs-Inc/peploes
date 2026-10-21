@@ -4,6 +4,10 @@ import type { IPolicyPageContent } from "@/lib/types";
 export const POLICY_PAGES = {
   privacy: {
     variant: "privacy",
+    relatedPolicies: [
+      { title: "Terms & Conditions", path: ROUTES.TERMS_CONDITIONS },
+      { title: "Accessibility", path: ROUTES.ACCESSIBILITY_POLICY },
+    ],
     title: "Privacy & Cookies",
     path: ROUTES.PRIVACY_COOKIES,
     seoDescription:
@@ -127,6 +131,10 @@ export const POLICY_PAGES = {
   },
   accessibility: {
     variant: "accessibility",
+    relatedPolicies: [
+      { title: "Privacy & Cookies", path: ROUTES.PRIVACY_COOKIES },
+      { title: "Terms & Conditions", path: ROUTES.TERMS_CONDITIONS },
+    ],
     title: "Accessibility",
     path: ROUTES.ACCESSIBILITY_POLICY,
     seoDescription:
@@ -198,6 +206,13 @@ export const POLICY_PAGES = {
   },
   terms: {
     variant: "terms",
+    relatedPolicies: [
+      {
+        title: "Booking & Cancellation Terms",
+        path: ROUTES.BOOKING_CANCELLATION_TERMS,
+      },
+      { title: "Privacy & Cookies", path: ROUTES.PRIVACY_COOKIES },
+    ],
     title: "Terms & Conditions",
     path: ROUTES.TERMS_CONDITIONS,
     seoDescription:
@@ -288,6 +303,10 @@ export const POLICY_PAGES = {
   },
   booking: {
     variant: "booking",
+    relatedPolicies: [
+      { title: "Terms & Conditions", path: ROUTES.TERMS_CONDITIONS },
+      { title: "Privacy & Cookies", path: ROUTES.PRIVACY_COOKIES },
+    ],
     title: "Booking & Cancellation Terms",
     path: ROUTES.BOOKING_CANCELLATION_TERMS,
     seoDescription:

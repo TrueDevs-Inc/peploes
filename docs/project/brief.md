@@ -310,7 +310,11 @@ full-width paragraphs, and contact links stack as outlined touch targets. The
 reading content is capped at 720px; the desktop template remains unchanged.
 Only policy content, metadata and photograph crops vary, with local content in
 `src/lib/constants/policies.ts`. Existing policy URLs are preserved; unknown
-slugs return 404. Footer Instagram and Facebook links use the restaurant
+slugs return 404. Figma comment #76 adds two related policies below each contents
+list: Privacy links to Terms then Accessibility; Accessibility links to Privacy
+then Terms; Terms links to Booking then Privacy; Booking links to Terms then
+Privacy. The links share the contents disclosure on mobile.
+Footer Instagram and Facebook links use the restaurant
 profiles linked from [the official website](https://peploes.com/) and open in a
 new tab. Other unbuilt navigation destinations remain inactive. The newsletter
 email field is editable, with an accessible label, email autocomplete and visible keyboard focus.

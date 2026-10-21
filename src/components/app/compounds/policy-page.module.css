@@ -21,6 +21,53 @@
   text-underline-offset: 4px;
 }
 
+.relatedPolicies {
+  margin-top: 12px;
+  padding-bottom: 12px;
+}
+
+.relatedPolicies h2 {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--soft-stone);
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 24px;
+}
+
+.relatedPolicies ul {
+  display: grid;
+  margin-top: 12px;
+}
+
+.relatedPolicies a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-block: 12px;
+  color: var(--peploe-burgundy);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.relatedPolicies a svg {
+  flex-shrink: 0;
+}
+
+@media (width >= 80rem) {
+  .relatedPolicies {
+    padding-bottom: 0;
+  }
+
+  .relatedPolicies ul {
+    gap: 12px;
+  }
+
+  .relatedPolicies a {
+    padding-block: 0;
+    line-height: 19px;
+  }
+}
+
 .hero {
   position: relative;
 }

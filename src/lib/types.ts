@@ -1521,6 +1521,7 @@ export interface IPolicyPageContent {
   description: string;
   image: ISectionImage;
   sections: readonly IPolicySection[];
+  relatedPolicies: readonly { title: string; path: TPolicyPath }[];
 }
 
 export interface IPolicyContentsProps {

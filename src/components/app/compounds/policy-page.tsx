@@ -1,4 +1,6 @@
+import { ArrowRight } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { Fragment } from "react";
 
 import styles from "@/components/app/compounds/policy-page.module.css";
@@ -49,6 +51,19 @@ export function PolicyPage({ policy }: IPolicyPageProps) {
               </li>
             ))}
           </ol>
+          <div className={styles.relatedPolicies}>
+            <h2 id="related-policies-title">Related policies</h2>
+            <ul aria-labelledby="related-policies-title">
+              {policy.relatedPolicies.map((related) => (
+                <li key={related.path}>
+                  <Link href={related.path}>
+                    {related.title}
+                    <ArrowRight aria-hidden="true" className="size-4" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
         </PolicyContents>
         <div className={styles.sections}>
           {policy.sections.map((section, index) => (

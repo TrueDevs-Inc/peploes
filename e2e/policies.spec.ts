@@ -27,6 +27,65 @@ const policies = [
   },
 ];
 
+test("policy contents link to the related policies in the design", async ({
+  page,
+  isMobile,
+}) => {
+  for (const policy of [
+    {
+      path: "/privacy-cookies",
+      related: ["Terms & Conditions", "Accessibility"],
+    },
+    {
+      path: "/accessibility-policy",
+      related: ["Privacy & Cookies", "Terms & Conditions"],
+    },
+    {
+      path: "/terms-conditions",
+      related: ["Booking & Cancellation Terms", "Privacy & Cookies"],
+    },
+    {
+      path: "/booking-cancellation-terms",
+      related: ["Terms & Conditions", "Privacy & Cookies"],
+    },
+  ]) {
+    await page.goto(policy.path);
+    const contents = page.getByRole("navigation", {
+      name: "On this page",
+      exact: true,
+    });
+    const related = contents.getByRole("list", {
+      name: "Related policies",
+      exact: true,
+    });
+    if (isMobile) {
+      await expect(related).toBeHidden();
+      await contents
+        .getByRole("button", { name: "On this page", exact: true })
+        .click();
+    }
+    await expect(related).toBeVisible();
+    await expect(related.getByRole("link")).toHaveText(policy.related);
+    for (const title of policy.related) {
+      const destination = policies.find(
+        (candidate) => candidate.title === title,
+      );
+      if (!destination) throw new Error(`Unknown related policy: ${title}`);
+      const link = related.getByRole("link", {
+        name: title,
+        exact: true,
+      });
+      await expect(link).toHaveAttribute("href", destination.path);
+    }
+    const firstLink = related.getByRole("link").first();
+    const href = await firstLink.getAttribute("href");
+    await firstLink.focus();
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(href ?? "");
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  }
+});
+
 test("policy email links reach the reception address", async ({ page }) => {
   for (const policy of policies) {
     await test.step(policy.path, async () => {
