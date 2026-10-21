@@ -793,7 +793,7 @@ export interface IFieldErrorProps {
 
 export interface IWhatsOnEvent {
   id: string;
-  href: Route<`/seasonal/${string}`>;
+  href: Route<"/seasonal" | `/seasonal/${string}`>;
   category: string;
   title: string;
   description: string;

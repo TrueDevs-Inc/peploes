@@ -608,11 +608,15 @@ The What’s On branch builds on `feat/ali/sanity-setup`
 integrated. Merge the menu CMS work first, then update this branch against
 `dev` and review the remaining diff.
 
-**Studio audit blocker:** `braces@3.0.3` is brought in by Sanity’s code generation
-dependencies. [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)
-has no published patched version as of 19 October 2026. The latest Sanity CLI
-and code generation packages still depend on the affected package. Keep the
-audit gate enabled and include this blocker in the PR description.
+The homepage retains its existing event cards and checks their destinations
+against published entries on each request. Cards without a published destination
+open the What’s On hub. Publishing or unpublishing an event updates these links
+on the next page load without a rebuild. CMS failures reach the error boundary.
+
+The Studio code generation dependency patch from PR #14 removes the vulnerable
+`braces` dependency paths. Keep the patch and overrides together as described in
+[the Studio README](../../studio/README.md#code-generation-dependency-patch),
+and retain both high-severity audit gates.
 
 ## Our Story implementation
 

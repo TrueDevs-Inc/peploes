@@ -7,15 +7,26 @@ import { RestaurantFeatures } from "@/components/app/compounds/restaurant-featur
 import { Stories } from "@/components/app/compounds/stories";
 import { WhatsOn } from "@/components/app/compounds/whats-on";
 import { Wine } from "@/components/app/compounds/wine";
+import { ROUTES } from "@/lib/constants";
 import { whatsOnEvents } from "@/lib/constants/whats-on";
+import { loadSeasonalEntries } from "@/lib/seasonal-content";
+import { seasonalPath } from "@/lib/seasonal-data";
 
-export default function Home() {
+export default async function Home() {
+  const entries = await loadSeasonalEntries();
+  const publishedPaths = new Set<string>(
+    entries.map((entry) => seasonalPath(entry.slug)),
+  );
+  const events = whatsOnEvents.map((event) => ({
+    ...event,
+    href: publishedPaths.has(event.href) ? event.href : ROUTES.WHATS_ON,
+  }));
   return (
     <main>
       <Hero />
       <RestaurantFeatures />
       <Menus />
-      <WhatsOn events={whatsOnEvents} />
+      <WhatsOn events={events} />
       <Wine />
       <Stories />
       <GroupsOccasions />

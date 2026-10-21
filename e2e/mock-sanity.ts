@@ -1,3 +1,4 @@
+import { existsSync, readFileSync } from "node:fs";
 import { basename } from "node:path";
 import { COCKTAILS_MENU } from "@/lib/constants/cocktails-menu";
 import { DINNER_MENU } from "@/lib/constants/dinner-menu";
@@ -67,9 +68,16 @@ function queryResult(url: URL): unknown {
   if (query.includes('_type == "whatsOnPage"'))
     return project(seasonalPageFixture);
   if (query.includes('_type == "seasonalEntry"')) {
+    const statePath = ".next/e2e/published-seasonal-slugs.json";
+    const publishedSlugs: string[] = existsSync(statePath)
+      ? JSON.parse(readFileSync(statePath, "utf8"))
+      : seasonalFixtures.map((entry) => entry.slug);
+    const published = seasonalFixtures.filter((entry) =>
+      publishedSlugs.includes(entry.slug),
+    );
     const events = slug
-      ? seasonalFixtures.filter((entry) => entry.slug === JSON.parse(slug))
-      : seasonalFixtures;
+      ? published.filter((entry) => entry.slug === JSON.parse(slug))
+      : published;
     if (query.startsWith("defined(")) return events.length > 0;
     return project(events);
   }

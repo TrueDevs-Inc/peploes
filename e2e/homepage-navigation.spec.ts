@@ -1,4 +1,38 @@
-import { expect, test } from "@playwright/test";
+import { rm, writeFile } from "node:fs/promises";
+import { expect, test } from "./menu-test";
+
+test("homepage event actions follow published availability without a rebuild", async ({
+  page,
+}) => {
+  const statePath = ".next/e2e/published-seasonal-slugs.json";
+  const card = page.getByRole("article").filter({
+    has: page.getByRole("heading", {
+      name: "Lobster Week Returns",
+      exact: true,
+    }),
+  });
+  try {
+    for (const published of [[], ["lobster-season"], []]) {
+      await writeFile(statePath, JSON.stringify(published));
+      await page.goto("/");
+      await expect(card.getByRole("link")).toHaveAttribute(
+        "href",
+        published.length ? "/seasonal/lobster-season" : "/seasonal",
+      );
+      if (!published.length) {
+        await expect(page.locator('a[href^="/seasonal/"]')).toHaveCount(0);
+      }
+      await card.getByRole("link").click();
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+        published.length
+          ? "Lobster Season"
+          : /There’s always\s+something happening\s+at Peploe’s\./,
+      );
+    }
+  } finally {
+    await rm(statePath, { force: true });
+  }
+});
 
 test("homepage contact and event actions reach their existing destinations", async ({
   page,
@@ -8,10 +42,14 @@ test("homepage contact and event actions reach their existing destinations", asy
     page.getByRole("link", { name: "Call Peploe's", exact: true }),
   ).toHaveAttribute("href", "tel:+35316763144");
 
-  for (const [title, href] of [
-    ["Lobster Week Returns", "/seasonal/lobster-season"],
-    ["A Seasonal Wine Dinner", "/seasonal/italian-wine-dinner"],
-    ["Sunday at Peploe’s", "/seasonal/sunday-at-peploes"],
+  for (const [title, href, heading] of [
+    ["Lobster Week Returns", "/seasonal/lobster-season", "Lobster Season"],
+    [
+      "A Seasonal Wine Dinner",
+      "/seasonal/italian-wine-dinner",
+      "An Evening with Italian Wines",
+    ],
+    ["Sunday at Peploe’s", "/seasonal/sunday-at-peploes", "Sunday at Peploe’s"],
   ]) {
     await page.goto("/");
     const card = page
@@ -21,9 +59,7 @@ test("homepage contact and event actions reach their existing destinations", asy
     await expect(action).toHaveAttribute("href", href);
     await action.click();
     await expect(page).toHaveURL(href);
-    await expect(page.getByRole("heading", { level: 1 })).toContainText(
-      "Campaign/Event",
-    );
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(heading);
   }
 });
 

@@ -167,6 +167,7 @@ test("shared closing banners fit long CMS labels and retain original short-label
 }) => {
   for (const pathname of ["/seasonal", "/seasonal/rugby-at-peploes"]) {
     await page.goto(pathname);
+    await page.evaluate(() => document.fonts.ready);
     const banner = page.getByRole("region", {
       name: seasonalPageFixture.join.heading,
     });
