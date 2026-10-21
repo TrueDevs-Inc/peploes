@@ -72,6 +72,9 @@ without asking ResDiary, even if a client keeps sending it.
 
 ## After payment
 
+Stripe accepting a payment is not a confirmed booking. Show a confirmation only
+after ResDiary confirms it.
+
 - Start checking `GET /api/bookings/hold-status` once Stripe reports success.
   Check every 2 seconds.
 - `confirmed`: show the confirmation.
@@ -79,7 +82,55 @@ without asking ResDiary, even if a client keeps sending it.
   may have been charged, with the phone number.
 - `pending`, `ServiceUnavailable` or `NotFound`: keep checking.
 - After 60 seconds without `confirmed`, stop and show
-  `BOOKING_MESSAGES.stillConfirming`. Never say the booking failed.
+  `BOOKING_MESSAGES.stillConfirming` with the booking reference from the hold
+  summary, so the guest can quote it. Never say the booking failed, and never
+  offer to pay again.
+- Make this "payment taken, not yet confirmed" state calm and reassuring, not
+  an error. Elhaam's example of the tone is "Hang tight! You'll get a
+  confirmation soon if your money is deducted." Follow how AnjomaZone
+  handles the same case.
+- Store in `sessionStorage` that Stripe accepted a payment for this
+  `holdReference`. After a reload or a return from Stripe, check `hold-status`
+  again before showing anything else. If it answers `NotFound` after a payment
+  was accepted (the hold cookie ends 15 minutes after the hold), show
+  `stillConfirming` with the reference, not "choose a time again".
+
+### If the guest leaves after paying
+
+ResDiary finalises a paid booking itself once Stripe accepts the payment. The
+page's checks only report the result, so closing the tab does not lose the
+booking.
+
+Sandbox evidence, 21 October 2026: booking B3TCDXPK was held at 05:44:49 UTC,
+and its €20 deposit was paid with a Stripe test card at 05:44:54. Nothing then
+called ResDiary for 7 minutes, past the hold's 5-minute end. The first read
+afterwards showed it Booked with the €20 deposit paid. On 15 October 2026 a
+card-guarantee booking also confirmed by itself, within about 5 seconds.
+
+ResDiary also sends the guest's confirmation email by itself. In a rerun the
+same day, B473H933 was paid at 05:56:16 UTC with a real inbox as the guest, and
+nothing called ResDiary afterwards. The guest received ResDiary's confirmation
+email: reference, date, time, guests, leave time and a feedback link. In the
+sandbox, Settings > Email Templates sends a custom confirmation email
+(cancellation emails are off), and Notification Settings shows no suppressions
+for any booking channel.
+
+Not yet verified:
+
+- **Peploe's live account.** `stillConfirming` promises an email. Before
+  payments go live, confirm the live account also sends confirmation emails,
+  and review their wording. The sandbox email says "Book.ResDiary.com" and
+  doesn't mention the deposit.
+- **A confirmation that takes longer than 60 seconds.** The slowest seen was
+  about 5 seconds.
+- **A completed 3-D Secure challenge.**
+
+### Resolving an unknown outcome
+
+- **The guest** has the reference on screen and the confirmation email if one
+  is sent, and can call the restaurant.
+- **Staff** find the reference in the ResDiary diary, which shows the booking's
+  status and deposit. The restaurant's Stripe account shows the payment.
 
 ## When something fails
 
