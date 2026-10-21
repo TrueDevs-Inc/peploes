@@ -24,20 +24,34 @@ export function VisitAnchorInitializer() {
       return;
     }
 
-    // Recover missed cold-load scrolling once; client navigation remains owned by the router.
+    let observer: ResizeObserver | undefined;
+
+    // Streamed content can still be hidden when load fires.
     function restoreInitialAnchor() {
-      if (window.location.href === initialUrl.href && window.scrollY === 0) {
-        document.getElementById(targetId)?.scrollIntoView();
-      }
+      const target = document.getElementById(targetId);
+      if (!target) return;
+      observer = new ResizeObserver(() => {
+        if (window.location.href !== initialUrl.href || window.scrollY !== 0) {
+          observer?.disconnect();
+          return;
+        }
+        if (target.getClientRects().length === 0) return;
+        observer?.disconnect();
+        target.scrollIntoView();
+      });
+      observer.observe(target);
     }
 
     if (document.readyState === "complete") {
       restoreInitialAnchor();
-      return;
+    } else {
+      window.addEventListener("load", restoreInitialAnchor, { once: true });
     }
 
-    window.addEventListener("load", restoreInitialAnchor, { once: true });
-    return () => window.removeEventListener("load", restoreInitialAnchor);
+    return () => {
+      window.removeEventListener("load", restoreInitialAnchor);
+      observer?.disconnect();
+    };
   }, []);
 
   return null;
