@@ -56,7 +56,7 @@ export function SeasonalJoin({ join }: ISeasonalJoinProps) {
             <Button
               asChild
               variant="brand-secondary-inverse"
-              className="h-auto min-h-11 w-full max-w-full gap-2 whitespace-normal rounded-[4px] px-5 py-2.5 text-base leading-[22px] has-[>svg]:px-5 sm:w-auto sm:min-w-[148px] sm:px-[18px] sm:py-[9px] sm:leading-6 sm:has-[>svg]:px-[18px]"
+              className="h-auto min-h-11 w-full max-w-full gap-2 whitespace-normal rounded-[4px] px-5 py-2.5 text-base leading-[22px] has-[>svg]:px-5 sm:w-auto sm:min-w-[148px] sm:gap-1.5 sm:px-[18px] sm:py-[9px] sm:leading-6 sm:has-[>svg]:px-[18px]"
             >
               <Link href={ROUTES.VISIT_CONTACT}>
                 <span className="min-w-0 [overflow-wrap:anywhere]">
