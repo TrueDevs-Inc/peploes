@@ -39,7 +39,7 @@ test("policy email links reach the reception address", async ({ page }) => {
           "href",
           "mailto:reception@peploes.com",
         );
-        await expect(link).toHaveText(/^reception@peploes\.ie\.?$/);
+        await expect(link).toHaveText(/^reception@peploes\.com\.?$/);
       }
     });
   }
