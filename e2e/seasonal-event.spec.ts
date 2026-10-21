@@ -173,7 +173,7 @@ test("booking actions remain unavailable until their booking flow is connected",
     seasonalPageFixture.join.bookingAction,
   ]) {
     const actions = main.getByRole("button", { name, exact: true });
-    expect(await actions.count()).toBeGreaterThan(0);
+    await expect(actions.first()).toBeVisible();
     for (const action of await actions.all()) {
       await expect(action).toHaveAttribute("type", "button");
       await expect(action).toHaveAttribute("aria-disabled", "true");

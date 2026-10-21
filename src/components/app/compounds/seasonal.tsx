@@ -46,7 +46,7 @@ export function SeasonalJoin({ join }: ISeasonalJoinProps) {
               type="button"
               aria-disabled="true"
               variant="brand-primary"
-              className="h-auto min-h-11 w-full max-w-full gap-2 whitespace-normal rounded-[4px] px-5 py-2.5 text-base leading-[22px] has-[>svg]:px-5 sm:w-auto sm:min-w-[156px] sm:gap-[5px] sm:leading-6"
+              className="h-auto min-h-11 w-full max-w-full gap-2 whitespace-normal rounded-[4px] px-5 py-2.5 text-base leading-[22px] has-[>svg]:px-5 sm:w-auto sm:min-w-[156px] sm:gap-1 sm:leading-6"
             >
               <span className="min-w-0 [overflow-wrap:anywhere]">
                 {join.bookingAction}
