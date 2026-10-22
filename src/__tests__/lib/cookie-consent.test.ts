@@ -95,4 +95,31 @@ describe("analytics consent", function analyticsConsentTests() {
     ).toBe(false);
     expect(hasAnalyticsConsent()).toBe(false);
   });
+
+  it("keeps failed withdrawal denied after a reload or in another tab", async () => {
+    const stored = JSON.stringify({
+      analytics: true,
+      performance: true,
+      marketing: true,
+    });
+    vi.stubGlobal("document", { cookie: "" });
+    vi.stubGlobal("window", {
+      localStorage: {
+        getItem: () => stored,
+        setItem: () => {
+          throw new Error("Storage full");
+        },
+      },
+    });
+    expect(
+      saveCookiePreferences({
+        analytics: false,
+        performance: false,
+        marketing: false,
+      }),
+    ).toBe(false);
+    vi.resetModules();
+    const freshPage = await import("@/lib/cookie-consent");
+    expect(freshPage.hasAnalyticsConsent()).toBe(false);
+  });
 });

@@ -159,3 +159,61 @@ test("blocked storage reports a failed save without pretending preferences were 
     dialog.getByRole("switch", { name: "Analytics", exact: true }),
   ).not.toBeChecked();
 });
+
+test("failed withdrawal stays denied across reloads and tabs until a successful save", async ({
+  page,
+  context,
+}) => {
+  await page.goto("/visit-contact");
+  const trigger = page.getByRole("button", {
+    name: "Cookie Settings",
+    exact: true,
+  });
+  await trigger.click();
+  const dialog = page.getByRole("dialog", {
+    name: "Cookie Preferences",
+    exact: true,
+  });
+  await dialog.getByRole("button", { name: "Accept All", exact: true }).click();
+  await page.evaluate(() => {
+    Storage.prototype.setItem = () => {
+      throw new Error("Storage full");
+    };
+  });
+  await trigger.click();
+  await dialog
+    .getByRole("button", { name: "Reject non-essential", exact: true })
+    .click();
+  await expect(dialog.getByRole("alert")).toBeVisible();
+  const otherTab = await context.newPage();
+  await otherTab.goto("/visit-contact");
+  await otherTab
+    .getByRole("button", { name: "Cookie Settings", exact: true })
+    .click();
+  await expect(
+    otherTab.getByRole("switch", { name: "Analytics", exact: true }),
+  ).not.toBeChecked();
+  await otherTab.reload();
+  await otherTab
+    .getByRole("button", { name: "Cookie Settings", exact: true })
+    .click();
+  await expect(
+    otherTab.getByRole("switch", { name: "Analytics", exact: true }),
+  ).not.toBeChecked();
+  await otherTab
+    .getByRole("button", { name: "Accept All", exact: true })
+    .click();
+  await dialog
+    .getByRole("button", { name: "Close cookie preferences" })
+    .click();
+  await trigger.click();
+  await expect(
+    dialog.getByRole("switch", { name: "Analytics", exact: true }),
+  ).toBeChecked();
+  await otherTab.close();
+  await page.reload();
+  await trigger.click();
+  await expect(
+    dialog.getByRole("switch", { name: "Analytics", exact: true }),
+  ).toBeChecked();
+});
