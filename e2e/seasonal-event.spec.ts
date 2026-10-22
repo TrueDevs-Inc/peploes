@@ -486,6 +486,20 @@ test("related items stack on phones and remain navigable on tablets", async ({
     const middle = related.getByRole("listitem").nth(1);
     await next.click();
     await expect(middle).toBeInViewport({ ratio: 1 });
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await next.focus();
+    await page.keyboard.press("Shift+Tab");
+    await expect(previous.locator("svg")).toHaveCSS(
+      "transform",
+      "matrix(1, 0, 0, 1, -3, 0)",
+    );
+    await previous.blur();
+    await previous.hover();
+    await expect(previous.locator("svg")).toHaveCSS(
+      "transform",
+      "matrix(1, 0, 0, 1, -3, 0)",
+    );
+    await page.mouse.move(0, 0);
     await expect(last).not.toBeInViewport();
     await next.click();
     await expect(last).toBeInViewport();

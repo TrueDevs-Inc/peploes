@@ -269,16 +269,20 @@
     transition: transform var(--duration-base) var(--ease-organic);
   }
 
-  :is(a, button):not(:disabled):focus-visible
-    :is(.lucide-arrow-right, .lucide-arrow-left) {
+  :is(a, button):not(:disabled):focus-visible .lucide-arrow-right {
     transform: translateX(3px);
+  }
+  :is(a, button):not(:disabled):focus-visible .lucide-arrow-left {
+    transform: translateX(-3px);
   }
 }
 
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  :is(a, button):not(:disabled):hover
-    :is(.lucide-arrow-right, .lucide-arrow-left) {
+  :is(a, button):not(:disabled):hover .lucide-arrow-right {
     transform: translateX(3px);
+  }
+  :is(a, button):not(:disabled):hover .lucide-arrow-left {
+    transform: translateX(-3px);
   }
 }
 
