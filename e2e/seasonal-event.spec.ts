@@ -532,12 +532,16 @@ test("menu and related event links open their published destinations", async ({
       menu.getByRole("link", { name: "Find Out More", exact: true }),
     ).toHaveAttribute("href", secondHref);
   }
+  const navigationStart = await page.evaluate(() => performance.timeOrigin);
   await page
     .getByRole("region", { name: "Menu & Experience", exact: true })
     .getByRole("link", { name: "Find Out More", exact: true })
     .click();
   await expect(page).toHaveURL(
     /\/seasonal\/lobster-season\?from=card#event-menu$/,
+  );
+  expect(await page.evaluate(() => performance.timeOrigin)).toBe(
+    navigationStart,
   );
   await expect(
     page.getByRole("heading", {
@@ -553,8 +557,14 @@ test("menu and related event links open their published destinations", async ({
       .getByRole("link", { name: "View Menu", exact: true }),
   ).toHaveAttribute("href", "/menus/dinner");
   const related = page.getByRole("region", { name: "More to Explore" });
+  const imageNavigationStart = await page.evaluate(
+    () => performance.timeOrigin,
+  );
   await related.getByRole("link").first().click();
   await expect(page).toHaveURL("/seasonal/italian-wine-dinner");
+  expect(await page.evaluate(() => performance.timeOrigin)).toBe(
+    imageNavigationStart,
+  );
   await expect(
     page.getByRole("heading", {
       level: 1,

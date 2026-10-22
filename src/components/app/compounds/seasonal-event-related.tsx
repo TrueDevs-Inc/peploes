@@ -1,7 +1,9 @@
 "use client";
 
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import type { Route } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import cardStyles from "@/components/app/compounds/groups-occasions.module.css";
@@ -93,8 +95,8 @@ export function SeasonalEventRelated({ content }: ISeasonalEventRelatedProps) {
               key={card.id ?? card.title}
               className={cn(styles.relatedCard, cardStyles.card)}
             >
-              <a
-                href={card.href}
+              <Link
+                href={card.href as Route}
                 aria-label={card.title}
                 className={cn(FOCUS_RING, cardStyles.image, "group")}
               >
@@ -105,7 +107,7 @@ export function SeasonalEventRelated({ content }: ISeasonalEventRelatedProps) {
                   sizes="(min-width: 1280px) 400px, (min-width: 640px) 360px, 280px"
                   className="object-cover transition-transform duration-(--duration-base) ease-out motion-safe:group-hover:scale-105 motion-safe:group-focus-visible:scale-105 motion-reduce:transition-none"
                 />
-              </a>
+              </Link>
               <div className={cardStyles.copy}>
                 <div className={cardStyles.introduction}>
                   <h3 className={cardStyles.title}>{card.title}</h3>

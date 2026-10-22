@@ -1,4 +1,6 @@
 import { ArrowRight } from "lucide-react";
+import type { Route } from "next";
+import Link from "next/link";
 
 import styles from "@/components/app/compounds/seasonal-event.module.css";
 import { Button } from "@/components/ui/button";
@@ -23,7 +25,7 @@ export function SeasonalEventAction({
       variant="brand-text"
       className={cn(styles.textAction, className)}
     >
-      <a href={href}>{content}</a>
+      <Link href={href as Route}>{content}</Link>
     </Button>
   ) : (
     <Button
