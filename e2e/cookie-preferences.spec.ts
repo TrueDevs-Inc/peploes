@@ -8,12 +8,17 @@ test("footer opens preferences, retains choices and restores keyboard focus", as
     name: "Cookie Settings",
     exact: true,
   });
+  await expect(trigger).not.toHaveAttribute("aria-controls");
   await trigger.click();
   const dialog = page.getByRole("dialog", {
     name: "Cookie Preferences",
     exact: true,
   });
   await expect(dialog).toBeVisible();
+  await expect(trigger).toHaveAttribute(
+    "aria-controls",
+    (await dialog.getAttribute("id")) ?? "",
+  );
   await expect(
     dialog.getByText("Always active", { exact: true }),
   ).toBeVisible();

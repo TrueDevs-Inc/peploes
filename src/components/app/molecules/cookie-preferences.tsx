@@ -57,7 +57,7 @@ export function CookiePreferences() {
         type="button"
         variant="brand-nav"
         aria-haspopup="dialog"
-        aria-controls={id}
+        aria-controls={isOpen ? id : undefined}
         className="h-auto rounded-none p-0 text-xs leading-[18px] font-normal text-text-secondary xl:leading-5"
         onClick={() => {
           setPreferences(getCookiePreferences());
