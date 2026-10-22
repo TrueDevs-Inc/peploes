@@ -102,6 +102,7 @@ test("switching shelves cancels a pending close and keeps keyboard and outside-c
   await page.mouse.move(0, 800);
   await page.clock.runFor(1000);
   await expect(groups).toHaveAttribute("aria-expanded", "true");
+  await page.clock.resume();
   await page.keyboard.press("Escape");
   await expect(groups).toBeFocused();
   await expect(groups).toHaveAttribute("aria-expanded", "false");
@@ -111,6 +112,9 @@ test("switching shelves cancels a pending close and keeps keyboard and outside-c
   await expect(menus).toHaveAttribute("aria-expanded", "false");
   await menus.press("Enter");
   await expect(menus).toHaveAttribute("aria-expanded", "true");
+  await expect(
+    navigation.getByRole("link", { name: "Lunch", exact: true }),
+  ).toBeVisible();
   await page.keyboard.press("Tab");
   await expect(
     navigation.getByRole("link", { name: "Lunch", exact: true }),
