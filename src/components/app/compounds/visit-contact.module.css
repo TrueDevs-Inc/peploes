@@ -227,9 +227,6 @@ body:has(.page) [data-navbar-visit]::after {
   font-size: 18px;
   line-height: 28px;
 }
-.transportGrid .accent {
-  color: var(--peploe-burgundy);
-}
 .closing {
   position: relative;
   isolation: isolate;

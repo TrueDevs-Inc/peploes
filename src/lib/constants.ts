@@ -130,6 +130,7 @@ export const ROUTES = {
   WEDDINGS: "/private-dining/weddings",
   VISIT_CONTACT: "/visit-contact",
   PRIVACY_COOKIES: "/privacy-cookies",
+  PRIVACY_POLICY: "/privacy-policy",
   ACCESSIBILITY_POLICY: "/accessibility-policy",
   TERMS_CONDITIONS: "/terms-conditions",
   BOOKING_CANCELLATION_TERMS: "/booking-cancellation-terms",

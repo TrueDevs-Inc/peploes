@@ -1,9 +1,12 @@
 .visitFooter [data-footer-newsletter-controls] input {
-  border-bottom: 0;
-  background-image: linear-gradient(var(--ink), var(--ink));
-  background-position: bottom;
-  background-repeat: no-repeat;
-  background-size: 100% 1px;
+  border-bottom-color: var(--ink);
+}
+
+:is(.visitFooter, .privateDiningFooter, .celebrationFooter)
+  [data-footer-newsletter-controls]
+  input:focus {
+  border-bottom-color: var(--peploe-burgundy);
+  border-bottom-width: 2px;
 }
 
 @media (forced-colors: active) {

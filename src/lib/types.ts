@@ -1299,6 +1299,10 @@ export interface IFooterContent {
     emailLabel: string;
     submitLabel: string;
     status: string;
+    requiredError: string;
+    invalidError: string;
+    completionHint: string;
+    domains: readonly string[];
   };
   copyright: string;
   legalNavigationLabel: string;
@@ -1509,6 +1513,7 @@ export interface IPolicySection {
 
 export type TPolicyPath = (typeof ROUTES)[
   | "PRIVACY_COOKIES"
+  | "PRIVACY_POLICY"
   | "ACCESSIBILITY_POLICY"
   | "TERMS_CONDITIONS"
   | "BOOKING_CANCELLATION_TERMS"];

@@ -13,6 +13,7 @@ export function FooterFrame({ children, className }: ComponentProps<"footer">) {
     pathname === ROUTES.MENUS || pathname.startsWith(`${ROUTES.MENUS}/`);
   const isPolicyPage =
     pathname === ROUTES.PRIVACY_COOKIES ||
+    pathname === ROUTES.PRIVACY_POLICY ||
     pathname === ROUTES.ACCESSIBILITY_POLICY ||
     pathname === ROUTES.TERMS_CONDITIONS ||
     pathname === ROUTES.BOOKING_CANCELLATION_TERMS;

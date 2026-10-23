@@ -187,7 +187,7 @@ export function SeasonalEvent({ content, join }: ISeasonalEventProps) {
                   variant="brand-secondary-inverse"
                   className="h-auto min-h-11 w-full max-w-full gap-2 whitespace-normal rounded-none px-6 py-2.5 text-base leading-[22px] has-[>svg]:px-6 sm:min-h-12 sm:w-auto sm:text-lg sm:leading-[26px] lg:min-w-[206px] lg:px-5 lg:has-[>svg]:px-5"
                 >
-                  <Link href={ROUTES.VISIT_CONTACT}>
+                  <Link href={`${ROUTES.PRIVATE_DINING}#enquire`}>
                     <span className="min-w-0 [overflow-wrap:anywhere]">
                       {invitation.enquiryAction}
                     </span>

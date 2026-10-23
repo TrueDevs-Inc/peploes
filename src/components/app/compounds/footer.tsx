@@ -3,6 +3,7 @@ import Link from "next/link";
 import { FooterFrame } from "@/components/app/compounds/footer-frame";
 import { FooterMeta } from "@/components/app/compounds/footer-meta";
 import { MobileFooterNavigation } from "@/components/app/compounds/mobile-footer-navigation";
+import { NewsletterSignup } from "@/components/app/molecules/newsletter-signup";
 import { Button } from "@/components/ui/button";
 import { FOCUS_RING, RESTAURANT_CONTACT, ROUTES } from "@/lib/constants";
 import {
@@ -75,36 +76,7 @@ export function Footer() {
             <p className="mt-4 text-sm leading-[21px] text-text-secondary xl:mt-6">
               {FOOTER_CONTENT.newsletter.description}
             </p>
-            <div
-              data-footer-newsletter-controls
-              className="mt-4 flex flex-col gap-3 xl:mt-6 xl:flex-row xl:items-end"
-            >
-              <label htmlFor="footer-newsletter-email" className="sr-only">
-                {FOOTER_CONTENT.newsletter.emailLabel}
-              </label>
-              <input
-                id="footer-newsletter-email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                placeholder={FOOTER_CONTENT.newsletter.emailLabel}
-                aria-describedby="footer-newsletter-status"
-                className="h-[30px] min-w-0 rounded-none border-b border-border-interactive bg-transparent text-sm leading-[21px] text-ink placeholder:text-text-secondary focus-visible:shadow-[0_2px_0_var(--peploe-burgundy)] focus-visible:outline-none forced-colors:focus-visible:outline-2 forced-colors:focus-visible:outline-offset-2 forced-colors:focus-visible:outline-solid xl:h-11 xl:flex-1"
-              />
-              <Button
-                type="button"
-                variant="brand-primary"
-                aria-disabled="true"
-                aria-describedby="footer-newsletter-status"
-                className="h-11 gap-2 rounded-[4px] bg-peploe-burgundy px-5 text-base leading-[22px] font-medium text-warm-cream shadow-none has-[>svg]:px-5"
-              >
-                {FOOTER_CONTENT.newsletter.submitLabel}
-                <ArrowRight aria-hidden="true" className="size-4" />
-              </Button>
-            </div>
-            <p id="footer-newsletter-status" className="sr-only">
-              {FOOTER_CONTENT.newsletter.status}
-            </p>
+            <NewsletterSignup />
           </section>
 
           <nav

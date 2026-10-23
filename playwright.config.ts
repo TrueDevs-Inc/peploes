@@ -39,6 +39,7 @@ export default defineConfig({
     command:
       "bun build e2e/mock-sanity.ts --target=node --outfile=.next/e2e/mock-sanity.mjs && node --import ./.next/e2e/mock-sanity.mjs node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3107",
     env: Object.fromEntries([
+      ["NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN", "pk.e2e-only"],
       ["SANITY_PROJECT_ID", "testproject"],
       ["SANITY_DATASET", "development"],
       ["SANITY_API_VERSION", "2026-10-06"],

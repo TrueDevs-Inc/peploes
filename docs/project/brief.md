@@ -58,7 +58,7 @@ wider columns do not shorten the text or dividers.
 Reservation assistance keeps its 450px action column, 394px buttons and 782px
 paragraph maximum on desktop, with the original phone SVG and text arrows.
 
-Use the original entrance photograph, map and illustrations exported from
+Use the original entrance photograph and illustrations exported from
 Figma. The closing photograph reuses `peploes-entrance-backdrop.png`. The desktop
 hero preserves the source's crop and slight vertical compression; smaller
 layouts use an undistorted cover crop. Its original entrance photograph is only
@@ -67,8 +67,17 @@ images may be improved later; it does not supply replacement photography.
 
 There is no separate mobile Visit & Contact frame. Smaller layouts retain
 24px gutters, stack the content and actions, and allow text to increase section
-heights. Phone, email, directions and private dining links are active. The map
-is a local image linking to directions, so it does not load a third-party embed.
+heights. All four Getting here descriptions use the secondary text colour.
+Phone, email, directions and private dining links are active. The map
+loads Mapbox GL JS automatically, matching the Samsu reference. It keeps the local
+Figma map as a preview when unconfigured, loading or unavailable. The hero’s
+Get Directions button opens Google Maps. The default light style uses warm cream land, muted green parks,
+blue water and a burgundy location pin. Mapbox Studio styles can be supplied
+through `NEXT_PUBLIC_MAPBOX_STYLE_URL`; a custom style keeps its own colours.
+Set `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN` to a public development token locally and
+replace it with the client's URL-restricted public token for production.
+Mapbox attribution stays visible. Zoom, fullscreen and recenter controls are
+available; scroll-wheel zoom is disabled so the page remains easy to scroll.
 Booking controls open the [Book a Table design preview](#book-a-table-design-preview).
 Navigation and footer links point to this page; opening-hours and location links
 use its `#opening-hours` and `#find-us` anchors.
@@ -203,8 +212,9 @@ Vouchers and newsletter subscription remain inactive.
 
 Remaining placeholder actions use inert `type="button"` controls with `aria-disabled="true"`
 and no click handlers. They remain focusable and show the Figma hover styles
-without navigating, booking or submitting. The newsletter email input accepts
-typing and keyboard focus, but does not send or store the entered address.
+without navigating, booking or submitting. The newsletter form validates email
+on Enter or Subscribe, then explains that signup is unavailable. It does not
+send or store the entered address.
 
 The existing shared button owns the homepage's brand variants: primary,
 primary inverse, secondary inverse, editorial text, navigation and contact.
@@ -324,10 +334,15 @@ Privacy. The links share the contents disclosure on mobile.
 Footer Instagram and Facebook links use the restaurant
 profiles linked from [the official website](https://peploes.com/) and open in a
 new tab. Other unbuilt navigation destinations remain inactive. The newsletter
-email field is editable, with an accessible label, email autocomplete and visible keyboard focus.
-Subscribe remains inactive pending the subscription integration; no email is
-sent or stored by the application. Opening hours and contact details follow
-the design and should be confirmed by the restaurant before launch.
+email field has an accessible label and inline completion for common email
+domains. Tab accepts the completion, and Escape dismisses it. No popup suggestion
+list is shown; browser autocomplete and the native datalist are disabled.
+Focus changes the existing bottom border to 2px burgundy
+without adding another line. Enter and Subscribe show an error for empty
+or malformed addresses, including addresses without a dotted domain. Valid input
+shows that signup is unavailable pending integration; no email is sent or saved.
+Opening hours and contact details follow the design and should be confirmed by
+the restaurant before launch.
 
 When changing the footer, verify the desktop columns, mobile reading order,
 phone and email targets, keyboard focus, 200% zoom and horizontal overflow.
@@ -553,7 +568,8 @@ a 72px/73px heading and 22px/31px paragraphs. Both headings use -1px letter spac
 Keep desktop type sizes fixed; allow narrower columns to wrap and the section
 to grow beyond its 470px minimum rather than shrinking or clipping the copy.
 
-Make an Inquiry and Contact Us open Visit & Contact. Both linked card sections
+Make an Inquiry opens `/private-dining#enquire`. Contact Us opens Visit & Contact.
+Both linked card sections
 open the editable URL entered for each card. Legacy event references still omit
 unpublished or disabled destinations; explicit URLs are not availability-checked.
 Each diary entry can override its link label; leaving

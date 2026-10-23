@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import styles from "@/components/app/compounds/visit-contact.module.css";
 import { VisitContactDetails } from "@/components/app/compounds/visit-contact-details";
+import { VisitLocationMap } from "@/components/app/molecules/visit-location-map";
 import { Button } from "@/components/ui/button";
 import {
   RESTAURANT_CONTACT,
@@ -59,7 +60,11 @@ function VisitHero() {
               variant="brand-contact"
               className={cn(styles.action, styles.directions)}
             >
-              <a href={VISIT_CONTACT_CONTENT.directionsUrl}>
+              <a
+                href={VISIT_CONTACT_CONTENT.directionsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <MapPin aria-hidden="true" className="size-4" />
                 {VISIT_CONTACT_CONTENT.directionsLabel}
               </a>
@@ -144,18 +149,7 @@ function VisitLocation() {
             {VISIT_CONTACT_CONTENT.location.description}
           </p>
         </div>
-        <a
-          href={VISIT_CONTACT_CONTENT.directionsUrl}
-          className={styles.map}
-          aria-label="Get directions to Peploe’s on Google Maps"
-        >
-          <Image
-            {...VISIT_CONTACT_CONTENT.location.map}
-            fill
-            sizes="(min-width: 1584px) 844px, (min-width: 1280px) 53vw, (min-width: 1024px) 52vw, calc(100vw - 48px)"
-            className={styles.cover}
-          />
-        </a>
+        <VisitLocationMap />
       </div>
       <div className={styles.transport}>
         <h3 className={styles.eyebrow}>
@@ -167,9 +161,7 @@ function VisitLocation() {
               <Image src={item.icon} alt="" width={48} height={48} />
               <div>
                 <h4>{item.heading}</h4>
-                <p className={cn("accent" in item && styles.accent)}>
-                  {item.description}
-                </p>
+                <p>{item.description}</p>
               </div>
             </li>
           ))}

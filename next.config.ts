@@ -61,6 +61,8 @@ const nextConfig: NextConfig = {
       process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ||
         process.env.NEXT_PUBLIC_GTM_ID,
     );
+    // Next Link retains the original document CSP when navigating to Visit.
+    const hasMapbox = Boolean(process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN);
     const scriptSources = [
       "script-src",
       "'self'",
@@ -93,7 +95,14 @@ const nextConfig: NextConfig = {
         "style-src 'self' 'unsafe-inline'",
         imageSources,
         "font-src 'self' data:",
-        [...connectionSources, ...extra.connect].join(" "),
+        [
+          ...connectionSources,
+          ...extra.connect,
+          ...(hasMapbox
+            ? ["https://api.mapbox.com", "https://events.mapbox.com"]
+            : []),
+        ].join(" "),
+        ...(hasMapbox ? ["worker-src 'self' blob:"] : []),
         ...(extra.frame.length > 0
           ? [["frame-src", ...extra.frame].join(" ")]
           : []),
@@ -175,6 +184,9 @@ const nextConfig: NextConfig = {
           ]
         : []),
     ];
+  },
+  rewrites() {
+    return [{ source: "/privacy-policy", destination: "/privacy-cookies" }];
   },
   redirects() {
     return [

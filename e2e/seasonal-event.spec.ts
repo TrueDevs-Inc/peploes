@@ -199,27 +199,34 @@ test("What's On remains the active section and returns from an event to the diar
   ).toBeVisible();
 });
 
-test("event enquiry and contact links reach Visit & Contact", async ({
+test("event enquiry reaches the private dining form and contact reaches Visit & Contact", async ({
   page,
 }) => {
-  for (const name of [
-    "Make an Inquiry",
-    seasonalPageFixture.join.contactAction,
-  ]) {
-    await page.goto(eventPath);
-    const contact = page
-      .getByRole("main")
-      .getByRole("link", { name, exact: true });
-    await expect(contact).toHaveAttribute("href", "/visit-contact");
-    await contact.click();
-    await expect(page).toHaveURL("/visit-contact");
-    await expect(
-      page.getByRole("heading", {
-        name: "Step down from the city.",
-        level: 1,
-      }),
-    ).toBeVisible();
-  }
+  await page.goto(eventPath);
+  const enquiry = page.getByRole("link", {
+    name: "Make an Inquiry",
+    exact: true,
+  });
+  await expect(enquiry).toHaveAttribute("href", "/private-dining#enquire");
+  await enquiry.click();
+  await expect(page).toHaveURL("/private-dining#enquire");
+  await expect(page.locator("#enquire")).toBeInViewport();
+  await expect(page.getByRole("textbox", { name: "Your name" })).toBeVisible();
+
+  await page.goto(eventPath);
+  const contact = page.getByRole("main").getByRole("link", {
+    name: seasonalPageFixture.join.contactAction,
+    exact: true,
+  });
+  await expect(contact).toHaveAttribute("href", "/visit-contact");
+  await contact.click();
+  await expect(page).toHaveURL("/visit-contact");
+  await expect(
+    page.getByRole("heading", {
+      name: "Step down from the city.",
+      level: 1,
+    }),
+  ).toBeVisible();
 });
 
 test("event booking actions open the Book a Table page", async ({ page }) => {
@@ -614,7 +621,7 @@ test("CMS optional sections, five-photo galleries, highlights and related pages 
     name: "Enquire about a gathering",
     exact: true,
   });
-  await expect(enquiry).toHaveAttribute("href", "/visit-contact");
+  await expect(enquiry).toHaveAttribute("href", "/private-dining#enquire");
   await expect
     .poll(() =>
       enquiry.evaluate((element) => {

@@ -1,5 +1,102 @@
 import { expect, test } from "./menu-test";
 
+test("desktop booking keeps the panel in place when opening available times", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/book-a-table");
+  const reservations = page.getByRole("region", { name: "Table reservations" });
+  const findTable = reservations.getByRole("button", {
+    name: "Find a Table",
+    exact: true,
+  });
+  await findTable.scrollIntoViewIfNeeded();
+  const initialBounds = await reservations.boundingBox();
+  expect(initialBounds).not.toBeNull();
+
+  await findTable.click();
+  await expect(
+    reservations.getByRole("heading", { name: "Available times", exact: true }),
+  ).toBeVisible();
+  await expect(reservations).toBeFocused();
+  const timesBounds = await reservations.boundingBox();
+  expect(timesBounds).not.toBeNull();
+  if (initialBounds && timesBounds) {
+    expect(Math.abs(timesBounds.y - initialBounds.y)).toBeLessThanOrEqual(1);
+  }
+});
+
+test("booking brings hidden step controls back into view on forward and back navigation", async ({
+  page,
+}) => {
+  await page.goto("/book-a-table");
+  const reservations = page.getByRole("region", { name: "Table reservations" });
+  await reservations
+    .getByRole("button", { name: "Find a Table", exact: true })
+    .click();
+  await reservations
+    .getByRole("button", { name: "6:00 pm", exact: true })
+    .click();
+
+  for (const name of ["Continue", "Back to times"]) {
+    const action = reservations.getByRole("button", { name, exact: true });
+    await action.scrollIntoViewIfNeeded();
+    await action.click();
+    await expect(reservations).toBeFocused();
+    await expect
+      .poll(() =>
+        reservations.evaluate((element) => element.getBoundingClientRect().top),
+      )
+      .toBeGreaterThanOrEqual(99);
+    await expect(
+      reservations.getByRole("list", { name: "Booking progress" }),
+    ).toBeInViewport();
+  }
+});
+
+test("booking terms open the policy without changing agreement or leaving the form", async ({
+  page,
+}) => {
+  await page.goto("/book-a-table");
+  const reservations = page.getByRole("region", { name: "Table reservations" });
+  await reservations
+    .getByRole("button", { name: "Find a Table", exact: true })
+    .click();
+  await reservations
+    .getByRole("button", { name: "6:00 pm", exact: true })
+    .click();
+  await reservations
+    .getByRole("button", { name: "Continue", exact: true })
+    .click();
+  const agreement = reservations.getByRole("checkbox", {
+    name: /By confirming/,
+  });
+  const terms = reservations.getByRole("link", {
+    name: "Peploe’s Booking & Cancellation Terms.",
+    exact: true,
+  });
+  await expect(terms).toHaveAttribute("href", "/booking-cancellation-terms");
+
+  for (const accepted of [false, true]) {
+    await agreement.setChecked(accepted);
+    const opened = page.waitForEvent("popup");
+    if (accepted) {
+      await terms.focus();
+      await terms.press("Enter");
+    } else {
+      await terms.click();
+    }
+    const policy = await opened;
+    await expect(policy).toHaveURL(/\/booking-cancellation-terms$/);
+    await expect(
+      policy.getByRole("heading", { name: "Before you book.", level: 1 }),
+    ).toBeVisible();
+    await expect(page).toHaveURL("/book-a-table");
+    await expect(agreement).toBeChecked({ checked: accepted });
+    await policy.close();
+  }
+});
+
 test("navbar booking navigation works and closes the mobile drawer", async ({
   page,
   isMobile,

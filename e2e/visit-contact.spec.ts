@@ -151,15 +151,12 @@ test("contact and map links point to the restaurant's public destinations", asyn
       main.getByRole("link", { name: label, exact: true }),
     ).toHaveAttribute("href", "mailto:reception@peploes.com");
   }
-  for (const label of [
-    "Get Directions",
-    "Get directions to Peploe’s on Google Maps",
-  ]) {
-    const link = main.getByRole("link", { name: label, exact: true });
-    await expect(link).toBeVisible();
-    await expect(link).toHaveAttribute(
-      "href",
-      "https://www.google.com/maps/dir/?api=1&destination=Peploe%27s%2C%2016%20St%20Stephen%27s%20Green%2C%20Dublin%202",
-    );
-  }
+  const link = main.getByRole("link", { name: "Get Directions", exact: true });
+  await expect(link).toBeVisible();
+  await expect(link).toHaveAttribute("target", "_blank");
+  await expect(link).toHaveAttribute("rel", "noopener noreferrer");
+  await expect(link).toHaveAttribute(
+    "href",
+    "https://www.google.com/maps/dir/?api=1&destination=Peploe%27s%2C%2016%20St%20Stephen%27s%20Green%2C%20Dublin%202",
+  );
 });
