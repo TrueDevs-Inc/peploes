@@ -79,8 +79,10 @@ replace it with the client's URL-restricted public token for production.
 Mapbox attribution stays visible. Zoom, fullscreen and recenter controls are
 available; scroll-wheel zoom is disabled so the page remains easy to scroll.
 Booking controls open the [Book a Table design preview](#book-a-table-design-preview).
-Navigation and footer links point to this page; opening-hours and location links
-use its `#opening-hours` and `#find-us` anchors.
+Main navigation and footer opening-hours and location links point to this page,
+using its `#opening-hours` and `#find-us` anchors where relevant. The desktop
+Explore footer's Visit & Contact link uses
+`https://peploes-fork-pink.vercel.app/contact`, as requested in issue #36.
 Direct anchor links recover a missed initial browser scroll after the document
 loads. Client navigation and history remain handled by the router.
 
