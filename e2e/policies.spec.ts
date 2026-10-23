@@ -271,7 +271,7 @@ test("footer legal links open the requested policies", async ({
         name: "Visit & Contact",
         exact: true,
       }),
-    ).toHaveAttribute("href", "https://peploes-fork-pink.vercel.app/contact");
+    ).toHaveAttribute("href", "/visit-contact");
   }
 
   for (const destination of [

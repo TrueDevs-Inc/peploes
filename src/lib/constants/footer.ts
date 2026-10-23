@@ -21,7 +21,7 @@ export const FOOTER_CONTENT: IFooterContent = {
     { label: "The Journal" },
     {
       label: "Visit & Contact",
-      href: "https://peploes-fork-pink.vercel.app/contact",
+      href: ROUTES.VISIT_CONTACT,
     },
     { label: "Gift Vouchers" },
   ],

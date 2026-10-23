@@ -82,7 +82,7 @@ Booking controls open the [Book a Table design preview](#book-a-table-design-pre
 Main navigation and footer opening-hours and location links point to this page,
 using its `#opening-hours` and `#find-us` anchors where relevant. The desktop
 Explore footer's Visit & Contact link uses
-`https://peploes-fork-pink.vercel.app/contact`, as requested in issue #36.
+the same-site `/visit-contact` route so it works on every deployment.
 Direct anchor links recover a missed initial browser scroll after the document
 loads. Client navigation and history remain handled by the router.
 
