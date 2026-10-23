@@ -40,7 +40,7 @@ vi.mock("@/services/restaurant-menus", () => ({
   getMenuCollections: vi.fn(),
 }));
 
-it("preserves compact desktop spacing in CMS navigation", async () => {
+it("preserves the published menu order and destinations in CMS navigation", async () => {
   vi.mocked(getMenusPage).mockResolvedValue(
     ok({
       ...MENU_PAGE_CONTENT,
@@ -49,15 +49,13 @@ it("preserves compact desktop spacing in CMS navigation", async () => {
   );
   vi.mocked(getMenuCollections).mockResolvedValue(ok([]));
   const navigation = await loadMenuNavigation();
-  expect(
-    navigation.map((item) => [item.href, item.compactDesktop ?? false]),
-  ).toEqual([
-    ["/menus/lunch", false],
-    ["/menus/dinner", false],
-    ["/menus/pre-theatre", false],
-    ["/menus/wine", true],
-    ["/menus/cocktails", true],
-    ["/menus/group-set-menu", true],
-    ["/menus/seasonal", true],
+  expect(navigation.map((item) => item.href)).toEqual([
+    "/menus/lunch",
+    "/menus/dinner",
+    "/menus/pre-theatre",
+    "/menus/wine",
+    "/menus/cocktails",
+    "/menus/group-set-menu",
+    "/menus/seasonal",
   ]);
 });

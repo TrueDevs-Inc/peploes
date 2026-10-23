@@ -4,6 +4,37 @@ test.beforeEach(async ({ page }) => {
   await page.goto("/");
 });
 
+test("switching desktop shelves keeps the panel height and page position stable", async ({
+  page,
+}) => {
+  const navigation = page.getByRole("navigation", {
+    name: "Main navigation",
+    exact: true,
+  });
+  const menus = navigation.getByRole("link", { name: "Menus", exact: true });
+  const groups = navigation.getByRole("link", {
+    name: "Private Dining & Events",
+    exact: true,
+  });
+  const heading = page.getByRole("main").getByRole("heading").first();
+  await menus.hover();
+  const menuPanel = page.locator(
+    `[id="${await menus.getAttribute("aria-controls")}"]`,
+  );
+  const originalPanel = await menuPanel.boundingBox();
+  const originalHeading = await heading.boundingBox();
+  expect(originalPanel).not.toBeNull();
+  for (const trigger of [groups, menus, groups, menus]) {
+    await trigger.hover();
+    const panel = page.locator(
+      `[id="${await trigger.getAttribute("aria-controls")}"]`,
+    );
+    await expect(panel).toBeVisible();
+    expect(await panel.boundingBox()).toEqual(originalPanel);
+    expect(await heading.boundingBox()).toEqual(originalHeading);
+  }
+});
+
 test("desktop Menus opens Lunch by pointer and keyboard", async ({ page }) => {
   const menus = page
     .getByRole("navigation", { name: "Main navigation", exact: true })

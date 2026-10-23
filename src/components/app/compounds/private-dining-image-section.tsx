@@ -31,7 +31,7 @@ export function PrivateDiningImageSection({
         />
       </div>
       <div className={contained ? undefined : "site-container"}>
-        <div className={styles.promoCopy}>
+        <div data-scroll-reveal className={styles.promoCopy}>
           <PrivateDiningHeading {...heading} />
           {children}
         </div>

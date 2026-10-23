@@ -12,7 +12,7 @@ export function PrivateDiningFeatures({
   return (
     <ul className={cn(styles.features, className)}>
       {items.map((item) => (
-        <li key={item._key}>
+        <li data-scroll-reveal key={item._key}>
           {item.illustration && (
             <Image
               src={item.illustration}

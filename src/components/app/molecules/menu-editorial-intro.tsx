@@ -39,6 +39,7 @@ export function MenuEditorialIntro({
       )}
       {menu.aside && (
         <p
+          data-scroll-reveal
           className={cn(
             ebGaramondItalic.className,
             "text-lg leading-6 text-text-secondary after:mt-3 after:block after:h-0.5 after:w-14 after:bg-peploe-burgundy xl:order-3 xl:self-center xl:text-base xl:leading-[22px] xl:after:mt-4",
@@ -102,7 +103,7 @@ function MenuEditorialImage({
 function MenuEditorialHeading({ menu, compact }: IMenuEditorialIntroProps) {
   const hasCompactDescription = compact && Boolean(menu.description);
   return (
-    <div>
+    <div data-scroll-reveal>
       <Breadcrumbs
         items={[
           { name: "Menus", url: ROUTES.MENUS },

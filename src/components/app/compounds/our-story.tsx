@@ -26,7 +26,10 @@ function StoryHero() {
         />
       </div>
       <div className="site-container">
-        <div className="relative pt-10 pb-12 lg:w-[535px] lg:max-w-[55%] lg:py-20 xl:max-w-none">
+        <div
+          data-scroll-reveal
+          className="relative pt-10 pb-12 lg:w-[535px] lg:max-w-[55%] lg:py-20 xl:max-w-none"
+        >
           <p className="flex items-center gap-2.5 text-sm leading-4 font-medium tracking-[0.1em] text-peploe-burgundy uppercase before:h-0.5 before:w-12 before:shrink-0 before:bg-current">
             {hero.eyebrow}
           </p>
@@ -58,6 +61,7 @@ function StoryTimeline() {
     >
       <div className="site-container grid items-center gap-10 lg:min-h-[297px] lg:grid-cols-[525fr_671fr] lg:gap-[60px] xl:gap-[100px] min-[90rem]:grid-cols-[525px_minmax(0,1fr)]">
         <h2
+          data-scroll-reveal
           id="story-philosophy"
           className="text-[38px] leading-[42px] after:mt-6 after:block after:h-0.5 after:w-12 after:bg-peploe-burgundy max-[360px]:text-[35px] max-[360px]:leading-10 sm:leading-10 lg:text-[46px] lg:leading-[48px] xl:text-[clamp(46px,calc(5vw_-_18px),54px)] xl:leading-[clamp(48px,3.75vw,54px)] xl:whitespace-pre-line"
         >
@@ -69,6 +73,7 @@ function StoryTimeline() {
         >
           {philosophy.milestones.map((milestone) => (
             <li
+              data-scroll-reveal
               key={milestone.year}
               className="relative min-w-0 pl-[30px] before:absolute before:top-[14px] before:bottom-[-42px] before:left-[6.5px] before:w-px before:bg-peploe-burgundy last:before:hidden sm:pl-0 sm:before:hidden"
             >
@@ -102,7 +107,10 @@ function StoryBuilding() {
       aria-labelledby="story-building"
     >
       <div className="site-container grid items-center gap-8 py-12 sm:grid-cols-[minmax(0,1fr)_170px] lg:min-h-[600px] lg:grid-cols-[525fr_23fr_518fr_57fr_173fr] lg:gap-0 lg:py-0">
-        <div className="min-w-0 sm:col-span-full lg:col-[1] lg:py-20">
+        <div
+          data-scroll-reveal
+          className="min-w-0 sm:col-span-full lg:col-[1] lg:py-20"
+        >
           <p className="flex items-center gap-2.5 text-sm leading-4 font-medium tracking-[0.1em] text-peploe-burgundy uppercase before:h-0.5 before:w-12 before:shrink-0 before:bg-current">
             {building.eyebrow}
           </p>
@@ -139,6 +147,7 @@ function StoryBuilding() {
         >
           {building.journey.map((stop) => (
             <li
+              data-scroll-reveal
               key={stop.label}
               className="relative pl-6 before:absolute before:top-1.5 before:left-0 before:size-1 before:rounded-full before:bg-ink after:absolute after:top-2.5 after:bottom-[-30px] after:left-[1.5px] after:w-px after:bg-text-secondary last:after:hidden sm:pl-0 sm:before:top-[47px] sm:before:left-[35px] sm:after:top-[51px] sm:after:bottom-0 sm:after:left-[36.5px] sm:last:before:hidden sm:[&:not(:last-child)]:h-24"
             >
@@ -167,7 +176,10 @@ function StoryFounder() {
         aria-hidden="true"
       />
       <div className="site-container">
-        <div className="pt-10 pb-12 lg:ml-auto lg:min-h-[390px] lg:w-[44%] lg:py-[51px] xl:w-[490px]">
+        <div
+          data-scroll-reveal
+          className="pt-10 pb-12 lg:ml-auto lg:min-h-[390px] lg:w-[44%] lg:py-[51px] xl:w-[490px]"
+        >
           <p className="flex items-center gap-2.5 text-sm leading-4 font-medium tracking-[0.1em] text-peploe-burgundy uppercase after:h-0.5 after:w-12 after:shrink-0 after:bg-current">
             {founder.eyebrow}
           </p>
@@ -203,7 +215,10 @@ function StoryMural() {
         />
       </div>
       <div className="site-container">
-        <div className="relative z-1 py-12 lg:min-h-[444px] lg:w-[470px]">
+        <div
+          data-scroll-reveal
+          className="relative z-1 py-12 lg:min-h-[444px] lg:w-[470px]"
+        >
           <p className="flex items-center gap-2.5 text-sm leading-4 font-medium tracking-[0.1em] uppercase after:h-0.5 after:w-12 after:shrink-0 after:bg-current">
             {mural.eyebrow}
           </p>
@@ -248,7 +263,10 @@ function StoryArchive() {
         />
       </div>
       <div className="site-container">
-        <div className="pt-8 pb-12 lg:relative lg:w-[445px] lg:py-20">
+        <div
+          data-scroll-reveal
+          className="pt-8 pb-12 lg:relative lg:w-[445px] lg:py-20"
+        >
           <p className="flex items-center gap-2.5 text-sm leading-4 font-medium tracking-[0.1em] text-peploe-burgundy uppercase">
             {archive.eyebrow}
           </p>
@@ -287,7 +305,10 @@ function StoryNextChapter() {
         aria-hidden="true"
       />
       <div className="site-container">
-        <div className="pt-10 pb-12 lg:ml-auto lg:min-h-[340px] lg:w-[44%] lg:py-12 xl:w-[527px]">
+        <div
+          data-scroll-reveal
+          className="pt-10 pb-12 lg:ml-auto lg:min-h-[340px] lg:w-[44%] lg:py-12 xl:w-[527px]"
+        >
           <p className="flex items-center gap-2.5 text-sm leading-4 font-medium tracking-[0.1em] text-peploe-burgundy uppercase">
             {nextChapter.eyebrow}
           </p>
@@ -324,7 +345,10 @@ function StoryToday() {
         />
       </div>
       <div className="site-container">
-        <div className="relative z-1 py-12 lg:min-h-[390px] lg:w-[520px]">
+        <div
+          data-scroll-reveal
+          className="relative z-1 py-12 lg:min-h-[390px] lg:w-[520px]"
+        >
           <p className="flex items-center gap-2.5 text-sm leading-4 font-medium tracking-[0.1em] uppercase after:h-0.5 after:w-12 after:shrink-0 after:bg-current">
             {today.eyebrow}
           </p>

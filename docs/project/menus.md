@@ -198,9 +198,9 @@ The booking object also accepts `tallOnMobile` for the Wine and Cocktails banner
 optional desktop image positioning, content width and text alignment. Mobile
 padding, mobile/desktop overlays and full-width mobile actions preserve each
 banner’s reference treatment. These presentation fields preserve the shared
-banner component while matching each photograph and caption. The shared menu navigation uses `compactDesktop` for
-the shorter bar in Wine, Cocktails, Group and Seasonal desktop frames; its
-mobile height remains consistent across routes. A 1px soft-stone divider spans
+banner component while matching each photograph and caption. The shared menu
+navigation uses the same 8px top padding on all desktop routes; its mobile
+height remains consistent across routes. A 1px soft-stone divider spans
 the menu navigation below the tabs on desktop and mobile; the active tab keeps
 its burgundy underline.
 

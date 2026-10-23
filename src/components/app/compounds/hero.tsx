@@ -1,8 +1,8 @@
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-
 import { Reveal } from "@/components/app/atoms/scroll-reveal";
+import revealStyles from "@/components/app/atoms/site-scroll-reveal.module.css";
 import styles from "@/components/app/compounds/hero.module.css";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,7 +34,14 @@ export function Hero() {
           className={cn(styles.photoOverlay, "absolute inset-0")}
         />
 
-        <div className="site-container relative flex flex-col gap-[22px] sm:gap-7">
+        <div
+          data-scroll-reveal
+          data-scroll-reveal-initial
+          className={cn(
+            revealStyles.initial,
+            "site-container relative flex flex-col gap-[22px] sm:gap-7",
+          )}
+        >
           <div className="flex max-w-[720px] flex-col gap-[14px] sm:gap-7">
             <p className="flex items-center gap-2.5 text-sm leading-4 font-medium tracking-[0.1em] uppercase sm:tracking-normal">
               <span
@@ -66,7 +73,8 @@ export function Hero() {
             <Button
               asChild
               variant="brand-primary"
-              className="h-11 w-full gap-2 rounded-[4px] bg-peploe-burgundy px-5 has-[>svg]:px-5 text-base leading-[22px] font-medium text-warm-cream shadow-none sm:w-[156px]"
+              size="cta"
+              className="w-full sm:w-[156px]"
             >
               <Link href={ROUTES.BOOK_A_TABLE}>
                 {HERO_CONTENT.bookingLabel}
@@ -76,7 +84,8 @@ export function Hero() {
             <Button
               asChild
               variant="brand-secondary-inverse"
-              className="h-11 w-full rounded-[4px] border-warm-cream bg-transparent px-5 text-base leading-[22px] font-medium text-warm-cream shadow-none sm:w-[136px]"
+              size="cta"
+              className="w-full sm:w-[136px]"
             >
               <a href={`tel:${RESTAURANT_CONTACT.phone}`}>
                 {HERO_CONTENT.callLabel}
@@ -96,6 +105,7 @@ export function Hero() {
           className="h-[520px] w-full object-fill"
         />
         <figcaption
+          data-scroll-reveal
           className={cn(
             ebGaramond.className,
             "px-6 py-[22px] text-center text-[28px] leading-[30px] font-medium text-peploe-burgundy",

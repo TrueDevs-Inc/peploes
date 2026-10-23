@@ -2,10 +2,7 @@ import { Mail, Phone } from "lucide-react";
 import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
-import {
-  HUMAN_HOSPITALITY_CONTACT_CLASSNAME,
-  HUMAN_HOSPITALITY_CONTENT,
-} from "@/lib/constants/human-hospitality";
+import { HUMAN_HOSPITALITY_CONTENT } from "@/lib/constants/human-hospitality";
 import { dmSans, ebGaramond } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
 
@@ -21,7 +18,10 @@ export function HumanHospitality() {
       <div className="relative isolate grid xl:ml-[max(0px,calc((100vw-var(--site-content-max-width))/2-72px))] xl:max-w-[calc(var(--site-content-max-width)+72px)] xl:grid-cols-[minmax(0,1fr)_min(37.5%,563px)] xl:gap-8">
         <div className="site-container relative z-10 xl:mx-0 xl:ml-[72px] xl:w-auto">
           <div className="flex min-w-0 flex-col items-start gap-5 pt-12 pb-9 sm:gap-7 sm:py-20 xl:max-w-[783px]">
-            <p className="flex items-center gap-2.5 text-sm leading-4 font-medium tracking-[0.1em] text-peploe-burgundy uppercase">
+            <p
+              data-scroll-reveal
+              className="flex items-center gap-2.5 text-sm leading-4 font-medium tracking-[0.1em] text-peploe-burgundy uppercase"
+            >
               <span
                 aria-hidden="true"
                 className="h-0.5 w-12 shrink-0 bg-current"
@@ -29,7 +29,7 @@ export function HumanHospitality() {
               {HUMAN_HOSPITALITY_CONTENT.eyebrow}
             </p>
 
-            <div className="flex flex-col gap-5 sm:gap-4">
+            <div data-scroll-reveal className="flex flex-col gap-5 sm:gap-4">
               <h2
                 id="human-hospitality-heading"
                 className={cn(
@@ -44,11 +44,15 @@ export function HumanHospitality() {
               </p>
             </div>
 
-            <div className="flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row sm:flex-wrap sm:gap-4">
+            <div
+              data-scroll-reveal
+              className="flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row sm:flex-wrap sm:gap-4"
+            >
               <Button
                 asChild
                 variant="brand-contact"
-                className={HUMAN_HOSPITALITY_CONTACT_CLASSNAME}
+                size="cta"
+                className="max-sm:w-full"
               >
                 <a href={HUMAN_HOSPITALITY_CONTENT.phoneAction.href}>
                   <Phone
@@ -62,7 +66,8 @@ export function HumanHospitality() {
               <Button
                 asChild
                 variant="brand-contact"
-                className={HUMAN_HOSPITALITY_CONTACT_CLASSNAME}
+                size="cta"
+                className="max-sm:w-full"
               >
                 <a href={HUMAN_HOSPITALITY_CONTENT.emailAction.href}>
                   <Mail

@@ -44,7 +44,7 @@ function VisitHero() {
         />
       </div>
       <div className="site-container">
-        <div className={styles.heroCopy}>
+        <div data-scroll-reveal className={styles.heroCopy}>
           <p className={styles.eyebrow}>{VISIT_CONTACT_CONTENT.hero.eyebrow}</p>
           <h1 id="visit-title">{VISIT_CONTACT_CONTENT.hero.heading}</h1>
           <p className={styles.heroAddress}>
@@ -84,7 +84,7 @@ function VisitContactInformation() {
       aria-label="Opening hours, address and contact"
     >
       <div className={cn("site-container", styles.contactGrid)}>
-        <div className={styles.contactItem}>
+        <div data-scroll-reveal className={styles.contactItem}>
           <Image src="/peploes-visit-clock.svg" alt="" width={48} height={48} />
           <div>
             <h2>{VISIT_CONTACT_CONTENT.contact.hoursHeading}</h2>
@@ -98,7 +98,7 @@ function VisitContactInformation() {
             </dl>
           </div>
         </div>
-        <div className={styles.contactItem}>
+        <div data-scroll-reveal className={styles.contactItem}>
           <Image
             src="/peploes-events-location.svg"
             alt=""
@@ -110,7 +110,7 @@ function VisitContactInformation() {
             <address>{VISIT_CONTACT_CONTENT.contact.address}</address>
           </div>
         </div>
-        <div className={styles.contactItem}>
+        <div data-scroll-reveal className={styles.contactItem}>
           <Image
             src="/peploes-visit-contact.svg"
             alt=""
@@ -138,7 +138,7 @@ function VisitLocation() {
   return (
     <section className={cn("site-container", styles.location)} id="find-us">
       <div className={styles.locationGrid}>
-        <div className={styles.locationCopy}>
+        <div data-scroll-reveal className={styles.locationCopy}>
           <p className={styles.eyebrow}>
             {VISIT_CONTACT_CONTENT.location.eyebrow}
           </p>
@@ -151,7 +151,7 @@ function VisitLocation() {
         </div>
         <VisitLocationMap />
       </div>
-      <div className={styles.transport}>
+      <div data-scroll-reveal className={styles.transport}>
         <h3 className={styles.eyebrow}>
           {VISIT_CONTACT_CONTENT.location.transportHeading}
         </h3>
@@ -181,7 +181,7 @@ function VisitClosing() {
         className={styles.cover}
       />
       <div className="site-container">
-        <div className={styles.closingCopy}>
+        <div data-scroll-reveal className={styles.closingCopy}>
           <p className={styles.eyebrow}>
             {VISIT_CONTACT_CONTENT.closing.eyebrow}
           </p>

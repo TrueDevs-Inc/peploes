@@ -260,8 +260,10 @@ The desktop Menus dropdown follows the updated Nav / Shelf / Menus / Light
 frame (`3732:6583`). Hovering over Menus or pressing ArrowDown opens the shelf;
 clicking or pressing Enter navigates to Lunch. The shelf overlays
 the page below the 76px header without moving the logo or page content. At
-1440px, the Warm Cream panel is 218px high with 36px vertical padding, 72px
+1440px, the Warm Cream panel is 352px high with 36px vertical padding, 72px
 side gutters, a 360px introduction and a 56px gap before the destinations.
+Both desktop shelves cap their height to the available viewport space below
+the header and scroll when needed.
 Six active menu links sit in three 146px-high columns, paired Lunch/Wine,
 Dinner/Cocktails and Pre-Theatre/Seasonal, with 40px column gaps, 24px row gaps
 and 1px Soft Stone dividers after the first two columns. The introduction and
@@ -270,7 +272,7 @@ Verify pointer travel into the panel, keyboard activation and tab order, Escape
 with focus restoration, outside-click and focus-leave dismissal, short-viewport
 scrolling, reduced motion and dismissal when switching to mobile navigation.
 The desktop Private Dining & Events dropdown follows the updated Nav / Shelf /
-Groups / Light frame (`3732:6657`): a 292px panel with a 320px introduction,
+Groups / Light frame (`3732:6657`): a 352px panel with a 320px introduction,
 56px column gap and three photo destinations with 132px images and 36px gaps.
 The introduction replaces its description with a 44px-high Explore text action
 that opens the private dining overview. The first destination is Celebrations &

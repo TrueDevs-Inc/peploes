@@ -2,24 +2,14 @@
   position: absolute;
   inset-inline: 0;
   top: 100%;
+  height: 352px;
   max-height: calc(100dvh - 76px);
   overflow-y: auto;
   overscroll-behavior: contain;
   background: var(--warm-cream);
   visibility: hidden;
-  opacity: 0;
-  transition:
-    opacity var(--duration-interaction) ease-out,
-    visibility var(--duration-interaction);
 }
 
 .open {
   visibility: visible;
-  opacity: 1;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .panel {
-    transition: none;
-  }
 }

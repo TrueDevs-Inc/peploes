@@ -1,5 +1,26 @@
 import { expect, test } from "./menu-test";
 
+test("menu navigation keeps its height when switching menus", async ({
+  page,
+}) => {
+  await page.goto("/menus/lunch");
+  const navigation = page.getByRole("navigation", { name: "Restaurant menus" });
+  const originalHeight = await navigation.evaluate(
+    (element) => element.getBoundingClientRect().height,
+  );
+  for (const name of ["Wine", "Cocktails", "Dinner", "Pre-Theatre", "Lunch"]) {
+    await navigation.getByRole("link", { name, exact: true }).click();
+    await expect(
+      navigation.getByRole("link", { name, exact: true }),
+    ).toHaveAttribute("aria-current", "page");
+    expect(
+      await navigation.evaluate(
+        (element) => element.getBoundingClientRect().height,
+      ),
+    ).toBe(originalHeight);
+  }
+});
+
 test("mobile navigation leaves the next menu tab half visible", async ({
   page,
   isMobile,

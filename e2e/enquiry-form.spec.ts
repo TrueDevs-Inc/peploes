@@ -88,8 +88,14 @@ for (const path of [
   }) => {
     await page.goto(path);
     const form = page.locator("#enquire").getByRole("form");
+    const reveal = page.locator("#enquire [data-scroll-reveal]:has(form)");
+    await reveal.scrollIntoViewIfNeeded();
+    await expect(reveal).toHaveCSS("opacity", "1");
+    await expect(reveal).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, 0)");
     for (const select of await form.getByRole("combobox").all()) {
-      await select.scrollIntoViewIfNeeded();
+      await select.evaluate((element) =>
+        element.scrollIntoView({ block: "center", behavior: "instant" }),
+      );
       await page.mouse.move(0, 0);
       await select.click();
       await expect(select).toHaveJSProperty("value", "");

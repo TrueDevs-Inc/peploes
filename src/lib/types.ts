@@ -1008,7 +1008,6 @@ export interface IMobileNavigationTriggerProps {
 }
 
 export interface IMenuNavigationLink {
-  compactDesktop?: boolean;
   label: string;
   href?: Route;
   children?: readonly { label: string; href: Route }[];
@@ -1471,6 +1470,11 @@ export interface IStoryActionProps {
   label: string;
   filled?: boolean;
   href?: Route;
+}
+
+export interface IStoryCardProps {
+  children: ReactNode;
+  className: string;
 }
 
 export interface IEventActionProps {

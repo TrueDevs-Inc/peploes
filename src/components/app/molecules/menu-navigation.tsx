@@ -21,9 +21,6 @@ export function MenuNavigation({
   const scrollRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const openItem = items.find((item) => item.href === openHref);
-  const compactDesktop = items.find(
-    (item) => item.href === pathname,
-  )?.compactDesktop;
 
   useEffect(() => {
     const scroll = scrollRef.current;
@@ -66,7 +63,7 @@ export function MenuNavigation({
       className={cn(
         className,
         "sticky top-[72px] z-30 bg-warm-cream pt-4 text-[#221a17] shadow-[inset_0_-1px_0_var(--soft-stone)] before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-2 before:bg-[linear-gradient(180deg,rgba(46,42,40,0.1),transparent)] xl:top-[76px]",
-        compactDesktop && "xl:pt-2",
+        "xl:pt-2",
       )}
     >
       <div

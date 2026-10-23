@@ -179,8 +179,38 @@
   margin-top: 32px;
 }
 .gatheringImage {
+  display: block;
   position: relative;
   height: 380px;
+  overflow: hidden;
+}
+:where(.gatheringCards > li:has(.gatheringImage:focus-visible)) .cardLink {
+  text-decoration-line: underline;
+}
+@media (hover: hover) {
+  :where(.gatheringCards > li:has(.gatheringImage:hover)) .cardLink {
+    text-decoration-line: underline;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .gatheringImage .cover {
+    transition: transform var(--duration-slow) var(--ease-organic);
+  }
+  .gatheringImage:focus-visible .cover {
+    transform: scale(1.05);
+  }
+  :where(.gatheringCards > li:has(.gatheringImage:focus-visible) .cardLink)
+    svg {
+    transform: translateX(3px);
+  }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .gatheringImage:hover .cover {
+    transform: scale(1.05);
+  }
+  :where(.gatheringCards > li:has(.gatheringImage:hover) .cardLink) svg {
+    transform: translateX(3px);
+  }
 }
 .gatheringCopy {
   padding-top: 20px;

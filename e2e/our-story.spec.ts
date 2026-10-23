@@ -78,6 +78,9 @@ test("archive copy and photograph stay separate at responsive widths", async ({
 test("the home family story card opens Our Story", async ({ page }) => {
   await page.goto("/");
   await page
+    .getByRole("link", { name: "Discover Our Story", exact: true })
+    .focus();
+  await page
     .getByRole("main")
     .getByRole("link", { name: "Discover Our Story", exact: true })
     .click();

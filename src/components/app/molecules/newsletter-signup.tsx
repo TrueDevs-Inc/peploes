@@ -111,7 +111,7 @@ export function NewsletterSignup() {
         <Button
           type="submit"
           variant="brand-primary"
-          className="h-11 gap-2 rounded-[4px] bg-peploe-burgundy px-5 text-base leading-[22px] font-medium text-warm-cream shadow-none has-[>svg]:px-5"
+          className="h-11 gap-2 rounded-[4px] bg-peploe-burgundy px-5 text-base leading-[22px] font-medium text-warm-cream shadow-none has-[>svg]:px-5 xl:leading-6"
         >
           {FOOTER_CONTENT.newsletter.submitLabel}
           <ArrowRight aria-hidden="true" className="size-4" />

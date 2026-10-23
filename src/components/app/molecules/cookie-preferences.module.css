@@ -139,6 +139,39 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
+  .dialog[open] {
+    opacity: 1;
+    transform: translateY(0);
+    transition:
+      opacity var(--duration-base) var(--ease-organic),
+      transform var(--duration-base) var(--ease-organic);
+  }
+
+  .dialog[open]::backdrop {
+    opacity: 1;
+    transition: opacity var(--duration-base) var(--ease-organic);
+  }
+
+  .dialog[open][data-closing] {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  .dialog[open][data-closing]::backdrop {
+    opacity: 0;
+  }
+
+  @starting-style {
+    .dialog[open] {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+
+    .dialog[open]::backdrop {
+      opacity: 0;
+    }
+  }
+
   .toggle::before {
     transition: transform var(--duration-interaction) var(--ease-organic);
   }

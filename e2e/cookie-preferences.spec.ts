@@ -1,5 +1,92 @@
 import { expect, test } from "@playwright/test";
 
+test("cookie preferences stay modal while fading closed through each dismissal", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/visit-contact");
+  const trigger = page.getByRole("button", {
+    name: "Cookie Settings",
+    exact: true,
+  });
+  const dialog = page.getByRole("dialog", {
+    name: "Cookie Preferences",
+    exact: true,
+  });
+  for (const dismissal of ["close", "escape", "outside", "accept", "reject"]) {
+    await trigger.click();
+    await expect(dialog).toHaveCSS("opacity", "1");
+    if (dismissal === "escape") await page.keyboard.press("Escape");
+    else if (dismissal === "outside") await page.mouse.click(4, 4);
+    else
+      await dialog
+        .getByRole("button", {
+          name:
+            dismissal === "close"
+              ? "Close cookie preferences"
+              : dismissal === "accept"
+                ? "Accept All"
+                : "Reject non-essential",
+          exact: true,
+        })
+        .click();
+    await expect(dialog).toHaveAttribute("data-closing", "true");
+    await expect(dialog).toBeVisible();
+    expect(await page.evaluate(() => document.body.style.overflow)).toBe(
+      "hidden",
+    );
+    await expect(dialog).not.toBeVisible();
+    await expect(trigger).toBeFocused();
+    await expect
+      .poll(() => page.evaluate(() => document.body.style.overflow))
+      .not.toBe("hidden");
+  }
+});
+
+test("cookie preferences fade and slide open on every visit and respect reduced motion", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/visit-contact");
+  const trigger = page.getByRole("button", {
+    name: "Cookie Settings",
+    exact: true,
+  });
+  const dialog = page.getByRole("dialog", {
+    name: "Cookie Preferences",
+    exact: true,
+  });
+  for (let opening = 0; opening < 2; opening++) {
+    await trigger.click();
+    await expect(dialog).toBeVisible();
+    const properties = await dialog.evaluate((element) =>
+      element
+        .getAnimations()
+        .map((animation) =>
+          animation instanceof CSSTransition
+            ? animation.transitionProperty
+            : "",
+        ),
+    );
+    expect(properties).toContain("opacity");
+    expect(properties).toContain("transform");
+    await expect(dialog).toHaveCSS("opacity", "1");
+    await expect(dialog).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, 0)");
+    await page.keyboard.press("Escape");
+    await expect(trigger).toBeFocused();
+  }
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await trigger.click();
+  await expect(dialog).toBeVisible();
+  expect(
+    await dialog.evaluate((element) => element.getAnimations().length),
+  ).toBe(0);
+  await expect(dialog).toHaveCSS("opacity", "1");
+  await page.keyboard.press("Escape");
+  await expect(dialog).not.toBeVisible();
+  await expect(trigger).toBeFocused();
+});
+
 test("footer opens preferences, retains choices and restores keyboard focus", async ({
   page,
 }) => {

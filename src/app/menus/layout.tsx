@@ -11,7 +11,7 @@ export default function MenusLayout({ children }: IMenuLayoutProps) {
       <Suspense
         fallback={
           <div
-            className="min-h-[492px] bg-ink xl:min-h-[454px]"
+            className="min-h-[492px] bg-ink xl:min-h-[446px]"
             aria-busy="true"
           />
         }

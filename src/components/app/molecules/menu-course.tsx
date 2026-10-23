@@ -40,6 +40,7 @@ export function MenuCourse({
       )}
     >
       <h2
+        data-scroll-reveal
         id={headingId}
         className={cn(
           ebGaramond.className,
@@ -65,6 +66,7 @@ export function MenuCourse({
           .filter((dishes) => dishes.length > 0)
           .map((dishes) => (
             <ul
+              data-scroll-reveal
               key={dishes[0]._key}
               className="space-y-4 xl:space-y-5 xl:border-l xl:border-soft-stone xl:pl-9"
             >

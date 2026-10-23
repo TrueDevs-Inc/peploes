@@ -30,7 +30,10 @@ export function GroupsOccasions() {
         />
 
         <div className="site-container relative pt-[185px] pb-10 sm:pt-20 sm:pb-12">
-          <div className="flex max-w-[720px] flex-col items-start gap-4 sm:gap-7">
+          <div
+            data-scroll-reveal
+            className="flex max-w-[720px] flex-col items-start gap-4 sm:gap-7"
+          >
             <p className="flex items-center gap-2.5 text-sm leading-4 font-medium tracking-[0.1em] uppercase">
               <span
                 aria-hidden="true"
@@ -56,7 +59,8 @@ export function GroupsOccasions() {
             <Button
               asChild
               variant="brand-primary-inverse"
-              className="h-11 w-[216px] rounded-[4px] bg-warm-cream px-5 has-[>svg]:px-5 text-base leading-[22px] font-medium text-peploe-burgundy shadow-none"
+              size="cta"
+              className="w-[216px]"
             >
               <Link href={ROUTES.PRIVATE_DINING}>
                 {GROUPS_OCCASIONS_CONTENT.ctaLabel}
@@ -86,7 +90,7 @@ export function GroupsOccasions() {
                   className="object-cover transition-transform duration-(--duration-base) ease-out motion-safe:group-hover:scale-105 motion-safe:group-focus-visible:scale-105 motion-reduce:transition-none"
                 />
               </Link>
-              <div className={styles.copy}>
+              <div data-scroll-reveal className={styles.copy}>
                 <div className={styles.introduction}>
                   <h3 className={cn(ebGaramond.className, styles.title)}>
                     {occasion.title}

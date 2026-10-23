@@ -35,7 +35,7 @@ export function RestaurantMenu({ menu }: IMenuContentProps) {
               menu.image && "xl:min-h-72 xl:grid-cols-2",
             )}
           >
-            <div className="relative z-10">
+            <div data-scroll-reveal className="relative z-10">
               <Breadcrumbs
                 items={[
                   { name: "Menus", url: ROUTES.MENUS },

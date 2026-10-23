@@ -54,6 +54,7 @@ export function MenuNotes({
 function MenuNotesText({ menu, compact, collection }: IMenuNotesProps) {
   return (
     <div
+      data-scroll-reveal
       className={cn(
         "xl:pr-16",
         compact &&
@@ -101,6 +102,7 @@ function MenuAllergenInformation({
   const hasNotes = Boolean(menu.offer) || menu.notes.length > 0;
   return (
     <details
+      data-scroll-reveal
       open
       className={cn(
         "group relative min-h-11",

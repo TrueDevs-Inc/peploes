@@ -71,7 +71,7 @@ function EventCard({ event, featured = false }: IEventCardProps) {
             fill
             sizes={
               featured
-                ? "(min-width: 1440px) 635px, (min-width: 1280px) calc((100vw - 192px) * 635 / 1248), calc(100vw - 48px)"
+                ? "(min-width: 1584px) 709px, (min-width: 1280px) calc((100vw - 192px) * 635 / 1248), calc(100vw - 48px)"
                 : "(min-width: 640px) 200px, calc(100vw - 48px)"
             }
             className={cn(
@@ -82,7 +82,7 @@ function EventCard({ event, featured = false }: IEventCardProps) {
         </span>
       </Link>
 
-      <div className="flex min-w-0 flex-col gap-2">
+      <div data-scroll-reveal className="flex min-w-0 flex-col gap-2">
         <p className="text-xs leading-4 font-medium tracking-[0.1em] uppercase">
           {event.category}
         </p>
@@ -132,8 +132,11 @@ export function WhatsOn({ events }: IWhatsOnProps) {
         "bg-button-primary-pressed text-warm-cream",
       )}
     >
-      <div className="site-container flex flex-col gap-8 pt-12 pb-[52px] sm:gap-12 sm:py-20 xl:max-w-[1296px]">
-        <div className="flex flex-col items-start gap-4 xl:flex-row xl:items-end xl:justify-between xl:gap-8">
+      <div className="site-container flex flex-col gap-8 pt-12 pb-[52px] sm:gap-12 sm:py-20">
+        <div
+          data-scroll-reveal
+          className="flex flex-col items-start gap-4 xl:flex-row xl:items-end xl:justify-between xl:gap-8"
+        >
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-4 sm:gap-7">
               <p className="flex items-center gap-2 text-xs leading-4 font-medium tracking-[0.1em] uppercase">
