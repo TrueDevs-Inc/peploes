@@ -374,6 +374,15 @@ test("related images share the action destination and homepage hover transition"
       (image) => image.getBoundingClientRect().width,
     );
     await imageLink.hover();
+    const action = firstCard.getByRole("link").filter({
+      hasNot: page.getByRole("img"),
+    });
+    const arrow = action.locator("svg.lucide-arrow-right");
+    await expect(arrow).toHaveCSS("transform", "matrix(1, 0, 0, 1, 3, 0)");
+    await expect(action).toHaveCSS("text-decoration-line", "underline");
+    await expect(
+      related.getByRole("listitem").nth(1).locator("svg.lucide-arrow-right"),
+    ).toHaveCSS("transform", "none");
     await expect
       .poll(() =>
         photograph.evaluate((image) => image.getBoundingClientRect().width),
@@ -384,6 +393,7 @@ test("related images share the action destination and homepage hover transition"
       "0.3s",
     );
     await page.emulateMedia({ reducedMotion: "reduce" });
+    await expect(arrow).toHaveCSS("transform", "none");
     await expect
       .poll(() =>
         photograph.evaluate((image) => image.getBoundingClientRect().width),
@@ -538,11 +548,19 @@ test("menu and related event links open their published destinations", async ({
     await expect(
       menu.getByRole("link", { name: "Find Out More", exact: true }),
     ).toHaveAttribute("href", secondHref);
+    const imageLinks = menu.getByRole("link").filter({
+      has: page.getByRole("img"),
+    });
+    await expect(imageLinks).toHaveCount(2);
+    await expect(imageLinks.first()).toHaveAttribute("href", "/menus/dinner");
+    await expect(imageLinks.nth(1)).toHaveAttribute("href", secondHref);
   }
   const navigationStart = await page.evaluate(() => performance.timeOrigin);
   await page
     .getByRole("region", { name: "Menu & Experience", exact: true })
-    .getByRole("link", { name: "Find Out More", exact: true })
+    .getByRole("link")
+    .filter({ has: page.getByRole("img") })
+    .nth(1)
     .click();
   await expect(page).toHaveURL(
     /\/seasonal\/lobster-season\?from=card#event-menu$/,

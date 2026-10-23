@@ -1,6 +1,44 @@
 import { rm, writeFile } from "node:fs/promises";
 import { expect, test } from "./menu-test";
 
+test("mobile hero fills the first screen before the entrance photograph", async ({
+  page,
+  viewport,
+}) => {
+  await page.goto("/");
+  const hero = page.locator('section[aria-labelledby="hero-heading"]');
+  const description = hero.getByText(
+    "Great food, exceptional wine and genuine hospitality in the heart of the city.",
+    { exact: true },
+  );
+  const heading = hero.getByRole("heading", { level: 1 });
+
+  if ((viewport?.width ?? 1440) >= 640) {
+    await expect(description).toBeVisible();
+    await expect(heading).toHaveCSS("font-size", "76px");
+    return;
+  }
+
+  for (const height of [viewport?.height ?? 844, 568]) {
+    await page.setViewportSize({ width: viewport?.width ?? 390, height });
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect(description).toBeHidden();
+    await expect(heading).toHaveCSS("font-size", "46px");
+    await expect(
+      hero.getByRole("link", { name: "Call Peploe's", exact: true }),
+    ).toBeInViewport();
+    const entrance = hero.getByRole("img", {
+      name: "Peploe’s red awning above the steps leading down to the restaurant.",
+      exact: true,
+    });
+    const bounds = await entrance.boundingBox();
+    expect(bounds?.y).toBeCloseTo(height, 0);
+    await expect(entrance).not.toBeInViewport();
+    await page.evaluate(() => window.scrollBy(0, 200));
+    await expect(entrance).toBeInViewport();
+  }
+});
+
 test("homepage event actions follow published availability without a rebuild", async ({
   page,
 }) => {
@@ -15,14 +53,19 @@ test("homepage event actions follow published availability without a rebuild", a
     for (const published of [[], ["lobster-season"], []]) {
       await writeFile(statePath, JSON.stringify(published));
       await page.goto("/");
-      await expect(card.getByRole("link")).toHaveAttribute(
-        "href",
-        published.length ? "/seasonal/lobster-season" : "/seasonal",
-      );
+      await expect(card.getByRole("link")).toHaveCount(2);
+      for (const link of await card.getByRole("link").all()) {
+        await expect(link).toHaveAttribute(
+          "href",
+          published.length ? "/seasonal/lobster-season" : "/seasonal",
+        );
+      }
       if (!published.length) {
         await expect(page.locator('a[href^="/seasonal/"]')).toHaveCount(0);
       }
-      await card.getByRole("link").click();
+      await card
+        .getByRole("link", { name: "Lobster Week Returns", exact: true })
+        .click();
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(
         published.length
           ? "Lobster Season"
@@ -55,8 +98,10 @@ test("homepage contact and event actions reach their existing destinations", asy
     const card = page
       .getByRole("article")
       .filter({ has: page.getByRole("heading", { name: title, exact: true }) });
-    const action = card.getByRole("link");
-    await expect(action).toHaveAttribute("href", href);
+    for (const link of await card.getByRole("link").all()) {
+      await expect(link).toHaveAttribute("href", href);
+    }
+    const action = card.locator("[data-card-action]");
     await action.click();
     await expect(page).toHaveURL(href);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(heading);

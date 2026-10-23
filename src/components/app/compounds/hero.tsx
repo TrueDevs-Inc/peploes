@@ -20,7 +20,7 @@ export function Hero() {
       aria-labelledby="hero-heading"
       className={cn(dmSans.className, styles.hero, "isolate text-warm-cream")}
     >
-      <div className="relative flex min-h-[660px] items-end bg-ink pt-[218px] pb-8 sm:min-h-[720px] sm:items-center sm:py-20 lg:min-h-[780px] lg:py-[72px]">
+      <div className="relative flex min-h-[calc(100dvh-72px)] items-end bg-ink py-8 sm:min-h-[720px] sm:items-center sm:py-20 lg:min-h-[780px] lg:py-[72px]">
         <Image
           src={HERO_CONTENT.backgroundImage.src}
           alt={HERO_CONTENT.backgroundImage.alt}
@@ -49,14 +49,14 @@ export function Hero() {
                 id="hero-heading"
                 className={cn(
                   ebGaramond.className,
-                  "text-[48px] leading-[46px] font-medium tracking-[-1px] sm:text-[clamp(40px,5.278vw,76px)] sm:leading-[1.079] sm:tracking-normal lg:text-[76px] lg:leading-[82px]",
+                  "text-[46px] leading-[44px] font-medium tracking-[-1px] sm:text-[clamp(40px,5.278vw,76px)] sm:leading-[1.079] sm:tracking-normal lg:text-[76px] lg:leading-[82px]",
                 )}
               >
                 <span className="lg:block">{HERO_CONTENT.headingLines[0]}</span>{" "}
                 <span className="lg:block">{HERO_CONTENT.headingLines[1]}</span>{" "}
                 <span className="lg:block">{HERO_CONTENT.headingLines[2]}</span>
               </h1>
-              <p className="text-base leading-[23px] text-warm-cream/92 sm:text-lg sm:leading-7 sm:text-warm-cream/90">
+              <p className="hidden text-base leading-[23px] text-warm-cream/92 sm:block sm:text-lg sm:leading-7 sm:text-warm-cream/90">
                 {HERO_CONTENT.description}
               </p>
             </div>

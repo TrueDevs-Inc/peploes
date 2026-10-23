@@ -66,7 +66,7 @@ layouts use an undistorted cover crop. Its original entrance photograph is only
 images may be improved later; it does not supply replacement photography.
 
 There is no separate mobile Visit & Contact frame. Smaller layouts retain
-24px gutters, stack the content and actions, and allow text to increase section
+16px gutters, stack the content and actions, and allow text to increase section
 heights. All four Getting here descriptions use the secondary text colour.
 Phone, email, directions and private dining links are active. The map
 loads Mapbox GL JS automatically, matching the Samsu reference. It keeps the local
@@ -151,7 +151,7 @@ full-width photographs fill the page. Keep the root layout full-width and put
 content inside the shared `site-container` or `site-container-inset` utilities.
 This applies to the homepage, menu pages, private dining pages, navbar and footer.
 
-Both utilities retain 24px gutters below the desktop breakpoint. On desktop,
+Both utilities use 16px gutters below the desktop breakpoint. On desktop,
 the standard container leaves at least 72px on each side and the inset container
 leaves at least 80px. The menu footer uses the standard 72px gutters; the
 homepage footer uses the 80px inset. At the 1440px Figma reference, their content
@@ -189,8 +189,8 @@ layouts for horizontal overflow and undistorted images after width changes.
 ## Mobile homepage reference
 
 The 390px Final Pages mobile homepage (`3395:17700`) owns the phone layout.
-Below 640px, use its 24px gutters, type sizes, vertical spacing, image frames
-and stacked full-width actions. Keep the existing tablet and desktop layouts.
+Below 640px, use 16px gutters with the reference type sizes, vertical spacing,
+image frames and stacked full-width actions. Keep the existing tablet and desktop layouts.
 At the reference width the page is 11,526px tall, including the 72px header.
 Sections may grow when narrower screens or enlarged text need more room.
 
@@ -212,6 +212,10 @@ Vouchers and newsletter subscription remain inactive.
 
 ## Homepage interaction previews
 
+Enabled links, buttons, selects, disclosure summaries and choice controls use a
+pointer cursor across the site, including menu dropdowns and the wine-index close
+button (issue #27). Text-entry fields retain their text cursor.
+
 Remaining placeholder actions use inert `type="button"` controls with `aria-disabled="true"`
 and no click handlers. They remain focusable and show the Figma hover styles
 without navigating, booking or submitting. The newsletter form validates email
@@ -226,12 +230,19 @@ links, and a 6%
 burgundy fill with a 60% border for contact actions. Navigation text changes
 to burgundy with an underline. Interactions use the 160ms token and respect
 reduced motion; buttons and images do not scale on hover, except the three
-Groups and occasions card images, which use a 300ms, 5% zoom.
+Groups and occasions and What's On card images, which use a 300ms, 5% zoom.
 
 Homepage action arrows use Lucide's 16px `ArrowRight`, matching the footer
 Subscribe button, including the menu category arrows. Keep existing button
 padding when adding direct SVG children; the shared Button's icon defaults
 otherwise change it. Mobile navigation chevrons remain separate glyphs.
+
+What's On, Groups & Occasions, Menu & Experience and More to Explore card
+images open the same destination as their text actions and use a 300ms, 5% zoom.
+Hovering an image also underlines its own text action and moves its arrow 3px
+right. Keyboard focus on the image link also moves the arrow. Reduced motion
+disables image zoom and arrow movement. CMS menu highlights without destinations
+remain non-interactive.
 
 Verify hover and keyboard focus, unchanged layout, inactive placeholder clicks,
 and working contact destinations when changing these controls.
@@ -246,7 +257,8 @@ locally and tinted with the Ink token using a CSS mask. Preserve its aspect
 ratio; replace it with the exact Figma vector when that export is available.
 
 The desktop Menus dropdown follows the updated Nav / Shelf / Menus / Light
-frame (`3732:6583`). It opens on mouse hover or button activation and overlays
+frame (`3732:6583`). Hovering over Menus or pressing ArrowDown opens the shelf;
+clicking or pressing Enter navigates to Lunch. The shelf overlays
 the page below the 76px header without moving the logo or page content. At
 1440px, the Warm Cream panel is 218px high with 36px vertical padding, 72px
 side gutters, a 360px introduction and a 56px gap before the destinations.
@@ -279,13 +291,15 @@ as the production build.
 
 Below the desktop breakpoint, navigation follows the Design System's light
 mobile variants: closed (`3041:1863`), menu open (`3041:1812`) and Menus expanded
-(`3041:1718`). The header is 72px tall with 24px gutters, the logo and a compact
-Book button. The full-screen menu expands Menus and Groups & Occasions inline,
-then shows Gift Vouchers, opening hours, address, telephone, email and the
-People make Peploe's brand line. Preserve the 44px minimum control targets.
+(`3041:1718`). The header is 72px tall with 16px gutters, the logo and a compact
+Book button. The open menu's close icon occupies the same position as the
+hamburger icon, including when the browser reserves scrollbar space.
+The full-screen menu expands Menus and Groups & Occasions inline, then shows
+Gift Vouchers and the People make Peploe's brand line. Contact details remain on Visit & Contact.
+Preserve the 44px minimum control targets.
 
 Unbuilt page links and Gift Vouchers remain inactive placeholders. Book opens
-the booking design preview; Home, telephone and email links work. Keep modal focus
+the booking design preview; Home and Visit & Contact links work. Keep modal focus
 containment and restoration, Escape and close-button dismissal, scroll locking
 and automatic dismissal at the desktop breakpoint. Verify both accordion
 groups, narrow screens, short viewports, enlarged text and overflow with the
@@ -302,11 +316,12 @@ EB Garamond headings.
 Footer dividers, mobile row borders and the email field rule use 1px thickness.
 The three burgundy heading underlines are 32px wide and 2px high, matching Figma.
 
-Telephone and email links are active. Per Figma comments #73 and #75, the footer
-lists Privacy, Terms, Accessibility and Cookie Settings in that order. The first
-three open their policy pages; Cookie Settings opens the Cookie Preferences
+Telephone and email links are active. The footer lists Privacy Policy, Terms,
+Accessibility, Booking & Cancellation and Cookie Settings in that order. The first
+four open their policy pages; Cookie Settings opens the Cookie Preferences
 modal. Booking & Cancellation Terms retains its existing URL. Legal links may
 wrap on narrow screens and when text is enlarged.
+On mobile, legal links stack vertically and the copyright is centered.
 The modal follows the desktop and mobile Cookie Preferences designs: necessary
 cookies are always active, optional Analytics, Performance and Marketing choices
 are saved individually, and Accept All or Reject non-essential saves and closes.
@@ -353,10 +368,13 @@ phone and email targets, keyboard focus, 200% zoom and horizontal overflow.
 
 The homepage hero follows the Final Pages hero and entrance group (`3131:11100`).
 The desktop photo panel is 780px tall with EB Garamond headings and DM Sans
-supporting copy. Book a Table opens the booking design preview; the telephone
-button remains a placeholder.
-On phones, the panel is 660px tall with 48px headings and stacked full-width
-buttons. The 520px entrance photograph has a separate 74px caption below it.
+supporting copy. Book a Table opens the booking design preview; Call Peploe's
+uses the restaurant's telephone number.
+On phones below 640px, hide the supporting description and use 46px headings
+with stacked full-width buttons. The photo panel fills the visible viewport
+below the 72px navbar, so the entrance photograph starts after scrolling. Allow
+the panel to grow when short screens or enlarged text need more space. The
+520px entrance photograph has a separate 74px caption below it.
 
 The restaurant photo and transparent entrance artwork were downloaded from
 Figma. The entrance uses its original Figma backdrop behind the cutout. Narrow
@@ -415,6 +433,10 @@ The homepage section follows Final Pages `3131:11285`: a dark burgundy
 background, one featured event and a column of smaller cards. It uses the
 original Figma photographs, EB Garamond headings and DM Sans supporting copy.
 The cards stack on narrow screens.
+
+Each event image opens the same destination as its text action and gently zooms
+on hover or keyboard focus. Preserve its resting crop and disable the zoom when
+reduced motion is requested.
 
 The adjacent yellow note (`3131:11688`) calls for CMS-managed campaigns that
 can be published or removed without changing the homepage layout, with cards
@@ -528,7 +550,7 @@ Book a Table opens the existing `/book-a-table` page. Contact Us opens Visit & C
 Use the three original Figma photos. The terrace source is only 243×244px;
 it needs an approved larger source for a sharp desktop image. Preserve its
 natural proportions when cropping. No separate mobile frame is supplied. Below
-640px, follow the homepage and menu pages: 24px gutters, 48px hero type, 42px
+640px, follow the homepage and menu pages: 16px gutters, 48px hero type, 42px
 section headings, 16px body copy and stacked full-width invitation buttons.
 Photo banners use vertical overlays with room above the text; their height grows
 with the content. The diary retains its date column, 1px horizontal row dividers
@@ -581,7 +603,7 @@ These links do not preselect an event or submit a reservation. Invitation button
 wrap onto another row when needed. On phones they remain full-width; long labels
 wrap inside the button instead of overflowing its border.
 At tablet widths, the related row scrolls with touch or its arrow controls.
-No separate mobile design is supplied. Below 640px, use the established 24px
+No separate mobile design is supplied. Below 640px, use the shared 16px
 gutters, 42px/44px section headings, 16px/24px body copy and 12px eyebrows.
 Stack the menu cards, story and gallery; use 3:2 menu and story photos with
 40px section padding. Keep information icons at 40px and invitation buttons
@@ -696,12 +718,14 @@ and retain both high-severity audit gates.
 `/our-story` follows Final Pages `3609:5115`: the dining-room hero, history
 timeline, Georgian building, founder, mural, archive, next generation and
 closing service photograph. It uses the existing brand fonts, buttons and
-production footer. Desktop section heights at 1440px are 546, 457, 600, 390,
-444, 516, 340 and 390px. Narrow layouts stack the content with 24px gutters,
+production footer. Desktop section minimum heights at 1440px are 546, 457, 600,
+390, 444, 516, 340 and 390px. The mural and closing service banners use matching
+48px top and bottom padding (issue #28), growing beyond their minimum heights
+as needed. Narrow layouts stack the content with 16px gutters,
 a vertical timeline and readable overlays; Figma has no separate mobile frame.
 Main headings use 38px type on phones and 35px below 360px, with 42px and
 40px line heights respectively. Smaller timeline titles retain their existing
-scale. Tablet and desktop typography, section geometry and image crops remain
+scale. Tablet and desktop typography and image crops remain
 unchanged. Page styling lives in Tailwind classes in the Our Story component.
 At the 1440px reference width and above, the philosophy column stays 525px
 wide beside a flexible timeline, with a 100px gap. The timeline has 22px top
@@ -714,8 +738,8 @@ beside the portrait. The portrait fills the remaining width, preserving the
 The next-generation section also keeps its 527px copy column, 16px portrait
 gap and five authored lines from 1280px, with 48px vertical padding inside
 the 340px section. Its paragraph wraps naturally on smaller screens.
-The closing banner retains its 390px height, 60px heading and 20px body
-text on desktop. From 1440px, anchor the photograph to the wrist beneath
+The closing banner retains its 60px heading and 20px body text on desktop.
+From 1440px, anchor the photograph to the wrist beneath
 “dining” on the third body line. Scale the image uniformly around that point
 to fill the banner as it widens, preserving the word-to-hand alignment.
 

@@ -1,9 +1,4 @@
-import {
-  NAVBAR_CONTENT,
-  RESTAURANT_CONTACT,
-  RESTAURANT_OPENING_HOURS,
-  ROUTES,
-} from "@/lib/constants";
+import { NAVBAR_CONTENT, ROUTES } from "@/lib/constants";
 import { GROUPS_SHELF_CONTENT } from "@/lib/constants/groups-shelf";
 import { MENUS_CONTENT } from "@/lib/constants/menus";
 import type { IMobileNavigationContent } from "@/lib/types";
@@ -50,16 +45,5 @@ export const MOBILE_NAVIGATION_CONTENT = {
     },
   ],
   giftVouchersLabel: "Gift Vouchers",
-  openingHoursHeading: "Opening Hours",
-  openingHours: RESTAURANT_OPENING_HOURS,
-  address: "16 St Stephen’s Green, Dublin 2",
-  phoneAction: {
-    href: `tel:${RESTAURANT_CONTACT.phone}`,
-    label: RESTAURANT_CONTACT.phoneLabel,
-  },
-  emailAction: {
-    href: `mailto:${RESTAURANT_CONTACT.email}`,
-    label: RESTAURANT_CONTACT.email,
-  },
   brandPhrase: "People make Peploe’s.",
 } as const satisfies IMobileNavigationContent;

@@ -47,9 +47,13 @@ export const FOOTER_CONTENT: IFooterContent = {
   copyright: "© 2026 Peploe’s",
   legalNavigationLabel: "Legal and accessibility",
   legalLabels: [
-    { label: "Privacy", href: ROUTES.PRIVACY_POLICY },
+    { label: "Privacy Policy", href: ROUTES.PRIVACY_POLICY },
     { label: "Terms", href: ROUTES.TERMS_CONDITIONS },
     { label: "Accessibility", href: ROUTES.ACCESSIBILITY_POLICY },
+    {
+      label: "Booking & Cancellation",
+      href: ROUTES.BOOKING_CANCELLATION_TERMS,
+    },
   ],
   instagramHref: "https://www.instagram.com/peploesstephensgreen/",
   instagramLabel: "Peploe’s on Instagram",

@@ -28,6 +28,7 @@ export function Navbar() {
             {
               id: "menus",
               label: NAVBAR_CONTENT.menusLabel,
+              href: ROUTES.MENUS,
               content: <DesktopMenus />,
             },
             {

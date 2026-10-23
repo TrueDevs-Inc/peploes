@@ -1,0 +1,65 @@
+@media (width < 80rem) {
+  .scroll {
+    scroll-padding-inline-start: 8px;
+    scroll-snap-type: x proximity;
+  }
+
+  .tabs {
+    --visible-tabs: 2.5;
+  }
+
+  .tabs > li {
+    flex: 0 0 calc((100% + 8px) / var(--visible-tabs));
+    min-width: max-content;
+    scroll-snap-align: start;
+  }
+
+  .tabs::after {
+    flex: 0 0 8px;
+    content: "";
+  }
+
+  .tabs > li > :is(a, button) {
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    gap: 4px;
+    padding-inline: 4px;
+    font-size: 18px;
+    line-height: 20px;
+    white-space: nowrap;
+  }
+
+  .tabs > li svg {
+    flex-shrink: 0;
+  }
+
+  .tabs > li > button {
+    gap: 8px;
+    padding-inline: 22px;
+  }
+}
+
+@media (360px <= width < 80rem) {
+  .tabs {
+    --visible-tabs: 3.5;
+  }
+}
+
+@media (480px <= width < 80rem) {
+  .tabs {
+    --visible-tabs: 4.5;
+  }
+}
+
+@media (640px <= width < 80rem) {
+  .tabs {
+    --visible-tabs: 5.5;
+  }
+}
+
+@media (900px <= width < 80rem) {
+  .tabs {
+    --visible-tabs: 6.5;
+  }
+}

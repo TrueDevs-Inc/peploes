@@ -23,6 +23,16 @@ removing prices do not apply to Dinner. Dinner has no set-menu offer.
 
 - The Menu navigation note (`3347:3824`) keeps the hero consistent between menus
   and the navigation accessible while scrolling. Phones scroll the links horizontally.
+  Below the desktop breakpoint, size tabs to show a whole number plus half of
+  the next tab: 2.5 below 360px, 3.5 from 360px, 4.5 from 480px, 5.5 from 640px
+  and 6.5 from 900px. Native scroll snapping preserves this visual cue after
+  swiping. Align the active tab to the start where possible; near the end,
+  show the final tabs fully with a partial tab on the left. Labels stay on one
+  line; longer labels widen their tab to fit the text and chevron, so their
+  visible fraction can differ from half.
+  Dropdown tabs retain 22px horizontal padding and an 8px text-to-chevron gap
+  so their labels do not crowd the separators.
+  Desktop retains its existing row layout.
 - The CMS note calls for editable headings, dishes, descriptions, prices, service
   times and notes. The allergen note calls for optional, editable expanding content.
 - Comment #17 removes individual starter and main-course prices from Lunch.

@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { ROUTES, WHATS_ON_CONTENT } from "@/lib/constants";
+import { FOCUS_RING, ROUTES, WHATS_ON_CONTENT } from "@/lib/constants";
 import { dmSans, ebGaramond } from "@/lib/fonts";
 import type {
   IEventActionProps,
@@ -29,6 +29,7 @@ function EventAction({ label, mobileLabel, href }: IEventActionProps) {
 
   return (
     <Button
+      data-card-action
       asChild={Boolean(href)}
       type={href ? undefined : "button"}
       variant="brand-text"
@@ -43,6 +44,7 @@ function EventAction({ label, mobileLabel, href }: IEventActionProps) {
 function EventCard({ event, featured = false }: IEventCardProps) {
   return (
     <article
+      data-image-card
       className={cn(
         "min-w-0 max-sm:pb-6 max-sm:shadow-[inset_0_-1px_0_rgb(250_247_241/0.3)]",
         featured
@@ -50,29 +52,35 @@ function EventCard({ event, featured = false }: IEventCardProps) {
           : "relative grid grid-cols-1 items-start gap-[14px] sm:not-first:pt-6 sm:not-first:before:absolute sm:not-first:before:inset-x-0 sm:not-first:before:top-0 sm:not-first:before:h-px sm:not-first:before:bg-soft-stone sm:grid-cols-[200px_minmax(0,1fr)] sm:gap-6",
       )}
     >
-      <div
+      <Link
+        data-card-image
+        href={event.href}
+        aria-label={event.title}
         className={cn(
-          "relative overflow-hidden",
+          FOCUS_RING,
+          "group relative block overflow-hidden focus-visible:ring-warm-cream",
           featured
             ? "h-[236px] rounded-[2px] sm:aspect-635/172 sm:h-auto"
             : "h-[190px] rounded-[1px] sm:aspect-5/4 sm:h-40",
         )}
       >
-        <Image
-          src={event.image.src}
-          alt={event.image.alt}
-          fill
-          sizes={
-            featured
-              ? "(min-width: 1440px) 635px, (min-width: 1280px) calc((100vw - 192px) * 635 / 1248), calc(100vw - 48px)"
-              : "(min-width: 640px) 200px, calc(100vw - 48px)"
-          }
-          className={cn(
-            "object-cover",
-            featured && "sm:scale-y-[1.194] sm:object-[center_63.7%]",
-          )}
-        />
-      </div>
+        <span className="absolute inset-0 transition-transform duration-(--duration-base) ease-out motion-safe:group-hover:scale-105 motion-safe:group-focus-visible:scale-105 motion-reduce:transition-none">
+          <Image
+            src={event.image.src}
+            alt={event.image.alt}
+            fill
+            sizes={
+              featured
+                ? "(min-width: 1440px) 635px, (min-width: 1280px) calc((100vw - 192px) * 635 / 1248), calc(100vw - 48px)"
+                : "(min-width: 640px) 200px, calc(100vw - 48px)"
+            }
+            className={cn(
+              "object-cover",
+              featured && "sm:scale-y-[1.194] sm:object-[center_63.7%]",
+            )}
+          />
+        </span>
+      </Link>
 
       <div className="flex min-w-0 flex-col gap-2">
         <p className="text-xs leading-4 font-medium tracking-[0.1em] uppercase">

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import styles from "@/components/app/molecules/menu-navigation.module.css";
 import { FOCUS_RING } from "@/lib/constants";
 import type { IMenuNavigationProps } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -29,12 +30,10 @@ export function MenuNavigation({
     const active = Array.from(
       scroll?.querySelectorAll<HTMLElement>("[data-menu-path]") ?? [],
     ).find((item) => item.dataset.menuPath === pathname);
-    if (scroll && active)
-      scroll.scrollLeft +=
-        active.getBoundingClientRect().left -
-        scroll.getBoundingClientRect().left -
-        scroll.clientWidth / 2 +
-        active.clientWidth / 2;
+    const tab = active?.closest("li");
+    const firstTab = scroll?.querySelector("li");
+    if (scroll && tab && firstTab)
+      scroll.scrollLeft = tab.offsetLeft - firstTab.offsetLeft;
   }, [pathname]);
 
   useEffect(() => {
@@ -72,9 +71,17 @@ export function MenuNavigation({
     >
       <div
         ref={scrollRef}
-        className="relative overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className={cn(
+          styles.scroll,
+          "relative overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+        )}
       >
-        <ul className="mx-2 flex h-12 min-w-max bg-[#fbf8f2] shadow-[inset_0_-1px_0_var(--soft-stone)] xl:site-container">
+        <ul
+          className={cn(
+            styles.tabs,
+            "mx-2 flex min-h-12 bg-[#fbf8f2] shadow-[inset_0_-1px_0_var(--soft-stone)] xl:site-container xl:min-w-max",
+          )}
+        >
           {items.map((item) => {
             const isOpen = openHref === item.href;
             const currentPage = pathname === item.href ? "page" : undefined;

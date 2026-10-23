@@ -58,7 +58,7 @@ export function CookiePreferences() {
         variant="brand-nav"
         aria-haspopup="dialog"
         aria-controls={isOpen ? id : undefined}
-        className="h-auto rounded-none p-0 text-xs leading-[18px] font-normal text-text-secondary xl:leading-5"
+        className="min-h-11 min-w-11 h-auto justify-start rounded-none p-0 text-sm leading-[21px] font-normal text-text-secondary xl:min-h-0 xl:min-w-0 xl:justify-center xl:text-xs xl:leading-5"
         onClick={() => {
           setPreferences(getCookiePreferences());
           setError(false);

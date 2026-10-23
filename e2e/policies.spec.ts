@@ -276,7 +276,7 @@ test("footer legal links open the requested policies", async ({
 
   for (const destination of [
     {
-      label: "Privacy",
+      label: "Privacy Policy",
       path: "/privacy-policy",
       heading: "Your privacy matters.",
     },
@@ -289,6 +289,11 @@ test("footer legal links open the requested policies", async ({
       label: "Accessibility",
       path: "/accessibility-policy",
       heading: "A warm welcome for everyone.",
+    },
+    {
+      label: "Booking & Cancellation",
+      path: "/booking-cancellation-terms",
+      heading: "Before you book.",
     },
   ]) {
     const legalNavigation = page

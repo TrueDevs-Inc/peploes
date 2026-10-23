@@ -1,13 +1,35 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./menu-test";
 
 test.beforeEach(async ({ page }) => {
   await page.goto("/");
 });
 
+test("desktop Menus opens Lunch by pointer and keyboard", async ({ page }) => {
+  const menus = page
+    .getByRole("navigation", { name: "Main navigation", exact: true })
+    .getByRole("link", { name: "Menus", exact: true });
+
+  await expect(menus).toHaveAttribute("href", "/menus");
+  await menus.click();
+  await expect(page).toHaveURL("/menus/lunch");
+  await expect(
+    page.getByRole("heading", { name: "Lunch Menu", exact: true }),
+  ).toBeVisible();
+  await expect(menus).toHaveAttribute("aria-expanded", "false");
+
+  await page.goto("/menus/dinner");
+  await menus.focus();
+  await menus.press("Enter");
+  await expect(page).toHaveURL("/menus/lunch");
+  await expect(
+    page.getByRole("heading", { name: "Lunch Menu", exact: true }),
+  ).toBeVisible();
+});
+
 for (const shelf of [
   {
     trigger: "Menus",
-    role: "button",
+    role: "link",
     crossedLink: "Our Story",
     destination: "Lunch",
     path: "/menus/lunch",
@@ -73,7 +95,7 @@ test("switching shelves cancels a pending close and keeps keyboard and outside-c
     name: "Main navigation",
     exact: true,
   });
-  const menus = navigation.getByRole("button", { name: "Menus", exact: true });
+  const menus = navigation.getByRole("link", { name: "Menus", exact: true });
   const groups = navigation.getByRole("link", {
     name: "Private Dining & Events",
     exact: true,
@@ -110,7 +132,7 @@ test("switching shelves cancels a pending close and keeps keyboard and outside-c
   await menus.hover();
   await page.mouse.click(0, 800);
   await expect(menus).toHaveAttribute("aria-expanded", "false");
-  await menus.press("Enter");
+  await menus.press("ArrowDown");
   await expect(menus).toHaveAttribute("aria-expanded", "true");
   await expect(
     navigation.getByRole("link", { name: "Lunch", exact: true }),
@@ -133,8 +155,8 @@ test("desktop shelves keep menu links and the private dining overview reachable"
     name: "Main navigation",
     exact: true,
   });
-  const menus = navigation.getByRole("button", { name: "Menus", exact: true });
-  await menus.click();
+  const menus = navigation.getByRole("link", { name: "Menus", exact: true });
+  await menus.press("ArrowDown");
   await expect(menus).toHaveAttribute("aria-expanded", "true");
 
   for (const [name, href] of [

@@ -92,10 +92,12 @@ export function SeasonalEventRelated({ content }: ISeasonalEventRelatedProps) {
         >
           {content.cards.map((card) => (
             <li
+              data-image-card
               key={card.id ?? card.title}
               className={cn(styles.relatedCard, cardStyles.card)}
             >
               <Link
+                data-card-image
                 href={card.href as Route}
                 aria-label={card.title}
                 className={cn(FOCUS_RING, cardStyles.image, "group")}

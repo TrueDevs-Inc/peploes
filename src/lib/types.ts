@@ -1276,11 +1276,6 @@ export interface IMobileNavigationContent {
   navigationLabel: string;
   items: readonly IMobileNavigationItem[];
   giftVouchersLabel: string;
-  openingHoursHeading: string;
-  openingHours: readonly IOpeningHours[];
-  address: string;
-  phoneAction: INavLink;
-  emailAction: INavLink;
   brandPhrase: string;
 }
 

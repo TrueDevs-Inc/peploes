@@ -70,8 +70,9 @@ export function GroupsOccasions() {
       <div className="site-container">
         <ul className="grid items-center gap-10 pt-8 pb-12 sm:gap-8 sm:pt-12 sm:pb-20 xl:w-[calc(100%+59px)] xl:max-w-[1355px] xl:grid-cols-3 xl:items-stretch xl:gap-7">
           {GROUPS_OCCASIONS_CONTENT.occasions.map((occasion) => (
-            <li key={occasion.title} className={styles.card}>
+            <li key={occasion.title} className={styles.card} data-image-card>
               <Link
+                data-card-image
                 href={occasion.href}
                 aria-label={occasion.title}
                 className={cn(FOCUS_RING, styles.image, "group")}
@@ -106,6 +107,7 @@ export function GroupsOccasions() {
                   </p>
                 </div>
                 <Button
+                  data-card-action
                   asChild
                   variant="brand-text"
                   aria-label={`${GROUPS_OCCASIONS_CONTENT.cardCtaLabel} ${occasion.title}`}

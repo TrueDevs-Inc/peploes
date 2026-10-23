@@ -203,7 +203,7 @@ function StoryMural() {
         />
       </div>
       <div className="site-container">
-        <div className="relative z-1 py-12 lg:min-h-[444px] lg:w-[470px] lg:pb-9">
+        <div className="relative z-1 py-12 lg:min-h-[444px] lg:w-[470px]">
           <p className="flex items-center gap-2.5 text-sm leading-4 font-medium tracking-[0.1em] uppercase after:h-0.5 after:w-12 after:shrink-0 after:bg-current">
             {mural.eyebrow}
           </p>
@@ -315,7 +315,7 @@ function StoryToday() {
       aria-labelledby="story-today"
     >
       {/* Keep the wrist beneath “dining” as the desktop photograph widens. */}
-      <div className="absolute inset-0 min-[90rem]:top-[264px] min-[90rem]:right-auto min-[90rem]:bottom-auto min-[90rem]:left-(--wrist-x) min-[90rem]:aspect-[3/2] min-[90rem]:w-[max(calc(var(--wrist-x)*30/11),calc((100%_-_var(--wrist-x))*30/19))] min-[90rem]:[--wrist-x:calc(var(--story-gutter)_+_456px)] min-[90rem]:[transform:translate(-36.666667%,-57.1875%)]">
+      <div className="absolute inset-0 min-[90rem]:top-[274px] min-[90rem]:right-auto min-[90rem]:bottom-auto min-[90rem]:left-(--wrist-x) min-[90rem]:aspect-[3/2] min-[90rem]:w-[max(calc(var(--wrist-x)*30/11),calc((100%_-_var(--wrist-x))*30/19))] min-[90rem]:[--wrist-x:calc(var(--story-gutter)_+_456px)] min-[90rem]:[transform:translate(-36.666667%,-57.1875%)]">
         <Image
           {...today.image}
           fill
@@ -324,7 +324,7 @@ function StoryToday() {
         />
       </div>
       <div className="site-container">
-        <div className="relative z-1 py-12 lg:min-h-[390px] lg:w-[520px] lg:pt-[38px] lg:pb-5">
+        <div className="relative z-1 py-12 lg:min-h-[390px] lg:w-[520px]">
           <p className="flex items-center gap-2.5 text-sm leading-4 font-medium tracking-[0.1em] uppercase after:h-0.5 after:w-12 after:shrink-0 after:bg-current">
             {today.eyebrow}
           </p>

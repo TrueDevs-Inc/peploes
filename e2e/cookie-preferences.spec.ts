@@ -74,6 +74,26 @@ test("preferences remain usable in narrow viewports and link to the privacy poli
   });
   await expect(dialog).toBeVisible();
   const viewportWidth = page.viewportSize()?.width ?? 1440;
+  const reject = dialog.getByRole("button", {
+    name: "Reject non-essential",
+    exact: true,
+  });
+  const accept = dialog.getByRole("button", {
+    name: "Accept All",
+    exact: true,
+  });
+  const rejectBounds = await reject.boundingBox();
+  const acceptBounds = await accept.boundingBox();
+  if (!rejectBounds || !acceptBounds)
+    throw new Error("Consent actions are missing");
+  if (viewportWidth <= 600) {
+    expect(rejectBounds.y).toBeLessThan(acceptBounds.y);
+  } else {
+    expect(rejectBounds.x).toBeLessThan(acceptBounds.x);
+  }
+  await reject.focus();
+  await page.keyboard.press("Tab");
+  await expect(accept).toBeFocused();
   await expect
     .poll(() =>
       dialog.evaluate((element) => element.getBoundingClientRect().width),

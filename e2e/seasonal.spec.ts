@@ -107,8 +107,8 @@ test("the Seasonal menu remains a separate destination from What's On", async ({
     await expect(menu).not.toBeVisible();
   } else {
     await navigation
-      .getByRole("button", { name: "Menus", exact: true })
-      .click();
+      .getByRole("link", { name: "Menus", exact: true })
+      .press("ArrowDown");
     await navigation
       .getByRole("link", { name: "Seasonal", exact: true })
       .click();

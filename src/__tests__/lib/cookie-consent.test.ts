@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { COOKIE_PREFERENCES } from "@/lib/constants/cookie-consent";
 import {
   getCookiePreferences,
   hasAnalyticsConsent,
@@ -9,6 +10,39 @@ import {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("analytics consent", function analyticsConsentTests() {
+  it("reports failure until a previous denial cookie can be cleared", async () => {
+    let stored: string | null = null;
+    let denial = `${COOKIE_PREFERENCES.denialCookie}=1`;
+    let blockDeletion = true;
+    vi.stubGlobal("document", {
+      get cookie() {
+        return denial;
+      },
+      set cookie(value: string) {
+        if (!blockDeletion && value.includes("Max-Age=0")) denial = "";
+      },
+    });
+    vi.stubGlobal("window", {
+      localStorage: {
+        getItem: () => stored,
+        setItem: (_key: string, value: string) => {
+          stored = value;
+        },
+      },
+    });
+    vi.resetModules();
+    const consent = await import("@/lib/cookie-consent");
+    expect(consent.saveCookiePreferences(COOKIE_PREFERENCES.accepted)).toBe(
+      false,
+    );
+    expect(consent.hasAnalyticsConsent()).toBe(false);
+    blockDeletion = false;
+    expect(consent.saveCookiePreferences(COOKIE_PREFERENCES.accepted)).toBe(
+      true,
+    );
+    expect(consent.hasAnalyticsConsent()).toBe(true);
+  });
+
   it("denies analytics without a browser consent decision", function defaultConsentTest() {
     expect(hasAnalyticsConsent()).toBe(false);
   });
