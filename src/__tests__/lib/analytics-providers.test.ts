@@ -108,6 +108,9 @@ function phConfig(posthog: ReturnType<typeof createPostHog>) {
 }
 
 beforeEach(() => {
+  // Node's real BroadcastChannel would link module graphs left by earlier tests
+  // as if they were tabs; tests that need a channel install the fake one.
+  vi.stubGlobal("BroadcastChannel", undefined);
   envState.live = true;
   envState.gaId = "G-TEST";
   envState.phKey = "phc_synthetic";
@@ -556,12 +559,13 @@ describe("withdrawal", () => {
 
   it("withdraws in a tab whose own storage write failed elsewhere", async () => {
     const bus = installFakeBroadcastChannel();
-    const { browser } = await granted();
+    const { browser, posthog } = await granted();
     browser.local.delete("peploes.cookie-preferences.v1");
     bus.otherTab(COOKIE_PREFERENCES.broadcastChannel).postMessage({
       source: "other",
     });
     expect(window.gtag).toBeUndefined();
+    expect(posthog.opt_out_capturing).toHaveBeenCalled();
   });
 
   it("clears Google cookies on withdrawal even when GA4 is not configured", async () => {
