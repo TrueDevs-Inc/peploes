@@ -23,6 +23,7 @@
     "test": "vitest run",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:e2e": "SANITY_PROJECT_ID=testproject SANITY_DATASET=development SANITY_API_VERSION=2026-10-06 bun run build && playwright test",
+    "test:e2e:sandbox": "SANITY_PROJECT_ID=testproject SANITY_DATASET=development SANITY_API_VERSION=2026-10-06 bun run build && playwright test -c playwright.sandbox.config.ts",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
