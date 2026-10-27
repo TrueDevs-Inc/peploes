@@ -50,6 +50,7 @@ instead of weakening a check.
 | Results, error mapping, retries, or action failures | [`docs/guides/error-handling-guide.md`](docs/guides/error-handling-guide.md) |
 | Log levels, context, or metadata | [`docs/guides/logging-guide.md`](docs/guides/logging-guide.md) |
 | Analytics, consent, attribution, or Web Vitals events | [`docs/guides/ga4-guide.md`](docs/guides/ga4-guide.md) |
+| PostHog configuration, consent lifecycle, event scrubbing, or its CSP | [`docs/guides/posthog-guide.md`](docs/guides/posthog-guide.md) |
 | Error capture, source maps, or Sentry privacy | [`docs/guides/sentry-guide.md`](docs/guides/sentry-guide.md) |
 | Rendering cost, images, fonts, streaming, or motion | [`docs/guides/performance-guide.md`](docs/guides/performance-guide.md) |
 | Standalone HTML reports, dossiers, or review artifacts | [`docs/guides/html-report-guide.md`](docs/guides/html-report-guide.md) |

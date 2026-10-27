@@ -2,6 +2,7 @@ import { subscribeToConsent } from "@/lib/cookie-consent";
 import { trackPageView } from "./client";
 import { activateGA4, deactivateGA4 } from "./ga4";
 import { isAnalyticsPermitted } from "./permission";
+import { activatePostHog, deactivatePostHog } from "./posthog";
 import { clearStoredUTMParams } from "./utm";
 
 interface INavigation {
@@ -29,9 +30,11 @@ function syncProviders(): void {
   if (!isAnalyticsPermitted()) {
     clearStoredUTMParams();
     deactivateGA4();
+    deactivatePostHog();
     return;
   }
   activateGA4();
+  void activatePostHog();
   // A grant mid-visit measures the page the visitor is on from that moment.
   sendCurrentPageView();
 }

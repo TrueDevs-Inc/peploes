@@ -12,7 +12,7 @@ describe("client environment mapping", () => {
   );
 
   it("finds the public variables", () => {
-    expect(names).toContain("NEXT_PUBLIC_VERCEL_ENV");
+    expect(names).toContain("NEXT_PUBLIC_POSTHOG_KEY");
     expect(names).toContain("NEXT_PUBLIC_GA_MEASUREMENT_ID");
   });
 

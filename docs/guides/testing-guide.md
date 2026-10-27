@@ -117,11 +117,15 @@ builds with synthetic provider variables, serves on port 3108 through
 configuration ignores that spec; it overwrites `.next`, so rerun `bun run
 test:e2e` afterwards to rebuild without providers. Provider hosts are intercepted
 with `context.route`, so no request leaves the machine. CI runs it after the
-normal browser tests, reusing the installed Chromium.
+normal browser tests, reusing the installed Chromium. See the
+[PostHog guide](posthog-guide.md).
 
 Analytics assertions have one owner each. Unit tests own sanitising, allowlists
-and consent logic. Playwright owns page-level wiring: consent to requests,
-navigation counts and storage. Do not assert the same rule in both.
+and consent logic. The real-SDK node test
+(`src/__tests__/lib/analytics-posthog-sdk.test.ts`) owns what posthog-js puts in
+a payload and how it sends it. Playwright owns page-level wiring: consent to
+requests, navigation counts, unload delivery and storage. Do not assert the same
+rule in more than one of them.
 
 Test the production build, locate controls by accessible role or label, and give
 each test isolated data. Add coverage for critical journeys such as sign-in,

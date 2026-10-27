@@ -14,6 +14,14 @@ import {
 // playwright.analytics.config.ts. Provider hosts are intercepted at the context.
 test.setTimeout(90_000);
 
+const SDK_OPT_OUT_FLAG = /^__ph_opt_in_out_/;
+
+async function ownedStorage(page: Parameters<typeof providerStorage>[0]) {
+  return (await providerStorage(page)).filter(
+    (key) => !SDK_OPT_OUT_FLAG.test(key),
+  );
+}
+
 function path(url: unknown): string {
   return new URL(String(url)).pathname;
 }
@@ -76,7 +84,7 @@ test.describe("before and without consent", () => {
 });
 
 test.describe("grant and navigation", () => {
-  test("granting sends exactly one initial pageview with safe fields", async ({
+  test("granting sends exactly one initial pageview per provider with safe fields", async ({
     page,
     analytics,
   }) => {
@@ -86,9 +94,24 @@ test.describe("grant and navigation", () => {
 
     const origin = new URL(page.url()).origin;
     expect(analytics.gaPageViews()[0]?.location).toBe(`${origin}/`);
+    const [view] = analytics.posthogPageViews();
+    expect(view?.properties.$current_url).toBe(`${origin}/`);
     expect(
       analytics.traffic.filter((t) => t.provider === "gtag-js"),
     ).toHaveLength(1);
+
+    // The SDK adds nothing of its own: no flags, config, surveys or extra events.
+    expect(
+      analytics.traffic.filter((t) => t.provider === "posthog-asset"),
+    ).toEqual([]);
+    await page.evaluate(() => {
+      window.dispatchEvent(new Event("pagehide"));
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    await settle(page);
+    expect(new Set(analytics.posthogEvents.map((e) => e.event))).toEqual(
+      new Set(["$pageview"]),
+    );
   });
 
   test("client navigation and history moves count once each, revisits included", async ({
@@ -116,6 +139,9 @@ test.describe("grant and navigation", () => {
     expect(analytics.gaPageViews().map((h) => path(h.location))).toEqual(
       expected,
     );
+    expect(
+      analytics.posthogPageViews().map((e) => path(e.properties.$current_url)),
+    ).toEqual(expected);
     const referrers = analytics
       .gaPageViews()
       .map((h) => h.params.page_referrer);
@@ -175,23 +201,26 @@ test.describe("withdrawal and re-consent", () => {
     await page.goto("/");
     await acceptAll(page);
     await expectPageViews(page, analytics, 1);
-    expect((await providerStorage(page)).length).toBeGreaterThan(0);
+    expect((await ownedStorage(page)).length).toBeGreaterThan(0);
 
+    // Interaction events leave at once, so this one is sent while consented.
     await suppressNavigationOfLinks(page);
     await page.locator('footer a[href^="tel:"]:visible').first().click();
-    await expect.poll(() => analytics.gaNamed("contact_click").length).toBe(1);
+    await expect
+      .poll(() => analytics.posthogNamed("contact_click").length)
+      .toBe(1);
     await rejectAll(page);
     const before = analytics.traffic.length;
-    await expect.poll(() => providerStorage(page)).toEqual([]);
+    await expect.poll(() => ownedStorage(page)).toEqual([]);
 
     await page.locator('a[href="/our-story"]:visible').first().click();
     await expect(page).toHaveURL("/our-story");
     await page.locator('footer a[href^="mailto:"]:visible').first().click();
     await settle(page);
     expect(analytics.traffic.length).toBe(before);
-    expect(analytics.gaNamed("contact_click")).toHaveLength(1);
+    expect(analytics.posthogNamed("contact_click")).toHaveLength(1);
     expect(analytics.gaPageViews()).toHaveLength(1);
-    expect(await providerStorage(page)).toEqual([]);
+    expect(await ownedStorage(page)).toEqual([]);
   });
 
   test("withdrawing while providers are still loading leaves no init, traffic or storage", async ({
@@ -213,7 +242,16 @@ test.describe("withdrawal and re-consent", () => {
     await settle(page);
 
     expect(analytics.ga).toEqual([]);
-    expect(await providerStorage(page)).toEqual([]);
+    expect(analytics.posthogEvents).toEqual([]);
+    expect(
+      analytics.traffic.filter(
+        (t) =>
+          t.provider === "posthog" ||
+          t.provider === "posthog-asset" ||
+          t.provider === "ga",
+      ),
+    ).toEqual([]);
+    expect(await ownedStorage(page)).toEqual([]);
   });
 
   test("a late provider load after withdrawal sends nothing", async ({
@@ -229,7 +267,8 @@ test.describe("withdrawal and re-consent", () => {
     await page.locator('a[href="/our-story"]:visible').first().click();
     await settle(page);
     expect(analytics.ga).toEqual([]);
-    expect(await providerStorage(page)).toEqual([]);
+    expect(analytics.posthogEvents).toEqual([]);
+    expect(await ownedStorage(page)).toEqual([]);
   });
 
   test("re-consent after withdrawal resumes with one pageview and no replay", async ({
@@ -252,6 +291,9 @@ test.describe("withdrawal and re-consent", () => {
       "/",
       "/our-story",
     ]);
+    expect(
+      analytics.posthogPageViews().map((e) => path(e.properties.$current_url)),
+    ).toEqual(["/", "/our-story"]);
   });
 
   test("withdrawal in a second tab stops the first tab", async ({
@@ -268,7 +310,7 @@ test.describe("withdrawal and re-consent", () => {
     await expectPageViews(other, analytics, 2);
     await rejectAll(other);
 
-    await expect.poll(() => providerStorage(page)).toEqual([]);
+    await expect.poll(() => ownedStorage(page)).toEqual([]);
     const before = analytics.traffic.length;
     await suppressNavigationOfLinks(page);
     await page.locator('footer a[href^="tel:"]:visible').first().click();
@@ -281,17 +323,18 @@ test.describe("withdrawal and re-consent", () => {
 });
 
 test.describe("failing providers", () => {
-  test("blocked gtag.js leaves the site working and silent", async ({
+  test("blocked gtag.js and PostHog leave the site working and silent", async ({
     page,
     analytics,
   }) => {
-    analytics.block("gtag-js");
+    analytics.block("gtag-js", "posthog");
     await page.goto("/");
     await acceptAll(page);
     await page.locator('a[href="/our-story"]:visible').first().click();
     await expect(page).toHaveURL("/our-story");
     await expect(page.getByRole("main")).toBeVisible();
     await settle(page);
+    // The SDK still attempts its (aborted) sends; none can be delivered.
     expect(analytics.ga).toEqual([]);
     expect(
       analytics.traffic.filter((t) => t.provider === "gtag-js"),
@@ -300,7 +343,7 @@ test.describe("failing providers", () => {
 });
 
 test.describe("payload privacy", () => {
-  test("query strings, hashes and personal values never reach GA4", async ({
+  test("query strings, hashes and personal values never reach a provider", async ({
     page,
     analytics,
   }) => {
@@ -312,7 +355,7 @@ test.describe("payload privacy", () => {
     );
     await expectPageViews(page, analytics, 2);
 
-    const payload = JSON.stringify(analytics.ga);
+    const payload = JSON.stringify([analytics.ga, analytics.posthogEvents]);
     for (const secret of [
       "jane",
       "example.com",
@@ -344,7 +387,7 @@ test.describe("payload privacy", () => {
     const last = analytics.gaPageViews().at(-1);
     expect(last?.params.utm_source).toBe("newsletter");
     expect(last?.params.utm_medium).toBe("email");
-    const payload = JSON.stringify(analytics.ga);
+    const payload = JSON.stringify([analytics.ga, analytics.posthogEvents]);
     for (const secret of ["abc999", "zzz888", "gclid", "fbclid"]) {
       expect(payload).not.toContain(secret);
     }
@@ -370,7 +413,9 @@ test.describe("interaction events", () => {
     await suppressNavigationOfLinks(page);
     await page.locator('footer a[href^="tel:"]:visible').first().click();
     await page.locator('footer a[href^="mailto:"]:visible').first().click();
-    await expect.poll(() => analytics.gaNamed("contact_click").length).toBe(2);
+    await expect
+      .poll(() => analytics.posthogNamed("contact_click").length)
+      .toBe(2);
     await page.goto("/visit-contact");
     // Directions leaves the site in the same tab: the click must survive unload.
     await page.context().route("https://www.google.com/maps/**", (route) =>
@@ -382,7 +427,7 @@ test.describe("interaction events", () => {
     await page.getByRole("link", { name: /Get directions to Peploe/ }).click();
     await expect(page).toHaveURL(/google\.com\/maps/);
     await expect
-      .poll(() => analytics.gaNamed("directions_click").length, {
+      .poll(() => analytics.posthogNamed("directions_click").length, {
         timeout: 2500,
       })
       .toBe(1);
@@ -395,6 +440,11 @@ test.describe("interaction events", () => {
       const ga = analytics.gaNamed(name);
       expect(ga, `GA ${name}`).toHaveLength(1);
       expect(ga[0]?.params).toEqual(params);
+      const posthog = analytics.posthogNamed(name);
+      expect(posthog, `PostHog ${name}`).toHaveLength(1);
+      for (const [key, value] of Object.entries(params)) {
+        expect(posthog[0]?.properties[key]).toBe(value);
+      }
     };
     expectEvent("booking_click", { placement: "navbar" });
     expect(analytics.gaNamed("contact_click")).toHaveLength(2);
@@ -404,6 +454,12 @@ test.describe("interaction events", () => {
         .map((h) => h.params.destination)
         .sort(),
     ).toEqual(["email", "phone"]);
+    expect(
+      analytics
+        .posthogNamed("contact_click")
+        .map((e) => `${e.properties.placement}:${e.properties.destination}`)
+        .sort(),
+    ).toEqual(["footer:email", "footer:phone"]);
     expectEvent("directions_click", { placement: "visit_contact" });
     expectEvent("menu_view", { menu: "lunch" });
 
@@ -415,7 +471,7 @@ test.describe("interaction events", () => {
       "menu_view",
       "page_view",
     ]);
-    const everything = JSON.stringify(analytics.ga);
+    const everything = JSON.stringify([analytics.ga, analytics.posthogEvents]);
     for (const forbidden of [
       "tel:",
       "mailto:",
@@ -470,7 +526,8 @@ test.describe("interaction events", () => {
     await settle(page);
 
     expect(analytics.ga.map((h) => h.event)).toEqual(["page_view"]);
-    const everything = JSON.stringify(analytics.ga);
+    expect(analytics.posthogEvents.map((e) => e.event)).toEqual(["$pageview"]);
+    const everything = JSON.stringify([analytics.ga, analytics.posthogEvents]);
     for (const personal of [
       "preview@example.com",
       "Preview",
@@ -484,13 +541,15 @@ test.describe("interaction events", () => {
   });
 });
 
-test("the CSP permits the intercepted Google origins and keeps Stripe on booking", async ({
+test("the CSP permits the intercepted provider origins and keeps Stripe on booking", async ({
   page,
 }) => {
   const home = await page.goto("/");
   const homeCsp = home?.headers()["content-security-policy"] ?? "";
   expect(homeCsp).toContain("https://www.googletagmanager.com");
+  expect(homeCsp).toContain("https://*.posthog.com");
   const booking = await page.goto("/book-a-table");
   const bookingCsp = booking?.headers()["content-security-policy"] ?? "";
+  expect(bookingCsp).toContain("https://*.posthog.com");
   expect(bookingCsp).toContain("stripe.com");
 });

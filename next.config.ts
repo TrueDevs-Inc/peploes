@@ -21,6 +21,17 @@ function getConfiguredOrigin(value: string | undefined): string | undefined {
   return new URL(value).origin;
 }
 
+// PostHog recommends its wildcard because its subdomains change; a host
+// outside posthog.com (for example a proxy) is allowed by exact origin.
+function getPostHogSource(): string | undefined {
+  const origin = getConfiguredOrigin(process.env.NEXT_PUBLIC_POSTHOG_HOST);
+  if (!origin || !process.env.NEXT_PUBLIC_POSTHOG_KEY) return undefined;
+
+  return new URL(origin).hostname.endsWith(".posthog.com")
+    ? "https://*.posthog.com"
+    : origin;
+}
+
 const nextConfig: NextConfig = {
   typedRoutes: true,
   experimental: {
@@ -61,12 +72,14 @@ const nextConfig: NextConfig = {
       process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ||
         process.env.NEXT_PUBLIC_GTM_ID,
     );
+    const posthogSource = getPostHogSource();
     const scriptSources = [
       "script-src",
       "'self'",
       "'unsafe-inline'",
       ...(isDevelopment ? ["'unsafe-eval'"] : []),
       ...(hasClientAnalytics ? ["https://www.googletagmanager.com"] : []),
+      ...(posthogSource ? [posthogSource] : []),
     ];
     const connectionSources = [
       "connect-src",
@@ -80,6 +93,7 @@ const nextConfig: NextConfig = {
             "https://www.googletagmanager.com",
           ]
         : []),
+      ...(posthogSource ? [posthogSource] : []),
     ];
     const imageSources = [
       "img-src",

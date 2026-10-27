@@ -5,6 +5,7 @@ import type {
   IOpeningHours,
   IWhatsOnContent,
   IWineContent,
+  TUrlPart,
 } from "@/lib/types";
 
 export const HTTP_STATUS = {
@@ -457,6 +458,63 @@ export const ANALYTICS_EVENT_PARAMS = {
   },
   [GA4Event.DirectionsClick]: { placement: ANALYTICS_PLACEMENTS },
 } as const;
+
+/** GA4 name to PostHog name where the providers disagree. */
+export const POSTHOG_EVENT_NAMES = {
+  [GA4Event.PageView]: "$pageview",
+} as const;
+
+// Everything posthog-js adds on its own is dropped unless named here: its
+// session and campaign tracking invent properties (`$session_entry_ph_keyword`,
+// ...) that carry raw query values.
+export const POSTHOG_SDK_PROPERTIES = new Set([
+  "distinct_id",
+  "token",
+  "$os",
+  "$browser",
+  "$browser_version",
+  "$browser_language",
+  "$browser_language_prefix",
+  "$device_type",
+  "$device_id",
+  "$timezone",
+  "$timezone_offset",
+  "$screen_height",
+  "$screen_width",
+  "$viewport_height",
+  "$viewport_width",
+  "$lib",
+  "$lib_version",
+  "$insert_id",
+  "$time",
+  "$session_id",
+  "$window_id",
+  "$pageview_id",
+  "$is_identified",
+  "$process_person_profile",
+]);
+export const POSTHOG_DOMAIN_PROPERTIES = new Set([
+  "$host",
+  "$referring_domain",
+  "$session_entry_host",
+  "$session_entry_referring_domain",
+]);
+export const POSTHOG_DOMAIN_VALUE = /^(\$direct|[a-z0-9.-]+(:\d+)?)$/i;
+export const POSTHOG_CAMPAIGN_PROPERTY =
+  /^\$(?:session_entry_|initial_)?utm_(?:source|medium|campaign|term|content)$/;
+export const POSTHOG_VALUE_MAX_LENGTH = 200;
+
+export const POSTHOG_URL_PROPERTIES: Record<string, TUrlPart> = {
+  $current_url: "url",
+  $initial_current_url: "url",
+  $session_entry_url: "url",
+  $pathname: "path",
+  $initial_pathname: "path",
+  $session_entry_pathname: "path",
+  $referrer: "referrer",
+  $initial_referrer: "referrer",
+  $session_entry_referrer: "referrer",
+};
 
 export const SEASONAL_DETAIL_ICONS = {
   date: { src: "/peploes-event-calendar.svg", width: 48, height: 48 },

@@ -64,6 +64,12 @@ export const env = createEnv({
       .string()
       .url()
       .default("https://www.google-analytics.com/mp/collect"),
+    NEXT_PUBLIC_POSTHOG_KEY: z.string().min(1).optional(),
+    NEXT_PUBLIC_POSTHOG_HOST: z
+      .string()
+      .url()
+      .refine((value) => value.startsWith("https://"), "Must use https")
+      .optional(),
   },
 
   // Next inlines only literal `process.env.NEXT_PUBLIC_*` reads into the
@@ -78,6 +84,8 @@ export const env = createEnv({
     NEXT_PUBLIC_GTM_ID: process.env.NEXT_PUBLIC_GTM_ID,
     NEXT_PUBLIC_VERCEL_ENV: process.env.NEXT_PUBLIC_VERCEL_ENV,
     NEXT_PUBLIC_GA_ENDPOINT: process.env.NEXT_PUBLIC_GA_ENDPOINT,
+    NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
+    NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
   },
 
   emptyStringAsUndefined: true,

@@ -5,6 +5,7 @@ import type { IPendingAnalyticsEvent } from "@/lib/types";
 import { logGA4Event } from "./debug";
 import { sendToGA4 } from "./ga4";
 import { isAnalyticsPermitted } from "./permission";
+import { sendToPostHog } from "./posthog";
 import { sanitizeAnalyticsEvent } from "./sanitize";
 import { getCurrentUTMParams } from "./utm";
 
@@ -26,6 +27,7 @@ function sendEvent(
     dedupeKey,
   };
   sendToGA4(enriched);
+  sendToPostHog(enriched);
 }
 
 export function trackPageView(params?: {

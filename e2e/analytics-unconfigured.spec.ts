@@ -8,7 +8,7 @@ test("accepting analytics without provider configuration contacts no provider", 
 }) => {
   const providerRequests: string[] = [];
   await context.route(
-    /(googletagmanager|google-analytics|analytics\.google)\.com/,
+    /(googletagmanager|google-analytics|analytics\.google|posthog)\.com/,
     (route) => {
       providerRequests.push(route.request().url());
       return route.abort();
@@ -29,7 +29,7 @@ test("accepting analytics without provider configuration contacts no provider", 
   expect(
     await page.evaluate(() =>
       [...Object.keys(localStorage), document.cookie].filter((entry) =>
-        /_ga|app_utm/.test(entry),
+        /ph_|_ga|app_utm/.test(entry),
       ),
     ),
   ).toEqual([]);

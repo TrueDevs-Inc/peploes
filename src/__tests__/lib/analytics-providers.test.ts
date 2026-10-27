@@ -5,11 +5,19 @@ import { installFakeBrowser } from "../helpers/browser";
 const envState = vi.hoisted(() => ({
   live: true,
   gaId: "G-TEST" as string | undefined,
+  phKey: "phc_synthetic" as string | undefined,
+  phHost: "https://eu.i.posthog.com" as string | undefined,
 }));
 vi.mock("@/lib/env", () => ({
   env: {
     get NEXT_PUBLIC_GA_MEASUREMENT_ID() {
       return envState.gaId;
+    },
+    get NEXT_PUBLIC_POSTHOG_KEY() {
+      return envState.phKey;
+    },
+    get NEXT_PUBLIC_POSTHOG_HOST() {
+      return envState.phHost;
     },
   },
   isLiveSiteClient: () => envState.live,
@@ -20,20 +28,58 @@ vi.mock("@sentry/nextjs", () => sentry);
 
 const GA_SCRIPT = "https://www.googletagmanager.com/gtag/js?id=G-TEST";
 const ACCEPTED = { analytics: true, performance: true, marketing: true };
+// Interaction clicks can unload the page, so they skip PostHog's batch.
+const INSTANT = { send_instantly: true };
 const DENIED = { analytics: false, performance: false, marketing: false };
+
+function createPostHog() {
+  const instance = {
+    init: vi.fn((..._args: unknown[]) => instance),
+    capture: vi.fn((..._args: unknown[]) => ({})),
+    opt_in_capturing: vi.fn(),
+    opt_out_capturing: vi.fn(),
+    reset: vi.fn(),
+    identify: vi.fn(),
+  };
+  return instance;
+}
 
 interface ILoadOptions {
   browser?: Parameters<typeof installFakeBrowser>[0];
+  importFails?: boolean;
+  holdImport?: boolean;
+  initThrows?: boolean;
 }
 
 async function load(options: ILoadOptions = {}) {
   vi.resetModules();
   const browser = installFakeBrowser(options.browser);
   browser.removeGtag();
+  const posthog = createPostHog();
+  if (options.initThrows) {
+    posthog.init.mockImplementation(() => {
+      throw new Error("init failed");
+    });
+  }
+  let release: () => void = () => undefined;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  vi.doMock("posthog-js", async () => {
+    if (options.importFails) throw new Error("chunk failed");
+    if (options.holdImport) await gate;
+    return { default: posthog };
+  });
   const lifecycle = await import("@/lib/analytics/lifecycle");
   const client = await import("@/lib/analytics/client");
   const consent = await import("@/lib/cookie-consent");
-  return { browser, lifecycle, client, consent };
+  return { browser, posthog, release, lifecycle, client, consent };
+}
+
+async function settle() {
+  await vi.dynamicImportSettled();
+  await Promise.resolve();
+  await Promise.resolve();
 }
 
 function gaEvents(
@@ -46,42 +92,77 @@ function gaEvents(
     .map((entry) => entry[2]);
 }
 
+function phConfig(posthog: ReturnType<typeof createPostHog>) {
+  return posthog.init.mock.calls[0]?.[1] as Record<string, unknown> & {
+    before_send: (event: {
+      event: string;
+      properties: Record<string, unknown>;
+      $set?: unknown;
+      $set_once?: unknown;
+    }) => { event: string; properties: Record<string, unknown> } | null;
+  };
+}
+
 beforeEach(() => {
   envState.live = true;
   envState.gaId = "G-TEST";
+  envState.phKey = "phc_synthetic";
+  envState.phHost = "https://eu.i.posthog.com";
   sentry.captureException.mockClear();
 });
 afterEach(() => {
   vi.useRealTimers();
   vi.unstubAllGlobals();
+  vi.doUnmock("posthog-js");
 });
 
 describe("before consent and without configuration", () => {
   it("loads nothing, stores nothing and sends nothing without consent", async () => {
-    const { browser, lifecycle } = await load();
+    const { browser, posthog, lifecycle } = await load();
     lifecycle.startAnalytics();
     lifecycle.recordNavigation("/");
+    await settle();
     expect(browser.scripts).toHaveLength(0);
     expect(browser.dataLayer()).toEqual([]);
+    expect(posthog.init).not.toHaveBeenCalled();
     expect(browser.cookieNames()).toEqual([]);
   });
 
-  it("stays inert when GA4 is not configured", async () => {
+  it("stays inert when neither provider is configured", async () => {
     envState.gaId = undefined;
-    const { browser, lifecycle } = await load();
+    envState.phKey = undefined;
+    envState.phHost = undefined;
+    const { browser, posthog, lifecycle } = await load();
     browser.grantAnalytics();
     lifecycle.startAnalytics();
     lifecycle.recordNavigation("/");
+    await settle();
     expect(browser.scripts).toHaveLength(0);
+    expect(posthog.init).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["key", { phKey: undefined }],
+    ["host", { phHost: undefined }],
+  ])("does not start PostHog without its %s", async (_label, change) => {
+    Object.assign(envState, change);
+    const { browser, posthog, lifecycle } = await load();
+    browser.grantAnalytics();
+    lifecycle.startAnalytics();
+    await settle();
+    expect(posthog.init).not.toHaveBeenCalled();
+    expect(browser.scripts).toHaveLength(1);
   });
 
   it("does nothing outside the live site", async () => {
     envState.live = false;
-    const { browser, lifecycle } = await load();
+    const { browser, posthog, lifecycle } = await load();
     browser.grantAnalytics();
     lifecycle.startAnalytics();
     lifecycle.recordNavigation("/");
+    await settle();
     expect(browser.scripts).toHaveLength(0);
+    expect(posthog.init).not.toHaveBeenCalled();
   });
 });
 
@@ -200,8 +281,8 @@ describe("page views", () => {
     ).toEqual(["/", "/menus", "/"]);
   });
 
-  it("sends one page view however often consent is granted", async () => {
-    const { browser, lifecycle, consent } = await load();
+  it("sends one page view per provider however often consent is granted", async () => {
+    const { browser, posthog, lifecycle, consent } = await load();
     lifecycle.startAnalytics();
     lifecycle.recordNavigation("/menus");
     consent.saveCookiePreferences(ACCEPTED);
@@ -212,12 +293,40 @@ describe("page views", () => {
       JSON.stringify(ACCEPTED),
     );
     browser.fireStorageEvent("peploes.cookie-preferences.v1");
+    await settle();
     browser.loadScript();
     expect(gaEvents(browser, "page_view")).toHaveLength(1);
+    expect(
+      posthog.capture.mock.calls.filter(([name]) => name === "$pageview"),
+    ).toHaveLength(1);
   });
 
-  it("leaks no query, hash or email to the provider", async () => {
-    const { browser, lifecycle } = await load({
+  it("sends the same navigation to PostHog as a $pageview", async () => {
+    const { browser, posthog, lifecycle } = await load();
+    browser.grantAnalytics();
+    lifecycle.startAnalytics();
+    await settle();
+    lifecycle.recordNavigation("/");
+    lifecycle.recordNavigation("/");
+    lifecycle.recordNavigation("/menus");
+    lifecycle.recordNavigation("/");
+    expect(posthog.capture.mock.calls.map(([name]) => name)).toEqual([
+      "$pageview",
+      "$pageview",
+      "$pageview",
+    ]);
+    expect(posthog.capture.mock.calls[1]?.[1]).toEqual({
+      page_location: "https://peploes.test/menus",
+      page_path: "/menus",
+      page_referrer: "https://peploes.test",
+      $current_url: "https://peploes.test/menus",
+      $pathname: "/menus",
+      $referrer: "https://peploes.test",
+    });
+  });
+
+  it("leaks no query, hash or email to either provider", async () => {
+    const { browser, posthog, lifecycle } = await load({
       browser: {
         href: "https://peploes.test/menus?email=jane@example.com&token=abc#frag",
         referrer: "https://search.example/results?q=jane@example.com",
@@ -225,19 +334,24 @@ describe("page views", () => {
     });
     browser.grantAnalytics();
     lifecycle.startAnalytics();
+    await settle();
     browser.loadScript();
     lifecycle.recordNavigation("/menus");
-    const sent = JSON.stringify(browser.dataLayer());
+    const sent = JSON.stringify([
+      browser.dataLayer(),
+      posthog.capture.mock.calls,
+    ]);
     expect(sent).not.toMatch(/jane|token|frag|email=|q=/);
     expect(sent).toContain("https://search.example");
   });
 });
 
 describe("event routing", () => {
-  it("sends catalog events and drops others", async () => {
-    const { browser, lifecycle, client } = await load();
+  it("sends catalog events to both providers and drops others", async () => {
+    const { browser, posthog, lifecycle, client } = await load();
     browser.grantAnalytics();
     lifecycle.startAnalytics();
+    await settle();
     browser.loadScript();
     client.trackCustomEvent("booking_click", { placement: "hero" });
     client.trackCustomEvent("contact_click", {
@@ -246,16 +360,109 @@ describe("event routing", () => {
     });
     client.trackCustomEvent("purchase", { value: 10 });
     expect(gaEvents(browser, "booking_click")).toEqual([{ placement: "hero" }]);
+    expect(posthog.capture.mock.calls).toEqual([
+      ["booking_click", { placement: "hero" }, INSTANT],
+      ["contact_click", { placement: "footer", destination: "phone" }, INSTANT],
+    ]);
     expect(gaEvents(browser, "purchase")).toEqual([]);
   });
 
   it("drops events while denied and never replays them after a grant", async () => {
-    const { browser, lifecycle, client, consent } = await load();
+    const { browser, posthog, lifecycle, client, consent } = await load();
     lifecycle.startAnalytics();
     client.trackCustomEvent("booking_click", { placement: "hero" });
     consent.saveCookiePreferences(ACCEPTED);
+    await settle();
     browser.loadScript();
     expect(gaEvents(browser, "booking_click")).toEqual([]);
+    expect(posthog.capture).not.toHaveBeenCalled();
+  });
+});
+
+describe("PostHog initialisation", () => {
+  it("initialises once, with every extra surface off", async () => {
+    const { browser, posthog, lifecycle } = await load();
+    browser.grantAnalytics();
+    lifecycle.startAnalytics();
+    lifecycle.startAnalytics();
+    await settle();
+    expect(posthog.init).toHaveBeenCalledTimes(1);
+    expect(posthog.init.mock.calls[0]?.[0]).toBe("phc_synthetic");
+    expect(phConfig(posthog)).toMatchObject({
+      api_host: "https://eu.i.posthog.com",
+      person_profiles: "identified_only",
+      capture_pageview: false,
+      capture_pageleave: false,
+      autocapture: false,
+      disable_session_recording: true,
+      capture_exceptions: false,
+      disable_surveys: true,
+      advanced_disable_flags: true,
+      enable_heatmaps: false,
+    });
+    expect(posthog.opt_in_capturing).toHaveBeenCalledWith({
+      captureEventName: false,
+    });
+    expect(posthog.identify).not.toHaveBeenCalled();
+  });
+
+  it("survives an SDK that cannot be imported, without noise", async () => {
+    const { browser, posthog, lifecycle, client } = await load({
+      importFails: true,
+    });
+    browser.grantAnalytics();
+    expect(() => lifecycle.startAnalytics()).not.toThrow();
+    lifecycle.recordNavigation("/");
+    await settle();
+    browser.loadScript();
+    client.trackCustomEvent("booking_click", { placement: "hero" });
+    expect(posthog.init).not.toHaveBeenCalled();
+    expect(gaEvents(browser, "page_view")).toHaveLength(1);
+    expect(gaEvents(browser, "booking_click")).toHaveLength(1);
+    expect(sentry.captureException).not.toHaveBeenCalled();
+  });
+
+  it("survives an SDK whose init throws", async () => {
+    const { browser, posthog, lifecycle, client } = await load({
+      initThrows: true,
+    });
+    browser.grantAnalytics();
+    lifecycle.startAnalytics();
+    await settle();
+    client.trackCustomEvent("booking_click", { placement: "hero" });
+    expect(posthog.capture).not.toHaveBeenCalled();
+    expect(sentry.captureException).not.toHaveBeenCalled();
+  });
+
+  it("does not initialise when consent is withdrawn while the SDK is importing", async () => {
+    const { browser, posthog, lifecycle, consent, release } = await load({
+      holdImport: true,
+    });
+    browser.grantAnalytics();
+    lifecycle.startAnalytics();
+    lifecycle.recordNavigation("/");
+    consent.saveCookiePreferences(DENIED);
+    release();
+    await settle();
+    expect(posthog.init).not.toHaveBeenCalled();
+    expect(posthog.opt_in_capturing).not.toHaveBeenCalled();
+    expect(posthog.capture).not.toHaveBeenCalled();
+    expect(
+      [...browser.local.keys()].filter((k) => k.startsWith("ph_")),
+    ).toEqual([]);
+  });
+
+  it("holds the page view until the SDK is ready, then sends it once", async () => {
+    const { browser, posthog, lifecycle, release } = await load({
+      holdImport: true,
+    });
+    browser.grantAnalytics();
+    lifecycle.startAnalytics();
+    lifecycle.recordNavigation("/");
+    expect(posthog.capture).not.toHaveBeenCalled();
+    release();
+    await settle();
+    expect(posthog.capture).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -268,8 +475,13 @@ describe("withdrawal", () => {
     browser.setCookie("_ga_ABC123", "GS1.1.1", ".peploes.test");
     browser.setCookie("_gid", "GA1.1.2");
     browser.setCookie("keep", "1");
+    browser.setCookie("ph_phc_synthetic_posthog", "{}");
+    browser.local.set("ph_phc_synthetic_posthog", "{}");
+    browser.local.set("__ph_opt_in_out_phc_synthetic", "1");
     browser.local.set("unrelated", "x");
+    browser.session.set("ph_session", "x");
     lifecycle.startAnalytics();
+    await settle();
     browser.loadScript();
     lifecycle.recordNavigation("/menus");
     return loaded;
@@ -297,19 +509,50 @@ describe("withdrawal", () => {
     expect(browser.cookieNames()).toContain("keep");
   });
 
+  it("opts PostHog out, resets it and clears its storage", async () => {
+    const { browser, posthog, consent, client } = await granted();
+    posthog.capture.mockClear();
+    consent.saveCookiePreferences(DENIED);
+    expect(posthog.reset).toHaveBeenCalledTimes(1);
+    expect(posthog.opt_out_capturing).toHaveBeenCalledTimes(1);
+    expect(posthog.reset.mock.invocationCallOrder[0]).toBeLessThan(
+      posthog.opt_out_capturing.mock.invocationCallOrder[0] ?? 0,
+    );
+    expect(
+      [...browser.local.keys()].filter((k) => k.startsWith("ph_")),
+    ).toEqual([]);
+    expect([...browser.session.keys()]).toEqual([]);
+    expect(browser.cookieNames()).not.toContain("ph_phc_synthetic_posthog");
+    expect(browser.local.get("unrelated")).toBe("x");
+    expect(browser.local.get("__ph_opt_in_out_phc_synthetic")).toBe("1");
+    client.trackCustomEvent("booking_click", { placement: "hero" });
+    expect(posthog.capture).not.toHaveBeenCalled();
+  });
+
   it("reacts to a withdrawal made in another tab", async () => {
-    const { browser } = await granted();
+    const { browser, posthog } = await granted();
     browser.local.set("peploes.cookie-preferences.v1", JSON.stringify(DENIED));
     browser.fireStorageEvent("peploes.cookie-preferences.v1");
+    expect(posthog.opt_out_capturing).toHaveBeenCalled();
     expect(window.gtag).toBeUndefined();
   });
 
-  it("collects again after re-consent and reuses gtag.js", async () => {
-    const { browser, consent } = await granted();
+  it("collects again after re-consent: gtag.js is reused, PostHog starts a fresh instance", async () => {
+    const { browser, posthog, consent } = await granted();
     consent.saveCookiePreferences(DENIED);
+    posthog.capture.mockClear();
     const scriptCount = browser.scripts.length;
     consent.saveCookiePreferences(ACCEPTED);
+    await settle();
     expect(browser.scripts).toHaveLength(scriptCount);
+    expect(posthog.init).toHaveBeenCalledTimes(2);
+    expect(posthog.init.mock.calls[1]?.[2]).not.toBe(
+      posthog.init.mock.calls[0]?.[2],
+    );
+    expect(posthog.opt_in_capturing).toHaveBeenCalledTimes(2);
+    expect(posthog.capture.mock.calls.map(([name]) => name)).toEqual([
+      "$pageview",
+    ]);
     expect(gaEvents(browser, "page_view")).toHaveLength(2);
   });
 
@@ -326,7 +569,110 @@ describe("withdrawal", () => {
   });
 });
 
+describe("PostHog before_send", () => {
+  async function scrubber() {
+    const { browser, posthog, lifecycle } = await load();
+    browser.grantAnalytics();
+    lifecycle.startAnalytics();
+    await settle();
+    return phConfig(posthog).before_send;
+  }
+
+  it("strips query and hash from every URL-like property", async () => {
+    const beforeSend = await scrubber();
+    const result = beforeSend({
+      event: "$pageview",
+      properties: {
+        $current_url: "https://peploes.test/menus?email=a@b.co#x",
+        $referrer: "https://search.example/r?q=secret",
+        $initial_referrer: "https://search.example/r?q=secret",
+        $initial_current_url: "https://peploes.test/?utm_source=x#y",
+        $pathname: "/menus?token=abc",
+        $os: "Linux",
+        page_path: "/menus",
+      },
+      $set: { $initial_referrer: "https://x.example/?a=1" },
+      $set_once: { $initial_current_url: "https://x.example/?a=1" },
+    });
+    expect(result).toEqual({
+      event: "$pageview",
+      properties: {
+        $current_url: "https://peploes.test/menus",
+        $referrer: "https://search.example",
+        $initial_referrer: "https://search.example",
+        $initial_current_url: "https://peploes.test/",
+        $pathname: "/menus",
+        $os: "Linux",
+        page_path: "/menus",
+      },
+    });
+  });
+
+  it.each([
+    "$autocapture",
+    "$pageleave",
+    "$opt_in",
+    "$exception",
+    "$web_vitals",
+    "purchase",
+  ])("drops the %s event", async (event) => {
+    const beforeSend = await scrubber();
+    expect(beforeSend({ event, properties: {} })).toBeNull();
+  });
+
+  it("drops custom properties that are not allowlisted for the event", async () => {
+    const beforeSend = await scrubber();
+    const result = beforeSend({
+      event: "booking_click",
+      properties: {
+        placement: "hero",
+        email: "a@b.co",
+        name: "Jane",
+        $os: "Linux",
+      },
+    });
+    expect(result?.properties).toEqual({ placement: "hero", $os: "Linux" });
+  });
+
+  it("drops a URL it cannot make safe", async () => {
+    const beforeSend = await scrubber();
+    const result = beforeSend({
+      event: "$pageview",
+      properties: { $current_url: "https://peploes.test/jane@example.com" },
+    });
+    expect(result?.properties).toEqual({});
+  });
+});
+
 describe("GA4 failure is not a consent teardown", () => {
+  it("keeps a slow PostHog import's first page view when gtag.js fails first", async () => {
+    const { browser, posthog, lifecycle, release } = await load({
+      holdImport: true,
+    });
+    browser.grantAnalytics();
+    lifecycle.startAnalytics();
+    lifecycle.recordNavigation("/");
+    browser.failScript();
+    release();
+    await settle();
+    expect(posthog.capture.mock.calls.map(([name]) => name)).toEqual([
+      "$pageview",
+    ]);
+  });
+
+  it("does not resend a delivered PostHog page view when gtag.js fails and consent is saved again", async () => {
+    const { browser, posthog, lifecycle, consent } = await load();
+    browser.grantAnalytics();
+    lifecycle.startAnalytics();
+    lifecycle.recordNavigation("/");
+    await settle();
+    expect(posthog.capture).toHaveBeenCalledTimes(1);
+    browser.failScript();
+    consent.saveCookiePreferences(ACCEPTED);
+    await settle();
+    expect(posthog.capture).toHaveBeenCalledTimes(1);
+  });
+
   it("keeps stored campaign attribution when gtag.js times out", async () => {
     vi.useFakeTimers();
     const { browser, lifecycle, client } = await load({
@@ -338,5 +684,37 @@ describe("GA4 failure is not a consent teardown", () => {
     expect(browser.session.size).toBe(1);
     vi.advanceTimersByTime(30_000);
     expect(browser.session.size).toBe(1);
+  });
+});
+
+describe("PostHog-only withdrawal", () => {
+  it("clears stored campaign attribution so re-consent cannot reuse it", async () => {
+    envState.gaId = undefined;
+    const { browser, posthog, lifecycle, client, consent } = await load({
+      browser: { href: "https://peploes.test/?utm_source=newsletter" },
+    });
+    browser.grantAnalytics();
+    lifecycle.startAnalytics();
+    await settle();
+    client.trackCustomEvent("booking_click", { placement: "hero" });
+    expect(posthog.capture).toHaveBeenLastCalledWith(
+      "booking_click",
+      { placement: "hero", utm_source: "newsletter" },
+      INSTANT,
+    );
+    expect(browser.session.size).toBe(1);
+
+    consent.saveCookiePreferences(DENIED);
+    expect(browser.session.size).toBe(0);
+
+    browser.setLocation("https://peploes.test/menus");
+    consent.saveCookiePreferences(ACCEPTED);
+    await settle();
+    client.trackCustomEvent("booking_click", { placement: "hero" });
+    expect(posthog.capture).toHaveBeenLastCalledWith(
+      "booking_click",
+      { placement: "hero" },
+      INSTANT,
+    );
   });
 });

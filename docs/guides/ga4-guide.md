@@ -2,23 +2,29 @@
 
 The analytics modules provide event dispatch, UTM persistence, duplicate
 suppression, server-side Measurement Protocol calls, and Web Vitals events.
-The root layout mounts `Analytics`, which owns page views, loads GA4 after
-consent and reacts to consent changes. The Web Vitals hook is not
+The root layout mounts `Analytics`, which owns page views, loads GA4 and
+PostHog after consent and reacts to consent changes. The Web Vitals hook is not
 mounted.
 
 ## Files
 
-- `src/lib/analytics/client.ts` sanitises events and routes them to GA4.
+- `src/lib/analytics/client.ts` sanitises events and routes them to each provider.
 - `src/lib/analytics/server.ts` sends Measurement Protocol events.
 - `src/lib/analytics/utm.ts` stores safe UTM parameters in `sessionStorage`.
 - `src/lib/analytics/sanitize.ts` applies the event and property allowlist.
 - `src/lib/analytics/permission.ts` combines consent with the live-site check.
 - `src/lib/analytics/deduplication.ts` suppresses a repeated dedupe key.
 - `src/lib/analytics/lifecycle.ts` is the single page_view owner and aligns
-  GA4 with consent.
+  both providers with consent.
 - `src/lib/analytics/ga4.ts` queues and dispatches to `window.gtag`, loads
   `gtag.js` (Consent Mode defaults denied, `send_page_view: false`), rechecks consent after load and clears `_ga*`
   cookies on withdrawal.
+- `src/lib/analytics/posthog.ts` imports `posthog-js` after consent, rechecks
+  consent after the import, scrubs events in `before_send`, and opts out,
+  resets and clears `ph_*` storage on withdrawal. posthog-js cannot discard its
+  batch or retry queues, so each instance gets an abort signal through
+  `fetch_options` (beacons disabled) that withdrawal fires; the next grant
+  starts a new instance. `before_send` is an allowlist, not a filter.
 - `src/components/app/atoms/analytics.tsx` mounts the lifecycle;
   `tracked-link.tsx` reports booking, contact and directions clicks.
 - `src/lib/analytics/web-vitals.ts` maps Web Vitals to GA4 events.
@@ -32,6 +38,8 @@ mounted.
 NEXT_PUBLIC_GA_MEASUREMENT_ID=
 NEXT_PUBLIC_GTM_ID=
 NEXT_PUBLIC_VERCEL_ENV=
+NEXT_PUBLIC_POSTHOG_KEY=
+NEXT_PUBLIC_POSTHOG_HOST=
 NEXT_PUBLIC_GA_ENDPOINT=https://www.google-analytics.com/mp/collect
 GA_API_SECRET=
 ```
@@ -44,7 +52,10 @@ for QA builds or another host. Events wait in a bounded in-memory queue until `g
 GA4 loader flushes the queue once loaded. Server
 tracking also needs `GA_API_SECRET`. Keep the secret on the server.
 
-The CSP permits Google browser origins only when GA4 is configured. GA4 needs Enhanced Measurement "Page changes based on browser history
+PostHog starts only when both its key and region host are set. The CSP permits
+Google and PostHog browser origins only for configured providers; PostHog uses
+`https://*.posthog.com` (its recommendation) or the exact origin of a non-PostHog
+host. GA4 needs Enhanced Measurement "Page changes based on browser history
 events" turned off in the property; code cannot verify that setting.
 
 ## Consent comes first
@@ -74,13 +85,13 @@ into event functions.
 from a closed list. Locations are origin plus path, referrers origin only, and
 UTM values must be short alphanumeric text with no email or phone-like content.
 
-| Event | Properties |
-| --- | --- |
-| `page_view` | `page_location`, `page_path`, `page_referrer` |
-| `booking_click` | `placement` |
-| `menu_view` | `menu` (a menu slug) |
-| `contact_click` | `placement`, `destination` (`phone` or `email`) |
-| `directions_click` | `placement` |
+| Event | PostHog name | Properties |
+| --- | --- | --- |
+| `page_view` | `$pageview` | `page_location`, `page_path`, `page_referrer` |
+| `booking_click` | same | `placement` |
+| `menu_view` | same | `menu` (a menu slug) |
+| `contact_click` | same | `placement`, `destination` (`phone` or `email`) |
+| `directions_click` | same | `placement` |
 
 Never send `tel:`, `mailto:` or map URLs. No enquiry, subscription or booking
 completion event exists: the enquiry and newsletter controls are inert and the
@@ -124,7 +135,8 @@ a `gtag.js` stub, so real gtag traffic is unverified.
 
 ## Verification
 
-Run `bun run test:e2e:analytics` for browser delivery. It builds with
+Run `bun run test:e2e:analytics` for browser delivery (see
+[PostHog guide](posthog-guide.md) for the shared harness). It builds with
 `NEXT_PUBLIC_VERCEL_ENV=production` and a synthetic `G-TEST000000`, replaces
 `gtag.js` with a stub that consumes `dataLayer` like the real script and sends
 `g/collect` hits, and records those hits. It covers no traffic or storage before

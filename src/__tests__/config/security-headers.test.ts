@@ -62,10 +62,13 @@ describe("security headers", function securityHeaderTests() {
     vi.stubEnv("NEXT_PUBLIC_SENTRY_DSN", "");
     vi.stubEnv("NEXT_PUBLIC_GA_MEASUREMENT_ID", "");
     vi.stubEnv("NEXT_PUBLIC_GTM_ID", "");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_HOST", "");
 
     const headers = await getGlobalHeaders();
     const contentSecurityPolicy = headers.get("Content-Security-Policy");
 
+    expect(contentSecurityPolicy).not.toContain("posthog.com");
     expect(contentSecurityPolicy).not.toContain("sentry.io");
     expect(contentSecurityPolicy).not.toContain("google-analytics.com");
     expect(contentSecurityPolicy).not.toContain("analytics.google.com");
@@ -110,6 +113,47 @@ describe("security headers", function securityHeaderTests() {
     expect(contentSecurityPolicy).toContain(
       "img-src 'self' data: blob: https://*.google-analytics.com",
     );
+  });
+
+  it("allows PostHog only when both its key and host are configured", async function postHogTest() {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_HOST", "https://eu.i.posthog.com");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "");
+    expect(
+      (await getGlobalHeaders()).get("Content-Security-Policy"),
+    ).not.toContain("posthog.com");
+
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "phc_test");
+    const policy = (await getGlobalHeaders()).get("Content-Security-Policy");
+    const directive = (name: string) =>
+      policy?.split("; ").find((part) => part.startsWith(`${name} `));
+    expect(directive("script-src")).toContain("https://*.posthog.com");
+    expect(directive("connect-src")).toContain("https://*.posthog.com");
+    expect(directive("img-src")).not.toContain("posthog");
+    expect(directive("default-src")).toBe("default-src 'self'");
+  });
+
+  it("allows a PostHog proxy host by its exact origin", async function postHogProxyTest() {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "phc_test");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_HOST", "https://ph.example.com/ingest");
+
+    const policy = (await getGlobalHeaders()).get("Content-Security-Policy");
+
+    expect(policy).toContain("https://ph.example.com");
+    expect(policy).not.toContain("posthog.com");
+  });
+
+  it("keeps Stripe and PostHog together on the booking page", async function bookingWithPostHogTest() {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "phc_test");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_HOST", "https://us.i.posthog.com");
+
+    const policy = await getBookingPagePolicy();
+
+    expect(policy).toContain("https://js.stripe.com");
+    expect(policy).toContain("https://api.stripe.com");
+    expect(policy).toContain("https://*.posthog.com");
   });
 
   it("uses development-only script and transport settings", async function developmentPolicyTest() {
