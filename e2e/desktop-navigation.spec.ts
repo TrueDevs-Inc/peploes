@@ -35,6 +35,35 @@ test("switching desktop shelves keeps the panel height and page position stable"
   }
 });
 
+test("switching desktop shelves slides the new shelf in from the pointer's side", async ({
+  page,
+}) => {
+  const navigation = page.getByRole("navigation", {
+    name: "Main navigation",
+    exact: true,
+  });
+  const menus = navigation.getByRole("link", { name: "Menus", exact: true });
+  const groups = navigation.getByRole("link", {
+    name: "Private Dining & Events",
+    exact: true,
+  });
+  const panelOf = async (trigger: typeof menus) =>
+    page.locator(`[id="${await trigger.getAttribute("aria-controls")}"]`);
+
+  await menus.hover();
+  await expect(await panelOf(menus)).toHaveAttribute("data-motion", "open");
+  await groups.hover();
+  await expect(await panelOf(groups)).toHaveAttribute(
+    "data-motion",
+    "from-end",
+  );
+  await menus.hover();
+  await expect(await panelOf(menus)).toHaveAttribute(
+    "data-motion",
+    "from-start",
+  );
+});
+
 test("desktop Menus opens Lunch by pointer and keyboard", async ({ page }) => {
   const menus = page
     .getByRole("navigation", { name: "Main navigation", exact: true })

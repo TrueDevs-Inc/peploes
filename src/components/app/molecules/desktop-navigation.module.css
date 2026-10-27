@@ -1,15 +1,124 @@
+.backdrop,
 .panel {
   position: absolute;
   inset-inline: 0;
   top: 100%;
   height: 352px;
   max-height: calc(100dvh - 76px);
+}
+
+/* One surface stays up while the pointer moves between shelves, so switching
+   moves only the content instead of swapping two opaque bands. */
+.backdrop {
+  background: var(--warm-cream);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--duration-fast) ease-out,
+    visibility 0s linear var(--duration-fast);
+}
+
+.backdrop.open {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity var(--duration-fast) ease-out;
+}
+
+.panel {
+  --shelf-slide: 6rem;
+  overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
-  background: var(--warm-cream);
   visibility: hidden;
 }
 
-.open {
+.panel[data-motion] {
   visibility: visible;
+}
+
+.panel[data-motion^="to-"],
+.panel[data-motion="close"] {
+  pointer-events: none;
+}
+
+.panel[data-motion="open"] > .content {
+  animation: shelf-open var(--duration-base) var(--ease-organic) both;
+}
+
+.panel[data-motion="from-end"] > .content {
+  animation: shelf-from-end var(--duration-base) var(--ease-organic) both;
+}
+
+.panel[data-motion="from-start"] > .content {
+  animation: shelf-from-start var(--duration-base) var(--ease-organic) both;
+}
+
+.panel[data-motion="to-end"] > .content {
+  animation: shelf-to-end var(--duration-fast) ease-in both;
+}
+
+.panel[data-motion="to-start"] > .content {
+  animation: shelf-to-start var(--duration-fast) ease-in both;
+}
+
+.panel[data-motion="close"] > .content {
+  animation: shelf-close var(--duration-fast) ease-out both;
+}
+
+@keyframes shelf-open {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+}
+
+@keyframes shelf-from-end {
+  from {
+    opacity: 0;
+    transform: translateX(var(--shelf-slide));
+  }
+}
+
+@keyframes shelf-from-start {
+  from {
+    opacity: 0;
+    transform: translateX(calc(-1 * var(--shelf-slide)));
+  }
+}
+
+@keyframes shelf-to-end {
+  to {
+    opacity: 0;
+    transform: translateX(var(--shelf-slide));
+  }
+}
+
+@keyframes shelf-to-start {
+  to {
+    opacity: 0;
+    transform: translateX(calc(-1 * var(--shelf-slide)));
+  }
+}
+
+@keyframes shelf-close {
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop,
+  .backdrop.open {
+    transition: none;
+  }
+
+  .panel[data-motion] > .content {
+    animation: none;
+  }
+
+  .panel[data-motion^="to-"],
+  .panel[data-motion="close"] {
+    visibility: hidden;
+  }
 }

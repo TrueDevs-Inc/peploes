@@ -19,6 +19,30 @@ import { cn } from "@/lib/utils";
 
 const HOVER_CLOSE_DELAY_MS = 350;
 
+interface IShelfTransition {
+  shown: string | null;
+  leaving: string | null;
+  enter: "open" | "from-start" | "from-end";
+  exit: "close" | "to-start" | "to-end";
+}
+
+function getShelfTransition(
+  items: IDesktopNavigationProps["items"],
+  leaving: string | null,
+  shown: string | null,
+): IShelfTransition {
+  const isForward =
+    items.findIndex((item) => item.id === shown) >
+    items.findIndex((item) => item.id === leaving);
+
+  return {
+    shown,
+    leaving,
+    enter: leaving === null ? "open" : isForward ? "from-end" : "from-start",
+    exit: shown === null ? "close" : isForward ? "to-start" : "to-end",
+  };
+}
+
 export function DesktopNavigation({ items }: IDesktopNavigationProps) {
   const [openItem, setOpenItem] = useState<IOpenDesktopNavigation | null>(null);
   const activeItemRef = useRef<HTMLLIElement>(null);
@@ -32,6 +56,16 @@ export function DesktopNavigation({ items }: IDesktopNavigationProps) {
     : pathname.startsWith(ROUTES.PRIVATE_DINING)
       ? NAVBAR_CONTENT.groupsId
       : null;
+  const openId = openItem?.id ?? null;
+  const [shelves, setShelves] = useState<IShelfTransition>({
+    shown: null,
+    leaving: null,
+    enter: "open",
+    exit: "close",
+  });
+  if (shelves.shown !== openId) {
+    setShelves(getShelfTransition(items, shelves.shown, openId));
+  }
 
   function cancelClose() {
     if (closeTimerRef.current !== null) {
@@ -80,89 +114,122 @@ export function DesktopNavigation({ items }: IDesktopNavigationProps) {
   }, [openItem]);
 
   return (
-    <ul
-      data-navbar-primary
-      className="hidden h-full flex-1 items-center gap-[30px] xl:flex"
-      onClickCapture={(event) => {
-        if (event.target instanceof Element && event.target.closest("a[href]"))
-          setOpenItem(null);
-      }}
-    >
-      {items.map((item) => {
-        const { id, href, content } = item;
-        const isOpen = openItem?.id === id;
-        const panelId = `${navigationId}-${encodeURIComponent(id)}`;
+    <>
+      <div
+        aria-hidden="true"
+        className={cn(styles.backdrop, openId !== null && styles.open)}
+      />
+      <ul
+        data-navbar-primary
+        className="hidden h-full flex-1 items-center gap-[30px] xl:flex"
+        onClickCapture={(event) => {
+          if (
+            event.target instanceof Element &&
+            event.target.closest("a[href]")
+          )
+            setOpenItem(null);
+        }}
+      >
+        {items.map((item) => {
+          const { id, href, content } = item;
+          const isOpen = openItem?.id === id;
+          const panelId = `${navigationId}-${encodeURIComponent(id)}`;
 
-        return (
-          <li
-            key={id}
-            ref={isOpen ? activeItemRef : undefined}
-            className="flex h-full items-center"
-            onPointerEnter={(event) => {
-              if (event.pointerType === "mouse" && content) {
-                cancelClose();
-                setOpenItem((current) => {
-                  return current?.id === id ? current : { id, source: "hover" };
-                });
-              }
-            }}
-            onPointerLeave={(event) => {
-              if (
-                isOpen &&
-                event.pointerType === "mouse" &&
-                !event.currentTarget.contains(document.activeElement)
-              ) {
-                cancelClose();
-                closeTimerRef.current = setTimeout(() => {
-                  closeTimerRef.current = null;
+          return (
+            <li
+              key={id}
+              ref={isOpen ? activeItemRef : undefined}
+              className="flex h-full items-center"
+              onPointerEnter={(event) => {
+                if (event.pointerType === "mouse" && content) {
+                  cancelClose();
+                  setOpenItem((current) => {
+                    return current?.id === id
+                      ? current
+                      : { id, source: "hover" };
+                  });
+                }
+              }}
+              onPointerLeave={(event) => {
+                if (
+                  isOpen &&
+                  event.pointerType === "mouse" &&
+                  !event.currentTarget.contains(document.activeElement)
+                ) {
+                  cancelClose();
+                  closeTimerRef.current = setTimeout(() => {
+                    closeTimerRef.current = null;
+                    setOpenItem((current) =>
+                      current?.id === id ? null : current,
+                    );
+                  }, HOVER_CLOSE_DELAY_MS);
+                }
+              }}
+              onFocus={cancelClose}
+              onBlur={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget)) {
                   setOpenItem((current) =>
                     current?.id === id ? null : current,
                   );
-                }, HOVER_CLOSE_DELAY_MS);
-              }
-            }}
-            onFocus={cancelClose}
-            onBlur={(event) => {
-              if (!event.currentTarget.contains(event.relatedTarget)) {
-                setOpenItem((current) => (current?.id === id ? null : current));
-              }
-            }}
-          >
-            <DesktopNavigationTrigger
-              item={item}
-              isOpen={isOpen}
-              isActive={
-                activeNavigationId === id ||
-                href === pathname ||
-                (href === ROUTES.WHATS_ON && isSeasonalDetail)
-              }
-              isCurrent={href === pathname}
-              panelId={panelId}
-              onFocus={() =>
-                setOpenItem((current) => (current?.id === id ? current : null))
-              }
-              onToggle={() =>
-                setOpenItem((current) =>
-                  current?.id === id && current.source === "activation"
-                    ? null
-                    : { id, source: "activation" },
-                )
-              }
-              onOpen={() => setOpenItem({ id, source: "activation" })}
-            />
-            {content && (
-              <div
-                id={panelId}
-                aria-hidden={!isOpen}
-                inert={!isOpen}
-                className={cn(styles.panel, isOpen && styles.open)}
-              >
-                {content}
-              </div>
-            )}
-          </li>
-        );
-      })}
-    </ul>
+                }
+              }}
+            >
+              <DesktopNavigationTrigger
+                item={item}
+                isOpen={isOpen}
+                isActive={
+                  activeNavigationId === id ||
+                  href === pathname ||
+                  (href === ROUTES.WHATS_ON && isSeasonalDetail)
+                }
+                isCurrent={href === pathname}
+                panelId={panelId}
+                onFocus={() =>
+                  setOpenItem((current) =>
+                    current?.id === id ? current : null,
+                  )
+                }
+                onToggle={() =>
+                  setOpenItem((current) =>
+                    current?.id === id && current.source === "activation"
+                      ? null
+                      : { id, source: "activation" },
+                  )
+                }
+                onOpen={() => setOpenItem({ id, source: "activation" })}
+              />
+              {content && (
+                <div
+                  id={panelId}
+                  aria-hidden={!isOpen}
+                  inert={!isOpen}
+                  data-motion={
+                    isOpen
+                      ? shelves.enter
+                      : shelves.leaving === id
+                        ? shelves.exit
+                        : undefined
+                  }
+                  className={styles.panel}
+                  onAnimationEnd={(event) => {
+                    if (
+                      event.target === event.currentTarget.firstElementChild
+                    ) {
+                      setShelves((current) =>
+                        current.leaving === id
+                          ? { ...current, leaving: null }
+                          : current,
+                      );
+                    }
+                  }}
+                >
+                  <div className={styles.content}>{content}</div>
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </>
   );
 }
