@@ -95,7 +95,7 @@
         <h2>Scope and revision</h2>
         <p>Reviewed all 16 changed files between base <code>8995a284c75bf6d8b34ed32dd9d30208f7a1afc1</code> and integration head <code>1d605694134f738d3cf3d9d446a34b4115fcf2a2</code>, plus the documentation correction accompanying this report. Production code is unchanged by this review’s remediation. <a href="https://github.com/TrueDevs-Inc/peploes/compare/8995a284c75bf6d8b34ed32dd9d30208f7a1afc1...1d605694134f738d3cf3d9d446a34b4115fcf2a2">Reviewed diff</a>.</p>
         <p>High-risk review areas: runtime enablement, credential separation and outbound redaction. Medium-risk areas: SDK compatibility, source-map upload/deletion, Zod 4 optional fields and dependency overrides. Environment examples and the owning guides were checked for agreement with executable behavior.</p>
-        <p>All review threads, replies, review summaries and PR comments were collected through GraphQL, including resolved/outdated flags. Pagination was exhausted: one unresolved Cubic thread; Codex’s review reported no code findings. The Vercel comment describes a plan restriction. No review-thread state was changed.</p>
+        <p>All review threads, replies, review summaries and PR comments were collected through GraphQL, including resolved/outdated flags. Pagination was exhausted: one Cubic thread was unresolved at the initial review. After the documentation fix, GitHub marked it resolved and outdated. Codex’s review reported no code findings. The Vercel comment describes a plan restriction. No review-thread state was changed by this review.</p>
         <p class="note">The installed Elhaam skill was applied across all seven lenses. Ponytail, unslop, readable-html-dossier and github-graphql-first were unavailable; repository rules, self-contained HTML and direct GraphQL were used.</p>
       </section>
 
@@ -153,7 +153,6 @@
           <li>Edge frames remain compiled. Hosted Edge execution and Edge source-map resolution are unverified. The application currently declares no Edge route; the temporary verification route is not shipped.</li>
           <li>Production credentials and deployment were outside this work. Verify artifacts against the actual deployed build before claiming deployed symbolication.</li>
           <li>No database migration or database integration command was run. Existing browser-journey tests were not rerun for this documentation-only correction; targeted real-browser Sentry delivery was verified separately.</li>
-          <li>The Cubic thread stays unresolved pending an explicit request to reply or resolve it. Its code/documentation fix is independent of review-thread state.</li>
         </ul>
       </section>
     </main>
