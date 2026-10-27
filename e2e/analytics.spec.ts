@@ -417,6 +417,14 @@ test.describe("interaction events", () => {
       .poll(() => analytics.posthogNamed("contact_click").length)
       .toBe(2);
     await page.goto("/visit-contact");
+    // The SDK loads lazily; click once it has sent this page's view.
+    await expect
+      .poll(() =>
+        analytics
+          .posthogPageViews()
+          .some((e) => e.properties.$pathname === "/visit-contact"),
+      )
+      .toBe(true);
     // Directions leaves the site in the same tab: the click must survive unload.
     await page.context().route("https://www.google.com/maps/**", (route) =>
       route.fulfill({
