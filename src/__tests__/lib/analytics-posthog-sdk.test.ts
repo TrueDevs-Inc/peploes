@@ -1,5 +1,6 @@
 import {
   afterAll,
+  afterEach,
   beforeAll,
   beforeEach,
   describe,
@@ -46,6 +47,9 @@ beforeAll(() => {
   });
   browser.removeGtag();
   network = installSdkGlobals();
+  // Node's real BroadcastChannel would let a module graph left by an earlier
+  // test hear this test's saves, as a second tab would, and send its own events.
+  vi.stubGlobal("BroadcastChannel", undefined);
 });
 afterAll(() => vi.unstubAllGlobals());
 
@@ -63,6 +67,7 @@ beforeEach(() => {
   browser.removeGtag();
   browser.setLocation(START_URL);
   network.requests.length = 0;
+  network.beacons.length = 0;
   network.status = 200;
   network.hang = false;
   network.signals.length = 0;
@@ -82,6 +87,9 @@ async function settle() {
   await vi.dynamicImportSettled();
   await vi.advanceTimersByTimeAsync(0);
 }
+
+// A beacon would bypass every network.requests assertion in this file.
+afterEach(() => expect(network.beacons).toEqual([]));
 
 const sentEvents = () => network.requests.flatMap((request) => request.events);
 
@@ -111,12 +119,12 @@ describe("pending SDK delivery on withdrawal", () => {
 
   it("does not retry a failed request after withdrawal, nor resend it after re-consent", async () => {
     const { lifecycle, consent } = await start();
+    network.status = 500;
     browser.grantAnalytics();
     lifecycle.startAnalytics();
     lifecycle.recordNavigation("/menus");
     await settle();
-    network.status = 500;
-    await vi.advanceTimersByTimeAsync(3_500);
+    // The page view was sent and rejected; withdrawal lands before any retry.
     expect(network.requests).toHaveLength(1);
 
     consent.saveCookiePreferences(DENIED);

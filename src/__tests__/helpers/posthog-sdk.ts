@@ -23,6 +23,8 @@ export function installSdkGlobals() {
     /** A hanging request settles only when its signal aborts. */
     hang: false,
     requests,
+    /** URLs passed to navigator.sendBeacon, which bypasses fetch. */
+    beacons: [] as string[],
     signals: [] as AbortSignal[],
     /** Event types the page registered on window, in order. */
     windowListeners: [] as string[],
@@ -34,7 +36,10 @@ export function installSdkGlobals() {
       "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
     language: "en",
     onLine: true,
-    sendBeacon: () => true,
+    sendBeacon: (url: string) => {
+      network.beacons.push(url);
+      return true;
+    },
   };
   const addWindowListener = win.addEventListener as (
     type: string,
