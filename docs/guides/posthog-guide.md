@@ -55,8 +55,10 @@ do not assume one. Production and local/preview data must use different projects
 `booking_click`, `menu_view`, `contact_click`, `directions_click`). Custom
 properties go through the same sanitiser as GA4; SDK properties are limited to a
 named set (device, browser, ids, timezone) and URL fields are reduced to origin
-plus path, referrers to origin. `$set`, `$set_once`, `$unset`, campaign keywords
-and click identifiers are removed. `identify` is never called.
+plus path, referrers to origin. `$set`, `$set_once`, `$unset`, raw PostHog
+keyword and click-identifier fields are dropped. Allowlisted UTM values
+(`utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`) still
+pass once the campaign sanitiser accepts them. `identify` is never called.
 
 ## Disabled surfaces
 
