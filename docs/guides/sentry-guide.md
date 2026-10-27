@@ -1,9 +1,13 @@
 # Sentry
 
-Sentry is optional. The app runs without a DSN. Reporting runs only on Vercel
-production deployments with a configured DSN. Local builds and previews do not
-send events, even when `NODE_ENV=production`. Initialization lives in the
-framework entry points required by the Next.js SDK.
+Sentry is optional. The app runs without a DSN. Reporting requires a configured
+DSN and an environment label of exactly `production`. Node and Edge read
+`VERCEL_ENV`; the browser uses the label derived from it at build time. This
+checks an environment variable, not whether the application is hosted on
+Vercel. Local builds normally leave `VERCEL_ENV` unset and previews use
+`preview`, so neither sends events, even when `NODE_ENV=production`. Setting
+`VERCEL_ENV=production` deliberately enables reporting on any host.
+Initialization lives in the framework entry points required by the Next.js SDK.
 
 ## Files
 
@@ -39,12 +43,12 @@ platform so a later move to TrueDevs requires no source change.
 
 `next.config.ts` derives `NEXT_PUBLIC_SENTRY_ENVIRONMENT` from `VERCEL_ENV` at
 build time. Do not set the public environment manually. All runtimes report
-only when their deployment environment is exactly `production`; missing or
+only when their environment label is exactly `production`; missing or
 unrecognized environments stay silent. Rebuild after changing any public value.
 Review this gate before changing hosting platforms.
 
 The auth token, organization, and project enable the build-time Sentry wrapper
-and source-map upload on production deployments. Keep the auth token in the
+and source-map upload when `VERCEL_ENV=production`. Keep the auth token in the
 deployment build environment or ignored local settings. No auth token belongs
 in a public variable.
 
@@ -82,10 +86,11 @@ One event with useful context is easier to investigate than four copies.
 
 ## Source maps
 
-The Next config enables the Sentry build wrapper only on production deployments
-when all upload variables exist. It passes organization, project and auth token
-explicitly and requests source-map deletion after upload with the installed
-SDK's `sourcemaps.deleteSourcemapsAfterUpload` option.
+The Next config enables the Sentry build wrapper when `VERCEL_ENV=production`
+and all upload variables exist, regardless of hosting provider. It passes
+organization, project and auth token explicitly and requests source-map deletion
+after upload with the installed SDK's `sourcemaps.deleteSourcemapsAfterUpload`
+option.
 
 Verify successful upload and removal of public maps in the deployment
 environment. A local build without credentials proves neither upload nor

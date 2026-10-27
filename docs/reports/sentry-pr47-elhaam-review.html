@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Peploe’s Sentry — full Elhaam review</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --background: #11151c;
+      --text: #e3e8ef;
+      --muted: #b0bccb;
+      --line: #3d4755;
+      --accent: #a9caff;
+      --success: #9de1bd;
+      --space: 1rem;
+      --body: 1.0625rem;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        color-scheme: light;
+        --background: #fafaf7;
+        --text: #202832;
+        --muted: #505c6b;
+        --line: #b9c0c8;
+        --accent: #174e91;
+        --success: #18583a;
+      }
+    }
+    * { box-sizing: border-box; }
+    html { scroll-padding-top: var(--space); }
+    body { margin: 0; background: var(--background); color: var(--text); font: var(--body)/1.7 system-ui, sans-serif; }
+    .layout { max-width: 76rem; margin: auto; padding: calc(3 * var(--space)) calc(2 * var(--space)); display: grid; grid-template-columns: 13rem minmax(0, 70ch); gap: calc(3 * var(--space)); }
+    main { min-width: 0; }
+    nav { align-self: start; position: sticky; top: calc(2 * var(--space)); }
+    a { color: var(--accent); text-underline-offset: .2em; overflow-wrap: anywhere; }
+    summary { display: list-item; cursor: pointer; }
+    nav a, summary { padding: .625rem 0; min-height: 44px; }
+    nav a { display: block; }
+    a:focus-visible, summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+    nav a[aria-current="location"] { color: var(--text); font-weight: 700; }
+    h1 { font-size: 2.25rem; line-height: 1.2; margin: .75rem 0 1.5rem; letter-spacing: -.025em; }
+    h2 { font-size: 1.5rem; line-height: 1.35; margin: 0 0 var(--space); }
+    h3 { font-size: 1.125rem; line-height: 1.4; margin: calc(2 * var(--space)) 0 .5rem; }
+    p, ul { margin: 0 0 var(--space); }
+    li { margin-bottom: .625rem; }
+    ul { padding-left: 1.5rem; }
+    section { margin-top: calc(3 * var(--space)); padding-top: calc(2 * var(--space)); border-top: 1px solid var(--line); }
+    code { font-size: .9em; overflow-wrap: anywhere; }
+    .meta, .note { color: var(--muted); }
+    .result { font-size: 1.25rem; font-weight: 600; color: var(--success); }
+    .skip { position: absolute; left: var(--space); top: -10rem; padding: var(--space); background: var(--background); }
+    .skip:focus { top: var(--space); }
+    @media (max-width: 52rem) {
+      .layout { display: block; padding: calc(1.5 * var(--space)); }
+      nav { position: static; margin-bottom: calc(2 * var(--space)); }
+      h1 { font-size: 2rem; }
+    }
+    @media print {
+      :root { color-scheme: light; --background: white; --text: black; --muted: #333; --line: #aaa; --accent: #174e91; --success: #18583a; }
+      @page { size: A4; margin: 18mm; }
+      body { font-size: 10.5pt; }
+      .layout { display: block; padding: 0; max-width: none; }
+      nav, .skip { display: none; }
+      h1 { font-size: 24pt; }
+      h2, h3 { break-after: avoid; }
+      section { margin-top: 1.5rem; padding-top: 1rem; }
+      p, li { orphans: 3; widows: 3; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to findings</a>
+  <div class="layout">
+    <nav aria-label="Report contents">
+      <details>
+        <summary>Contents</summary>
+        <a href="#scope">Scope and revision</a>
+        <a href="#findings">Findings and fixes</a>
+        <a href="#lenses">Seven review lenses</a>
+        <a href="#evidence">Verification evidence</a>
+        <a href="#remaining">Remaining limits</a>
+      </details>
+    </nav>
+    <main id="main">
+      <header>
+        <p class="meta">Peploe’s · 27 October 2026 · Separate full Elhaam review</p>
+        <h1>Sentry integration review</h1>
+        <p class="result">No open code blockers. One documentation finding fixed.</p>
+        <p>The integration has local execution evidence for browser, Node and Edge capture. Browser and Node frames resolve to original source. Remote verification remains blocked by account settings; this report is not a merge approval.</p>
+        <p><a href="https://github.com/TrueDevs-Inc/peploes/pull/47">Open PR #47 and its current checks</a></p>
+      </header>
+
+      <section id="scope">
+        <h2>Scope and revision</h2>
+        <p>Reviewed all 16 changed files between base <code>8995a284c75bf6d8b34ed32dd9d30208f7a1afc1</code> and integration head <code>1d605694134f738d3cf3d9d446a34b4115fcf2a2</code>, plus the documentation correction accompanying this report. Production code is unchanged by this review’s remediation. <a href="https://github.com/TrueDevs-Inc/peploes/compare/8995a284c75bf6d8b34ed32dd9d30208f7a1afc1...1d605694134f738d3cf3d9d446a34b4115fcf2a2">Reviewed diff</a>.</p>
+        <p>High-risk review areas: runtime enablement, credential separation and outbound redaction. Medium-risk areas: SDK compatibility, source-map upload/deletion, Zod 4 optional fields and dependency overrides. Environment examples and the owning guides were checked for agreement with executable behavior.</p>
+        <p>All review threads, replies, review summaries and PR comments were collected through GraphQL, including resolved/outdated flags. Pagination was exhausted: one unresolved Cubic thread; Codex’s review reported no code findings. The Vercel comment describes a plan restriction. No review-thread state was changed.</p>
+        <p class="note">The installed Elhaam skill was applied across all seven lenses. Ponytail, unslop, readable-html-dossier and github-graphql-first were unavailable; repository rules, self-contained HTML and direct GraphQL were used.</p>
+      </section>
+
+      <section id="findings">
+        <h2>Findings and fixes</h2>
+        <h3>Blockers</h3>
+        <p>No security, correctness or data-loss blocker was demonstrated in the integration diff. Account-level CI and hosting restrictions remain external merge-readiness blockers.</p>
+        <h3>[P2 documentation] Hosting guarantee overstated — fixed</h3>
+        <p>The guide said reporting ran only on Vercel production deployments. The implementation checks <code>VERCEL_ENV</code>, which any host can set. This could lead an operator to enable reporting unintentionally in a local or non-Vercel process.</p>
+        <p>The guide now names the exact environment-variable gate, distinguishes browser build-time configuration from server runtime configuration, and explains that setting <code>VERCEL_ENV=production</code> enables reporting on any host. The source-map section uses the same precise condition. Runtime behavior was preserved.</p>
+        <p>Confidence: high. This is proved by the initialization files, build configuration and existing deployment tests. <a href="https://github.com/TrueDevs-Inc/peploes/pull/47#discussion_r4386290067">Original Cubic finding</a>.</p>
+        <h3>Teach-back</h3>
+        <p>Keep policy wording tied to the values code actually checks. SDK configuration stays in framework entry points; shared redaction stays in its existing helper. Recording-transport tests inspect outbound data rather than merely asserting SDK calls.</p>
+        <h3>Automation follow-up</h3>
+        <p>The existing delivery matrix is the durable control for production/preview/unset/missing-DSN behavior. It passed again during this review. A prose-string test would duplicate wording without detecting delivery errors, so none was added for this documentation correction.</p>
+      </section>
+
+      <section id="lenses">
+        <h2>Seven review lenses</h2>
+        <h3>1. Codebase boundary — clear</h3>
+        <p>Traced framework initialization, global/client boundaries, provider catches and booking-service callers. The changed scrubber exports mutate SDK payloads without I/O; their owners remain the SDK hooks. Build configuration owns the private upload token; client initialization reads only the public DSN. No service-to-framework dependency was introduced.</p>
+        <h3>2. Simplicity — clear</h3>
+        <p>The existing URL scrubber is reused for event requests, breadcrumbs and spans. No second capture framework, provider registry or speculative abstraction was added. Console breadcrumbs are dropped; DOM breadcrumbs are disabled at initialization.</p>
+        <h3>3. Test confidence — clear within stated limits</h3>
+        <p>Reviewed the recording envelope, retained diagnostic tags, request/user removal and deployment delivery matrix. The focused suite passed 15 tests. Prior mutation evidence shows the local/preview assertions fail when the gate is removed. Real release-build browser and Node events establish initialized SDK delivery and artifact matching; helper tests alone were not used as proof of those paths.</p>
+        <h3>4. Security boundary — clear within stated limits</h3>
+        <p>Checked private versus public environment access, CSP ingestion origin, upload credentials, map deletion and outbound request fields. No token or temporary route is present in the candidate. Request bodies, headers, cookies and queries are removed. Arbitrary exception messages, tags and manually attached contexts are not comprehensively scrubbed; callers still own their content. Sentry displayed geolocation enrichment, so zero personal-data storage is not claimed.</p>
+        <h3>5. Whole-flow correctness and scale — clear</h3>
+        <p>Traced missing configuration, preview, local production build, enabled runtime, upload and capture paths. Expected ResDiary results remain typed; its unexpected exceptions are captured at the provider boundary, while booking services own only their exceptions. No database query, write, retry or migration changed. Sampling remains 15% for production traces; errors retain the SDK default. No new unbounded loop or duplicate business operation was introduced.</p>
+        <h3>6. Maintainer clarity — corrected</h3>
+        <p>The environment-variable guarantee is now explicit. SDK 10 options match the installed declarations; v11-only collection settings were not copied. Zod 4 is accepted by the installed Drizzle/env peers; the optional-menu wrapper retains omitted-field compatibility. The Studio Undici override records its vulnerability and removal condition. Edge source-map limitations remain visible rather than implied complete.</p>
+        <h3>7. Automation feedback — clear</h3>
+        <p>The production gate and privacy hooks have executable regression coverage; the security audits remain enabled. Remote checks failed before repository steps ran. Neither check was bypassed or weakened to produce a green status. The bot’s proposed documentation correction was checked against the code before adoption.</p>
+      </section>
+
+      <section id="evidence">
+        <h2>Verification evidence</h2>
+        <ul>
+          <li><code>bun run test -- src/__tests__/config/sentry.test.ts src/__tests__/lib/sentry-scrub.test.ts</code>: 15 passed during this review.</li>
+          <li><code>bun run format</code> and <code>bun run ci</code>: passed again during this review; 781 tests across 45 files, application and Studio builds, and both high-severity audits. Lower-severity advisories remain below the configured audit threshold.</li>
+          <li><a href="https://truedevs-rn.sentry.io/issues/PEPLOES-2">Browser error PEPLOES-2</a>: original <code>page.tsx:3:85</code> and source context from a minified local release build.</li>
+          <li><a href="https://truedevs-rn.sentry.io/issues/PEPLOES-4">Node error PEPLOES-4</a>: original <code>route.ts:5:13</code> and source context.</li>
+          <li><a href="https://truedevs-rn.sentry.io/issues/PEPLOES-3">Edge error PEPLOES-3</a>: route probe returned <code>NEXT_RUNTIME=edge</code>; Next’s <code>onRequestError</code> captured the thrown error in its local Edge sandbox.</li>
+          <li>That build’s <code>.next/static</code> had zero map files and zero line-based source-map references after upload. Temporary routes stayed in a disposable copy; its server was stopped.</li>
+        </ul>
+        <p class="note">The execution evidence above is reused from the unchanged integration source revision. Test events use <code>local-verification</code>; no production deployment was performed. No raw environment values or personal metadata are included in this report.</p>
+        <p>Code evidence: <a href="https://github.com/TrueDevs-Inc/peploes/blob/1d605694134f738d3cf3d9d446a34b4115fcf2a2/src/lib/sentry-scrub.ts">shared redaction</a>, <a href="https://github.com/TrueDevs-Inc/peploes/blob/1d605694134f738d3cf3d9d446a34b4115fcf2a2/src/__tests__/config/sentry.test.ts">deployment matrix</a>, and <a href="https://github.com/TrueDevs-Inc/peploes/blob/1d605694134f738d3cf3d9d446a34b4115fcf2a2/next.config.ts">build-time credentials and environment derivation</a>.</p>
+      </section>
+
+      <section id="remaining">
+        <h2>Remaining limits and follow-ups</h2>
+        <ul>
+          <li>GitHub Actions: the Verify job did not start because account payments or spending limits require attention. Fix the account restriction and rerun the check.</li>
+          <li>Vercel: its Hobby plan cannot deploy this private organization repository. Deployment/account choices remain with the owner; no billing or repository-visibility setting was changed.</li>
+          <li>Edge frames remain compiled. Hosted Edge execution and Edge source-map resolution are unverified. The application currently declares no Edge route; the temporary verification route is not shipped.</li>
+          <li>Production credentials and deployment were outside this work. Verify artifacts against the actual deployed build before claiming deployed symbolication.</li>
+          <li>No database migration or database integration command was run. Existing browser-journey tests were not rerun for this documentation-only correction; targeted real-browser Sentry delivery was verified separately.</li>
+          <li>The Cubic thread stays unresolved pending an explicit request to reply or resolve it. Its code/documentation fix is independent of review-thread state.</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+  <script>
+    const contents = document.querySelector("nav details");
+    const desktop = window.matchMedia("(min-width: 52.001rem)");
+    const syncDisclosure = () => { contents.open = desktop.matches; };
+    syncDisclosure();
+    desktop.addEventListener("change", syncDisclosure);
+
+    const sections = [...document.querySelectorAll("main section")];
+    const links = [...document.querySelectorAll("nav a")];
+    const markCurrentSection = () => {
+      const atEnd = scrollY + innerHeight >= document.documentElement.scrollHeight - 2;
+      const current = atEnd ? sections.at(-1) : sections.filter(section => section.getBoundingClientRect().top <= innerHeight * 0.35).at(-1) ?? sections[0];
+      for (const link of links) {
+        if (link.hash === `#${current.id}`) link.setAttribute("aria-current", "location");
+        else link.removeAttribute("aria-current");
+      }
+    };
+    window.addEventListener("scroll", markCurrentSection, { passive: true });
+    markCurrentSection();
+  </script>
+</body>
+</html>
