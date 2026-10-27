@@ -80,6 +80,12 @@ export const RESTAURANT_CONTACT = {
   email: "reception@peploes.com",
 } as const;
 
+export const RESTAURANT_ADDRESS = {
+  streetAddress: "16 St Stephen's Green",
+  locality: "Dublin 2",
+  countryCode: "IE",
+} as const;
+
 export const RESTAURANT_OPENING_HOURS = [
   { days: "Monday – Wednesday", hours: "12pm to 10pm" },
   { days: "Thursday – Saturday", hours: "12pm to Late" },
@@ -92,24 +98,7 @@ export const SOCIAL_IMAGE = {
   FORMAT: "image/png",
 } as const;
 
-export const AI_CRAWLER_POLICY = {
-  SEARCH: {
-    USER_AGENTS: [
-      "OAI-SearchBot",
-      "PerplexityBot",
-      "Claude-SearchBot",
-    ] as const,
-    ALLOW: true,
-  },
-  TRAINING: {
-    USER_AGENTS: ["GPTBot", "ClaudeBot"] as const,
-    ALLOW: false,
-  },
-  MIXED_USE: {
-    USER_AGENTS: ["Google-Extended", "CCBot"] as const,
-    ALLOW: true,
-  },
-} as const;
+export { AI_CRAWLER_POLICY } from "./constants/crawlers";
 
 export const ROUTES = {
   HOME: "/",
@@ -137,6 +126,28 @@ export const ROUTES = {
   ROBOTS: "/robots.txt",
   SITEMAP: "/sitemap.xml",
 } as const;
+
+export const SITEMAP_STATIC_ROUTES = [
+  ROUTES.HOME,
+  ROUTES.WHATS_ON,
+  ROUTES.OUR_STORY,
+  ROUTES.LUNCH,
+  ROUTES.DINNER,
+  ROUTES.PRE_THEATRE,
+  ROUTES.WINE,
+  ROUTES.COCKTAILS,
+  ROUTES.GROUP_SET_MENU,
+  ROUTES.SEASONAL,
+  ROUTES.PRIVATE_DINING,
+  ROUTES.CELEBRATIONS,
+  ROUTES.CORPORATE_EVENTS,
+  ROUTES.WEDDINGS,
+  ROUTES.VISIT_CONTACT,
+  ROUTES.PRIVACY_COOKIES,
+  ROUTES.ACCESSIBILITY_POLICY,
+  ROUTES.TERMS_CONDITIONS,
+  ROUTES.BOOKING_CANCELLATION_TERMS,
+] as const;
 
 export const EXAMPLE_LIMITS = {
   NAME_MIN_LENGTH: 1,

@@ -2,6 +2,23 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import nextConfig from "../../../next.config";
 
+const HTML_LIMITED_BOTS = [
+  "Google-InspectionTool",
+  "Google-Extended",
+  "Bingbot",
+  "Applebot",
+  "facebookexternalhit",
+  "GPTBot",
+  "OAI-SearchBot",
+  "ChatGPT-User",
+  "ClaudeBot",
+  "Claude-SearchBot",
+  "Claude-User",
+  "PerplexityBot",
+  "Perplexity-User",
+  "CCBot",
+];
+
 async function getGlobalHeaders(): Promise<Map<string, string>> {
   const headerRules = await nextConfig.headers?.();
   const headers =
@@ -26,6 +43,25 @@ async function getBookingPagePolicy(): Promise<string | undefined> {
 describe("security headers", function securityHeaderTests() {
   afterEach(function restoreEnvironment() {
     vi.unstubAllEnvs();
+  });
+
+  it("marks every response noindex on preview and local deployments", async function nonLiveNoindexTest() {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("VERCEL_ENV", "preview");
+    expect((await getGlobalHeaders()).get("X-Robots-Tag")).toBe("noindex");
+
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("VERCEL_ENV", "");
+    expect((await getGlobalHeaders()).get("X-Robots-Tag")).toBe("noindex");
+  });
+
+  it("leaves the live site indexable", async function liveIndexableTest() {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("VERCEL_ENV", "production");
+    expect((await getGlobalHeaders()).has("X-Robots-Tag")).toBe(false);
+
+    vi.stubEnv("VERCEL_ENV", "");
+    expect((await getGlobalHeaders()).has("X-Robots-Tag")).toBe(false);
   });
 
   it("omits eval permission from the production CSP", async function productionCspTest() {
@@ -141,5 +177,17 @@ describe("security headers", function securityHeaderTests() {
     );
     expect(bookingPolicy).toContain("frame-ancestors 'none'");
     expect(bookingPolicy).toContain("object-src 'none'");
+  });
+
+  it("keeps Next's default HTML-limited bots and adds AI fetchers", function htmlLimitedBotsTest() {
+    const pattern = nextConfig.htmlLimitedBots;
+
+    expect(pattern).toBeInstanceOf(RegExp);
+    for (const bot of HTML_LIMITED_BOTS) {
+      expect(pattern?.test(`Mozilla/5.0 (compatible; ${bot}/1.0)`), bot).toBe(
+        true,
+      );
+    }
+    expect(pattern?.test("Mozilla/5.0 Chrome/130 Safari/537.36")).toBe(false);
   });
 });

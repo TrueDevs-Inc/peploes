@@ -1,7 +1,8 @@
+import { JsonLd } from "@/components/app/atoms/json-ld";
 import { SeasonalEvent } from "@/components/app/compounds/seasonal-event";
 import { loadSeasonalEntry, loadWhatsOnPage } from "@/lib/seasonal-content";
 import { getSeasonalEventContent, seasonalPath } from "@/lib/seasonal-data";
-import { buildSeoMetadata } from "@/lib/seo";
+import { buildSeoMetadata, getSeasonalBreadcrumb } from "@/lib/seo";
 import type { ISeasonalRouteProps } from "@/lib/types";
 
 export async function generateMetadata({ params }: ISeasonalRouteProps) {
@@ -24,10 +25,14 @@ export default async function SeasonalEventPage({
     loadSeasonalEntry(slug),
     loadWhatsOnPage(),
   ]);
+  const breadcrumb = getSeasonalBreadcrumb(entry);
   return (
-    <SeasonalEvent
-      content={getSeasonalEventContent(entry)}
-      join={settings.join}
-    />
+    <>
+      {breadcrumb ? <JsonLd data={breadcrumb} /> : null}
+      <SeasonalEvent
+        content={getSeasonalEventContent(entry)}
+        join={settings.join}
+      />
+    </>
   );
 }

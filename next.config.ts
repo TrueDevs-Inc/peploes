@@ -1,5 +1,7 @@
 import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
+import { HTML_LIMITED_BOT_UA_RE } from "next/dist/shared/lib/router/utils/html-bots";
+import { HTML_LIMITED_AI_FETCHERS } from "./src/lib/constants/crawlers";
 
 const BOOKING_PAGE = "/book-a-table";
 
@@ -23,6 +25,10 @@ function getConfiguredOrigin(value: string | undefined): string | undefined {
 
 const nextConfig: NextConfig = {
   typedRoutes: true,
+  htmlLimitedBots: new RegExp(
+    [HTML_LIMITED_BOT_UA_RE.source, ...HTML_LIMITED_AI_FETCHERS].join("|"),
+    "i",
+  ),
   experimental: {
     optimizePackageImports: [
       "lucide-react",
@@ -54,6 +60,10 @@ const nextConfig: NextConfig = {
   },
   headers() {
     const isDevelopment = process.env.NODE_ENV === "development";
+    // Mirrors isLiveSite() in src/lib/env.ts, which this file cannot import.
+    const isLiveSite = process.env.VERCEL_ENV
+      ? process.env.VERCEL_ENV === "production"
+      : process.env.NODE_ENV === "production";
     const sentryOrigin = getConfiguredOrigin(
       process.env.NEXT_PUBLIC_SENTRY_DSN,
     );
@@ -133,6 +143,7 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: contentSecurityPolicy(false),
           },
+          ...(isLiveSite ? [] : [{ key: "X-Robots-Tag", value: "noindex" }]),
         ],
       },
       {
