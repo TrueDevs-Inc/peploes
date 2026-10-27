@@ -7,13 +7,7 @@ import {
   BOOKING_LOG,
   BOOKING_MESSAGES,
 } from "@/lib/constants/booking";
-import {
-  addDays,
-  dublinNow,
-  isInPeriod,
-  shortDateLabel,
-  weekdayOf,
-} from "@/lib/dates";
+import { addDays, dublinNow, isClosed, shortDateLabel } from "@/lib/dates";
 import { LogContext } from "@/lib/enums";
 import { logger } from "@/lib/logger";
 import type {
@@ -21,7 +15,6 @@ import type {
   IBookingVisit,
   IBookingWindow,
   IPartyLimits,
-  IResDiaryClosedDates,
   IResDiaryRules,
   IResDiaryTimeSearchInput,
   TBookingProvider,
@@ -86,13 +79,6 @@ export function guestLimitError(
     return invalid("partySize", BOOKING_MESSAGES.tooManyGuests(max));
   }
   return null;
-}
-
-export function isClosed(date: string, closed: IResDiaryClosedDates): boolean {
-  return (
-    closed.closedWeekdays.includes(weekdayOf(date)) ||
-    closed.closedPeriods.some((period) => isInPeriod(date, period))
-  );
 }
 
 export async function loadWindow(

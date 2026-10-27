@@ -5,6 +5,7 @@ import {
   dublinNow,
   dublinToday,
   guestsLabel,
+  isBookableDay,
   isCalendarDate,
   isClockTime,
   isInPeriod,
@@ -72,6 +73,35 @@ describe("weekdayOf and isInPeriod", function calendarTests() {
     expect(isInPeriod("2026-12-24", period)).toBe(true);
     expect(isInPeriod("2026-12-26", period)).toBe(true);
     expect(isInPeriod("2026-12-27", period)).toBe(false);
+  });
+});
+
+describe("isBookableDay", function bookableDayTests() {
+  const calendar = {
+    today: "2026-10-21",
+    lastDate: "2026-12-20",
+    defaultDate: "2026-10-21",
+    closedWeekdays: [1],
+    closedPeriods: [{ from: "2026-11-10", to: "2026-11-12" }],
+  };
+
+  it.each([
+    ["today", "2026-10-21", true],
+    ["yesterday", "2026-10-20", false],
+    ["the last bookable date", "2026-12-20", true],
+    ["the day after the last bookable date", "2026-12-21", false],
+    ["a closed weekday", "2026-10-26", false],
+    ["the first day of a closed period", "2026-11-10", false],
+    ["the last day of a closed period", "2026-11-12", false],
+    ["the day after a closed period", "2026-11-13", true],
+  ])("%s (%s) bookable: %s", function checksDay(_label, date, bookable) {
+    expect(isBookableDay(date, calendar)).toBe(bookable);
+  });
+
+  it("has no end when ResDiary sets no last date", function noLastDate() {
+    expect(isBookableDay("2027-06-01", { ...calendar, lastDate: null })).toBe(
+      true,
+    );
   });
 });
 
