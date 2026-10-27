@@ -367,8 +367,8 @@ new tab. Other unbuilt navigation destinations remain inactive. The newsletter
 email field has an accessible label and inline completion for common email
 domains. Tab accepts the completion, and Escape dismisses it. No popup suggestion
 list is shown; browser autocomplete and the native datalist are disabled.
-Focus changes the existing bottom border to 2px burgundy
-without adding another line. Enter and Subscribe show an error for empty
+Focus colours the 1px bottom border burgundy and thickens it by 1px downward
+without moving the text. Enter and Subscribe show an error for empty
 or malformed addresses, including addresses without a dotted domain. Valid input
 shows that signup is unavailable pending integration; no email is sent or saved.
 Opening hours and contact details follow the design and should be confirmed by

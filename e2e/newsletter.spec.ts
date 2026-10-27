@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("newsletter focus recolours the existing border without adding a line", async ({
+test("newsletter focus thickens the rule downward without shifting text", async ({
   page,
 }) => {
   for (const path of [
@@ -12,9 +12,16 @@ test("newsletter focus recolours the existing border without adding a line", asy
   ]) {
     await page.goto(path);
     const email = page.getByLabel("Your email address", { exact: true });
+    const restingHeight = await email.evaluate((input) => input.clientHeight);
     await email.focus();
-    await expect(email).toHaveCSS("box-shadow", "none");
-    await expect(email).toHaveCSS("border-bottom-width", "2px");
+    expect(await email.evaluate((input) => input.clientHeight)).toBe(
+      restingHeight,
+    );
+    await expect(email).toHaveCSS(
+      "box-shadow",
+      /rgb\(122, 30, 36\) 0px 1px 0px 0px$/,
+    );
+    await expect(email).toHaveCSS("border-bottom-width", "1px");
     await expect(email).toHaveCSS("border-bottom-color", "rgb(122, 30, 36)");
     await expect(email).toHaveCSS("background-image", "none");
   }

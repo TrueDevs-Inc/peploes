@@ -91,7 +91,7 @@ export function NewsletterSignup() {
                   : FOOTER_CONTENT.newsletter.invalidError,
               );
             }}
-            className={`${styles.input} h-[30px] min-w-0 rounded-none border-b border-border-interactive bg-transparent text-sm leading-[21px] text-ink placeholder:text-text-secondary focus:border-b-2 focus:border-peploe-burgundy focus:outline-none forced-colors:focus-visible:outline-2 forced-colors:focus-visible:outline-offset-2 forced-colors:focus-visible:outline-solid xl:h-11`}
+            className={`${styles.input} h-[30px] min-w-0 rounded-none border-b border-border-interactive bg-transparent text-sm leading-[21px] text-ink placeholder:text-text-secondary focus:border-peploe-burgundy focus:shadow-[0_1px_0_0_var(--color-peploe-burgundy)] focus:outline-none forced-colors:focus-visible:outline-2 forced-colors:focus-visible:outline-offset-2 forced-colors:focus-visible:outline-solid xl:h-11`}
           />
           {completion && (
             <div
