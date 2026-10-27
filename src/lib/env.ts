@@ -55,6 +55,9 @@ export const env = createEnv({
     NEXT_PUBLIC_SITE_URL: z.string().url(),
     NEXT_PUBLIC_API_BASE_URL: z.string().url().default("http://localhost:3000"),
     NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
+    NEXT_PUBLIC_SENTRY_ENVIRONMENT: z
+      .enum(["production", "preview", "development"])
+      .default("development"),
     NEXT_PUBLIC_GA_MEASUREMENT_ID: z.string().optional(),
     NEXT_PUBLIC_GTM_ID: z.string().optional(),
     NEXT_PUBLIC_GA_ENDPOINT: z
