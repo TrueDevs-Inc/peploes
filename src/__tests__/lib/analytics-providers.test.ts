@@ -366,7 +366,9 @@ describe("event routing", () => {
       destination: "phone",
     });
     client.trackCustomEvent("purchase", { value: 10 });
-    expect(gaEvents(browser, "booking_click")).toEqual([{ placement: "hero" }]);
+    expect(gaEvents(browser, "booking_click")).toEqual([
+      { placement: "hero", page_location: "https://peploes.test/" },
+    ]);
     expect(posthog.capture.mock.calls).toEqual([
       ["booking_click", { placement: "hero" }, INSTANT],
       ["contact_click", { placement: "footer", destination: "phone" }, INSTANT],

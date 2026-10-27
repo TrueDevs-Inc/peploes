@@ -123,7 +123,9 @@ describe("consent and deployment gate", () => {
     browser.grantAnalytics();
     browser.session.set(STORAGE_KEY, "{broken");
     client.trackCustomEvent("menu_view", { menu: "lunch" });
-    expect(calls(browser)).toEqual([["menu_view", { menu: "lunch" }]]);
+    expect(calls(browser)).toEqual([
+      ["menu_view", { menu: "lunch", page_location: "https://peploes.test/" }],
+    ]);
     expect(browser.session.has(STORAGE_KEY)).toBe(false);
   });
 });
@@ -152,6 +154,24 @@ describe("payload privacy", () => {
     expect(JSON.stringify([...browser.session.values()])).not.toContain("jane");
   });
 
+  it("gives interaction events a path-only location so gtag does not send the raw URL", async () => {
+    const { browser, client } = await load({
+      href: "https://peploes.test/visit-contact?email=jane@example.com#map",
+    });
+    browser.grantAnalytics();
+    client.trackCustomEvent("booking_click", { placement: "hero" });
+    expect(calls(browser)).toEqual([
+      [
+        "booking_click",
+        {
+          placement: "hero",
+          page_location: "https://peploes.test/visit-contact",
+        },
+      ],
+    ]);
+    expect(JSON.stringify(browser.gtag.mock.calls)).not.toContain("jane");
+  });
+
   it("drops events and properties outside the catalog", async () => {
     const { browser, client } = await load();
     browser.grantAnalytics();
@@ -163,7 +183,14 @@ describe("payload privacy", () => {
       href: "tel:+353861234567",
     });
     expect(calls(browser)).toEqual([
-      ["contact_click", { placement: "footer", destination: "phone" }],
+      [
+        "contact_click",
+        {
+          placement: "footer",
+          destination: "phone",
+          page_location: "https://peploes.test/",
+        },
+      ],
     ]);
   });
 
@@ -175,7 +202,12 @@ describe("payload privacy", () => {
     client.trackCustomEvent("menu_view", { menu: "dinner" });
     expect(calls(browser)[1]).toEqual([
       "menu_view",
-      { menu: "dinner", utm_source: "newsletter", utm_medium: "email" },
+      {
+        menu: "dinner",
+        page_location: "https://peploes.test/menus/dinner",
+        utm_source: "newsletter",
+        utm_medium: "email",
+      },
     ]);
   });
 });

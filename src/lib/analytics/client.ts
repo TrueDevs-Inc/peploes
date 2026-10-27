@@ -1,12 +1,11 @@
 "use client";
 
 import { GA4Event } from "@/lib/enums";
-import type { IPendingAnalyticsEvent } from "@/lib/types";
 import { logGA4Event } from "./debug";
 import { sendToGA4 } from "./ga4";
 import { isAnalyticsPermitted } from "./permission";
 import { sendToPostHog } from "./posthog";
-import { sanitizeAnalyticsEvent } from "./sanitize";
+import { sanitizeAnalyticsEvent, sanitizeUrlPart } from "./sanitize";
 import { getCurrentUTMParams } from "./utm";
 
 function sendEvent(
@@ -21,13 +20,20 @@ function sendEvent(
   // Denied events are dropped here, never queued, so consent cannot replay them.
   if (!isAnalyticsPermitted()) return;
 
-  const enriched: IPendingAnalyticsEvent = {
+  // gtag otherwise fills GA's location from the raw URL, query and hash included.
+  const pageLocation =
+    event.params.page_location ?? sanitizeUrlPart("url", window.location.href);
+  const location: Record<string, string> = pageLocation
+    ? { page_location: pageLocation }
+    : {};
+  const shared = { ...event.params, ...getCurrentUTMParams() };
+  sendToGA4({
     name: event.name,
-    params: { ...event.params, ...getCurrentUTMParams() },
+    params: { ...shared, ...location },
     dedupeKey,
-  };
-  sendToGA4(enriched);
-  sendToPostHog(enriched);
+  });
+  // PostHog derives its own sanitised URL properties.
+  sendToPostHog({ name: event.name, params: shared, dedupeKey });
 }
 
 export function trackPageView(params?: {

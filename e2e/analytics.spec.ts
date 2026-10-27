@@ -447,7 +447,9 @@ test.describe("interaction events", () => {
     const expectEvent = (name: string, params: Record<string, string>) => {
       const ga = analytics.gaNamed(name);
       expect(ga, `GA ${name}`).toHaveLength(1);
-      expect(ga[0]?.params).toEqual(params);
+      const { page_location: location, ...rest } = ga[0]?.params ?? {};
+      expect(rest).toEqual(params);
+      expect(location).toMatch(/^http:\/\/127\.0\.0\.1:\d+\/[^?#]*$/);
       const posthog = analytics.posthogNamed(name);
       expect(posthog, `PostHog ${name}`).toHaveLength(1);
       for (const [key, value] of Object.entries(params)) {
