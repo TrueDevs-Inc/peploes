@@ -90,6 +90,24 @@ describe("consent and deployment gate", () => {
     expect(browser.gtag).not.toHaveBeenCalled();
   });
 
+  it("stores only sanitized campaign values, whatever the caller passes", async () => {
+    const { browser, utm } = await load({ href: "https://peploes.test/" });
+    browser.grantAnalytics();
+    utm.storeUTMParams({
+      utm_source: "newsletter",
+      utm_campaign: "jane.doe@example.com",
+      utm_term: "call 353 1 234 5678",
+    });
+    expect(JSON.parse(browser.session.get(STORAGE_KEY) ?? "{}").params).toEqual(
+      {
+        utm_source: "newsletter",
+      },
+    );
+    browser.session.clear();
+    utm.storeUTMParams({ utm_campaign: "jane.doe@example.com" });
+    expect(browser.session.size).toBe(0);
+  });
+
   it("does not throw when attribution storage is blocked", async () => {
     const { browser, client } = await load({
       href: UTM_URL,

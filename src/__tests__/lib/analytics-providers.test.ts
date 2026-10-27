@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { installFakeBrowser } from "../helpers/browser";
+import { COOKIE_PREFERENCES } from "@/lib/constants/cookie-consent";
+import {
+  installFakeBroadcastChannel,
+  installFakeBrowser,
+} from "../helpers/browser";
 
 const envState = vi.hoisted(() => ({
   live: true,
@@ -535,6 +539,39 @@ describe("withdrawal", () => {
     browser.fireStorageEvent("peploes.cookie-preferences.v1");
     expect(posthog.opt_out_capturing).toHaveBeenCalled();
     expect(window.gtag).toBeUndefined();
+  });
+
+  it("sets Google's opt-out flag on withdrawal and lifts it on re-consent", async () => {
+    const { browser, consent } = await granted();
+    const flag = "ga-disable-G-TEST";
+    expect((window as unknown as Record<string, unknown>)[flag]).toBeFalsy();
+    consent.saveCookiePreferences(DENIED);
+    expect((window as unknown as Record<string, unknown>)[flag]).toBe(true);
+    consent.saveCookiePreferences(ACCEPTED);
+    expect((window as unknown as Record<string, unknown>)[flag]).toBeFalsy();
+    expect(browser.dataLayer().some((entry) => entry[0] === "config")).toBe(
+      true,
+    );
+  });
+
+  it("withdraws in a tab whose own storage write failed elsewhere", async () => {
+    const bus = installFakeBroadcastChannel();
+    const { browser } = await granted();
+    browser.local.delete("peploes.cookie-preferences.v1");
+    bus.otherTab(COOKIE_PREFERENCES.broadcastChannel).postMessage({
+      source: "other",
+    });
+    expect(window.gtag).toBeUndefined();
+  });
+
+  it("clears Google cookies on withdrawal even when GA4 is not configured", async () => {
+    envState.gaId = undefined;
+    const { browser, lifecycle } = await load();
+    browser.setCookie("_ga", "GA1.1.1");
+    browser.setCookie("_ga_ABC123", "GS1.1.1");
+    browser.setCookie("keep", "1");
+    lifecycle.startAnalytics();
+    expect(browser.cookieNames()).toEqual(["keep"]);
   });
 
   it("collects again after re-consent: gtag.js is reused, PostHog starts a fresh instance", async () => {

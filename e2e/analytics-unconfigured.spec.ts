@@ -1,7 +1,9 @@
 import { expect, test } from "@playwright/test";
 
-// This suite's build has no provider configuration (see playwright.config.ts),
-// so a visitor who accepts analytics must still produce no provider traffic.
+// This suite's build is a live-site build (NEXT_PUBLIC_VERCEL_ENV=production)
+// with empty provider IDs (see `test:e2e`), so the deployment gate is open and
+// the missing-ID gate is what is tested: a visitor who accepts analytics must
+// still produce no provider traffic.
 test("accepting analytics without provider configuration contacts no provider", async ({
   page,
   context,

@@ -165,3 +165,35 @@ export function installFakeBrowser(options: IFakeBrowserOptions = {}) {
   vi.stubGlobal("document", doc);
   return browser;
 }
+
+/** In-process BroadcastChannel: a message reaches every other open channel of the same name. */
+export function installFakeBroadcastChannel() {
+  const open = new Set<FakeChannel>();
+
+  class FakeChannel {
+    onmessage: ((event: { data: unknown }) => void) | null = null;
+    closed = false;
+    constructor(readonly name: string) {
+      open.add(this);
+    }
+    postMessage(data: unknown) {
+      if (this.closed) throw new Error("Channel closed");
+      for (const channel of open) {
+        if (channel !== this && channel.name === this.name) {
+          channel.onmessage?.({ data });
+        }
+      }
+    }
+    close() {
+      this.closed = true;
+      open.delete(this);
+    }
+  }
+
+  vi.stubGlobal("BroadcastChannel", FakeChannel);
+  return {
+    /** A channel as another tab would hold it. */
+    otherTab: (name: string) => new FakeChannel(name),
+    openCount: () => open.size,
+  };
+}

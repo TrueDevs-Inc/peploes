@@ -47,8 +47,9 @@ GA_API_SECRET=
 Client tracking needs a measurement ID, analytics consent and a live-site
 deployment: `NEXT_PUBLIC_VERCEL_ENV` must equal `production`. Unset or any
 other value means no collection, even in a production build, so previews and
-local `next start` stay off. Vercel provides the variable; set it explicitly
-for QA builds or another host. Events wait in a bounded in-memory queue until `gtag` exists; the
+local `next start` stay off. `next.config.ts` inlines Vercel's build-time
+`VERCEL_ENV` into it, so no system-variable exposure setting is needed; set it
+explicitly for QA builds or another host. Events wait in a bounded in-memory queue until `gtag` exists; the
 GA4 loader flushes the queue once loaded. Server
 tracking also needs `GA_API_SECRET`. Keep the secret on the server.
 

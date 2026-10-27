@@ -37,11 +37,16 @@ export function clearStoredUTMParams(): void {
 }
 
 export function storeUTMParams(params: IUTMParameters): void {
-  if (!isAnalyticsPermitted() || !hasUTMParams(params)) return;
+  if (!isAnalyticsPermitted()) return;
+  // Callers may pass raw input, so only sanitized values reach storage.
+  const safe = pickSafeUTM({
+    get: (key) => params[key as keyof IUTMParameters],
+  });
+  if (!hasUTMParams(safe)) return;
   try {
     window.sessionStorage.setItem(
       ANALYTICS.UTM_STORAGE_KEY,
-      JSON.stringify({ params, timestamp: Date.now() }),
+      JSON.stringify({ params: safe, timestamp: Date.now() }),
     );
   } catch {
     // Attribution is best effort; blocked storage must not break tracking.

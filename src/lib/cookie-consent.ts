@@ -28,16 +28,52 @@ function handleStorageEvent(event: { key: string | null }): void {
   notifyConsentChange();
 }
 
+// A failed localStorage write fires no `storage` event, so tabs also announce
+// every save on a channel. Each message carries its sender to skip our own.
+const tabId = Math.random().toString(36).slice(2);
+let channel: BroadcastChannel | null = null;
+
+function openChannel(): BroadcastChannel | null {
+  if (typeof BroadcastChannel === "undefined") return null;
+  try {
+    return new BroadcastChannel(COOKIE_PREFERENCES.broadcastChannel);
+  } catch {
+    return null;
+  }
+}
+
+function handleChannelMessage(event: { data: unknown }): void {
+  const data = event.data as { source?: unknown } | null;
+  if (data?.source === tabId) return;
+  notifyConsentChange();
+}
+
+function announceConsentChange(): void {
+  const sender = openChannel();
+  if (!sender) return;
+  try {
+    sender.postMessage({ source: tabId });
+  } catch {
+    // Other tabs still see the stored choice on their next read.
+  } finally {
+    sender.close();
+  }
+}
+
 /** Calls `listener` after any save in this tab, or a consent change in another tab. */
 export function subscribeToConsent(listener: () => void): () => void {
   listeners.add(listener);
   if (listeners.size === 1 && typeof window !== "undefined") {
     window.addEventListener?.("storage", handleStorageEvent);
+    channel = openChannel();
+    if (channel) channel.onmessage = handleChannelMessage;
   }
   return () => {
     listeners.delete(listener);
     if (listeners.size === 0 && typeof window !== "undefined") {
       window.removeEventListener?.("storage", handleStorageEvent);
+      channel?.close();
+      channel = null;
     }
   };
 }
@@ -78,6 +114,7 @@ export function saveCookiePreferences(
   } finally {
     // Failed saves notify too: subscribers re-read consent, which now denies.
     notifyConsentChange();
+    announceConsentChange();
   }
 }
 

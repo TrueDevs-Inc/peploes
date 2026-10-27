@@ -26,14 +26,30 @@ function parseUrl(value: unknown, base?: string): URL | undefined {
   }
 }
 
+const MAX_DECODE_PASSES = 5;
+
+// An address can hide behind several layers of percent-encoding ("%2540"), so
+// decode until the text stops changing. A malformed escape, or a chain deeper
+// than the limit, is treated as unsafe.
+function hidesEmail(pathname: string): boolean {
+  let text = pathname;
+  for (let pass = 0; pass < MAX_DECODE_PASSES; pass++) {
+    if (EMAIL_LIKE.test(text)) return true;
+    let decoded: string;
+    try {
+      decoded = decodeURIComponent(text);
+    } catch {
+      return true;
+    }
+    if (decoded === text) return false;
+    text = decoded;
+  }
+  return true;
+}
+
 function safePath(url: URL): string | undefined {
   if (url.pathname.length > ANALYTICS.PATH_MAX_LENGTH) return undefined;
-  try {
-    if (EMAIL_LIKE.test(decodeURIComponent(url.pathname))) return undefined;
-  } catch {
-    return undefined;
-  }
-  return url.pathname;
+  return hidesEmail(url.pathname) ? undefined : url.pathname;
 }
 
 /** Path only: query, hash and credentials never reach a provider. */

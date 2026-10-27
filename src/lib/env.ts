@@ -102,7 +102,8 @@ export function isLiveSite(): boolean {
 
 // Browser-safe twin of isLiveSite. It fails closed: a production build with no
 // explicit signal (a preview, `next start`) must not collect, so collection
-// needs NEXT_PUBLIC_VERCEL_ENV=production, which Vercel sets on production.
+// needs NEXT_PUBLIC_VERCEL_ENV=production. next.config.ts fills it from
+// Vercel's build-time VERCEL_ENV unless the variable is set explicitly.
 export function isLiveSiteClient(): boolean {
   return env.NEXT_PUBLIC_VERCEL_ENV === "production";
 }

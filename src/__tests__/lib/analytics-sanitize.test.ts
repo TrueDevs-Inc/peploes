@@ -115,3 +115,29 @@ describe("event allowlist", () => {
     });
   });
 });
+
+describe("encoded email in a path", () => {
+  it.each([
+    ["single", "/book/jane%40example.com"],
+    ["double", "/book/jane%2540example.com"],
+    ["triple", "/book/jane%252540example.com"],
+    ["encoded dot and at", "/book/jane%252540example%252Ecom"],
+    ["malformed escape", "/book/%E0%A4%A"],
+  ])("rejects a %s-encoded address", (_label, path) => {
+    expect(sanitizeUrlPart("path", path)).toBeUndefined();
+    expect(
+      sanitizeUrlPart("url", `https://peploes.test${path}`),
+    ).toBeUndefined();
+  });
+
+  it("rejects an escape chain deeper than the decode limit", () => {
+    const deep = `/a/${"%25".repeat(12)}40`;
+    expect(sanitizeUrlPart("path", deep)).toBeUndefined();
+  });
+
+  it("keeps an ordinary encoded path", () => {
+    expect(sanitizeUrlPart("path", "/menus/caf%C3%A9")).toBe(
+      "/menus/caf%C3%A9",
+    );
+  });
+});

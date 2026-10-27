@@ -1,11 +1,15 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { COOKIE_PREFERENCES } from "@/lib/constants/cookie-consent";
 import {
   getCookiePreferences,
   hasAnalyticsConsent,
   saveCookiePreferences,
   subscribeToConsent,
 } from "@/lib/cookie-consent";
-import { installFakeBrowser } from "../helpers/browser";
+import {
+  installFakeBroadcastChannel,
+  installFakeBrowser,
+} from "../helpers/browser";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -193,5 +197,59 @@ describe("consent change notifications", () => {
     expect(survivor).toHaveBeenCalledTimes(1);
     stopBad();
     stopGood();
+  });
+
+  describe("across tabs without storage events", () => {
+    const CHANNEL = COOKIE_PREFERENCES.broadcastChannel;
+
+    it("resyncs when another tab broadcasts a consent change", () => {
+      installFakeBrowser();
+      const bus = installFakeBroadcastChannel();
+      const listener = vi.fn();
+      const stop = subscribeToConsent(listener);
+      bus.otherTab(CHANNEL).postMessage({ source: "other-tab" });
+      expect(listener).toHaveBeenCalledTimes(1);
+      stop();
+    });
+
+    it("broadcasts a saved choice, including one whose write failed", () => {
+      installFakeBrowser({ blockLocalWrites: true });
+      const bus = installFakeBroadcastChannel();
+      const heard = vi.fn();
+      bus.otherTab(CHANNEL).onmessage = heard;
+      expect(saveCookiePreferences(denied)).toBe(false);
+      expect(heard).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not notify its own tab twice for one save", () => {
+      installFakeBrowser();
+      installFakeBroadcastChannel();
+      const listener = vi.fn();
+      const stop = subscribeToConsent(listener);
+      saveCookiePreferences(granted);
+      expect(listener).toHaveBeenCalledTimes(1);
+      stop();
+    });
+
+    it("closes its channel on unsubscribe and leaves none open after a save", () => {
+      installFakeBrowser();
+      const bus = installFakeBroadcastChannel();
+      const stop = subscribeToConsent(() => {});
+      expect(bus.openCount()).toBe(1);
+      stop();
+      expect(bus.openCount()).toBe(0);
+      saveCookiePreferences(granted);
+      expect(bus.openCount()).toBe(0);
+    });
+
+    it("still works where BroadcastChannel is unavailable", () => {
+      installFakeBrowser();
+      vi.stubGlobal("BroadcastChannel", undefined);
+      const listener = vi.fn();
+      const stop = subscribeToConsent(listener);
+      expect(() => saveCookiePreferences(granted)).not.toThrow();
+      expect(listener).toHaveBeenCalledTimes(1);
+      stop();
+    });
   });
 });

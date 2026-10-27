@@ -49,6 +49,14 @@ const nextConfig: NextConfig = {
     },
   },
   poweredByHeader: false,
+  // Vercel exposes VERCEL_ENV at build time only; inline it for the browser
+  // live-site gate. An explicit NEXT_PUBLIC_VERCEL_ENV wins (QA builds).
+  env: Object.fromEntries([
+    [
+      "NEXT_PUBLIC_VERCEL_ENV",
+      process.env.NEXT_PUBLIC_VERCEL_ENV || process.env.VERCEL_ENV || "",
+    ],
+  ]),
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [

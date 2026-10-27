@@ -87,7 +87,15 @@ function fail(): void {
   clearPending();
 }
 
+// Google's documented opt-out: it silences a gtag.js that is already running.
+function setOptOut(disabled: boolean): void {
+  (window as unknown as Record<string, unknown>)[
+    `ga-disable-${GA_MEASUREMENT_ID}`
+  ] = disabled;
+}
+
 function enable(): void {
+  setOptOut(false);
   pushCommand("consent", "update", { analytics_storage: "granted" });
   if (!configured) {
     pushCommand("js", new Date());
@@ -131,12 +139,14 @@ export function activateGA4(): void {
 }
 
 export function deactivateGA4(): void {
-  if (!GA_MEASUREMENT_ID) return;
-  if (state === "loaded" && configured) {
-    try {
-      pushCommand("consent", "update", CONSENT_DENIED);
-    } catch {
-      // The page-level gate below still stops every send.
+  if (GA_MEASUREMENT_ID) {
+    setOptOut(true);
+    if (state === "loaded" && configured) {
+      try {
+        pushCommand("consent", "update", CONSENT_DENIED);
+      } catch {
+        // The page-level gate below still stops every send.
+      }
     }
   }
   Reflect.deleteProperty(window, "gtag");
