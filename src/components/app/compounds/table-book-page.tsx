@@ -1,16 +1,22 @@
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
 
 import styles from "@/components/app/compounds/table-book-page.module.css";
-import { TableBookingPanel } from "@/components/app/compounds/table-booking-panel";
+import {
+  TableBookingNotice,
+  TableBookingPanel,
+} from "@/components/app/compounds/table-booking-panel";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/lib/constants";
 import { TABLE_BOOK_PAGE_CONTENT } from "@/lib/constants/table-book-page";
+import { TABLE_BOOKING_CONTENT } from "@/lib/constants/table-booking";
 import { dmSans, ebGaramond } from "@/lib/fonts";
+import type { ITableBookPageProps } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-export function TableBookPage() {
+export function TableBookPage({ booking }: ITableBookPageProps) {
   return (
     <main className={cn(dmSans.className, ebGaramond.variable, styles.page)}>
       <section className={styles.hero} aria-labelledby="table-book-title">
@@ -35,7 +41,16 @@ export function TableBookPage() {
         </div>
       </section>
       <div className={styles.bookingContainer}>
-        <TableBookingPanel />
+        <Suspense
+          fallback={
+            <TableBookingNotice
+              message={TABLE_BOOKING_CONTENT.loadingMessage}
+              loading
+            />
+          }
+        >
+          <TableBookingSection booking={booking} />
+        </Suspense>
       </div>
       <section className={styles.groups} aria-labelledby="booking-groups-title">
         <div className={styles.groupImage}>
@@ -70,5 +85,14 @@ export function TableBookPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+async function TableBookingSection({ booking }: ITableBookPageProps) {
+  const result = await booking;
+  return result.ok ? (
+    <TableBookingPanel findTable={result.data} />
+  ) : (
+    <TableBookingNotice message={result.error.message} />
   );
 }

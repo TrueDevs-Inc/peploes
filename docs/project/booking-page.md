@@ -20,6 +20,130 @@ the page to them.
 - The hold token is an `httpOnly` cookie. The page never reads it and must not
   try to.
 
+## Finding a table
+
+- The page starts `getFindTableData` on every request and streams the booking
+  panel behind `Suspense`, so the hero and the rest of the page never wait for
+  ResDiary. While it loads, the panel says "Loading available dates…", shows
+  the phone and email, and reserves roughly its final height.
+- If the call fails, the panel shows the server's message, which names the
+  phone and email. The rest of the page is unchanged.
+- The date picker opens on `calendar.defaultDate`. A day can be chosen only when
+  `isBookableDay` in `src/lib/dates.ts` allows it: from `today` to `lastDate`,
+  and not on a closed weekday or in a closed period. The server checks closed
+  days with the same `isClosed`.
+- The month arrows stop at today's month and at the month of `lastDate`. They
+  use `aria-disabled`, not `disabled`, so the arrow the guest just pressed
+  keeps focus and the calendar stays open.
+- Party size lists `partySize.min` to `partySize.max` and starts on
+  `partySize.default`.
+- As soon as the panel appears, the page asks `/api/bookings/calendar` for the
+  selected month's six-week grid and the month after, at the chosen party
+  size. Showing another month asks for it and the one after. Replies are kept
+  per party size and month, so a late reply for another party size never
+  changes what is shown.
+- Days missing from `openDates` are disabled as well as closed days. While a
+  month loads, the calendar says "Checking which days are full…" and stays
+  usable. If the request fails, the calendar works on the closed-day rules
+  alone and does not ask again; the times step has the final word.
+- If the selected date turns out full, a date the page chose moves to the first
+  free day in the reply. A date the guest chose stays, with a note such as "No
+  tables for 2 guests on Thu, 22 Oct 2026. Please choose another day."
+- Availability is fetched a month at a time, not for the whole booking window.
+  On the sandbox on 21 Oct 2026, a year took 8 to 10 seconds per party size,
+  against 1.3 to 2.3 seconds for a month.
+
+## Choosing a time
+
+- "Find a Table" asks `/api/bookings/times` for the chosen date and party size.
+  While it waits, the panel says "Finding tables…". It then lists every time
+  ResDiary can book online, in time order. On the sandbox on 21 Oct 2026 the
+  times were on screen 0.85 to 1.4 seconds after the click.
+- A reply for an earlier search is ignored, so going back and searching again
+  never shows the older search's times.
+- A day with no times says why: the restaurant is closed, there are no tables
+  online for that party size, or online booking for today has closed. The last
+  two name the phone number.
+- If the search fails, the panel shows the server's message, which names the
+  phone and email, and the guest can go back to the search.
+- When the guest picks a time, its return time shows as "Table until 8:15 pm".
+  If ResDiary marks that return time as required, the guest must tick "I
+  understand the table is required back by 8:15 pm" before continuing. On the
+  sandbox, dinner times from 7:15 pm are required.
+
+## Holding a table
+
+- "Continue" sends the chosen time to `holdTable`, with the current
+  `holdReference` when the tab already holds a table. While it waits, the button
+  says "Holding Your Table…" and cannot be pressed again, so a double click
+  makes one hold. On the sandbox on 23 Oct 2026 the table was held 1.4 to 3.4
+  seconds after the click.
+- If the hold fails, the times step shows the server's message and the guest can
+  pick a time and continue again.
+- Going back and choosing another time, date or party size moves the same hold:
+  the reference stays, the revision goes up and the timer carries on.
+- The tab keeps the choice, `holdReference` and `holdRevision` in
+  `sessionStorage` under `peploes:booking-hold`. A reload or a return to the
+  page sends them to `holdTable` again and brings the guest back to their held
+  table.
+- When the timer reaches zero, the details form is replaced by "Your table hold
+  ran out. Please choose a time again." and a "Choose a Time Again" button.
+  Everything the guest typed is kept.
+
+## Sending the details
+
+- The phone number has a country code picker (default +353 from
+  `BOOKING_GUEST_LIMITS.defaultCountryCode`) and a number typed without the
+  code. ResDiary stores the two separately.
+- "Confirm Reservation" sends the form to `submitGuestDetails` with the held
+  table's `holdReference` and `holdRevision`. The button says "Confirming…"
+  while it waits. Field errors from the server show under their fields; any
+  other error shows above the buttons. What the guest typed is kept.
+- A `confirmed` reply shows the confirmation with ResDiary's booking reference.
+  A `payment` or `card` reply shows the Stripe step.
+
+## Paying a deposit or saving a card
+
+- The Stripe step uses only what ResDiary sends: `loadStripe(publishableKey,
+  { stripeAccount: accountId })` and the `clientSecret`. Stripe.js is imported
+  from `@stripe/stripe-js/pure`, so it loads only at this step, not for every
+  visitor.
+- A deposit's amount comes from Stripe's PaymentIntent
+  (`retrievePaymentIntent`), so the page shows exactly what the card will be
+  charged. A card guarantee charges nothing now, so its possible charge comes
+  from ResDiary's `amountText`.
+- The Payment Element is styled through Stripe's appearance settings to match
+  the panel. It uses the system font because loading DM Sans from Google Fonts
+  would break the CSP and send guests' IP addresses to Google.
+- The deposit step reads "Secure your table", "A €20.00 deposit is needed to
+  reserve this table." and "Pay €20.00 and Reserve". A card guarantee's button
+  is "Save Card and Reserve". Buttons capitalise each main word, like the rest
+  of the panel.
+- The pay button turns on only when Stripe's form reports it is ready.
+- If Stripe's script fails to load (a dropped connection or a blocking browser
+  extension), the step says "We couldn't load the secure payment form. Check
+  your connection and try again, or call us on …" and shows a "Try Again"
+  button, which loads Stripe again.
+- A reload on this step brings the card form back from the saved step without
+  sending the details to ResDiary again. A
+  declined card shows Stripe's message and the guest can try again. 3-D Secure
+  opens Stripe's own check.
+- When the Stripe step appears, the tab saves it in `sessionStorage` under
+  `peploes:booking-payment`. If a bank takes the guest to its own page, Stripe
+  sends them back to `/book-a-table` with `payment_intent` (or `setup_intent`),
+  its client secret and `redirect_status`. The page checks that the secret
+  matches the saved step, removes these values from the address bar, and then:
+  - after `succeeded` or `processing`, checks ResDiary until the booking is
+    confirmed, as after Stripe's popup;
+  - after `failed` or `requires_payment_method`, shows the card form again with
+    "Your bank didn't approve the payment. Please try again or use another
+    card."
+  A return address that doesn't match the saved step is ignored.
+- The hold timer is hidden from this step on (rule 7).
+- On the sandbox on 23 Oct 2026 the deposit step appeared 1.4 to 1.9 seconds
+  after "Confirm Reservation", and ResDiary confirmed 4.5 to 6.1 seconds after
+  "Pay".
+
 ## The hold timer
 
 The timer tells the guest how long their table is held.
@@ -81,10 +205,10 @@ after ResDiary confirms it.
 - `failed` or `expired`: say the booking was not confirmed and that the guest
   may have been charged, with the phone number.
 - `pending`, `ServiceUnavailable` or `NotFound`: keep checking.
-- After 60 seconds without `confirmed`, stop and show
-  `BOOKING_MESSAGES.stillConfirming` with the booking reference from the hold
-  summary, so the guest can quote it. Never say the booking failed, and never
-  offer to pay again.
+- After 60 seconds without `confirmed`, stop and say "Hang tight! We're still
+  confirming booking …" with the reference, so the guest can quote it. Never say
+  the booking failed, and never offer to pay again. This copy does not promise
+  an email, because Peploe's live account's emails are not yet verified.
 - Make this "payment taken, not yet confirmed" state calm and reassuring, not
   an error. Elhaam's example of the tone is "Hang tight! You'll get a
   confirmation soon if your money is deducted." Follow how AnjomaZone

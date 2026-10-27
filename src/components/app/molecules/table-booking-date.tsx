@@ -2,30 +2,43 @@
 
 import {
   addMonths,
-  eachDayOfInterval,
-  endOfMonth,
-  endOfWeek,
   format,
+  isAfter,
+  isBefore,
   isSameMonth,
   parseISO,
   startOfMonth,
-  startOfWeek,
 } from "date-fns";
 import { ArrowLeft, ArrowRight, CalendarDays, ChevronDown } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import styles from "@/components/app/compounds/table-booking-panel.module.css";
 import { TABLE_BOOKING_CONTENT } from "@/lib/constants/table-booking";
+import { isBookableDay, monthGrid } from "@/lib/dates";
 import type { ITableBookingDateProps } from "@/lib/types";
 
-export function TableBookingDate({ value, onChange }: ITableBookingDateProps) {
+export function TableBookingDate({
+  value,
+  calendar,
+  availability,
+  onChange,
+}: ITableBookingDateProps) {
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState(() => startOfMonth(parseISO(value)));
   const trigger = useRef<HTMLButtonElement>(null);
-  const days = eachDayOfInterval({
-    start: startOfWeek(startOfMonth(month), { weekStartsOn: 1 }),
-    end: endOfWeek(endOfMonth(month), { weekStartsOn: 1 }),
-  });
+  const firstMonth = startOfMonth(parseISO(calendar.today));
+  const lastMonth = calendar.lastDate
+    ? startOfMonth(parseISO(calendar.lastDate))
+    : null;
+  const atFirstMonth = !isAfter(month, firstMonth);
+  const atLastMonth = lastMonth !== null && !isBefore(month, lastMonth);
+  const days = monthGrid(month);
+  const openDates = availability.datesFor(month);
+  const { load } = availability;
+
+  useEffect(() => {
+    if (open) load(month);
+  }, [open, month, load]);
 
   return (
     <fieldset
@@ -69,14 +82,20 @@ export function TableBookingDate({ value, onChange }: ITableBookingDateProps) {
             <button
               type="button"
               aria-label="Previous month"
-              onClick={() => setMonth(addMonths(month, -1))}
+              aria-disabled={atFirstMonth}
+              onClick={() => {
+                if (!atFirstMonth) setMonth(addMonths(month, -1));
+              }}
             >
               <ArrowLeft aria-hidden="true" />
             </button>
             <button
               type="button"
               aria-label="Next month"
-              onClick={() => setMonth(addMonths(month, 1))}
+              aria-disabled={atLastMonth}
+              onClick={() => {
+                if (!atLastMonth) setMonth(addMonths(month, 1));
+              }}
             >
               <ArrowRight aria-hidden="true" />
             </button>
@@ -95,6 +114,10 @@ export function TableBookingDate({ value, onChange }: ITableBookingDateProps) {
                   key={date}
                   aria-label={format(day, "EEEE, d MMMM yyyy")}
                   aria-pressed={date === value}
+                  disabled={
+                    !isBookableDay(date, calendar) ||
+                    (Array.isArray(openDates) && !openDates.includes(date))
+                  }
                   data-outside={!isSameMonth(day, month)}
                   onClick={() => {
                     onChange(date);
@@ -107,6 +130,9 @@ export function TableBookingDate({ value, onChange }: ITableBookingDateProps) {
               );
             })}
           </div>
+          <p role="status" className={styles.calendarStatus}>
+            {openDates === "loading" && TABLE_BOOKING_CONTENT.checkingDates}
+          </p>
         </fieldset>
       )}
     </fieldset>

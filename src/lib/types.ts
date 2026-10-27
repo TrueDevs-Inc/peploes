@@ -1,3 +1,4 @@
+import type { Stripe, StripeElements } from "@stripe/stripe-js";
 import type { VariantProps } from "class-variance-authority";
 import type { Result as NeverthrowResult } from "neverthrow";
 import type { Route } from "next";
@@ -1602,25 +1603,68 @@ export interface ITableBookingGuestDetails {
   firstName: string;
   surname: string;
   email: string;
+  countryCode: string;
   phone: string;
   requests: string;
   terms: boolean;
 }
 
+export type TTableBookingDetailsErrors = Partial<
+  Record<keyof ITableBookingGuestDetails, string>
+>;
+
 export interface ITableBookingDetailsProps {
   details: ITableBookingGuestDetails;
+  sending: boolean;
+  serverErrors: TTableBookingDetailsErrors;
+  formError: string | null;
   onChange: (details: ITableBookingGuestDetails) => void;
   onBack: () => void;
   onContinue: () => void;
 }
 
+export interface IGuestDetailsSending {
+  sending: boolean;
+  formError: string | null;
+  fieldErrors: TTableBookingDetailsErrors;
+  send: (
+    details: ITableBookingGuestDetails,
+    hold: IHoldSummary,
+    onReply: (reply: TGuestDetailsView) => void,
+  ) => void;
+}
+
+export interface ITableBookPageProps {
+  booking: Promise<TBookingResponse<IFindTableData>>;
+}
+
+export interface ITableBookingPanelProps {
+  findTable: IFindTableData;
+}
+
+export interface ITableBookingNoticeProps {
+  message: string;
+  loading?: boolean;
+}
+
+export type TOpenDates = string[] | "loading" | "failed";
+
+export interface IOpenDates {
+  load: (month: Date) => void;
+  datesFor: (month: Date) => TOpenDates | undefined;
+}
+
 export interface ITableBookingDateProps {
   value: string;
+  calendar: IFindTableData["calendar"];
+  availability: IOpenDates;
   onChange: (value: string) => void;
 }
 
 export interface ITableBookingPartySizeProps {
   value: string;
+  min: number;
+  max: number;
   onChange: (value: string) => void;
 }
 
@@ -1636,16 +1680,102 @@ export interface ITableBookingFieldProps extends ComponentProps<"input"> {
   error?: string;
 }
 
+export type TBookingTimes =
+  | { status: "loading" }
+  | { status: "ready"; data: ITimesData }
+  | { status: "failed"; message: string };
+
+export interface IHoldChoice {
+  searchDate: string;
+  time: string;
+  partySize: number;
+}
+
+export interface IStoredHold {
+  choice: IHoldChoice;
+  holdReference: string;
+  holdRevision: number;
+}
+
+export interface IActiveHold {
+  summary: IHoldSummary;
+  endsAt: number;
+}
+
+export interface ITableHold {
+  active: IActiveHold | null;
+  pending: boolean;
+  error: string | null;
+  place: (choice: IHoldChoice, onHeld: (summary: IHoldSummary) => void) => void;
+  release: () => void;
+}
+
+export type TPaymentStep = Exclude<TGuestDetailsView, { kind: "confirmed" }>;
+
+export type TBookingStatusCheck =
+  | { kind: "checking" }
+  | { kind: "confirmed"; reference: string; summary: IHoldSummary }
+  | { kind: "failed" }
+  | { kind: "unknown" };
+
+export interface IStripeReady {
+  stripe: Stripe;
+  elements: StripeElements;
+  amount: string;
+}
+
+export interface ITableBookingPaymentProps {
+  step: TPaymentStep;
+  initialError: string | null;
+  onPaid: () => void;
+}
+
+export interface IPaymentFormProps extends ITableBookingPaymentProps {
+  onRetry: () => void;
+}
+
+export interface ITableBookingHeldStepProps {
+  hold: ITableHold;
+  details: ITableBookingGuestDetails;
+  guest: IGuestDetailsSending;
+  payment: TPaymentStep | null;
+  paymentError: string | null;
+  paid: IHoldSummary | null;
+  onPaid: () => void;
+  onConfirmed: (booked: ITableBookingConfirmationProps) => void;
+  onDetailsChange: (details: ITableBookingGuestDetails) => void;
+  onBack: () => void;
+  onContinue: () => void;
+}
+
+export interface ITableBookingHoldTimerProps {
+  endsAt: number;
+  onExpire: () => void;
+}
+
 export interface ITableBookingTimesProps {
   longDate: string;
   guests: string;
-  time: string;
+  times: TBookingTimes;
+  time: IBookingTime | null;
+  holding: boolean;
+  holdError: string | null;
   returnAccepted: boolean;
-  onTimeChange: (time: string) => void;
+  onTimeChange: (time: IBookingTime) => void;
   onReturnChange: (accepted: boolean) => void;
   onBack: () => void;
   onContinue: () => void;
 }
+
+export interface ITableBookingConfirmationProps {
+  reference: string;
+  summary: IHoldSummary;
+}
+
+export type TTableBookingTimesListProps = Pick<
+  ITableBookingTimesProps,
+  "times" | "time" | "onTimeChange"
+>;
 
 export type TMenuSlug = (typeof MENU_SLUGS)[number];
 export type TCmsMenu = InferSchema<typeof cmsMenuSchema>;

@@ -98,10 +98,12 @@ bunx playwright install chromium
 bun run test:e2e
 ```
 
-The command builds the production application, then starts and stops its own
-server at `http://127.0.0.1:3107`. Keep that port free; the suite refuses to reuse
-an existing server. Pull-request CI installs Chromium and its system dependencies
-before running the same command. Failure traces stay in ignored `test-results/`.
+The command builds the production application, then starts and stops two
+servers from that build: `http://127.0.0.1:3107` for most journeys and
+`http://127.0.0.1:3108` for the `resdiary-down` project. Keep both ports free;
+the suite refuses to reuse an existing server. Pull-request CI installs Chromium
+and its system dependencies before running the same command. Failure traces stay
+in ignored `test-results/`.
 
 The build and test server use a fake Sanity project. The test-only
 `e2e/mock-sanity.ts` preload supplies menu documents from the local design
@@ -109,6 +111,36 @@ catalogs; it rejects unexpected CMS queries and never reads a live dataset.
 Menu journeys import `test` from `e2e/menu-test.ts` so their synthetic CMS image
 URLs reach local photographs through the real Next image optimizer. These
 fixtures are not imported by the application or used as production fallbacks.
+
+Booking journeys run the real page, services and ResDiary provider against a
+fake ResDiary. The `e2e/mock-resdiary.ts` preload answers sign-in, Setup,
+ClosedDates, AvailabilityForDateRangeV2 and AvailabilitySearch for `https://resdiary.e2e.test` from
+`e2e/booking-fixtures.ts`, with dates counted from today in Dublin, and fails on
+any other ResDiary request. Its availability depends on the party size: some
+sizes have full days, one answers slowly and one fails, so the tests can cover
+loading, failure and replies that arrive out of order. The second server points at `https://resdiary-down.e2e.test`, which
+waits two seconds and answers 503, so `e2e/booking-unavailable.spec.ts` covers a
+slow, failing ResDiary. It needs its own server because the provider caches
+settings for five minutes. Playwright sets every `RESDIARY_*` value and a
+test-only `BOOKING_HOLD_SECRET`, so a contributor's `.env.local` never reaches
+the real sandbox. These tests prove the page against replies shaped like
+ResDiary's.
+
+Booking behaviour is tested against ResDiary's sandbox first, with real data
+and real speed. `bun run test:e2e:sandbox` loads `.env.local`, refuses any host
+other than `api.rdbranch.com`, starts the production build on port 3109 with a
+throwaway hold secret, and compares the page with ResDiary's own replies,
+requested directly by the test. It reports how long the page took and never
+runs in CI. The server runs with `VERCEL_ENV=preview`, so the app accepts the
+sandbox's Stripe test key the way a preview would. Payment tests check that
+every Stripe key starts with `pk_test_` and use only Stripe's published test
+cards (4242 4242 4242 4242, 4000 0027 6000 3184 for 3-D Secure, 4000 0000 0000
+0002 for a decline). Every booking a test makes goes to the test inbox and is
+cancelled at the end, and the test checks that ResDiary reads it back as
+cancelled. Write the sandbox test first for each booking change, then add fake
+tests only for what the sandbox cannot do on demand: failures, slow or
+out-of-order replies and states it does not have. Report which evidence came
+from the sandbox and which from the fake.
 
 Test the production build, locate controls by accessible role or label, and give
 each test isolated data. Add coverage for critical journeys such as sign-in,

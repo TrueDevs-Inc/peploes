@@ -1,55 +1,198 @@
 "use client";
 
-import { format, parseISO } from "date-fns";
+import { format, parseISO, startOfMonth } from "date-fns";
 import {
   ArrowLeft,
   ArrowRight,
   CalendarDays,
   Check,
-  ChevronDown,
   Pencil,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import styles from "@/components/app/compounds/table-booking-panel.module.css";
 import { TableBookingDate } from "@/components/app/molecules/table-booking-date";
 import { TableBookingDetails } from "@/components/app/molecules/table-booking-details";
+import { TableBookingHoldTimer } from "@/components/app/molecules/table-booking-hold-timer";
 import { TableBookingPartySize } from "@/components/app/molecules/table-booking-party-size";
+import { TableBookingPayment } from "@/components/app/molecules/table-booking-payment";
 import { TableBookingSupport } from "@/components/app/molecules/table-booking-support";
 import { Button } from "@/components/ui/button";
+import {
+  getSessionStorage,
+  removeSessionStorage,
+  setSessionStorage,
+} from "@/helpers/storage";
+import { useBookingStatus } from "@/hooks/use-booking-status";
+import { useBookingTimes } from "@/hooks/use-booking-times";
+import { useGuestDetails } from "@/hooks/use-guest-details";
+import { useOpenDates } from "@/hooks/use-open-dates";
+import { storedHold, useTableHold } from "@/hooks/use-table-hold";
 import { ROUTES } from "@/lib/constants";
+import {
+  BOOKING_GUEST_LIMITS,
+  BOOKING_MESSAGES,
+} from "@/lib/constants/booking";
 import { TABLE_BOOKING_CONTENT as content } from "@/lib/constants/table-booking";
 import type {
+  IBookingTime,
+  IHoldChoice,
+  IHoldSummary,
+  IReturnBy,
+  ITableBookingConfirmationProps,
   ITableBookingGuestDetails,
+  ITableBookingHeldStepProps,
+  ITableBookingNoticeProps,
+  ITableBookingPanelProps,
   ITableBookingProgressProps,
   ITableBookingTimesProps,
+  TBookingStatusCheck,
+  TBookingTimes,
+  TPaymentStep,
+  TTableBookingTimesListProps,
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-export function TableBookingPanel() {
-  const [step, setStep] = useState(0);
-  const [date, setDate] = useState<string>(content.date.initialValue);
-  const [partySize, setPartySize] = useState<string>(
-    content.partySize.initialValue,
+export function TableBookingNotice({
+  message,
+  loading = false,
+}: ITableBookingNoticeProps) {
+  return (
+    <section
+      aria-label={content.label}
+      aria-busy={loading}
+      className={styles.panel}
+    >
+      <p role={loading ? "status" : undefined} className={styles.panelMessage}>
+        {message}
+      </p>
+      <TableBookingSupport />
+    </section>
   );
-  const [time, setTime] = useState("");
+}
+
+export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
+  const [step, setStep] = useState(0);
+  const [date, setDate] = useState(findTable.calendar.defaultDate);
+  const [partySize, setPartySize] = useState(
+    String(findTable.partySize.default),
+  );
+  const [time, setTime] = useState<IBookingTime | null>(null);
+  const [datePicked, setDatePicked] = useState(false);
+  const availability = useOpenDates(partySize, findTable.calendar.lastDate);
+  const { load } = availability;
 
   const [returnAccepted, setReturnAccepted] = useState(false);
-  const [details, setDetails] = useState<ITableBookingGuestDetails>({
-    firstName: "",
-    surname: "",
-    email: "",
-    phone: "",
-    requests: "",
-    terms: false,
-  });
+  const [details, setDetails] = useState(emptyDetails);
+  const [booked, setBooked] = useState<ITableBookingConfirmationProps | null>(
+    null,
+  );
+  const guest = useGuestDetails();
+  const [payment, setPayment] = useState<TPaymentStep | null>(null);
+  const [paid, setPaid] = useState<IHoldSummary | null>(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
   const panel = useRef<HTMLElement>(null);
   const previousStep = useRef(0);
   const shortDate = format(parseISO(date), "EEE, d MMM yyyy");
   const longDate = format(parseISO(date), "EEEE, d MMMM yyyy");
   const guests = partySize === "1" ? "1 guest" : `${partySize} guests`;
-  const requiresReturn = time === content.returnTime.start;
+  const returnBy = returnByOf(time);
+  const times = useBookingTimes(date, partySize, step === 1 || step === 2);
+  const hold = useTableHold();
+  const { place } = hold;
+  const restoring = useRef(true);
+
+  const showHeld = useCallback((choice: IHoldChoice, summary: IHoldSummary) => {
+    setDate(choice.searchDate);
+    setPartySize(String(choice.partySize));
+    setDatePicked(true);
+    setTime({
+      searchDate: choice.searchDate,
+      date: summary.date,
+      time: summary.time,
+      label: summary.timeLabel,
+      offers: [summary.offer],
+    });
+    setReturnAccepted(true);
+    setStep(2);
+  }, []);
+
+  useEffect(() => {
+    if (!restoring.current) return;
+    restoring.current = false;
+    const saved = savedBooking();
+    if (saved?.kind === "held") {
+      place(saved.choice, (summary) => showHeld(saved.choice, summary));
+      return;
+    }
+    if (!saved) return;
+    showHeld(saved.choice, saved.summary);
+    if (saved.kind !== "paid") {
+      setPayment(saved.step);
+      if (saved.kind === "refused") setPaymentError(content.payment.bankFailed);
+      return;
+    }
+    setSessionStorage(PAID_KEY, saved.summary);
+    removeSessionStorage(PAYMENT_KEY);
+    setPaid(saved.summary);
+  }, [place, showHeld]);
+
+  const { release } = hold;
+  const confirmBooking = useCallback(
+    (confirmed: ITableBookingConfirmationProps) => {
+      setBooked(confirmed);
+      setPayment(null);
+      setPaid(null);
+      removeSessionStorage(PAID_KEY);
+      removeSessionStorage(PAYMENT_KEY);
+      release();
+      setStep(3);
+    },
+    [release],
+  );
+
+  function sendDetails() {
+    const held = hold.active?.summary;
+    if (!held) return;
+    guest.send(details, held, (reply) => {
+      if (reply.kind === "confirmed") {
+        confirmBooking({ reference: reply.reference, summary: reply.summary });
+      } else {
+        setSessionStorage(PAYMENT_KEY, reply);
+        setPayment(reply);
+      }
+    });
+  }
+
+  function paymentAccepted() {
+    if (!payment) return;
+    setSessionStorage(PAID_KEY, payment.summary);
+    removeSessionStorage(PAYMENT_KEY);
+    setPaid(payment.summary);
+  }
+
+  function holdChosenTime() {
+    if (!time) return;
+    const choice = {
+      searchDate: time.searchDate,
+      time: time.time,
+      partySize: Number(partySize),
+    };
+    place(choice, (summary) => showHeld(choice, summary));
+  }
+  const monthDates = availability.datesFor(startOfMonth(parseISO(date)));
+  const dateFull = Array.isArray(monthDates) && !monthDates.includes(date);
+  const firstFree = Array.isArray(monthDates) ? monthDates[0] : undefined;
+  const moveDate = dateFull && !datePicked && firstFree !== undefined;
+
+  useEffect(() => {
+    load(startOfMonth(parseISO(date)));
+  }, [load, date]);
+
+  useEffect(() => {
+    if (moveDate) setDate(firstFree);
+  }, [moveDate, firstFree]);
 
   useEffect(() => {
     if (previousStep.current !== step) {
@@ -78,9 +221,19 @@ export function TableBookingPanel() {
         <>
           <div className={styles.availability}>
             <div className={styles.fields}>
-              <TableBookingDate value={date} onChange={setDate} />
+              <TableBookingDate
+                value={date}
+                calendar={findTable.calendar}
+                availability={availability}
+                onChange={(value) => {
+                  setDate(value);
+                  setDatePicked(true);
+                }}
+              />
               <TableBookingPartySize
                 value={partySize}
+                min={findTable.partySize.min}
+                max={findTable.partySize.max}
                 onChange={setPartySize}
               />
             </div>
@@ -89,9 +242,8 @@ export function TableBookingPanel() {
               variant="brand-primary"
               className={styles.findTable}
               onClick={() => {
-                setTime("");
+                setTime(null);
                 setReturnAccepted(false);
-
                 setStep(1);
               }}
             >
@@ -99,6 +251,9 @@ export function TableBookingPanel() {
               <ArrowRight aria-hidden="true" className={styles.actionArrow} />
             </Button>
           </div>
+          <p role="status" className={styles.dateNote}>
+            {dateFull && !moveDate && content.fullDate(guests, shortDate)}
+          </p>
           <TableBookingSupport />
         </>
       )}
@@ -110,15 +265,15 @@ export function TableBookingPanel() {
             <p>
               {shortDate}
               <span aria-hidden="true"> | </span>
-              {step === 2 && (
+              {step === 2 && time && (
                 <>
-                  {time}
+                  {time.label}
                   <span aria-hidden="true"> | </span>
                 </>
               )}
               {guests}
-              {step === 2 && requiresReturn && (
-                <small>Table until {content.returnTime.end}</small>
+              {step === 2 && returnBy && (
+                <small>{content.tableUntil(returnBy.label)}</small>
               )}
             </p>
             <button
@@ -136,89 +291,50 @@ export function TableBookingPanel() {
             <BookingTimes
               longDate={longDate}
               guests={guests}
+              times={times}
               time={time}
+              holding={hold.pending}
+              holdError={hold.error}
               returnAccepted={returnAccepted}
               onTimeChange={setTime}
               onReturnChange={setReturnAccepted}
               onBack={() => setStep(0)}
-              onContinue={() => setStep(2)}
+              onContinue={holdChosenTime}
             />
           ) : (
-            <TableBookingDetails
+            <HeldStep
+              hold={hold}
               details={details}
-              onChange={setDetails}
+              guest={guest}
+              payment={payment}
+              paymentError={paymentError}
+              paid={paid}
+              onPaid={paymentAccepted}
+              onConfirmed={confirmBooking}
+              onDetailsChange={setDetails}
               onBack={() => setStep(1)}
-              onContinue={() => setStep(3)}
+              onContinue={sendDetails}
             />
           )}
         </>
       )}
 
-      {step === 3 && (
+      {step === 3 && booked && (
         <>
-          <div className={styles.confirmation}>
-            <span className={styles.confirmationCheck}>
-              <Check aria-hidden="true" />
-            </span>
-            <p className={styles.confirmationLabel}>Confirmation preview</p>
-            <h2 className={styles.flowHeading}>Your table is booked.</h2>
-            <p className={styles.bookingReference}>
-              Sample booking reference
-              <br />
-              <strong>#PPL-45827</strong>
-            </p>
-            <p className={styles.confirmationSummary}>
-              {longDate}
-              <br className={styles.desktopOnly} /> · {time} · {guests}
-              {requiresReturn && (
-                <>
-                  <br />
-                  Table required back by {content.returnTime.end}
-                </>
-              )}
-            </p>
-            <p className={styles.confirmationDisclaimer}>
-              {content.previewConfirmation}
-            </p>
-            <div className={styles.confirmationActions}>
-              <Button
-                type="button"
-                variant="brand-contact"
-                disabled
-                title="Calendar export is unavailable for a sample reservation."
-              >
-                Add to Calendar
-              </Button>
-              <Button asChild variant="brand-primary">
-                <Link href={ROUTES.MENUS}>
-                  View Menus
-                  <ArrowRight aria-hidden="true" />
-                </Link>
-              </Button>
-              <Button asChild variant="brand-contact">
-                <Link href={ROUTES.VISIT_CONTACT}>
-                  Plan Your Visit
-                  <ArrowRight aria-hidden="true" />
-                </Link>
-              </Button>
-            </div>
-          </div>
+          <BookingConfirmation
+            reference={booked.reference}
+            summary={booked.summary}
+          />
           <TableBookingSupport confirmation />
           <button
             type="button"
             className={cn(styles.backAction, styles.restart)}
             onClick={() => {
               setStep(0);
-              setTime("");
+              setTime(null);
               setReturnAccepted(false);
-              setDetails({
-                firstName: "",
-                surname: "",
-                email: "",
-                phone: "",
-                requests: "",
-                terms: false,
-              });
+              setDetails(emptyDetails());
+              setBooked(null);
             }}
           >
             <ArrowLeft aria-hidden="true" />
@@ -228,6 +344,157 @@ export function TableBookingPanel() {
       )}
     </section>
   );
+}
+
+function BookingConfirmation({
+  reference,
+  summary,
+}: ITableBookingConfirmationProps) {
+  const { returnBy } = summary.offer;
+  return (
+    <div className={styles.confirmation}>
+      <span className={styles.confirmationCheck}>
+        <Check aria-hidden="true" />
+      </span>
+      <h2 className={styles.flowHeading}>{content.confirmation.heading}</h2>
+      <p className={styles.bookingReference}>
+        {content.confirmation.referenceLabel}
+        <br />
+        <strong>{reference}</strong>
+      </p>
+      <p className={styles.confirmationSummary}>
+        {summary.dateLabel}
+        <br className={styles.desktopOnly} /> · {summary.timeLabel} ·{" "}
+        {summary.guestsLabel}
+        {returnBy && (
+          <>
+            <br />
+            {content.tableUntil(returnBy.label)}
+          </>
+        )}
+      </p>
+      <p className={styles.confirmationDisclaimer}>
+        {content.confirmation.keepReference}
+      </p>
+      <div className={styles.confirmationActions}>
+        <Button
+          type="button"
+          variant="brand-contact"
+          disabled
+          title="Calendar export isn't available yet."
+        >
+          Add to Calendar
+        </Button>
+        <Button asChild variant="brand-primary">
+          <Link href={ROUTES.MENUS}>
+            View Menus
+            <ArrowRight aria-hidden="true" />
+          </Link>
+        </Button>
+        <Button asChild variant="brand-contact">
+          <Link href={ROUTES.VISIT_CONTACT}>
+            Plan Your Visit
+            <ArrowRight aria-hidden="true" />
+          </Link>
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function PaymentOutcome({
+  check,
+  reference,
+}: {
+  check: TBookingStatusCheck;
+  reference: string;
+}) {
+  if (check.kind === "failed") {
+    return (
+      <p role="alert" className={styles.formError}>
+        {content.payment.notConfirmed(reference)}
+      </p>
+    );
+  }
+  return (
+    <p role="status" className={styles.flowDescription}>
+      {check.kind === "unknown"
+        ? content.payment.stillConfirming(reference)
+        : content.payment.checking}
+    </p>
+  );
+}
+
+const PAID_KEY = "peploes:booking-paid";
+const PAYMENT_KEY = "peploes:booking-payment";
+const REFUSED_BY_BANK = new Set(["failed", "requires_payment_method"]);
+
+type TSavedBooking =
+  | { kind: "held"; choice: IHoldChoice }
+  | { kind: "paid"; choice: IHoldChoice; summary: IHoldSummary }
+  | {
+      kind: "refused" | "paying";
+      choice: IHoldChoice;
+      summary: IHoldSummary;
+      step: TPaymentStep;
+    };
+
+function choiceFor(summary: IHoldSummary): IHoldChoice {
+  return (
+    storedHold()?.choice ?? {
+      searchDate: summary.date,
+      time: summary.time,
+      partySize: summary.partySize,
+    }
+  );
+}
+
+function bankReturn(): TSavedBooking | null {
+  const params = new URLSearchParams(window.location.search);
+  const status = params.get("redirect_status");
+  if (!status) return null;
+  window.history.replaceState(null, "", window.location.pathname);
+  const step = getSessionStorage<TPaymentStep>(PAYMENT_KEY);
+  const secret = params.get(
+    step?.kind === "card"
+      ? "setup_intent_client_secret"
+      : "payment_intent_client_secret",
+  );
+  if (!step || secret !== step.stripe.clientSecret) return null;
+  const { summary } = step;
+  return REFUSED_BY_BANK.has(status)
+    ? { kind: "refused", choice: choiceFor(summary), summary, step }
+    : { kind: "paid", choice: choiceFor(summary), summary };
+}
+
+function savedBooking(): TSavedBooking | null {
+  const returned = bankReturn();
+  if (returned) return returned;
+  const paid = getSessionStorage<IHoldSummary>(PAID_KEY);
+  if (paid) return { kind: "paid", choice: choiceFor(paid), summary: paid };
+  const step = getSessionStorage<TPaymentStep>(PAYMENT_KEY);
+  if (step) {
+    const { summary } = step;
+    return { kind: "paying", choice: choiceFor(summary), summary, step };
+  }
+  const held = storedHold();
+  return held ? { kind: "held", choice: held.choice } : null;
+}
+
+function emptyDetails(): ITableBookingGuestDetails {
+  return {
+    firstName: "",
+    surname: "",
+    email: "",
+    countryCode: String(BOOKING_GUEST_LIMITS.defaultCountryCode),
+    phone: "",
+    requests: "",
+    terms: false,
+  };
+}
+
+function returnByOf(time: IBookingTime | null): IReturnBy | null {
+  return time?.offers[0]?.returnBy ?? null;
 }
 
 function BookingProgress({ step }: ITableBookingProgressProps) {
@@ -260,67 +527,47 @@ function BookingProgress({ step }: ITableBookingProgressProps) {
 function BookingTimes({
   longDate,
   guests,
+  times,
   time,
+  holding,
+  holdError,
   returnAccepted,
   onTimeChange,
   onReturnChange,
   onBack,
   onContinue,
 }: ITableBookingTimesProps) {
-  const [showMore, setShowMore] = useState(() =>
-    content.moreTimes.some((slot) => slot === time),
-  );
-  const requiresReturn = time === content.returnTime.start;
+  const returnBy = returnByOf(time);
+  const mustAccept = returnBy?.required === true;
   return (
     <div>
-      <h2 className={styles.flowHeading}>Available times</h2>
+      <h2 className={styles.flowHeading}>{content.timesLabel}</h2>
       <p className={styles.flowDescription}>
         Showing times for {longDate} · {guests}
       </p>
-      <fieldset className={styles.timeGrid} aria-label="Sample available times">
-        {[...content.times, ...(showMore ? content.moreTimes : [])].map(
-          (slot) => (
-            <button
-              type="button"
-              key={slot}
-              aria-pressed={time === slot}
-              className={styles.timeSlot}
-              onClick={() => {
-                onTimeChange(slot);
-                onReturnChange(false);
-              }}
-            >
-              {slot}
-            </button>
-          ),
-        )}
-      </fieldset>
-      <button
-        type="button"
-        className={styles.moreTimes}
-        aria-expanded={showMore}
-        onClick={() => setShowMore(!showMore)}
-      >
-        <ChevronDown aria-hidden="true" />
-        {showMore ? "Show fewer times" : "Show more times (6 more)"}
-      </button>
-      {requiresReturn && (
+      <TimesList times={times} time={time} onTimeChange={onTimeChange} />
+      {returnBy && !mustAccept && (
+        <p className={styles.returnInfo}>
+          {content.tableUntil(returnBy.label)}
+        </p>
+      )}
+      {returnBy && mustAccept && (
         <div className={styles.returnNotice}>
-          <strong>This table has a return time</strong>
-          <p>
-            Your table is available from 7:00pm until 9:00pm.
-            <br />
-            Please confirm you’re happy to return the table by 9:00pm.
-          </p>
+          <strong>{content.returnTime.heading}</strong>
           <label>
             <input
               type="checkbox"
               checked={returnAccepted}
               onChange={(event) => onReturnChange(event.target.checked)}
             />
-            {content.returnTime.label}
+            {content.returnTime.accept(returnBy.label)}
           </label>
         </div>
+      )}
+      {holdError && (
+        <p role="alert" className={styles.timesMessage}>
+          {holdError}
+        </p>
       )}
       <div className={styles.flowActions}>
         <button type="button" className={styles.backAction} onClick={onBack}>
@@ -331,13 +578,116 @@ function BookingTimes({
           type="button"
           variant="brand-primary"
           className={styles.continueAction}
-          disabled={!time || (requiresReturn && !returnAccepted)}
+          disabled={!time || holding || (mustAccept && !returnAccepted)}
           onClick={onContinue}
         >
-          Continue
+          {holding ? content.holding : "Continue"}
           <ArrowRight aria-hidden="true" />
         </Button>
       </div>
     </div>
   );
+}
+
+function HeldStep({
+  hold,
+  details,
+  guest,
+  payment,
+  paymentError,
+  paid,
+  onPaid,
+  onConfirmed,
+  onDetailsChange,
+  onBack,
+  onContinue,
+}: ITableBookingHeldStepProps) {
+  const check = useBookingStatus(paid);
+
+  useEffect(() => {
+    if (check.kind === "confirmed") {
+      onConfirmed({ reference: check.reference, summary: check.summary });
+    }
+  }, [check, onConfirmed]);
+
+  if (paid) {
+    return <PaymentOutcome check={check} reference={paid.reference} />;
+  }
+  if (payment) {
+    return (
+      <TableBookingPayment
+        step={payment}
+        initialError={paymentError}
+        onPaid={onPaid}
+      />
+    );
+  }
+  if (!hold.active) {
+    return (
+      <div className={styles.holdExpired}>
+        <p role="alert">{BOOKING_MESSAGES.holdExpired}</p>
+        <Button type="button" variant="brand-primary" onClick={onBack}>
+          {content.chooseAgain}
+        </Button>
+      </div>
+    );
+  }
+  return (
+    <>
+      <TableBookingHoldTimer
+        endsAt={hold.active.endsAt}
+        onExpire={hold.release}
+      />
+      <TableBookingDetails
+        details={details}
+        sending={guest.sending}
+        serverErrors={guest.fieldErrors}
+        formError={guest.formError}
+        onChange={onDetailsChange}
+        onBack={onBack}
+        onContinue={onContinue}
+      />
+    </>
+  );
+}
+
+function TimesList({ times, time, onTimeChange }: TTableBookingTimesListProps) {
+  return (
+    <>
+      <p role="status" className={styles.timesMessage}>
+        {timesMessage(times)}
+      </p>
+      {times.status === "ready" && times.data.times.length > 0 && (
+        <fieldset className={styles.timeGrid} aria-label={content.timesLabel}>
+          {times.data.times.map((slot) => (
+            <button
+              type="button"
+              key={`${slot.date} ${slot.time}`}
+              aria-pressed={time?.date === slot.date && time.time === slot.time}
+              className={styles.timeSlot}
+              onClick={() => onTimeChange(slot)}
+            >
+              {slot.label}
+            </button>
+          ))}
+        </fieldset>
+      )}
+    </>
+  );
+}
+
+function timesMessage(times: TBookingTimes): string {
+  if (times.status === "loading") return content.findingTimes;
+  if (times.status === "failed") return times.message;
+  const { emptyReason, dateLabel, guestsLabel } = times.data;
+  switch (emptyReason) {
+    case "closed":
+      return content.noTimes.closed(dateLabel);
+    case "none_online":
+      return content.noTimes.noneOnline(guestsLabel, dateLabel);
+    case "all_passed":
+      return content.noTimes.allPassed(dateLabel);
+    default:
+      return "";
+  }
 }

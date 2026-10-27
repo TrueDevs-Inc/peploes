@@ -43,6 +43,17 @@ export const BOOKING_GUEST_LIMITS = {
 
 export const BOOKING_CALENDAR_MAX_DAYS = 42;
 
+export const BOOKING_STATUS_CHECK = {
+  everyMs: 2000,
+  giveUpMs: 60_000,
+} as const;
+
+export const BOOKING_API = {
+  calendar: "/api/bookings/calendar",
+  times: "/api/bookings/times",
+  holdStatus: "/api/bookings/hold-status",
+} as const;
+
 export const BOOKING_DEFAULT_DATE_SEARCH_DAYS = 31;
 
 export const BOOKING_MESSAGES = {

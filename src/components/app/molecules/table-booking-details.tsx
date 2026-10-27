@@ -4,12 +4,27 @@ import { useState } from "react";
 import { z } from "zod";
 import styles from "@/components/app/compounds/table-booking-panel.module.css";
 import { Button } from "@/components/ui/button";
+import {
+  BOOKING_GUEST_LIMITS,
+  BOOKING_MESSAGES,
+} from "@/lib/constants/booking";
 import { TABLE_BOOKING_CONTENT } from "@/lib/constants/table-booking";
 import type {
   ITableBookingDetailsProps,
   ITableBookingFieldProps,
   ITableBookingGuestDetails,
+  TTableBookingDetailsErrors,
 } from "@/lib/types";
+
+function phoneError(phone: string): string {
+  if (phone.trim().startsWith("+")) return BOOKING_MESSAGES.mobileWithoutCode;
+  const digits = phone.replace(/\D/g, "").length;
+  return /^[\d\s()-]+$/.test(phone) &&
+    digits >= BOOKING_GUEST_LIMITS.mobileMinDigits &&
+    digits <= BOOKING_GUEST_LIMITS.mobileMaxDigits
+    ? ""
+    : TABLE_BOOKING_CONTENT.details.phoneError;
+}
 
 function getDetailsErrors(details: ITableBookingGuestDetails) {
   const copy = TABLE_BOOKING_CONTENT.details;
@@ -19,11 +34,7 @@ function getDetailsErrors(details: ITableBookingGuestDetails) {
     email: z.string().email().safeParse(details.email.trim()).success
       ? ""
       : copy.emailError,
-    phone:
-      /^[+\d\s()-]+$/.test(details.phone) &&
-      details.phone.replace(/\D/g, "").length >= 7
-        ? ""
-        : copy.phoneError,
+    phone: phoneError(details.phone),
     terms: details.terms ? "" : copy.termsError,
   };
 }
@@ -32,20 +43,31 @@ function BookingField({
   error,
   id,
   className,
+  children,
   ...props
 }: ITableBookingFieldProps) {
   const errorId = `${id}-error`;
+  const input = (
+    <input
+      {...props}
+      id={id}
+      aria-invalid={!!error}
+      aria-describedby={error ? errorId : undefined}
+    />
+  );
   return (
-    <label className={className}>
+    <label htmlFor={id} className={className}>
       <span>
         {label} <span className={styles.required}>*</span>
       </span>
-      <input
-        {...props}
-        id={id}
-        aria-invalid={!!error}
-        aria-describedby={error ? errorId : undefined}
-      />
+      {children ? (
+        <span className={styles.phoneRow}>
+          {children}
+          {input}
+        </span>
+      ) : (
+        input
+      )}
       {error && (
         <span id={errorId} className={styles.error}>
           {error}
@@ -56,6 +78,9 @@ function BookingField({
 }
 export function TableBookingDetails({
   details,
+  sending,
+  serverErrors,
+  formError,
   onChange,
   onBack,
   onContinue,
@@ -66,7 +91,10 @@ export function TableBookingDetails({
     ? `${details.firstName} ${details.surname}`
     : details.firstName;
   const invalid = getDetailsErrors(details);
-  const errors: Partial<typeof invalid> = attempted ? invalid : {};
+  const errors: TTableBookingDetailsErrors = {
+    ...(attempted ? invalid : {}),
+    ...serverErrors,
+  };
   function update(
     field: keyof ITableBookingGuestDetails,
     value: string | boolean,
@@ -144,22 +172,38 @@ export function TableBookingDetails({
           error={errors.firstName || errors.surname}
           onChange={(event) => updateFullName(event.target.value)}
         />
-        <BookingField
-          id="booking-phone"
-          className={styles.phoneField}
-          label={
-            <>
-              <span className={styles.desktopOnly}>Mobile number</span>
-              <span className={styles.mobileOnly}>Telephone number</span>
-            </>
-          }
-          type="tel"
-          autoComplete="tel"
-          value={details.phone}
-          placeholder="e.g. 01 123 4567"
-          error={errors.phone}
-          onChange={(event) => update("phone", event.target.value)}
-        />
+        <div className={styles.phoneField}>
+          <BookingField
+            id="booking-phone"
+            className={styles.phoneNumber}
+            label={
+              <>
+                <span className={styles.desktopOnly}>Mobile number</span>
+                <span className={styles.mobileOnly}>Telephone number</span>
+              </>
+            }
+            type="tel"
+            autoComplete="tel-national"
+            value={details.phone}
+            placeholder="e.g. 087 123 4567"
+            error={errors.phone || errors.countryCode}
+            onChange={(event) => update("phone", event.target.value)}
+          >
+            <select
+              aria-label={copy.countryCode}
+              autoComplete="tel-country-code"
+              className={styles.countryCode}
+              value={details.countryCode}
+              onChange={(event) => update("countryCode", event.target.value)}
+            >
+              {TABLE_BOOKING_CONTENT.countryCodes.map((country) => (
+                <option key={country.code} value={country.code}>
+                  {country.label}
+                </option>
+              ))}
+            </select>
+          </BookingField>
+        </div>
         <BookingField
           id="booking-email"
           className={styles.emailField}
@@ -201,6 +245,11 @@ export function TableBookingDetails({
           {errors.terms}
         </p>
       )}
+      {formError && (
+        <p role="alert" className={styles.formError}>
+          {formError}
+        </p>
+      )}
       <div className={styles.flowActions}>
         <button type="button" className={styles.backAction} onClick={onBack}>
           <ArrowLeft aria-hidden="true" /> Back to times
@@ -209,8 +258,9 @@ export function TableBookingDetails({
           type="submit"
           variant="brand-primary"
           className={styles.continueAction}
+          disabled={sending}
         >
-          {copy.action}
+          {sending ? copy.sending : copy.action}
           <ArrowRight aria-hidden="true" />
         </Button>
       </div>

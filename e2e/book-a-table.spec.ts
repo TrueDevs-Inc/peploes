@@ -1,3 +1,5 @@
+import { dayLabel, dublinToday, openDates } from "./booking-fixtures";
+import { chooseDate, laterFreeDate } from "./booking-page";
 import { expect, test } from "./menu-test";
 
 test("navbar booking navigation works and closes the mobile drawer", async ({
@@ -39,7 +41,7 @@ test("navbar booking navigation works and closes the mobile drawer", async ({
     await expect(page.locator("body")).not.toHaveCSS("overflow", "hidden");
   }
 });
-test("booking preview moves through time, details and confirmation without submitting a reservation", async ({
+test("the booking journey holds a time, sends the details and shows ResDiary's confirmation", async ({
   page,
   isMobile,
 }) => {
@@ -49,12 +51,13 @@ test("booking preview moves through time, details and confirmation without submi
   });
   await page.goto("/book-a-table");
   const reservations = page.getByRole("region", { name: "Table reservations" });
-  await expect(reservations.getByText(/Design preview/)).toBeVisible();
+  await expect(reservations.getByText(/Booking preview/)).toBeVisible();
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
     "content",
     /noindex/,
   );
 
+  await chooseDate(reservations, laterFreeDate());
   await reservations
     .getByRole("button", { name: "Find a Table", exact: true })
     .click();
@@ -68,7 +71,7 @@ test("booking preview moves through time, details and confirmation without submi
     .getByRole("button", { name: "7:00 pm", exact: true })
     .click();
   await reservations
-    .getByLabel("I understand the table is required back by 9:00pm")
+    .getByLabel("I understand the table is required back by 9:00 pm")
     .check();
   await reservations
     .getByRole("button", { name: "Continue", exact: true })
@@ -107,7 +110,7 @@ test("booking preview moves through time, details and confirmation without submi
     .getByLabel(isMobile ? "Telephone number" : "Mobile number", {
       exact: false,
     })
-    .fill("+353 87 123 4567");
+    .fill("087 123 4567");
   await reservations
     .getByLabel("Special requests (optional)")
     .fill("Preview only");
@@ -123,11 +126,10 @@ test("booking preview moves through time, details and confirmation without submi
     }),
   ).toBeVisible();
   await expect(
-    reservations.getByText(
-      "No table has been reserved and no confirmation email has been sent.",
-      { exact: true },
-    ),
-  ).toBeVisible();
+    reservations
+      .locator("p", { hasText: "Booking reference" })
+      .locator("strong"),
+  ).toHaveText(/^E2EBK\d{4}$/);
   await expect(
     reservations.getByRole("button", { name: "Add to Calendar", exact: true }),
   ).toBeDisabled();
@@ -137,7 +139,7 @@ test("booking preview moves through time, details and confirmation without submi
   await expect(
     reservations.getByRole("link", { name: "Plan Your Visit", exact: true }),
   ).toHaveAttribute("href", "/visit-contact");
-  expect(submissions).toEqual([]);
+  expect(submissions).toHaveLength(2);
   await expect
     .poll(() =>
       page.evaluate(
@@ -152,35 +154,25 @@ test("booking preview moves through time, details and confirmation without submi
 test("booking preview preserves selections on back navigation and resets time when the search changes", async ({
   page,
 }) => {
+  const date = openDates(dublinToday())[1] ?? "";
   await page.goto("/book-a-table");
   const reservations = page.getByRole("region", { name: "Table reservations" });
   await reservations.getByRole("combobox", { name: "Party size" }).click();
   await reservations
-    .getByRole("option", { name: "4 guests", exact: true })
+    .getByRole("option", { name: "3 guests", exact: true })
     .click();
-  await reservations.getByRole("button", { name: /^Date / }).click();
-  await reservations
-    .getByRole("button", { name: "Friday, 25 April 2025", exact: true })
-    .click();
+  await chooseDate(reservations, date);
   await reservations
     .getByRole("button", { name: "Find a Table", exact: true })
     .click();
   await expect(
-    reservations.getByText(
-      "Showing times for Friday, 25 April 2025 · 4 guests",
-    ),
-  ).toBeVisible();
-  await reservations
-    .getByRole("button", { name: "Show more times (6 more)", exact: true })
-    .click();
-  await expect(
-    reservations.getByRole("button", { name: "3:00 pm", exact: true }),
+    reservations.getByText(`Showing times for ${dayLabel(date)} · 3 guests`),
   ).toBeVisible();
   await reservations
     .getByRole("button", { name: "7:00 pm", exact: true })
     .click();
   await reservations
-    .getByLabel("I understand the table is required back by 9:00pm")
+    .getByLabel("I understand the table is required back by 9:00 pm")
     .check();
   await reservations
     .getByRole("button", { name: "Continue", exact: true })
@@ -196,7 +188,7 @@ test("booking preview preserves selections on back navigation and resets time wh
     .click();
   await expect(
     reservations.getByRole("combobox", { name: "Party size" }),
-  ).toHaveText("4 guests");
+  ).toHaveText("3 guests");
   await reservations
     .getByRole("button", { name: "Find a Table", exact: true })
     .click();
@@ -204,9 +196,9 @@ test("booking preview preserves selections on back navigation and resets time wh
     reservations.getByRole("button", { name: "Continue", exact: true }),
   ).toBeDisabled();
   await page.reload();
-  await expect(
-    reservations.getByRole("button", { name: "Find a Table", exact: true }),
-  ).toBeVisible();
+  await expect(reservations.getByRole("timer")).toHaveText(
+    /^Table held for \d:\d{2}$/,
+  );
 });
 test("multiword guest names survive typing, back navigation and responsive changes", async ({
   page,
@@ -214,6 +206,7 @@ test("multiword guest names survive typing, back navigation and responsive chang
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/book-a-table");
   const reservations = page.getByRole("region", { name: "Table reservations" });
+  await chooseDate(reservations, laterFreeDate());
   await reservations
     .getByRole("button", { name: "Find a Table", exact: true })
     .click();
@@ -266,38 +259,6 @@ test("multiword guest names survive typing, back navigation and responsive chang
   await page.setViewportSize({ width: 1440, height: 900 });
   await expect(firstName).toHaveValue("Mary Jane");
   await expect(surname).toHaveValue("Smith");
-});
-
-test("extra time selections stay visible after returning from guest details", async ({
-  page,
-}) => {
-  await page.goto("/book-a-table");
-  const reservations = page.getByRole("region", { name: "Table reservations" });
-  await reservations
-    .getByRole("button", { name: "Find a Table", exact: true })
-    .click();
-  await reservations
-    .getByRole("button", { name: "Show more times (6 more)", exact: true })
-    .click();
-  const noon = reservations.getByRole("button", {
-    name: "12:00 pm",
-    exact: true,
-  });
-  await noon.click();
-  await reservations
-    .getByRole("button", { name: "Continue", exact: true })
-    .click();
-  await reservations
-    .getByRole("button", { name: "Back to times", exact: true })
-    .click();
-  await expect(noon).toBeVisible();
-  await expect(noon).toHaveAttribute("aria-pressed", "true");
-  await expect(
-    reservations.getByRole("button", { name: "Show fewer times", exact: true }),
-  ).toHaveAttribute("aria-expanded", "true");
-  await expect(
-    reservations.getByRole("button", { name: "Continue", exact: true }),
-  ).toBeEnabled();
 });
 
 test("booking help offers the restaurant's contact and group dining destinations", async ({
@@ -364,9 +325,9 @@ test("party size menu fits the field and supports keyboard selection and dismiss
   const options = reservations.getByRole("listbox", { name: "Party size" });
   await partySize.click();
   await expect(options).toBeVisible();
-  await expect(options.getByRole("option")).toHaveCount(7);
+  await expect(options.getByRole("option")).toHaveCount(6);
   await expect(
-    options.getByRole("option", { name: "2 guests", exact: true }),
+    options.getByRole("option", { name: "4 guests", exact: true }),
   ).toHaveAttribute("aria-selected", "true");
   const fieldBounds = await partySize.boundingBox();
   const menuBounds = await options.boundingBox();
@@ -384,22 +345,22 @@ test("party size menu fits the field and supports keyboard selection and dismiss
   }
   await partySize.press("ArrowDown");
   await partySize.press("Enter");
-  await expect(partySize).toHaveText("3 guests");
+  await expect(partySize).toHaveText("5 guests");
   await expect(partySize).toBeFocused();
   await expect(options).not.toBeVisible();
   await partySize.press("Space");
   await partySize.press("End");
   await partySize.press("Escape");
-  await expect(partySize).toHaveText("3 guests");
+  await expect(partySize).toHaveText("5 guests");
   await expect(options).not.toBeVisible();
   await partySize.press("ArrowDown");
   await partySize.press("Home");
   await partySize.press("Enter");
   await expect(partySize).toHaveText("1 guest");
   await partySize.click();
-  await partySize.press("7");
+  await partySize.press("6");
   await partySize.press("Enter");
-  await expect(partySize).toHaveText("7 guests");
+  await expect(partySize).toHaveText("6 guests");
   await partySize.click();
   const fourGuests = options.getByRole("option", {
     name: "4 guests",
@@ -409,7 +370,7 @@ test("party size menu fits the field and supports keyboard selection and dismiss
   else await fourGuests.click();
   await expect(partySize).toHaveText("4 guests");
   await partySize.click();
-  await reservations.getByText("Design preview", { exact: false }).click();
+  await reservations.getByText("Booking preview", { exact: false }).click();
   await expect(options).not.toBeVisible();
   await partySize.click();
   await partySize.press("Tab");

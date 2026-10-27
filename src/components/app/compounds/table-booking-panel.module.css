@@ -510,8 +510,7 @@
 .timeSlot:focus-visible,
 .calendar button:focus-visible,
 .editAction:focus-visible,
-.backAction:focus-visible,
-.moreTimes:focus-visible {
+.backAction:focus-visible {
   outline: 2px solid var(--booking-accent);
   outline-offset: 3px;
 }
@@ -621,8 +620,47 @@
   background: var(--booking-accent);
   color: var(--booking-surface);
 }
-.calendarGrid button:hover:not([aria-pressed="true"]) {
+.calendarGrid button:hover:not([aria-pressed="true"], :disabled) {
   background: var(--booking-emblem);
+}
+.calendarGrid button:disabled,
+.calendarHeader button[aria-disabled="true"] {
+  color: var(--booking-muted);
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.calendarStatus {
+  min-height: 18px;
+  margin: 8px 0 0;
+  color: var(--booking-muted);
+  font-size: 12px;
+  line-height: 18px;
+}
+.dateNote {
+  margin: 8px 0 0;
+  color: var(--booking-accent);
+  font-size: 14px;
+  line-height: 20px;
+}
+.dateNote:empty {
+  margin: 0;
+}
+.panelMessage {
+  margin: 0 0 24px;
+  color: var(--booking-accent);
+}
+.panel[aria-busy="true"] {
+  min-height: 715px;
+}
+@media (min-width: 1024px) {
+  .panel[aria-busy="true"] {
+    min-height: 603px;
+  }
+}
+@media (max-width: 359px) {
+  .panel[aria-busy="true"] {
+    min-height: 774px;
+  }
 }
 .summary {
   display: flex;
@@ -696,22 +734,56 @@
 .timeSlot:hover:not([aria-pressed="true"]) {
   background: var(--booking-emblem);
 }
-.moreTimes {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  margin-top: 24px;
-  padding: 8px 0;
+.payment {
+  display: grid;
+  gap: 16px;
+}
+.paymentElement {
+  min-height: 200px;
+}
+.phoneRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+}
+.detailsFields .countryCode {
+  width: auto;
+  padding-right: 8px;
+}
+.formError {
+  margin: 16px 0 0;
+  color: var(--booking-accent);
+  font-size: 14px;
+  line-height: 20px;
+}
+.holdTimer {
+  margin: 0 0 24px;
+  color: var(--booking-accent);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
+}
+.holdExpired {
+  display: grid;
+  justify-items: start;
+  gap: 16px;
+  color: var(--booking-accent);
+}
+.timesMessage {
+  margin: 0 0 16px;
   color: var(--booking-accent);
   font-size: 13px;
   line-height: 20px;
-  cursor: pointer;
 }
-.moreTimes svg {
-  width: 16px;
-  height: 16px;
+.timesMessage:empty {
+  margin: 0;
+}
+.returnInfo {
+  margin-top: 24px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 20px;
 }
 .returnNotice {
   margin-top: 28px;
@@ -810,6 +882,7 @@
   order: 3;
 }
 .detailsFields input,
+.detailsFields select,
 .detailsFields textarea {
   width: 100%;
   min-width: 0;
@@ -1007,14 +1080,10 @@
     font-size: 18px;
     line-height: 26px;
   }
-  .moreTimes {
-    margin-top: 20px;
+  .timesMessage,
+  .returnInfo {
     font-size: 16px;
     line-height: 24px;
-  }
-  .moreTimes svg {
-    width: 16px;
-    height: 16px;
   }
   .returnNotice {
     margin-top: 24px;
