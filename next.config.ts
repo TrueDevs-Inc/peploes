@@ -60,7 +60,6 @@ const nextConfig: NextConfig = {
   },
   headers() {
     const isDevelopment = process.env.NODE_ENV === "development";
-    // Mirrors isLiveSite() in src/lib/env.ts, which this file cannot import.
     const isLiveSite = process.env.VERCEL_ENV
       ? process.env.VERCEL_ENV === "production"
       : process.env.NODE_ENV === "production";

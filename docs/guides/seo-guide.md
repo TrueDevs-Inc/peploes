@@ -49,7 +49,9 @@ describes.
 
 Outside the live site (`isLiveSite()` false: Vercel previews and local builds),
 `robots.txt` allows crawling and every response carries `X-Robots-Tag: noindex`
-(`next.config.ts`) while page metadata is `noindex`. A robots.txt block would
+(`next.config.ts`) while page metadata is `noindex`. `next.config.ts` cannot
+import `src/lib/env.ts`, so it repeats the `isLiveSite()` rule; change both
+together. A robots.txt block would
 stop crawlers from seeing the noindex signal and does not reliably keep a URL out
 of search; see [Block search indexing](https://developers.google.com/search/docs/crawling-indexing/block-indexing).
 The route is prerendered, so `VERCEL_ENV` must be present at build time, which
@@ -103,7 +105,8 @@ preview agents only. It omits GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot,
 Claude-SearchBot, Claude-User, PerplexityBot and Perplexity-User.
 `next.config.ts` extends the default with `HTML_LIMITED_AI_FETCHERS`
 (`src/lib/constants/crawlers.ts`, derived from `AI_CRAWLER_POLICY` plus the
-user-triggered fetchers) so they receive metadata in `<head>`. Setting the option
+user-triggered fetchers) so they receive metadata in `<head>`. `crawlers.ts`
+has no imports so that `next.config.ts` can load it. Setting the option
 replaces Next's list, so the config reuses Next's default expression from a
 private Next path. A test in `security-headers.test.ts` fails if an upgrade
 changes it.

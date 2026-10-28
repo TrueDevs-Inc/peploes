@@ -1,4 +1,3 @@
-// Kept free of imports so next.config.ts can load it.
 export const AI_CRAWLER_POLICY = {
   SEARCH: {
     USER_AGENTS: [
@@ -24,9 +23,6 @@ const USER_TRIGGERED_AI_FETCHERS = [
   "Perplexity-User",
 ] as const;
 
-// Crawlers and fetchers that read the first HTML without running JavaScript.
-// Next streams metadata into <body> unless the agent is listed in
-// htmlLimitedBots, so these must receive it in <head>.
 export const HTML_LIMITED_AI_FETCHERS: readonly string[] = [
   ...AI_CRAWLER_POLICY.SEARCH.USER_AGENTS,
   ...AI_CRAWLER_POLICY.TRAINING.USER_AGENTS,

@@ -35,8 +35,6 @@ export function buildRobots(
   siteUrl: string,
   isLive: boolean,
 ): MetadataRoute.Robots {
-  // Outside the live site, crawlers may fetch pages so they can see the
-  // noindex header and metadata. A robots.txt block would hide that signal.
   if (!isLive) {
     return {
       rules: {
