@@ -1,9 +1,11 @@
 "use client";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { z } from "zod";
 import styles from "@/components/app/compounds/table-booking-panel.module.css";
 import { Button } from "@/components/ui/button";
+import { ROUTES } from "@/lib/constants";
 import { TABLE_BOOKING_CONTENT } from "@/lib/constants/table-booking";
 import type {
   ITableBookingDetailsProps,
@@ -191,9 +193,14 @@ export function TableBookingDetails({
         />
         <span>
           By confirming, you agree to{" "}
-          <span className={styles.termsName}>
+          <Link
+            href={ROUTES.BOOKING_CANCELLATION_TERMS}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.termsName}
+          >
             Peploe’s Booking &amp; Cancellation Terms.
-          </span>
+          </Link>
         </span>
       </label>
       {errors.terms && (

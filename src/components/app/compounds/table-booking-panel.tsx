@@ -55,7 +55,13 @@ export function TableBookingPanel() {
     if (previousStep.current !== step) {
       previousStep.current = step;
       panel.current?.focus({ preventScroll: true });
-      panel.current?.scrollIntoView({ block: "start", behavior: "instant" });
+      if (
+        panel.current &&
+        panel.current.getBoundingClientRect().top <
+          Number.parseFloat(getComputedStyle(panel.current).scrollMarginTop)
+      ) {
+        panel.current.scrollIntoView({ block: "start", behavior: "instant" });
+      }
     }
   }, [step]);
 

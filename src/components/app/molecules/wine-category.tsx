@@ -27,6 +27,7 @@ export function WineCategory({
   };
   return (
     <section
+      data-scroll-reveal
       id={id}
       aria-labelledby={`${id}-heading`}
       style={style}

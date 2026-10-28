@@ -19,7 +19,7 @@ export function PolicyPage({ policy }: IPolicyPageProps) {
     >
       <section className={styles.hero} aria-labelledby="policy-title">
         <div className={cn("site-container", styles.heroContainer)}>
-          <div className={styles.heroCopy}>
+          <div data-scroll-reveal className={styles.heroCopy}>
             <p className={styles.eyebrow}>{policy.eyebrow}</p>
             <h1 id="policy-title">{policy.heading}</h1>
             <p className={styles.description}>{policy.description}</p>
@@ -68,6 +68,7 @@ export function PolicyPage({ policy }: IPolicyPageProps) {
         <div className={styles.sections}>
           {policy.sections.map((section, index) => (
             <section
+              data-scroll-reveal
               key={section._key}
               id={section._key}
               aria-labelledby={`${section._key}-heading`}
@@ -105,11 +106,11 @@ export function PolicyPage({ policy }: IPolicyPageProps) {
 
       <section className={styles.help} aria-labelledby="policy-help-title">
         <div className={cn("site-container", styles.helpContainer)}>
-          <div className={styles.helpHeading}>
+          <div data-scroll-reveal className={styles.helpHeading}>
             <p className={styles.eyebrow}>{POLICY_HELP.eyebrow}</p>
             <h2 id="policy-help-title">{POLICY_HELP.heading}</h2>
           </div>
-          <div className={styles.helpDetails}>
+          <div data-scroll-reveal className={styles.helpDetails}>
             <p>{POLICY_HELP.description}</p>
             <div className={styles.contactActions}>
               <a href={`tel:${POLICY_HELP.phone}`}>{POLICY_HELP.phoneLabel}</a>

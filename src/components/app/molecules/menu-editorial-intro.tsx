@@ -1,7 +1,6 @@
-import Image from "next/image";
-
+import { MenuIntroImage } from "@/components/app/atoms/menu-intro-image";
 import { Breadcrumbs } from "@/components/app/compounds/breadcrumb-navigation";
-import { ROUTES } from "@/lib/constants";
+import { MENU_ROUTES, ROUTES } from "@/lib/constants";
 import { ebGaramond, ebGaramondItalic } from "@/lib/fonts";
 import type {
   IMenuEditorialImageProps,
@@ -39,6 +38,7 @@ export function MenuEditorialIntro({
       )}
       {menu.aside && (
         <p
+          data-scroll-reveal
           className={cn(
             ebGaramondItalic.className,
             "text-lg leading-6 text-text-secondary after:mt-3 after:block after:h-0.5 after:w-14 after:bg-peploe-burgundy xl:order-3 xl:self-center xl:text-base xl:leading-[22px] xl:after:mt-4",
@@ -78,10 +78,8 @@ function MenuEditorialImage({
       )}
       style={imageStyle}
     >
-      <Image
-        src={image.src}
-        alt={image.alt}
-        fill
+      <MenuIntroImage
+        image={image}
         sizes={
           image.fit === "cover"
             ? "(min-width: 1280px) 258px, calc(100vw - 48px)"
@@ -102,7 +100,7 @@ function MenuEditorialImage({
 function MenuEditorialHeading({ menu, compact }: IMenuEditorialIntroProps) {
   const hasCompactDescription = compact && Boolean(menu.description);
   return (
-    <div>
+    <div data-scroll-reveal>
       <Breadcrumbs
         items={[
           { name: "Menus", url: ROUTES.MENUS },
@@ -111,7 +109,7 @@ function MenuEditorialHeading({ menu, compact }: IMenuEditorialIntroProps) {
               menu.slug === "pre-theatre"
                 ? menu.slug
                 : menu.slug.replaceAll("-", " "),
-            url: `${ROUTES.MENUS}/${menu.slug}`,
+            url: MENU_ROUTES[menu.slug],
           },
         ]}
         className={cn(

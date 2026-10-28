@@ -37,14 +37,16 @@ test("home HTML carries its title, canonical and linked JSON-LD graph in the hea
 test("metadata of a CMS-driven page reaches AI fetchers in the head", async ({
   request,
 }) => {
-  const response = await request.get("/menus/lunch", {
+  const response = await request.get("/menus?menu=lunch", {
     headers: { "User-Agent": AI_FETCHER },
   });
   const html = await response.text();
   const head = html.slice(0, html.indexOf("</head>"));
 
   expect(head).toContain("<title>Lunch Menu | Peploe&#x27;s</title>");
-  expect(head).toMatch(/<link rel="canonical" href="[^"]*\/menus\/lunch"/u);
+  expect(head).toMatch(
+    /<link rel="canonical" href="[^"]*\/menus\?menu=lunch"/u,
+  );
 });
 
 test("the live build is indexable", async ({ request }) => {

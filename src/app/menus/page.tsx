@@ -1,7 +1,13 @@
-import { redirect } from "next/navigation";
+import {
+  CmsMenuPage,
+  getMenuMetadata,
+} from "@/components/app/compounds/cms-menu-page";
+import { getSelectedMenu } from "@/lib/menu-selection";
 
-import { ROUTES } from "@/lib/constants";
+export async function generateMetadata({ searchParams }: PageProps<"/menus">) {
+  return getMenuMetadata(getSelectedMenu((await searchParams).menu));
+}
 
-export default function MenusPage() {
-  redirect(ROUTES.LUNCH);
+export default async function MenusPage({ searchParams }: PageProps<"/menus">) {
+  return <CmsMenuPage slug={getSelectedMenu((await searchParams).menu)} />;
 }

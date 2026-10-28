@@ -24,7 +24,10 @@ export function MenuHero({ content }: IMenuHeroProps) {
         aria-hidden="true"
         className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(24,20,19,0)_0%,rgba(24,20,19,0.2)_28%,rgba(24,20,19,0.82)_100%)] xl:bg-[linear-gradient(90deg,rgba(24,20,19,0.98)_0%,rgba(24,20,19,0.8)_34.055%,rgba(24,20,19,0.18)_76.727%,rgba(24,20,19,0)_98.368%)]"
       />
-      <div className="site-container py-[54px] xl:pt-[68px] xl:pb-[52px]">
+      <div
+        data-scroll-reveal
+        className="site-container py-[54px] xl:pt-[68px] xl:pb-[52px]"
+      >
         <p className="text-sm leading-5 font-medium tracking-[0.08em] uppercase">
           {content.eyebrow}
         </p>

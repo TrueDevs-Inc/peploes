@@ -10,7 +10,8 @@ export function NavbarBookingButton({ onNavigate }: INavbarBookingButtonProps) {
     <Button
       asChild
       variant="brand-primary"
-      className="h-11 w-[99px] gap-2 rounded-[4px] bg-peploe-burgundy px-5 text-base leading-6 font-medium text-warm-cream shadow-none has-[>svg]:px-5 xl:w-[156px] xl:leading-[22px]"
+      size="cta"
+      className="w-[99px] xl:w-[156px]"
     >
       <Link href={ROUTES.BOOK_A_TABLE} onNavigate={onNavigate}>
         <span className="xl:hidden">{NAVBAR_CONTENT.mobileBookingLabel}</span>

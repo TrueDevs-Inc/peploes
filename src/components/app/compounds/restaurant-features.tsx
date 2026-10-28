@@ -21,7 +21,10 @@ export function RestaurantFeatures() {
               className="flex min-w-0 flex-col items-center gap-2.5 sm:gap-4"
             >
               <Image src={illustration} alt="" width={48} height={48} />
-              <div className="flex flex-col gap-2.5 sm:gap-2">
+              <div
+                data-scroll-reveal
+                className="flex flex-col gap-2.5 sm:gap-2"
+              >
                 <h2
                   className={cn(
                     ebGaramond.className,

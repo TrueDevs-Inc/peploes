@@ -33,10 +33,10 @@ The home page sets its own title, description and social image with
 
 BreadcrumbList data is emitted without visible UI on the three private dining
 sub-pages (Home, Private Dining & Events, page) and on indexable What's On entries
-(Home, What's On, entry) through `getSectionBreadcrumbSchema()`. Menu pages have
-no breadcrumb because `/menus` redirects to Lunch, so the parent is not a real
-page. Use the `Breadcrumbs` compound when a page has a visible trail; it keeps
-the navigation and BreadcrumbList data aligned.
+(Home, What's On, entry) through `getSectionBreadcrumbSchema()`. Menu pages show
+a visible trail (Menus, then the selected menu) through the `Breadcrumbs`
+compound, which keeps the navigation and BreadcrumbList data aligned. Use it
+when a page has a visible trail.
 
 `getSeasonalBreadcrumb()` returns the What's On breadcrumb, and nothing while
 the entry is `noIndex`. Event markup is not emitted: the CMS has no venue field,
@@ -72,8 +72,8 @@ routes from public discovery. Use non-indexing response headers and metadata
 where appropriate; crawler directives alone do not protect private content.
 
 `src/app/sitemap.ts` contains the home page, Our Story, What’s On, all seven
-menu pages, the four private dining pages, the policy pages and Visit & Contact,
-plus published (not `noIndex`) What's On entries. Add public
+query-selected menu URLs, the four private dining pages, the policy pages and
+Visit & Contact, plus published (not `noIndex`) What's On entries. Add public
 canonical pages when they exist. Use a content update time for `lastModified`;
 omit it when the application has no trustworthy value.
 

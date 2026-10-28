@@ -1019,7 +1019,6 @@ export interface IMobileNavigationTriggerProps {
 }
 
 export interface IMenuNavigationLink {
-  compactDesktop?: boolean;
   label: string;
   href?: Route;
   children?: readonly { label: string; href: Route }[];
@@ -1049,7 +1048,7 @@ export interface IMenuContent extends IMenuEditorialContent, IMenuNotesContent {
 }
 
 export interface IMenuEditorialContent {
-  slug: string;
+  slug: TMenuSlug;
   title: string;
   description?: string;
   aside?: string;
@@ -1069,6 +1068,12 @@ export interface IMenuEditorialImageProps {
   image: IMenuImage;
   compact: boolean;
   imageBeforeAside?: boolean;
+}
+
+export interface IMenuIntroImageProps {
+  image: IMenuImage;
+  sizes: string;
+  className?: string;
 }
 
 export interface IMenuBooking {
@@ -1287,11 +1292,6 @@ export interface IMobileNavigationContent {
   navigationLabel: string;
   items: readonly IMobileNavigationItem[];
   giftVouchersLabel: string;
-  openingHoursHeading: string;
-  openingHours: readonly IOpeningHours[];
-  address: string;
-  phoneAction: INavLink;
-  emailAction: INavLink;
   brandPhrase: string;
 }
 
@@ -1310,6 +1310,10 @@ export interface IFooterContent {
     emailLabel: string;
     submitLabel: string;
     status: string;
+    requiredError: string;
+    invalidError: string;
+    completionHint: string;
+    domains: readonly string[];
   };
   copyright: string;
   legalNavigationLabel: string;
@@ -1485,6 +1489,11 @@ export interface IStoryActionProps {
   href?: Route;
 }
 
+export interface IStoryCardProps {
+  children: ReactNode;
+  className: string;
+}
+
 export interface IEventActionProps {
   label: string;
   mobileLabel?: string;
@@ -1520,6 +1529,7 @@ export interface IPolicySection {
 
 export type TPolicyPath = (typeof ROUTES)[
   | "PRIVACY_COOKIES"
+  | "PRIVACY_POLICY"
   | "ACCESSIBILITY_POLICY"
   | "TERMS_CONDITIONS"
   | "BOOKING_CANCELLATION_TERMS"];
@@ -1666,6 +1676,9 @@ export type TMenuCollections = InferSchema<
 >;
 export interface ICmsMenuPageProps {
   slug: TMenuSlug;
+}
+export interface IMenuContentTransitionProps extends ICmsMenuPageProps {
+  children: ReactNode;
 }
 export interface IMenuHeroProps {
   content: TMenusPageDocument;

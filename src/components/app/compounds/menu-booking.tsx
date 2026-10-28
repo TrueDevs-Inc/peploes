@@ -43,6 +43,7 @@ export function MenuBooking({
         className="absolute inset-0 -z-10 bg-(image:--menu-booking-mobile-overlay) xl:bg-(image:--menu-booking-desktop-overlay)"
       />
       <div
+        data-scroll-reveal
         className={cn(
           "site-container flex flex-col items-end gap-6 py-(--menu-booking-mobile-padding) xl:py-12",
           !booking.description && "xl:gap-4",

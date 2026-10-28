@@ -1,5 +1,83 @@
 import { expect, type Locator, test } from "@playwright/test";
 
+test("mobile footer legal and social controls have comfortable touch targets", async ({
+  page,
+  viewport,
+}) => {
+  if ((viewport?.width ?? 1440) >= 1280) {
+    await page.setViewportSize({ width: 390, height: 844 });
+  }
+
+  for (const path of ["/", "/visit-contact"]) {
+    await page.goto(path);
+    const footer = page.getByRole("contentinfo");
+    const legal = footer.getByRole("navigation", {
+      name: "Legal and accessibility",
+    });
+    const controls = legal.getByRole("link").or(legal.getByRole("button"));
+    await expect(controls).toHaveText([
+      "Privacy Policy",
+      "Terms",
+      "Accessibility",
+      "Booking & Cancellation",
+      "Cookie Settings",
+    ]);
+    const positions = await controls.evaluateAll((elements) =>
+      elements.map((element) => {
+        const bounds = element.getBoundingClientRect();
+        return { left: bounds.left, top: bounds.top, bottom: bounds.bottom };
+      }),
+    );
+    for (let index = 1; index < positions.length; index++) {
+      expect(positions[index].left).toBeCloseTo(positions[0].left, 0);
+      expect(positions[index].top).toBeGreaterThanOrEqual(
+        positions[index - 1].bottom,
+      );
+    }
+
+    for (const control of [
+      ...(await controls.all()),
+      footer.getByRole("link", { name: /on Instagram/ }),
+      footer.getByRole("link", { name: /on Facebook/ }),
+    ]) {
+      await expect(control).toBeVisible();
+      const bounds = await control.boundingBox();
+      expect(bounds?.width).toBeGreaterThanOrEqual(44);
+      expect(bounds?.height).toBeGreaterThanOrEqual(44);
+    }
+
+    await expect(
+      legal.getByRole("link", { name: "Privacy Policy", exact: true }),
+    ).toHaveAttribute("href", "/privacy-policy");
+    await legal.getByRole("button", { name: "Cookie Settings" }).click();
+    await expect(
+      page.getByRole("dialog", { name: "Cookie Preferences" }),
+    ).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(
+      legal.getByRole("button", { name: "Cookie Settings" }),
+    ).toBeFocused();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await page.evaluate(() => {
+      document.body.style.zoom = "2";
+    });
+    const booking = legal.getByRole("link", {
+      name: "Booking & Cancellation",
+      exact: true,
+    });
+    expect(
+      await booking.evaluate((element) => {
+        const bounds = element.getBoundingClientRect();
+        return bounds.left >= 0 && bounds.right <= innerWidth;
+      }),
+    ).toBe(true);
+  }
+});
+
 function sampleFooterFade(section: Locator) {
   return section.evaluate(async (element) => {
     const toggle = element.querySelector("summary");

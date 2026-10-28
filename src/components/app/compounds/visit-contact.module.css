@@ -8,13 +8,6 @@ body:has(.page) [data-navbar-visit] {
   color: var(--peploe-burgundy);
   text-decoration: none;
 }
-body:has(.page) [data-navbar-visit]::after {
-  content: "";
-  position: absolute;
-  inset: auto 0 8px;
-  height: 2px;
-  background: currentColor;
-}
 .page :is(h1, h2, h4) {
   font-family: var(--font-eb-garamond), serif;
   font-weight: 400;
@@ -226,9 +219,6 @@ body:has(.page) [data-navbar-visit]::after {
   color: var(--text-secondary);
   font-size: 18px;
   line-height: 28px;
-}
-.transportGrid .accent {
-  color: var(--peploe-burgundy);
 }
 .closing {
   position: relative;

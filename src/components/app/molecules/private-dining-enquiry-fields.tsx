@@ -22,11 +22,12 @@ export function PrivateDiningEnquiryFields({
         <div className={styles.selectField}>
           <select
             name="occasion"
+            className={styles.enquirySelect}
             aria-label={content.occasionLabel}
             defaultValue=""
             required
           >
-            <option value="" disabled>
+            <option value="" disabled hidden>
               {content.occasionLabel}
             </option>
             {content.occasions.map((occasion) => (
@@ -52,7 +53,7 @@ export function PrivateDiningEnquiryFields({
         <div className={styles.selectField}>
           <select
             name="guests"
-            className={styles.guestSelect}
+            className={styles.enquirySelect}
             required
             aria-label={PRIVATE_DINING_FORM.guests}
             defaultValue=""
