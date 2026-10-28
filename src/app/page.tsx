@@ -7,10 +7,22 @@ import { RestaurantFeatures } from "@/components/app/compounds/restaurant-featur
 import { Stories } from "@/components/app/compounds/stories";
 import { WhatsOn } from "@/components/app/compounds/whats-on";
 import { Wine } from "@/components/app/compounds/wine";
-import { ROUTES } from "@/lib/constants";
+import { DEFAULT_SEO, ROUTES } from "@/lib/constants";
+import { HERO_CONTENT } from "@/lib/constants/hero";
 import { whatsOnEvents } from "@/lib/constants/whats-on";
 import { loadSeasonalEntries } from "@/lib/seasonal-content";
 import { seasonalPath } from "@/lib/seasonal-data";
+import { buildSeoMetadata } from "@/lib/seo";
+
+export const metadata = buildSeoMetadata({
+  title: `${DEFAULT_SEO.siteName} | A Dublin Restaurant on St Stephen's Green`,
+  description: `${DEFAULT_SEO.description} ${HERO_CONTENT.description}`,
+  url: ROUTES.HOME,
+  image: HERO_CONTENT.entranceImage.src,
+  imageAlt: HERO_CONTENT.entranceImage.alt,
+  imageWidth: 1452,
+  imageHeight: 1407,
+});
 
 export default async function Home() {
   const entries = await loadSeasonalEntries();

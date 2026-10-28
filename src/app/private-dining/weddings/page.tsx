@@ -1,7 +1,9 @@
+import { JsonLd } from "@/components/app/atoms/json-ld";
 import { PrivateDiningWeddings } from "@/components/app/compounds/private-dining-weddings";
 import { ROUTES } from "@/lib/constants";
+import { PRIVATE_DINING } from "@/lib/constants/private-dining";
 import { WEDDINGS } from "@/lib/constants/private-dining-weddings";
-import { buildSeoMetadata } from "@/lib/seo";
+import { buildSeoMetadata, getSectionBreadcrumbSchema } from "@/lib/seo";
 
 export const metadata = buildSeoMetadata({
   title: WEDDINGS.title,
@@ -12,5 +14,15 @@ export const metadata = buildSeoMetadata({
 });
 
 export default function WeddingsPage() {
-  return <PrivateDiningWeddings />;
+  return (
+    <>
+      <JsonLd
+        data={getSectionBreadcrumbSchema(
+          { name: PRIVATE_DINING.title, url: ROUTES.PRIVATE_DINING },
+          { name: WEDDINGS.title, url: ROUTES.WEDDINGS },
+        )}
+      />
+      <PrivateDiningWeddings />
+    </>
+  );
 }

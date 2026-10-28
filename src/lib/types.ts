@@ -158,6 +158,8 @@ export interface ISeoConfig {
   url: string;
   image?: string;
   imageAlt?: string;
+  imageWidth?: number;
+  imageHeight?: number;
   type?: "website" | "article";
   publishedTime?: string;
   modifiedTime?: string;
@@ -185,6 +187,15 @@ export interface IOrganizationSchemaConfig {
   url: string;
   logoUrl?: string;
   sameAs?: string[];
+}
+
+export interface ILlmsEntry {
+  slug: string;
+  title: string;
+  summary: string;
+  kind: "campaign" | "event" | "menuMoment";
+  date: string;
+  endDate?: string | null;
 }
 
 export interface IJsonLdProps {
