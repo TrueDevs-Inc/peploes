@@ -6,7 +6,7 @@ import type { IDesktopNavigationTriggerProps } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export function DesktopNavigationTrigger({
-  item: { label, href, content },
+  item: { id, label, href, content },
   isOpen,
   isActive,
   isCurrent,
@@ -20,6 +20,7 @@ export function DesktopNavigationTrigger({
       asChild={Boolean(href)}
       type={href ? undefined : "button"}
       data-navigation-trigger
+      data-navigation-id={id}
       data-active={isActive}
       variant="brand-nav"
       aria-disabled={content || href ? undefined : true}

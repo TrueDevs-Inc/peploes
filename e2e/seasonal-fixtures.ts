@@ -33,12 +33,12 @@ export const seasonalFixtures = SEASONAL_CONTENT.diary.months
           _key: `menu-${index}`,
           href:
             index === 0
-              ? "/menus/dinner"
+              ? "/menus?menu=dinner"
               : event.slug === "sunday-at-peploes"
                 ? "/seasonal/lobster-season?from=card#event-menu"
                 : event.slug === "italian-wine-dinner"
                   ? "https://example.com/events/wine"
-                  : "/menus/wine",
+                  : "/menus?menu=wine",
         })),
       },
       gallery: SEASONAL_EVENT_CONTENT.gallery
@@ -119,7 +119,7 @@ export const seasonalFixtures = SEASONAL_CONTENT.diary.months
                 title: "Explore our wines",
                 description: "The wine menu.",
                 action: "Explore wines",
-                href: "/menus/wine",
+                href: "/menus?menu=wine",
                 image: entry.hero.image,
               },
               {

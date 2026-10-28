@@ -4,6 +4,36 @@ test.beforeEach(async ({ page, isMobile }) => {
   if (!isMobile) await page.setViewportSize({ width: 768, height: 1024 });
 });
 
+test("mobile menu keeps navigation and vouchers without contact details", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Open menu" }).click();
+  const menu = page.getByRole("dialog", { name: "Navigation menu" });
+
+  await expect(menu.getByText("Opening Hours", { exact: true })).toHaveCount(0);
+  await expect(
+    menu.getByText("16 St Stephen’s Green, Dublin 2", { exact: true }),
+  ).toHaveCount(0);
+  await expect(menu.locator('a[href^="tel:"], a[href^="mailto:"]')).toHaveCount(
+    0,
+  );
+  await expect(
+    menu.getByRole("link", { name: "Visit & Contact" }),
+  ).toBeVisible();
+  await expect(
+    menu.getByRole("button", { name: "Gift Vouchers" }),
+  ).toBeInViewport();
+  await expect(
+    menu.getByText("People make Peploe’s.", { exact: true }),
+  ).toBeInViewport();
+  expect(
+    await menu.evaluate(
+      (element) => element.scrollWidth <= element.clientWidth,
+    ),
+  ).toBe(true);
+});
+
 async function sampleMotion(toggle: Locator, menu: Locator) {
   const dialogId = await menu.getAttribute("id");
   await toggle.focus();

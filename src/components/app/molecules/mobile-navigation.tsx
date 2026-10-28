@@ -9,7 +9,6 @@ import { MobileNavigationTrigger } from "@/components/app/atoms/mobile-navigatio
 import { NavbarBookingButton } from "@/components/app/atoms/navbar-booking-button";
 import { NavbarBrand } from "@/components/app/atoms/navbar-brand";
 import styles from "@/components/app/molecules/mobile-navigation.module.css";
-import { MobileNavigationDetails } from "@/components/app/molecules/mobile-navigation-details";
 import { Button } from "@/components/ui/button";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { DESKTOP_NAVIGATION_QUERY, FOCUS_RING } from "@/lib/constants";
@@ -89,7 +88,7 @@ export function MobileNavigation({
         onClick={openMenu}
         className={cn(
           FOCUS_RING,
-          "size-11 rounded-sm text-ink transition-colors duration-(--duration-fast) hover:bg-soft-stone/40 hover:text-ink focus-visible:ring-peploe-burgundy motion-reduce:transition-none",
+          "size-11 justify-end rounded-sm text-ink transition-colors duration-(--duration-fast) hover:bg-soft-stone/40 hover:text-ink focus-visible:ring-peploe-burgundy motion-reduce:transition-none",
         )}
       >
         <Menu aria-hidden="true" className="size-6" />
@@ -115,14 +114,14 @@ export function MobileNavigation({
         }}
         className={cn(
           styles.dialog,
-          "fixed inset-0 m-0 h-dvh max-h-none w-dvw max-w-none overflow-y-auto overscroll-contain border-0 bg-warm-cream p-0 text-ink backdrop:bg-ink/40",
+          "fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none overflow-y-auto overscroll-contain border-0 bg-warm-cream p-0 text-ink backdrop:bg-ink/40",
         )}
       >
-        <div className="min-h-full">
+        <div className="flex min-h-full flex-col">
           <h2 id={titleId} className="sr-only">
             {MOBILE_NAVIGATION_CONTENT.title}
           </h2>
-          <div className="flex h-[72px] items-center justify-between gap-2 px-6 shadow-[inset_0_-1px_0_var(--soft-stone)]">
+          <div className="flex h-[72px] items-center justify-between gap-2 px-4 shadow-[inset_0_-1px_0_var(--soft-stone)]">
             <NavbarBrand onClick={closeMenu} />
             <div className="flex shrink-0 items-center gap-3">
               <NavbarBookingButton onNavigate={closeMenu} />
@@ -132,13 +131,13 @@ export function MobileNavigation({
                   ariaLabel={MOBILE_NAVIGATION_CONTENT.closeLabel}
                   className={cn(
                     FOCUS_RING,
-                    "static size-11 rounded-sm border-transparent text-ink transition-colors duration-(--duration-fast) hover:border-transparent hover:bg-soft-stone/40 hover:text-ink focus-visible:ring-peploe-burgundy motion-reduce:transition-none [&>svg]:size-6",
+                    "static size-11 justify-end rounded-sm border-0 text-ink transition-colors duration-(--duration-fast) hover:bg-soft-stone/40 hover:text-ink focus-visible:ring-peploe-burgundy motion-reduce:transition-none [&>svg]:size-6",
                   )}
                 />
               </div>
             </div>
           </div>
-          <div className="flex flex-col gap-6 px-6 pt-6 pb-7">
+          <div className="flex flex-1 flex-col gap-6 px-6 pt-6 pb-7">
             <nav aria-label={MOBILE_NAVIGATION_CONTENT.navigationLabel}>
               <ul className="flex flex-col gap-1">
                 {MOBILE_NAVIGATION_CONTENT.items.map(
@@ -216,9 +215,14 @@ export function MobileNavigation({
             >
               {MOBILE_NAVIGATION_CONTENT.giftVouchersLabel}
             </Button>
-            <MobileNavigationDetails
-              brandPhraseClassName={brandPhraseClassName}
-            />
+            <p
+              className={cn(
+                brandPhraseClassName,
+                "mt-auto pt-2 text-center text-lg leading-[26px] text-peploe-burgundy",
+              )}
+            >
+              {MOBILE_NAVIGATION_CONTENT.brandPhrase}
+            </p>
           </div>
         </div>
       </dialog>

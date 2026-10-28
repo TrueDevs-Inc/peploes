@@ -1,25 +1,93 @@
+header:has(.navigation) [data-navigation-id] {
+  text-decoration: none;
+}
+
+.indicator {
+  position: absolute;
+  top: 50px;
+  left: 0;
+  height: 2px;
+  pointer-events: none;
+  background: var(--peploe-burgundy);
+  opacity: 0;
+  transition: opacity var(--duration-interaction) ease;
+}
+
+.indicator[data-ready="true"] {
+  transition:
+    opacity var(--duration-interaction) ease,
+    transform 220ms ease,
+    width 220ms ease;
+}
+
+.indicator[data-visible="true"] {
+  opacity: 1;
+}
+
+.backdrop {
+  position: absolute;
+  inset-inline: 0;
+  top: 100%;
+  pointer-events: none;
+  background: var(--warm-cream);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    height 220ms ease,
+    opacity var(--duration-interaction) ease,
+    visibility 0s 220ms;
+}
+
+.backdrop[data-open="true"] {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
 .panel {
   position: absolute;
   inset-inline: 0;
   top: 100%;
   max-height: calc(100dvh - 76px);
+  overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
-  background: var(--warm-cream);
+  pointer-events: none;
   visibility: hidden;
-  opacity: 0;
-  transition:
-    opacity var(--duration-interaction) ease-out,
-    visibility var(--duration-interaction);
+  transition: visibility 0s 220ms;
 }
 
 .open {
+  z-index: 1;
+  pointer-events: auto;
   visibility: visible;
+  transition-delay: 0s;
+}
+
+.content {
+  opacity: 0;
+  transform: translateX(-16px);
+  transition:
+    opacity var(--duration-interaction) ease,
+    transform 220ms ease;
+}
+
+.panel[data-direction="right"] .content {
+  transform: translateX(16px);
+}
+
+.open .content,
+.open[data-direction="right"] .content {
   opacity: 1;
+  transform: translateX(0);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .panel {
+  .indicator,
+  .indicator[data-ready="true"],
+  .backdrop,
+  .panel,
+  .content {
     transition: none;
   }
 }

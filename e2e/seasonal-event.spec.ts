@@ -188,7 +188,16 @@ test("What's On remains the active section and returns from an event to the diar
     });
     await expect(whatsOn).not.toHaveAttribute("aria-current", "page");
     await expect(whatsOn).toHaveCSS("color", "rgb(122, 30, 36)");
-    await expect(whatsOn).toHaveCSS("text-decoration-line", "underline");
+    const indicator = navigation.locator("[data-navbar-indicator]");
+    await expect(indicator).toHaveCSS("opacity", "1");
+    const whatsOnBounds = await whatsOn.boundingBox();
+    expect(whatsOnBounds).not.toBeNull();
+    await expect
+      .poll(() => indicator.boundingBox())
+      .toMatchObject({
+        x: whatsOnBounds?.x,
+        width: whatsOnBounds?.width,
+      });
     await whatsOn.click();
     await expect(whatsOn).toHaveAttribute("aria-current", "page");
   }
@@ -199,27 +208,34 @@ test("What's On remains the active section and returns from an event to the diar
   ).toBeVisible();
 });
 
-test("event enquiry and contact links reach Visit & Contact", async ({
+test("event enquiry reaches the private dining form and contact reaches Visit & Contact", async ({
   page,
 }) => {
-  for (const name of [
-    "Make an Inquiry",
-    seasonalPageFixture.join.contactAction,
-  ]) {
-    await page.goto(eventPath);
-    const contact = page
-      .getByRole("main")
-      .getByRole("link", { name, exact: true });
-    await expect(contact).toHaveAttribute("href", "/visit-contact");
-    await contact.click();
-    await expect(page).toHaveURL("/visit-contact");
-    await expect(
-      page.getByRole("heading", {
-        name: "Step down from the city.",
-        level: 1,
-      }),
-    ).toBeVisible();
-  }
+  await page.goto(eventPath);
+  const enquiry = page.getByRole("link", {
+    name: "Make an Inquiry",
+    exact: true,
+  });
+  await expect(enquiry).toHaveAttribute("href", "/private-dining#enquire");
+  await enquiry.click();
+  await expect(page).toHaveURL("/private-dining#enquire");
+  await expect(page.locator("#enquire")).toBeInViewport();
+  await expect(page.getByRole("textbox", { name: "Your name" })).toBeVisible();
+
+  await page.goto(eventPath);
+  const contact = page.getByRole("main").getByRole("link", {
+    name: seasonalPageFixture.join.contactAction,
+    exact: true,
+  });
+  await expect(contact).toHaveAttribute("href", "/visit-contact");
+  await contact.click();
+  await expect(page).toHaveURL("/visit-contact");
+  await expect(
+    page.getByRole("heading", {
+      name: "Step down from the city.",
+      level: 1,
+    }),
+  ).toBeVisible();
 });
 
 test("event booking actions open the Book a Table page", async ({ page }) => {
@@ -367,6 +383,15 @@ test("related images share the action destination and homepage hover transition"
       (image) => image.getBoundingClientRect().width,
     );
     await imageLink.hover();
+    const action = firstCard.getByRole("link").filter({
+      hasNot: page.getByRole("img"),
+    });
+    const arrow = action.locator("svg.lucide-arrow-right");
+    await expect(arrow).toHaveCSS("transform", "matrix(1, 0, 0, 1, 3, 0)");
+    await expect(action).toHaveCSS("text-decoration-line", "underline");
+    await expect(
+      related.getByRole("listitem").nth(1).locator("svg.lucide-arrow-right"),
+    ).toHaveCSS("transform", "none");
     await expect
       .poll(() =>
         photograph.evaluate((image) => image.getBoundingClientRect().width),
@@ -377,6 +402,7 @@ test("related images share the action destination and homepage hover transition"
       "0.3s",
     );
     await page.emulateMedia({ reducedMotion: "reduce" });
+    await expect(arrow).toHaveCSS("transform", "none");
     await expect
       .poll(() =>
         photograph.evaluate((image) => image.getBoundingClientRect().width),
@@ -516,7 +542,7 @@ test("menu and related event links open their published destinations", async ({
   page,
 }) => {
   for (const [slug, secondHref] of [
-    ["lobster-season", "/menus/wine"],
+    ["lobster-season", "/menus?menu=wine"],
     ["italian-wine-dinner", "https://example.com/events/wine"],
     ["sunday-at-peploes", "/seasonal/lobster-season?from=card#event-menu"],
   ]) {
@@ -527,15 +553,26 @@ test("menu and related event links open their published destinations", async ({
     });
     await expect(
       menu.getByRole("link", { name: "View Menu", exact: true }),
-    ).toHaveAttribute("href", "/menus/dinner");
+    ).toHaveAttribute("href", "/menus?menu=dinner");
     await expect(
       menu.getByRole("link", { name: "Find Out More", exact: true }),
     ).toHaveAttribute("href", secondHref);
+    const imageLinks = menu.getByRole("link").filter({
+      has: page.getByRole("img"),
+    });
+    await expect(imageLinks).toHaveCount(2);
+    await expect(imageLinks.first()).toHaveAttribute(
+      "href",
+      "/menus?menu=dinner",
+    );
+    await expect(imageLinks.nth(1)).toHaveAttribute("href", secondHref);
   }
   const navigationStart = await page.evaluate(() => performance.timeOrigin);
   await page
     .getByRole("region", { name: "Menu & Experience", exact: true })
-    .getByRole("link", { name: "Find Out More", exact: true })
+    .getByRole("link")
+    .filter({ has: page.getByRole("img") })
+    .nth(1)
     .click();
   await expect(page).toHaveURL(
     /\/seasonal\/lobster-season\?from=card#event-menu$/,
@@ -555,7 +592,7 @@ test("menu and related event links open their published destinations", async ({
     page
       .getByRole("main")
       .getByRole("link", { name: "View Menu", exact: true }),
-  ).toHaveAttribute("href", "/menus/dinner");
+  ).toHaveAttribute("href", "/menus?menu=dinner");
   const related = page.getByRole("region", { name: "More to Explore" });
   const imageNavigationStart = await page.evaluate(
     () => performance.timeOrigin,
@@ -614,7 +651,7 @@ test("CMS optional sections, five-photo galleries, highlights and related pages 
     name: "Enquire about a gathering",
     exact: true,
   });
-  await expect(enquiry).toHaveAttribute("href", "/visit-contact");
+  await expect(enquiry).toHaveAttribute("href", "/private-dining#enquire");
   await expect
     .poll(() =>
       enquiry.evaluate((element) => {
@@ -639,7 +676,7 @@ test("CMS optional sections, five-photo galleries, highlights and related pages 
   const related = main.getByRole("region", { name: "More to Explore" });
   await expect(
     related.getByRole("link", { name: "Explore wines" }),
-  ).toHaveAttribute("href", "/menus/wine");
+  ).toHaveAttribute("href", "/menus?menu=wine");
   await expect(
     related.getByRole("link", { name: "Explore groups" }),
   ).toHaveAttribute("href", "/private-dining/groups-celebrations");

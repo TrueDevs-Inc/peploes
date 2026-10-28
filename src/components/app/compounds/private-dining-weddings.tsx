@@ -24,7 +24,7 @@ export function PrivateDiningWeddings() {
           <PrivateDiningHeading {...WEDDING_DAY} />
           <ol className={styles.weddingSteps}>
             {WEDDING_DAY.items.map((item) => (
-              <li key={item._key}>
+              <li data-scroll-reveal key={item._key}>
                 <h3 className={ebGaramond.className}>{item.heading}</h3>
                 <p>{item.description}</p>
               </li>

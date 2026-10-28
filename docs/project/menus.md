@@ -1,11 +1,22 @@
 # Menu pages
 
-The menu routes are `/menus/lunch`, `/menus/dinner`, `/menus/pre-theatre`,
-`/menus/wine`, `/menus/cocktails`, `/menus/group-set-menu` and `/menus/seasonal`.
-`/menus` redirects to Lunch. The shared layout contains the hero and sticky menu
-navigation. Each page supplies its closing photograph and copy. The site header
-and footer remain shared with the homepage. The footer's menu variant follows
-the menu frames' spacing and mobile section order; homepage styling is unchanged.
+Menus share `/menus`, selected with the `menu` query: `lunch`, `dinner`,
+`pre-theatre`, `wine`, `cocktails`, `group-set-menu` or `seasonal`.
+Missing, invalid or repeated selections show Lunch. Old `/menus/<slug>` links
+permanently redirect to their query URL, preserving section anchors.
+The shared layout contains the hero and sticky menu navigation. Switching menus
+keeps that shell mounted, moves the underline and fades the selected content out
+and in on desktop and mobile. Reduced motion switches immediately. Only the
+selected CMS menu loads; refresh, Back and Forward retain the URL selection.
+The menu-tab underline follows the selected menu only; hovering, focusing or
+opening a collection dropdown does not move it. Introductory images load eagerly
+for the selected menu. If optimization fails, retry the same validated CMS image
+directly without changing its crop or reserved frame.
+Tabs and the displayed menu share a hydration boundary so an early selection
+cannot replace an unhydrated menu with a different view.
+Each menu supplies its closing photograph and copy. The site header
+and footer remain shared with the homepage, including the footer's spacing,
+gutters and mobile section order.
 The Group Set Menu enquiry action opens the private-dining enquiry section.
 Book a Table actions open the [booking design preview](brief.md#book-a-table-design-preview).
 Enquiry submission remains inactive until its integration exists.
@@ -23,6 +34,19 @@ removing prices do not apply to Dinner. Dinner has no set-menu offer.
 
 - The Menu navigation note (`3347:3824`) keeps the hero consistent between menus
   and the navigation accessible while scrolling. Phones scroll the links horizontally.
+  Below the desktop breakpoint, size tabs to show a whole number plus half of
+  the next tab: 2.5 below 360px, 3.5 from 360px, 4.5 from 480px, 5.5 from 640px
+  and 6.5 from 900px. Swiping scrolls freely. Selecting a fully visible tab
+  preserves the strip position so its underline transition stays visible.
+  A clipped selection scrolls smoothly only far enough to reveal it with an
+  8px edge gutter; reduced motion reveals it immediately. Labels stay on one
+  line; longer labels widen their tab to fit the text and chevron, so their
+  visible fraction can differ from half.
+  Dropdown tabs retain 22px horizontal padding and an 8px text-to-chevron gap
+  so their labels do not crowd the separators.
+  Group Set Menu and Seasonal dropdown panels have no top or bottom padding;
+  their menu rows meet the panel border without an extra strip.
+  Desktop retains its existing row layout.
 - The CMS note calls for editable headings, dishes, descriptions, prices, service
   times and notes. The allergen note calls for optional, editable expanding content.
 - Comment #17 removes individual starter and main-course prices from Lunch.
@@ -129,13 +153,13 @@ is separate and is not used by this setup.
 
 | Studio content type | Menu URL name | Website path |
 | --- | --- | --- |
-| Restaurant menu | `lunch` | `/menus/lunch` |
-| Restaurant menu | `dinner` | `/menus/dinner` |
-| Restaurant menu | `pre-theatre` | `/menus/pre-theatre` |
-| Wine menu | `wine` | `/menus/wine` |
-| Drinks menu | `cocktails` | `/menus/cocktails` |
-| Set menu collection | `group-set-menu` | `/menus/group-set-menu` |
-| Set menu collection | `seasonal` | `/menus/seasonal` |
+| Restaurant menu | `lunch` | `/menus?menu=lunch` |
+| Restaurant menu | `dinner` | `/menus?menu=dinner` |
+| Restaurant menu | `pre-theatre` | `/menus?menu=pre-theatre` |
+| Wine menu | `wine` | `/menus?menu=wine` |
+| Drinks menu | `cocktails` | `/menus?menu=cocktails` |
+| Set menu collection | `group-set-menu` | `/menus?menu=group-set-menu` |
+| Set menu collection | `seasonal` | `/menus?menu=seasonal` |
 
 | Content | Sanity content shape |
 | --- | --- |
@@ -188,9 +212,9 @@ The booking object also accepts `tallOnMobile` for the Wine and Cocktails banner
 optional desktop image positioning, content width and text alignment. Mobile
 padding, mobile/desktop overlays and full-width mobile actions preserve each
 banner’s reference treatment. These presentation fields preserve the shared
-banner component while matching each photograph and caption. The shared menu navigation uses `compactDesktop` for
-the shorter bar in Wine, Cocktails, Group and Seasonal desktop frames; its
-mobile height remains consistent across routes. A 1px soft-stone divider spans
+banner component while matching each photograph and caption. The shared menu
+navigation uses the same 8px top padding on all desktop routes; its mobile
+height remains consistent across routes. A 1px soft-stone divider spans
 the menu navigation below the tabs on desktop and mobile; the active tab keeps
 its burgundy underline.
 
@@ -210,7 +234,7 @@ an error; they never display a local preview menu instead.
 
 Open two terminals in `D:\JavaScript\peploes-sanity`:
 
-1. Website: `bun run dev` — open `http://localhost:3000/menus/lunch`.
+1. Website: `bun run dev` — open `http://localhost:3000/menus?menu=lunch`.
 2. Studio: `bun run studio:dev` — open `http://localhost:3333`.
 
 Keep both terminals running. If dependencies are missing, run `bun install` in

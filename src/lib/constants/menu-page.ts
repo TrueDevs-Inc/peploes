@@ -17,12 +17,11 @@ export const MENU_PAGE_CONTENT = {
     { label: "Lunch", href: ROUTES.LUNCH },
     { label: "Dinner", href: ROUTES.DINNER },
     { label: "Pre-Theatre", href: ROUTES.PRE_THEATRE },
-    { label: "Wine", href: ROUTES.WINE, compactDesktop: true },
-    { label: "Cocktails", href: ROUTES.COCKTAILS, compactDesktop: true },
+    { label: "Wine", href: ROUTES.WINE },
+    { label: "Cocktails", href: ROUTES.COCKTAILS },
     {
       label: "Group Set Menu",
       href: ROUTES.GROUP_SET_MENU,
-      compactDesktop: true,
       children: GROUP_SET_MENU.menus.map((menu) => ({
         label: menu.title,
         href: `${ROUTES.GROUP_SET_MENU}#${menu._key}`,
@@ -31,7 +30,6 @@ export const MENU_PAGE_CONTENT = {
     {
       label: "Seasonal",
       href: ROUTES.SEASONAL,
-      compactDesktop: true,
       children: SEASONAL_MENU.menus.map((menu) => ({
         label: menu.title,
         href: `${ROUTES.SEASONAL}#${menu._key}`,

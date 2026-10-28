@@ -22,7 +22,10 @@ export function PrivateDiningClosing({
           className={styles.cover}
         />
       </div>
-      <div className={cn("site-container", styles.closingCopy)}>
+      <div
+        data-scroll-reveal
+        className={cn("site-container", styles.closingCopy)}
+      >
         {content.contacts && (
           <span aria-hidden="true" className={styles.heroRule} />
         )}

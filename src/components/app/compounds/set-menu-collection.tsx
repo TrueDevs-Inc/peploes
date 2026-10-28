@@ -16,6 +16,7 @@ export function SetMenuCollection({ menu }: ISetMenuCollectionProps) {
       <div className="site-container pb-8">
         <MenuEditorialIntro menu={menu} compact />
         <nav
+          data-scroll-reveal
           aria-label={`${menu.title} sections`}
           className="mb-10 grid gap-3 xl:mb-8 xl:grid-cols-2 xl:gap-6"
         >
@@ -58,7 +59,10 @@ export function SetMenuCollection({ menu }: ISetMenuCollectionProps) {
             aria-labelledby={`${set._key}-title`}
             className="scroll-mt-40 not-last:mb-6"
           >
-            <header className="border-b border-soft-stone bg-[#f1e9e3] px-4 py-6 text-center xl:py-4">
+            <header
+              data-scroll-reveal
+              className="border-b border-soft-stone bg-[#f1e9e3] px-4 py-6 text-center xl:py-4"
+            >
               <h2
                 id={`${set._key}-title`}
                 className={cn(

@@ -25,6 +25,7 @@ export function DrinksMenu({ menu }: IDrinksMenuProps) {
               className="border-t border-soft-stone py-8 first-of-type:border-t-0 xl:py-10 xl:first-of-type:border-t"
             >
               <h2
+                data-scroll-reveal
                 id={section._key}
                 className={cn(
                   ebGaramond.className,
@@ -36,6 +37,7 @@ export function DrinksMenu({ menu }: IDrinksMenuProps) {
               <ul className="space-y-4 xl:space-y-[14px]">
                 {section.dishes.map((dish) => (
                   <li
+                    data-scroll-reveal
                     key={dish._key}
                     className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-0.5 xl:grid-cols-[160px_1fr_auto]"
                   >
@@ -66,6 +68,7 @@ export function DrinksMenu({ menu }: IDrinksMenuProps) {
             className="border-t border-soft-stone pt-8 xl:pt-10"
           >
             <h2
+              data-scroll-reveal
               id="spirits-heading"
               className={cn(
                 ebGaramond.className,
@@ -75,7 +78,10 @@ export function DrinksMenu({ menu }: IDrinksMenuProps) {
               {menu.spiritsHeading}
             </h2>
             {menu.spiritsDescription && (
-              <p className="mt-4 text-[15px] leading-6 text-text-secondary xl:text-base xl:text-[#505050]">
+              <p
+                data-scroll-reveal
+                className="mt-4 text-[15px] leading-6 text-text-secondary xl:text-base xl:text-[#505050]"
+              >
                 {menu.spiritsDescription}
               </p>
             )}
@@ -84,6 +90,7 @@ export function DrinksMenu({ menu }: IDrinksMenuProps) {
                 .filter((section) => section.dishes.length > 0)
                 .map((section) => (
                   <section
+                    data-scroll-reveal
                     key={section._key}
                     aria-labelledby={section._key}
                     className={cn(

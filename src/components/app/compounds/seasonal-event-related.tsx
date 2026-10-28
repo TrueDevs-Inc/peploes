@@ -60,7 +60,7 @@ export function SeasonalEventRelated({ content }: ISeasonalEventRelatedProps) {
   return (
     <section className={styles.related} aria-labelledby="event-related">
       <div className="site-container">
-        <div className={styles.relatedHeader}>
+        <div data-scroll-reveal className={styles.relatedHeader}>
           <h2 id="event-related" className={styles.eyebrow}>
             {content.eyebrow}
           </h2>
@@ -92,10 +92,12 @@ export function SeasonalEventRelated({ content }: ISeasonalEventRelatedProps) {
         >
           {content.cards.map((card) => (
             <li
+              data-image-card
               key={card.id ?? card.title}
               className={cn(styles.relatedCard, cardStyles.card)}
             >
               <Link
+                data-card-image
                 href={card.href as Route}
                 aria-label={card.title}
                 className={cn(FOCUS_RING, cardStyles.image, "group")}
@@ -108,7 +110,7 @@ export function SeasonalEventRelated({ content }: ISeasonalEventRelatedProps) {
                   className="object-cover transition-transform duration-(--duration-base) ease-out motion-safe:group-hover:scale-105 motion-safe:group-focus-visible:scale-105 motion-reduce:transition-none"
                 />
               </Link>
-              <div className={cardStyles.copy}>
+              <div data-scroll-reveal className={cardStyles.copy}>
                 <div className={cardStyles.introduction}>
                   <h3 className={cardStyles.title}>{card.title}</h3>
                   <p className={cardStyles.description}>{card.description}</p>

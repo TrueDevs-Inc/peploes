@@ -52,7 +52,7 @@ routes from public discovery. Use non-indexing response headers and metadata
 where appropriate; crawler directives alone do not protect private content.
 
 `src/app/sitemap.ts` contains the home page, Our Story, What’s On, all seven
-menu pages, the four private dining pages and Visit & Contact. Add public
+query-selected menu URLs, the four private dining pages and Visit & Contact. Add public
 canonical pages when they exist. Use a content update time for `lastModified`;
 omit it when the application has no trustworthy value.
 

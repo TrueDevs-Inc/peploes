@@ -26,7 +26,7 @@ export function PrivateDiningHero({ hero, variant }: IPrivateDiningHeroProps) {
         />
       </div>
       <div className={cn("site-container", styles.heroContainer)}>
-        <div className={styles.heroCopy}>
+        <div data-scroll-reveal className={styles.heroCopy}>
           <p className={styles.eyebrow}>{hero.eyebrow}</p>
           <h1
             id="private-dining-title"

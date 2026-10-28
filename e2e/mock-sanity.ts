@@ -52,10 +52,12 @@ const menus = new Map([
 const settings = project({
   ...MENU_PAGE_CONTENT,
   navigation: MENU_PAGE_CONTENT.navigation.map((item) => ({
-    label: ["/menus/group-set-menu", "/menus/seasonal"].includes(item.href)
+    label: ["/menus?menu=group-set-menu", "/menus?menu=seasonal"].includes(
+      item.href,
+    )
       ? "Special menus"
       : item.label,
-    menu: item.href.split("/").at(-1),
+    menu: new URL(item.href, "https://example.com").searchParams.get("menu"),
   })),
 });
 const collections = [GROUP_SET_MENU, SEASONAL_MENU].map((menu) => ({

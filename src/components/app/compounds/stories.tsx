@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import styles from "@/components/app/compounds/stories.module.css";
+import { StoryCard } from "@/components/app/molecules/story-card";
 import { Button } from "@/components/ui/button";
 import { MOBILE_HOME_CONTENT, ROUTES } from "@/lib/constants";
 import { STORIES_CONTENT } from "@/lib/constants/stories";
@@ -43,7 +44,7 @@ export function Stories() {
       className={cn(dmSans.className, "bg-warm-cream text-ink")}
     >
       <div className="site-container flex flex-col gap-8 pt-12 pb-14 sm:gap-12 sm:py-20 lg:gap-[72px] xl:pb-[76px]">
-        <div className="flex flex-col items-start gap-4">
+        <div data-scroll-reveal className="flex flex-col items-start gap-4">
           <p className="flex items-center gap-2.5 text-[11px] leading-4 font-medium tracking-[0.1em] text-peploe-burgundy uppercase sm:mb-3 sm:text-sm">
             <span
               aria-hidden="true"
@@ -78,7 +79,7 @@ export function Stories() {
         </div>
 
         <div className="grid items-start gap-[18px] text-warm-cream sm:gap-7 xl:w-[calc(100%+4px)] xl:grid-cols-[repeat(2,minmax(0,636px))]">
-          <article className="relative isolate flex min-h-[460px] flex-col justify-end overflow-hidden rounded-[4px] bg-ink p-6 sm:min-h-[520px] sm:p-10 xl:min-h-[640px]">
+          <StoryCard className="relative isolate flex min-h-[460px] flex-col justify-end overflow-hidden rounded-[4px] bg-ink p-6 sm:min-h-[520px] sm:p-10 xl:min-h-[640px]">
             <Image
               src={STORIES_CONTENT.family.image.src}
               alt={STORIES_CONTENT.family.image.alt}
@@ -90,7 +91,16 @@ export function Stories() {
               aria-hidden="true"
               className={cn(styles.familyOverlay, "absolute inset-0")}
             />
-            <div className="relative flex flex-col gap-[9px] sm:gap-4">
+            <Link
+              href={ROUTES.OUR_STORY}
+              aria-hidden="true"
+              tabIndex={-1}
+              className="absolute inset-0"
+            />
+            <div
+              data-story-copy
+              className="relative flex flex-col gap-[9px] sm:gap-4"
+            >
               <p className="text-[11px] leading-[14px] font-medium tracking-[1.2px] uppercase sm:text-sm sm:leading-5 sm:tracking-[0.1em]">
                 {STORIES_CONTENT.family.eyebrow}
               </p>
@@ -101,25 +111,26 @@ export function Stories() {
                 )}
               >
                 {STORIES_CONTENT.family.heading}
-                <br className="hidden sm:block" />
-                <span className="sm:hidden"> </span>
+                <br />
                 {STORIES_CONTENT.family.headingContinuation}
               </h3>
-              <p className="text-sm leading-5 text-warm-cream/90 sm:text-[15px] sm:leading-[22px]">
-                {STORIES_CONTENT.family.description}
-              </p>
-              <div className="sm:pt-3">
-                <StoryAction
-                  label={STORIES_CONTENT.family.ctaLabel}
-                  filled
-                  href={ROUTES.OUR_STORY}
-                />
+              <div id="family-story-details" data-story-details>
+                <p className="text-sm leading-5 text-warm-cream/90 sm:text-[15px] sm:leading-[22px]">
+                  {STORIES_CONTENT.family.description}
+                </p>
+                <div className="sm:pt-3">
+                  <StoryAction
+                    label={STORIES_CONTENT.family.ctaLabel}
+                    filled
+                    href={ROUTES.OUR_STORY}
+                  />
+                </div>
               </div>
             </div>
-          </article>
+          </StoryCard>
 
           <div className="grid min-w-0 gap-[18px] sm:gap-7">
-            <article className="relative isolate flex min-h-[390px] items-end justify-end overflow-hidden rounded-[4px] bg-ink sm:min-h-[308px] sm:items-center">
+            <StoryCard className="relative isolate flex min-h-[390px] items-end justify-end overflow-hidden rounded-[4px] bg-ink sm:min-h-[308px] sm:items-center">
               <Image
                 src={STORIES_CONTENT.produce.image.src}
                 alt={STORIES_CONTENT.produce.image.alt}
@@ -131,7 +142,10 @@ export function Stories() {
                 aria-hidden="true"
                 className={cn(styles.produceOverlay, "absolute inset-0")}
               />
-              <div className="relative flex w-full flex-col gap-[9px] p-6 sm:w-1/2 sm:gap-3 sm:p-8">
+              <div
+                data-story-copy
+                className="relative flex w-full flex-col gap-[9px] p-6 sm:w-1/2 sm:gap-3 sm:p-8"
+              >
                 <p className="text-[11px] leading-[14px] font-medium tracking-[1.2px] uppercase sm:text-xs sm:leading-[18px] sm:tracking-[0.1em]">
                   {STORIES_CONTENT.produce.eyebrow}
                 </p>
@@ -143,15 +157,17 @@ export function Stories() {
                 >
                   {STORIES_CONTENT.produce.heading}
                 </h3>
-                <p className="text-sm leading-5">
-                  {STORIES_CONTENT.produce.description}
-                </p>
-                <StoryAction label={STORIES_CONTENT.produce.ctaLabel} />
+                <div id="produce-story-details" data-story-details>
+                  <p className="text-sm leading-5">
+                    {STORIES_CONTENT.produce.description}
+                  </p>
+                  <StoryAction label={STORIES_CONTENT.produce.ctaLabel} />
+                </div>
               </div>
-            </article>
+            </StoryCard>
 
             <div className="grid gap-[18px] sm:grid-cols-2 sm:gap-7">
-              <article className="relative isolate flex min-h-[330px] flex-col justify-end overflow-hidden rounded-[4px] bg-ink p-6 sm:min-h-[308px]">
+              <StoryCard className="relative isolate flex min-h-[330px] flex-col justify-end overflow-hidden rounded-[4px] bg-ink p-6 sm:min-h-[308px]">
                 <Image
                   src={STORIES_CONTENT.gina.image.src}
                   alt={STORIES_CONTENT.gina.image.alt}
@@ -163,7 +179,10 @@ export function Stories() {
                   aria-hidden="true"
                   className={cn(styles.ginaOverlay, "absolute inset-0")}
                 />
-                <div className="relative flex flex-col gap-[9px] sm:gap-2">
+                <div
+                  data-story-copy
+                  className="relative flex flex-col gap-[9px] sm:gap-2"
+                >
                   <p className="text-[11px] leading-[14px] font-medium tracking-[1.2px] uppercase sm:text-xs sm:leading-[18px] sm:tracking-[0.1em]">
                     <span className="sm:hidden">
                       {MOBILE_HOME_CONTENT.ginaEyebrow}
@@ -185,13 +204,17 @@ export function Stories() {
                       {STORIES_CONTENT.gina.heading}
                     </span>
                   </h3>
-                  <div className="sm:pt-2">
+                  <div
+                    id="gina-story-details"
+                    data-story-details
+                    className="sm:pt-2"
+                  >
                     <StoryAction label={STORIES_CONTENT.gina.ctaLabel} />
                   </div>
                 </div>
-              </article>
+              </StoryCard>
 
-              <article className="relative isolate flex min-h-[330px] flex-col justify-end overflow-hidden rounded-[4px] bg-ink p-6 sm:min-h-[308px]">
+              <StoryCard className="relative isolate flex min-h-[330px] flex-col justify-end overflow-hidden rounded-[4px] bg-ink p-6 sm:min-h-[308px]">
                 <Image
                   src={STORIES_CONTENT.art.image.src}
                   alt={STORIES_CONTENT.art.image.alt}
@@ -203,7 +226,10 @@ export function Stories() {
                   aria-hidden="true"
                   className={cn(styles.artOverlay, "absolute inset-0")}
                 />
-                <div className="relative flex flex-col gap-[9px] sm:gap-2">
+                <div
+                  data-story-copy
+                  className="relative flex flex-col gap-[9px] sm:gap-2"
+                >
                   <p className="text-[11px] leading-[14px] font-medium tracking-[1.2px] uppercase sm:text-xs sm:leading-[18px] sm:tracking-[0.1em]">
                     {STORIES_CONTENT.art.eyebrow}
                   </p>
@@ -215,14 +241,16 @@ export function Stories() {
                   >
                     {STORIES_CONTENT.art.heading}
                   </h3>
-                  <p className="hidden text-[13px] leading-[18px] text-warm-cream/80 sm:block">
-                    {STORIES_CONTENT.art.description}
-                  </p>
-                  <div className="sm:pt-2">
-                    <StoryAction label={STORIES_CONTENT.art.ctaLabel} />
+                  <div id="art-story-details" data-story-details>
+                    <p className="hidden text-[13px] leading-[18px] text-warm-cream/80 sm:block">
+                      {STORIES_CONTENT.art.description}
+                    </p>
+                    <div className="sm:pt-2">
+                      <StoryAction label={STORIES_CONTENT.art.ctaLabel} />
+                    </div>
                   </div>
                 </div>
-              </article>
+              </StoryCard>
             </div>
           </div>
         </div>

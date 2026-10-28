@@ -27,7 +27,10 @@ export function BookingBanner() {
           className="pointer-events-none absolute -right-[120px] -bottom-20 h-[310px] w-[310px] max-w-none opacity-24 sm:-top-6 sm:-right-[104px] sm:bottom-auto sm:h-[472px] sm:w-[472px] sm:opacity-15 lg:opacity-35"
         />
 
-        <div className="relative flex flex-col items-start gap-6 sm:gap-7">
+        <div
+          data-scroll-reveal
+          className="relative flex flex-col items-start gap-6 sm:gap-7"
+        >
           <div className="flex flex-col gap-4 sm:gap-6">
             <h2
               id="booking-banner-heading"
@@ -54,7 +57,8 @@ export function BookingBanner() {
           <Button
             asChild
             variant="brand-primary-inverse"
-            className="h-11 w-full rounded-[4px] bg-warm-cream px-5 has-[>svg]:px-5 text-base leading-[22px] font-medium text-peploe-burgundy shadow-none sm:w-[156px]"
+            size="cta"
+            className="w-full sm:w-[156px]"
           >
             <Link href={ROUTES.BOOK_A_TABLE}>
               {BOOKING_BANNER_CONTENT.ctaLabel}

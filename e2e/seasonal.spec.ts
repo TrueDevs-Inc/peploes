@@ -56,7 +56,10 @@ test("What's On navigation closes the mobile menu and marks the desktop link as 
     await expect(page).toHaveURL("/seasonal");
     await expect(whatsOn).toHaveAttribute("aria-current", "page");
     await expect(whatsOn).toHaveCSS("color", "rgb(122, 30, 36)");
-    await expect(whatsOn).toHaveCSS("text-decoration-line", "underline");
+    await expect(navigation.locator("[data-navbar-indicator]")).toHaveCSS(
+      "opacity",
+      "1",
+    );
 
     await navigation.getByRole("link", { name: "Peploe’s home" }).click();
     await page.mouse.move(0, 0);
@@ -107,14 +110,14 @@ test("the Seasonal menu remains a separate destination from What's On", async ({
     await expect(menu).not.toBeVisible();
   } else {
     await navigation
-      .getByRole("button", { name: "Menus", exact: true })
-      .click();
+      .getByRole("link", { name: "Menus", exact: true })
+      .press("ArrowDown");
     await navigation
       .getByRole("link", { name: "Seasonal", exact: true })
       .click();
   }
 
-  await expect(page).toHaveURL("/menus/seasonal");
+  await expect(page).toHaveURL("/menus?menu=seasonal");
   await expect(
     page.getByRole("heading", { name: "Seasonal Menus", level: 1 }),
   ).toBeVisible();

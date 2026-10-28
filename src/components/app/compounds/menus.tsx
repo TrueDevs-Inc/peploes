@@ -31,7 +31,10 @@ export function Menus() {
         />
       </div>
 
-      <div className="site-container flex flex-col gap-5 pt-10 pb-12 sm:gap-7 sm:pt-12 sm:pb-20">
+      <div
+        data-scroll-reveal
+        className="site-container flex flex-col gap-5 pt-10 pb-12 sm:gap-7 sm:pt-12 sm:pb-20"
+      >
         <p className="flex items-center gap-2.5 text-xs leading-4 font-medium tracking-[0.1em] text-peploe-burgundy uppercase sm:text-sm">
           <span
             aria-hidden="true"
@@ -97,7 +100,8 @@ export function Menus() {
         <Button
           asChild
           variant="brand-primary"
-          className="h-11 w-full self-start rounded-[4px] bg-peploe-burgundy px-5 has-[>svg]:px-5 text-base leading-6 font-medium text-warm-cream shadow-none sm:w-[204px]"
+          size="cta"
+          className="w-full self-start sm:w-[204px]"
         >
           <Link href={ROUTES.MENUS}>
             {MENUS_CONTENT.ctaLabel}
