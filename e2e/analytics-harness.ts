@@ -308,8 +308,12 @@ export const test = base.extend<{ analytics: AnalyticsRecorder }>({
     // posthog-js treats webdriver and HeadlessChrome brand browsers as bots and
     // drops their events, which would hide real SDK delivery from this suite.
     await context.addInitScript(() => {
-      Object.defineProperty(navigator, "webdriver", { get: () => false });
+      Object.defineProperty(navigator, "webdriver", {
+        configurable: true,
+        get: () => false,
+      });
       Object.defineProperty(navigator, "userAgentData", {
+        configurable: true,
         get: () => undefined,
       });
     });
