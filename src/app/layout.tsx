@@ -6,6 +6,7 @@ import "./globals.css";
 
 import { Analytics } from "@/components/app/atoms/analytics";
 import { JsonLd } from "@/components/app/atoms/json-ld";
+import { SiteScrollReveal } from "@/components/app/atoms/site-scroll-reveal";
 import { VisitAnchorInitializer } from "@/components/app/atoms/visit-anchor-initializer";
 import { Footer } from "@/components/app/compounds/footer";
 import { Navbar } from "@/components/app/compounds/navbar";
@@ -58,6 +59,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Analytics />
+        <SiteScrollReveal />
         <Navbar />
         <VisitAnchorInitializer />
         {children}

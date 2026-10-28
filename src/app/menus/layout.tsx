@@ -10,17 +10,17 @@ export default function MenusLayout({ children }: IMenuLayoutProps) {
     <main className="[font-optical-sizing:none] [font-variation-settings:'opsz'_14]">
       <Suspense
         fallback={
-          <div
-            className="min-h-[492px] bg-ink xl:min-h-[454px]"
-            aria-busy="true"
-          />
+          <>
+            <div
+              className="min-h-[492px] bg-ink xl:min-h-[446px]"
+              aria-busy="true"
+            />
+            <div className="min-h-96 bg-warm-cream" aria-busy="true" />
+          </>
         }
       >
+        {/* Hydrate the tabs and displayed menu together before a selection updates them. */}
         <MenuShell />
-      </Suspense>
-      <Suspense
-        fallback={<div className="min-h-96 bg-warm-cream" aria-busy="true" />}
-      >
         {children}
       </Suspense>
     </main>

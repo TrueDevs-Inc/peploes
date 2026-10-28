@@ -28,7 +28,7 @@ export function PrivateDiningCorporate() {
           <PrivateDiningHeading {...CORPORATE_OCCASIONS} />
           <ul className={styles.corporateOccasionList}>
             {CORPORATE_OCCASIONS.items.map((item) => (
-              <li key={item._key}>
+              <li data-scroll-reveal key={item._key}>
                 <h3 className={ebGaramond.className}>{item.heading}</h3>
                 <p>{item.description}</p>
               </li>
@@ -48,7 +48,7 @@ export function PrivateDiningCorporate() {
           <PrivateDiningHeading {...CORPORATE_CAPACITY} />
           <ul className={styles.capacityGrid}>
             {CORPORATE_CAPACITY.items.map((item) => (
-              <li key={item._key}>
+              <li data-scroll-reveal key={item._key}>
                 <Image
                   src={item.illustration}
                   alt=""
@@ -84,7 +84,7 @@ export function PrivateDiningCorporate() {
                   className={styles.cover}
                 />
               </div>
-              <div className={styles.spaceCopy}>
+              <div data-scroll-reveal className={styles.spaceCopy}>
                 <h3>{space.title}</h3>
                 <p>{space.description}</p>
               </div>

@@ -5,7 +5,6 @@ import { connection } from "next/server";
 import { cache } from "react";
 
 import { MENU_ROUTES, ROUTES } from "@/lib/constants";
-import { MENU_PAGE_CONTENT } from "@/lib/constants/menu-page";
 import { ErrorCode } from "@/lib/enums";
 import { unwrapResultOrThrow } from "@/lib/errors";
 import type { IMenuBooking, IMenuNavigationLink, TMenuSlug } from "@/lib/types";
@@ -48,10 +47,6 @@ export async function loadMenuNavigation(): Promise<IMenuNavigationLink[]> {
     const collection = collections.find((menu) => menu.slug === item.menu);
     const href = MENU_ROUTES[item.menu];
     return {
-      compactDesktop: MENU_PAGE_CONTENT.navigation.some(
-        (link) =>
-          link.href === href && "compactDesktop" in link && link.compactDesktop,
-      ),
       label: item.label,
       href,
       children: collection?.menus.map((menu) => ({

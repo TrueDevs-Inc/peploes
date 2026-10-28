@@ -1,7 +1,9 @@
 import { createClient } from "@sanity/client";
 import { Schema } from "@sanity/schema";
+import { builtinTypes } from "@sanity/schema/_internal";
 import { validateDocument } from "@sanity/validation";
 import { expect, test } from "vitest";
+import { menuImage } from "./schemaTypes/menu-fields";
 import {
   seasonalMenuCard,
   seasonalRelatedPage,
@@ -10,6 +12,7 @@ import {
 const schema = Schema.compile({
   name: "card-editing",
   types: [
+    ...builtinTypes,
     ...["restaurantMenu", "wineMenu", "drinksMenu", "setMenuCollection"].map(
       (name) => ({
         name,
@@ -17,11 +20,7 @@ const schema = Schema.compile({
         fields: [{ name: "title", type: "string" }],
       }),
     ),
-    {
-      name: "menuImage",
-      type: "object",
-      fields: [{ name: "alt", type: "string" }],
-    },
+    menuImage,
     seasonalMenuCard,
     seasonalRelatedPage,
     {
@@ -98,7 +97,14 @@ test.each([
         title: "Dinner",
         description: "A seasonal dinner",
         action: "Explore",
-        image: { alt: "Dining room" },
+        image: {
+          _type: "menuImage",
+          alt: "Dining room",
+          asset: {
+            _type: "reference",
+            _ref: "image-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-800x600-jpg",
+          },
+        },
         ...link,
       },
     },

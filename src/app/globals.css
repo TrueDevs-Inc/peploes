@@ -8,7 +8,7 @@
 }
 
 @utility site-container {
-  width: calc(100% - 3rem);
+  width: calc(100% - 2rem);
   max-width: var(--site-content-max-width);
   margin-inline: auto;
 
@@ -18,7 +18,7 @@
 }
 
 @utility site-container-inset {
-  width: calc(100% - 3rem);
+  width: calc(100% - 2rem);
   max-width: var(--site-content-max-width);
   margin-inline: auto;
 
@@ -186,6 +186,20 @@
   body {
     @apply bg-background text-foreground;
   }
+  :is(
+    a[href],
+    button,
+    select,
+    summary,
+    input[type="button"],
+    input[type="submit"],
+    input[type="reset"],
+    input[type="checkbox"],
+    input[type="radio"]
+  ):not(:disabled):not([aria-disabled="true"]),
+  label:has(input:is([type="checkbox"], [type="radio"]):enabled) {
+    cursor: pointer;
+  }
 }
 
 /* ─── Motion Design Tokens ─────────────────────────────────────────────── */
@@ -275,6 +289,9 @@
   :is(a, button):not(:disabled):focus-visible .lucide-arrow-left {
     transform: translateX(-3px);
   }
+  [data-image-card]:has([data-card-image]:focus-visible) .lucide-arrow-right {
+    transform: translateX(3px);
+  }
 }
 
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
@@ -283,6 +300,15 @@
   }
   :is(a, button):not(:disabled):hover .lucide-arrow-left {
     transform: translateX(-3px);
+  }
+  [data-image-card]:has([data-card-image]:hover) .lucide-arrow-right {
+    transform: translateX(3px);
+  }
+}
+
+@media (hover: hover) {
+  [data-image-card]:has([data-card-image]:hover) [data-card-action] {
+    text-decoration-line: underline;
   }
 }
 

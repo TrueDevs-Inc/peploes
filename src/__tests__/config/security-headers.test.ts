@@ -28,6 +28,29 @@ describe("security headers", function securityHeaderTests() {
     vi.unstubAllEnvs();
   });
 
+  it("allows configured Mapbox across documents for client navigation", async function mapboxPolicyTest() {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN", "pk.test-only");
+    const globalPolicy = (await getGlobalHeaders()).get(
+      "Content-Security-Policy",
+    );
+    const bookingPolicy = await getBookingPagePolicy();
+    for (const policy of [globalPolicy, bookingPolicy]) {
+      expect(policy).toContain("https://api.mapbox.com");
+      expect(policy).toContain("https://events.mapbox.com");
+      expect(policy).toContain("worker-src 'self' blob:");
+      expect(policy).not.toContain("'unsafe-eval'");
+      expect(policy).toContain("frame-ancestors 'none'");
+    }
+  });
+
+  it("omits Mapbox permissions when no public token is configured", async function unconfiguredMapboxTest() {
+    vi.stubEnv("NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN", "");
+    const policy = (await getGlobalHeaders()).get("Content-Security-Policy");
+    expect(policy).not.toContain("mapbox.com");
+    expect(policy).not.toContain("worker-src");
+  });
+
   it("omits eval permission from the production CSP", async function productionCspTest() {
     vi.stubEnv("NODE_ENV", "production");
 

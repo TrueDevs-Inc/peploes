@@ -19,7 +19,10 @@ export function VisitContactDetails() {
         aria-labelledby="visit-reservation-heading"
         className={styles.reservation}
       >
-        <div className={cn("site-container", styles.reservationGrid)}>
+        <div
+          data-scroll-reveal
+          className={cn("site-container", styles.reservationGrid)}
+        >
           <div>
             <p className={styles.eyebrow}>
               {VISIT_CONTACT_DETAILS.reservation.eyebrow}
@@ -90,7 +93,7 @@ export function VisitContactDetails() {
 
       <section aria-labelledby="visit-dining-heading" className={styles.dining}>
         <div className="site-container">
-          <div className={styles.diningIntro}>
+          <div data-scroll-reveal className={styles.diningIntro}>
             <div>
               <p className={styles.eyebrow}>
                 {VISIT_CONTACT_DETAILS.dining.eyebrow}
@@ -105,7 +108,11 @@ export function VisitContactDetails() {
           </div>
           <ul className={styles.services}>
             {VISIT_CONTACT_DETAILS.dining.services.map((service) => (
-              <li className={styles.service} key={service.heading}>
+              <li
+                data-scroll-reveal
+                className={styles.service}
+                key={service.heading}
+              >
                 <Image
                   src={service.icon}
                   alt=""
@@ -125,7 +132,10 @@ export function VisitContactDetails() {
       </section>
 
       <div className={cn("site-container", styles.practicalities)}>
-        <section aria-labelledby="visit-accessibility-heading">
+        <section
+          data-scroll-reveal
+          aria-labelledby="visit-accessibility-heading"
+        >
           <p className={styles.eyebrow}>
             {VISIT_CONTACT_DETAILS.accessibility.eyebrow}
           </p>
@@ -137,6 +147,7 @@ export function VisitContactDetails() {
           </p>
         </section>
         <section
+          data-scroll-reveal
           aria-labelledby="visit-gatherings-heading"
           className={styles.gatherings}
         >

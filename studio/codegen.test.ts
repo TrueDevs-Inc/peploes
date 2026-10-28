@@ -1,4 +1,11 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  realpath,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
@@ -37,7 +44,8 @@ function output() {
 }
 
 beforeEach(async () => {
-  directory = await mkdtemp(join(tmpdir(), "peploes-codegen-"));
+  // Resolve Windows short aliases so glob paths and the checkout share a canonical root.
+  directory = await realpath(await mkdtemp(join(tmpdir(), "peploes-codegen-")));
   await mkdir(join(directory, "queries"));
   await writeFile(join(directory, "schema.json"), "[]");
 });

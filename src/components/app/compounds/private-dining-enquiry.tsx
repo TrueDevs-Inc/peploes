@@ -21,7 +21,7 @@ export function PrivateDiningEnquiry({
       )}
     >
       <div className={cn("site-container", styles.enquiryContainer)}>
-        <div className={styles.enquiryIntro}>
+        <div data-scroll-reveal className={styles.enquiryIntro}>
           <PrivateDiningHeading
             eyebrow={content.eyebrow}
             heading={content.heading}
@@ -29,7 +29,7 @@ export function PrivateDiningEnquiry({
           />
           {content.contacts && <PrivateDiningContacts />}
         </div>
-        <div className={styles.enquiryForm}>
+        <div data-scroll-reveal className={styles.enquiryForm}>
           {content.formEyebrow && (
             <PrivateDiningHeading
               eyebrow={content.formEyebrow}

@@ -417,7 +417,6 @@ test.describe("interaction events", () => {
       .poll(() => analytics.posthogNamed("contact_click").length)
       .toBe(2);
     await page.goto("/visit-contact");
-    // The SDK loads lazily; click once it has sent this page's view.
     await expect
       .poll(() =>
         analytics
@@ -425,15 +424,17 @@ test.describe("interaction events", () => {
           .some((e) => e.properties.$pathname === "/visit-contact"),
       )
       .toBe(true);
-    // Directions leaves the site in the same tab: the click must survive unload.
     await page.context().route("https://www.google.com/maps/**", (route) =>
       route.fulfill({
         contentType: "text/html",
         body: "<title>maps</title>",
       }),
     );
-    await page.getByRole("link", { name: /Get directions to Peploe/ }).click();
-    await expect(page).toHaveURL(/google\.com\/maps/);
+    const directions = page.waitForEvent("popup");
+    await page
+      .getByRole("link", { name: "Get Directions", exact: true })
+      .click();
+    await (await directions).close();
     await expect
       .poll(() => analytics.posthogNamed("directions_click").length, {
         timeout: 2500,

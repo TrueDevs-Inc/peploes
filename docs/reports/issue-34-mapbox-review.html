@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Issue 34 — Mapbox implementation review</title>
+  <style>
+    :root { color-scheme: dark; --bg:#181b20; --text:#eeeae2; --muted:#b9b8b2; --accent:#a9caff; --border:#50545c; }
+    [data-theme="light"] { color-scheme:light; --bg:#faf7f0; --text:#282824; --muted:#595953; --accent:#284f8d; --border:#a3a39b; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:18px/1.7 "Source Sans 3",system-ui,sans-serif; }
+    main { max-width:65ch; margin:auto; padding:2rem 1rem 4rem; overflow-wrap:anywhere; }
+    h1,h2 { font-family:Inter,system-ui,sans-serif; line-height:1.2; letter-spacing:-.02em; }
+    h1 { font-size:clamp(1.8rem,5vw,2.5rem); } h2 { margin-top:2.5rem; font-size:1.4rem; }
+    a { color:var(--accent); text-underline-offset:.2em; }
+    code { font: .9em/1.6 "JetBrains Mono",Consolas,monospace; }
+    .meta { color:var(--muted); }
+    .limit { border-left:3px solid var(--accent); padding-left:1rem; }
+    button { min-height:44px; padding:.5rem 1rem; border:1px solid var(--border); border-radius:4px; background:var(--bg); color:var(--text); font:inherit; cursor:pointer; }
+    :focus-visible { outline:3px solid var(--accent); outline-offset:4px; }
+    @media print { body { background:white; color:black; font-size:11pt; } button { display:none; } a[href^="http"]::after { content:" (" attr(href) ")"; } }
+  </style>
+</head>
+<body>
+<main>
+  <button type="button" onclick="const root=document.documentElement;root.dataset.theme=root.dataset.theme==='dark'?'light':'dark';this.textContent=root.dataset.theme==='dark'?'Use light theme':'Use dark theme'">Use light theme</button>
+  <h1>Issue 34: Mapbox</h1>
+  <p class="meta">23 October 2026 · Uncommitted implementation on <code>fix/ali/github-issues</code> · Compared with HEAD <code>8995a28</code> and the captured starting working tree.</p>
+  <p>The interactive Visit map is implemented and its live appearance has been verified using the contributor’s verified Mapbox demo account. The token was supplied only to an isolated preview process; environment files remain unchanged for the contributor to configure. Unrelated booking, newsletter, policy and dining changes in this checkout are excluded from this review.</p>
+  <h2>Standards review</h2>
+  <p>The small client component imports Mapbox automatically on Visit, cleans up its map, and preserves the image and directions on failure. Public environment variables use explicit Next.js mappings. The extra opt-in overlay was removed following the contributor’s correction to match Samsu’s automatic loading.</p>
+  <p>The first review found that page-specific CSP blocked maps after client navigation. The browser regression reproduced the failure. Configured Mapbox permissions now apply to shared document policies, including booking, so homepage navigation retains a compatible CSP. Permissions are absent without configuration.</p>
+  <p>A third standards/spec review found no new issue in the final mobile popup refinement: the address is displayed below the pin with preserved line breaks, clear of the top map controls.</p>
+  <p>The automatic-loading follow-up also passed separate standards and spec review. The visitor no longer clicks Explore or sees a loading overlay. The contributor’s local dev server needed a restart after adding the public token: its older CSP still blocked Mapbox workers and connections before the restart.</p>
+  <h2>Spec review</h2>
+  <p>No remaining implementation defects found in the second independent review. Samsu’s live cabin listing and Cucu detail page were inspected in Chromium: custom cream/blue map, yellow pins, fullscreen and recenter controls. Peploe’s uses cream land, muted green parks, blue water, a burgundy pin and an address popup, with zoom, fullscreen and recenter controls. The contributor requested removal of the map’s extra Get Directions overlay; the hero’s Get Directions button remains available, including on map failure. A custom Studio style URL retains its own colours.</p>
+  <p>Follow-up live verification used the default public token from the contributor’s verified no-card account. The style, vector tiles, icons, fonts and map-session requests succeeded. The real Dublin map shows cream land, muted green St Stephen’s Green, blue lake water and the burgundy location marker. Desktop and 390px/320px browser checks cover the location popup, controls and overflow. No responses were intercepted during these live checks.</p>
+  <p class="limit">The account is a usage-limited demo, with no payment method added. The contributor will copy the public token into their ignored environment file. A separate custom Studio style and the production client-token handoff remain unverified. The automated suite still uses a synthetic token and intercepted style, keeping repeat runs independent of live usage.</p>
+  <h2>Verification</h2>
+  <ul>
+    <li>Directions-overlay removal: formatting, lint, application/Studio types and production build passed. Live Mapbox verified at 1440px, 390px and 320px with the overlay absent and hero directions retained. Production browser run: 26 passed, 1 desktop map-load timing failure; the unchanged failed-test rerun passed. Standards and spec reviews found no defects. The full CI run stopped at units: 761 passed, 9 failed (7 existing Studio codegen cases and 2 Git-hook timeouts in unchanged files); downstream build/audit stages did not run in that gate. All 9 Git-hook tests passed on a separate unchanged rerun.</li>
+    <li>Passed: formatting, full lint, application and Studio types, application production build, Studio build, and 10 security-header tests.</li>
+    <li>Passed: manual no-token preview/directions check and controlled browser fullscreen entry/exit.</li>
+    <li>Passed: <code>bun run test:e2e</code>, all 286 browser tests across desktop, 390px and 320px screens (7.9 minutes), before the final popup refinement. After that refinement, the production build and all 6 focused map browser cases passed, including a popup/control-overlap regression.</li>
+    <li>Automatic-loading follow-up: production build, formatting, lint, types and 10 security tests passed. The first 27-case Visit/map run had 2 failures (entrance-image decoding and a throttled anchor); the unchanged rerun passed all 27. The new automatic-loading check first failed against the previous opt-in UI and then passed without a click at every width.</li>
+    <li>Failed: <code>bun run ci</code> stopped at the unit suite: 763 passed, 7 failed, all in unchanged <code>studio/codegen.test.ts</code>. Query discovery returns no queries and watcher expectations time out. No pre-change full-suite baseline was run; these failures are outside the Mapbox files.</li>
+    <li>Failed independently: root audit reports the existing Sentry critical advisory; Studio audit reports DOMPurify critical/high advisories. No check was weakened or dependency upgraded outside scope.</li>
+  </ul>
+  <h2>Next action</h2>
+  <p>Review the uncommitted changes. Copy the default public token from the <a href="https://console.mapbox.com/">Mapbox console</a> into <code>NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN</code> in an ignored environment file, then restart or rebuild. The default style remains <code>mapbox://styles/mapbox/light-v11</code>; its branding is applied by the component. Use the client’s URL-restricted public token for production. No commit, push, PR or issue-state change was performed.</p>
+  <h2>Evidence and owner rules</h2>
+  <ul>
+    <li><a href="https://github.com/TrueDevs-Inc/peploes/issues/34">Issue 34</a></li>
+    <li><a href="../architecture.md">Architecture</a> · <a href="../guides/quality-guide.md">Quality gates</a> · <a href="../guides/testing-guide.md">Testing</a></li>
+    <li><a href="https://docs.mapbox.com/mapbox-gl-js/guides/security-and-testing/">Mapbox CSP guidance</a> · <a href="https://docs.mapbox.com/mapbox-gl-js/guides/styles/">Mapbox styles</a></li>
+    <li><a href="https://docs.mapbox.com/accounts/guides/demo-access/">Mapbox demo-account limits and token management</a></li>
+    <li><a href="https://github.com/advisories/GHSA-mchm-gjx6-7h55">Sentry advisory</a> · <a href="https://github.com/advisories/GHSA-cg2g-xh64-v4q7">DOMPurify critical advisory</a> · <a href="https://github.com/advisories/GHSA-mrv2-3pqr-j5jr">DOMPurify high advisory</a></li>
+  </ul>
+</main>
+</body>
+</html>

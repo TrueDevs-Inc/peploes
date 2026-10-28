@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 
 import { DesktopNavigationTrigger } from "@/components/app/atoms/desktop-navigation-trigger";
 import styles from "@/components/app/molecules/desktop-navigation.module.css";
@@ -21,6 +21,9 @@ const HOVER_CLOSE_DELAY_MS = 350;
 
 export function DesktopNavigation({ items }: IDesktopNavigationProps) {
   const [openItem, setOpenItem] = useState<IOpenDesktopNavigation | null>(null);
+  const navigationRef = useRef<HTMLUListElement>(null);
+  const indicatorRef = useRef<HTMLLIElement>(null);
+  const backdropRef = useRef<HTMLLIElement>(null);
   const activeItemRef = useRef<HTMLLIElement>(null);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigationId = useId();
@@ -32,6 +35,67 @@ export function DesktopNavigation({ items }: IDesktopNavigationProps) {
     : pathname.startsWith(ROUTES.PRIVATE_DINING)
       ? NAVBAR_CONTENT.groupsId
       : null;
+  const currentId =
+    pathname === ROUTES.VISIT_CONTACT
+      ? ROUTES.VISIT_CONTACT
+      : items.find(
+          ({ id, href }) =>
+            id === activeNavigationId ||
+            href === pathname ||
+            (href === ROUTES.WHATS_ON && isSeasonalDetail),
+        )?.id;
+  const openId = openItem?.id;
+  const openIndex = items.findIndex(({ id }) => id === openItem?.id);
+
+  useLayoutEffect(() => {
+    const navigation = navigationRef.current;
+    const indicator = indicatorRef.current;
+    const backdrop = backdropRef.current;
+    if (!navigation || !indicator || !backdrop) return;
+    const trigger = Array.from(
+      navigation
+        .closest("header")
+        ?.querySelectorAll<HTMLElement>("[data-navigation-id]") ?? [],
+    ).find((node) => node.dataset.navigationId === currentId);
+    const panel = openId
+      ? navigation.querySelector<HTMLElement>(
+          '[data-navigation-panel][aria-hidden="false"]',
+        )
+      : null;
+    let readyFrame = 0;
+
+    function measure() {
+      if (trigger && isDesktop) {
+        const bounds = trigger.getBoundingClientRect();
+        const headerLeft =
+          navigation?.closest("header")?.getBoundingClientRect().left ?? 0;
+        indicator?.style.setProperty(
+          "transform",
+          `translateX(${bounds.left - headerLeft}px)`,
+        );
+        indicator?.style.setProperty("width", `${bounds.width}px`);
+      }
+      backdrop?.style.setProperty(
+        "height",
+        `${isDesktop && panel ? panel.getBoundingClientRect().height : 0}px`,
+      );
+    }
+
+    measure();
+    if (trigger && isDesktop) {
+      readyFrame = requestAnimationFrame(() => {
+        indicator.dataset.ready = "true";
+      });
+    }
+    const observer = new ResizeObserver(measure);
+    observer.observe(navigation);
+    if (trigger) observer.observe(trigger);
+    if (panel) observer.observe(panel);
+    return () => {
+      cancelAnimationFrame(readyFrame);
+      observer.disconnect();
+    };
+  }, [currentId, openId, isDesktop]);
 
   function cancelClose() {
     if (closeTimerRef.current !== null) {
@@ -41,7 +105,9 @@ export function DesktopNavigation({ items }: IDesktopNavigationProps) {
   }
 
   useEffect(() => {
-    if (!isDesktop) setOpenItem(null);
+    if (!isDesktop) {
+      setOpenItem(null);
+    }
   }, [isDesktop]);
 
   useEffect(() => {
@@ -81,14 +147,32 @@ export function DesktopNavigation({ items }: IDesktopNavigationProps) {
 
   return (
     <ul
+      ref={navigationRef}
       data-navbar-primary
-      className="hidden h-full flex-1 items-center gap-[30px] xl:flex"
+      className={cn(
+        styles.navigation,
+        "hidden h-full flex-1 items-center gap-[30px] xl:flex",
+      )}
       onClickCapture={(event) => {
         if (event.target instanceof Element && event.target.closest("a[href]"))
           setOpenItem(null);
       }}
     >
-      {items.map((item) => {
+      <li
+        aria-hidden="true"
+        data-navbar-backdrop
+        ref={backdropRef}
+        data-open={Boolean(openItem) && isDesktop}
+        className={styles.backdrop}
+      />
+      <li
+        aria-hidden="true"
+        data-navbar-indicator
+        ref={indicatorRef}
+        data-visible={Boolean(currentId) && isDesktop}
+        className={styles.indicator}
+      />
+      {items.map((item, index) => {
         const { id, href, content } = item;
         const isOpen = openItem?.id === id;
         const panelId = `${navigationId}-${encodeURIComponent(id)}`;
@@ -121,7 +205,9 @@ export function DesktopNavigation({ items }: IDesktopNavigationProps) {
                 }, HOVER_CLOSE_DELAY_MS);
               }
             }}
-            onFocus={cancelClose}
+            onFocus={() => {
+              cancelClose();
+            }}
             onBlur={(event) => {
               if (!event.currentTarget.contains(event.relatedTarget)) {
                 setOpenItem((current) => (current?.id === id ? null : current));
@@ -131,11 +217,7 @@ export function DesktopNavigation({ items }: IDesktopNavigationProps) {
             <DesktopNavigationTrigger
               item={item}
               isOpen={isOpen}
-              isActive={
-                activeNavigationId === id ||
-                href === pathname ||
-                (href === ROUTES.WHATS_ON && isSeasonalDetail)
-              }
+              isActive={currentId === id}
               isCurrent={href === pathname}
               panelId={panelId}
               onFocus={() =>
@@ -153,11 +235,13 @@ export function DesktopNavigation({ items }: IDesktopNavigationProps) {
             {content && (
               <div
                 id={panelId}
+                data-navigation-panel
+                data-direction={index > openIndex ? "right" : "left"}
                 aria-hidden={!isOpen}
                 inert={!isOpen}
                 className={cn(styles.panel, isOpen && styles.open)}
               >
-                {content}
+                <div className={styles.content}>{content}</div>
               </div>
             )}
           </li>

@@ -18,6 +18,8 @@ describe("client environment mapping", () => {
 
   // Next only inlines literal process.env.NEXT_PUBLIC_* reads into the browser.
   it.each(names)("reads %s as a literal for the browser bundle", (name) => {
-    expect(source).toContain(`${name}: process.env.${name}`);
+    expect(source).toMatch(
+      new RegExp(`${name}:\\s*process\\.env\\.${name}\\b`, "u"),
+    );
   });
 });

@@ -6,6 +6,7 @@ import {
 } from "@/components/app/atoms/tracked-link";
 import styles from "@/components/app/compounds/visit-contact.module.css";
 import { VisitContactDetails } from "@/components/app/compounds/visit-contact-details";
+import { VisitLocationMap } from "@/components/app/molecules/visit-location-map";
 import { Button } from "@/components/ui/button";
 import {
   RESTAURANT_CONTACT,
@@ -52,7 +53,7 @@ function VisitHero() {
         />
       </div>
       <div className="site-container">
-        <div className={styles.heroCopy}>
+        <div data-scroll-reveal className={styles.heroCopy}>
           <p className={styles.eyebrow}>{VISIT_CONTACT_CONTENT.hero.eyebrow}</p>
           <h1 id="visit-title">{VISIT_CONTACT_CONTENT.hero.heading}</h1>
           <p className={styles.heroAddress}>
@@ -70,6 +71,8 @@ function VisitHero() {
             >
               <TrackedAnchor
                 href={VISIT_CONTACT_CONTENT.directionsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
                 interaction={{
                   event: GA4Event.DirectionsClick,
                   placement: "visit_contact",
@@ -94,7 +97,7 @@ function VisitContactInformation() {
       aria-label="Opening hours, address and contact"
     >
       <div className={cn("site-container", styles.contactGrid)}>
-        <div className={styles.contactItem}>
+        <div data-scroll-reveal className={styles.contactItem}>
           <Image src="/peploes-visit-clock.svg" alt="" width={48} height={48} />
           <div>
             <h2>{VISIT_CONTACT_CONTENT.contact.hoursHeading}</h2>
@@ -108,7 +111,7 @@ function VisitContactInformation() {
             </dl>
           </div>
         </div>
-        <div className={styles.contactItem}>
+        <div data-scroll-reveal className={styles.contactItem}>
           <Image
             src="/peploes-events-location.svg"
             alt=""
@@ -120,7 +123,7 @@ function VisitContactInformation() {
             <address>{VISIT_CONTACT_CONTENT.contact.address}</address>
           </div>
         </div>
-        <div className={styles.contactItem}>
+        <div data-scroll-reveal className={styles.contactItem}>
           <Image
             src="/peploes-visit-contact.svg"
             alt=""
@@ -162,7 +165,7 @@ function VisitLocation() {
   return (
     <section className={cn("site-container", styles.location)} id="find-us">
       <div className={styles.locationGrid}>
-        <div className={styles.locationCopy}>
+        <div data-scroll-reveal className={styles.locationCopy}>
           <p className={styles.eyebrow}>
             {VISIT_CONTACT_CONTENT.location.eyebrow}
           </p>
@@ -173,24 +176,9 @@ function VisitLocation() {
             {VISIT_CONTACT_CONTENT.location.description}
           </p>
         </div>
-        <TrackedAnchor
-          interaction={{
-            event: GA4Event.DirectionsClick,
-            placement: "visit_contact",
-          }}
-          href={VISIT_CONTACT_CONTENT.directionsUrl}
-          className={styles.map}
-          aria-label="Get directions to Peploe’s on Google Maps"
-        >
-          <Image
-            {...VISIT_CONTACT_CONTENT.location.map}
-            fill
-            sizes="(min-width: 1584px) 844px, (min-width: 1280px) 53vw, (min-width: 1024px) 52vw, calc(100vw - 48px)"
-            className={styles.cover}
-          />
-        </TrackedAnchor>
+        <VisitLocationMap />
       </div>
-      <div className={styles.transport}>
+      <div data-scroll-reveal className={styles.transport}>
         <h3 className={styles.eyebrow}>
           {VISIT_CONTACT_CONTENT.location.transportHeading}
         </h3>
@@ -200,9 +188,7 @@ function VisitLocation() {
               <Image src={item.icon} alt="" width={48} height={48} />
               <div>
                 <h4>{item.heading}</h4>
-                <p className={cn("accent" in item && styles.accent)}>
-                  {item.description}
-                </p>
+                <p>{item.description}</p>
               </div>
             </li>
           ))}
@@ -222,7 +208,7 @@ function VisitClosing() {
         className={styles.cover}
       />
       <div className="site-container">
-        <div className={styles.closingCopy}>
+        <div data-scroll-reveal className={styles.closingCopy}>
           <p className={styles.eyebrow}>
             {VISIT_CONTACT_CONTENT.closing.eyebrow}
           </p>

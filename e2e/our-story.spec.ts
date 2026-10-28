@@ -78,6 +78,9 @@ test("archive copy and photograph stay separate at responsive widths", async ({
 test("the home family story card opens Our Story", async ({ page }) => {
   await page.goto("/");
   await page
+    .getByRole("link", { name: "Discover Our Story", exact: true })
+    .focus();
+  await page
     .getByRole("main")
     .getByRole("link", { name: "Discover Our Story", exact: true })
     .click();
@@ -119,7 +122,16 @@ test("Our Story navigation closes the mobile menu and shows its desktop active s
     await expect(page).toHaveURL("/our-story");
     await expect(story).toHaveAttribute("aria-current", "page");
     await expect(story).toHaveCSS("color", "rgb(122, 30, 36)");
-    await expect(story).toHaveCSS("text-decoration-line", "underline");
+    const indicator = navigation.locator("[data-navbar-indicator]");
+    await expect(indicator).toHaveCSS("opacity", "1");
+    const storyBounds = await story.boundingBox();
+    expect(storyBounds).not.toBeNull();
+    await expect
+      .poll(() => indicator.boundingBox())
+      .toMatchObject({
+        x: storyBounds?.x,
+        width: storyBounds?.width,
+      });
 
     await navigation.getByRole("link", { name: "Peploe’s home" }).click();
     await page.mouse.move(0, 0);

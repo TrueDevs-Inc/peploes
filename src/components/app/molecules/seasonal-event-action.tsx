@@ -21,6 +21,7 @@ export function SeasonalEventAction({
 
   return href ? (
     <Button
+      data-card-action
       asChild
       variant="brand-text"
       className={cn(styles.textAction, className)}

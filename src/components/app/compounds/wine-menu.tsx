@@ -116,6 +116,7 @@ export function WineMenu({ menu }: IWineMenuProps) {
               className="border-t border-soft-stone pt-8 pb-(--wine-mobile-bottom-padding) xl:pt-9 xl:pb-(--wine-bottom-padding) [section:first-of-type_&]:border-t-0"
             >
               <h2
+                data-scroll-reveal
                 id={`wine-${section._key}-heading`}
                 className={cn(
                   "mb-6 flex items-center xl:mb-1 gap-2.5 text-sm tracking-[0.08em] text-peploe-burgundy uppercase before:h-0.5 before:w-12 before:bg-peploe-burgundy",
@@ -125,7 +126,10 @@ export function WineMenu({ menu }: IWineMenuProps) {
                 {section.heading}
               </h2>
               {section.description && (
-                <p className="mb-2.5 text-base leading-6 text-text-secondary xl:mb-10 xl:text-lg">
+                <p
+                  data-scroll-reveal
+                  className="mb-2.5 text-base leading-6 text-text-secondary xl:mb-10 xl:text-lg"
+                >
                   {section.description}
                 </p>
               )}
