@@ -1627,11 +1627,13 @@ export interface IGuestDetailsSending {
   sending: boolean;
   formError: string | null;
   fieldErrors: TTableBookingDetailsErrors;
+  unsure: IHoldSummary | null;
   send: (
     details: ITableBookingGuestDetails,
     hold: IHoldSummary,
     onReply: (reply: TGuestDetailsView) => void,
   ) => void;
+  settle: (check: TBookingStatusCheck) => void;
 }
 
 export interface ITableBookPageProps {
@@ -1714,6 +1716,7 @@ export type TPaymentStep = Exclude<TGuestDetailsView, { kind: "confirmed" }>;
 
 export type TBookingStatusCheck =
   | { kind: "checking" }
+  | { kind: "pending" }
   | { kind: "confirmed"; reference: string; summary: IHoldSummary }
   | { kind: "failed" }
   | { kind: "unknown" };

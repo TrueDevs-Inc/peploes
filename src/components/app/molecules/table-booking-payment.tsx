@@ -1,6 +1,10 @@
 "use client";
 
-import type { Appearance, StripePaymentElement } from "@stripe/stripe-js";
+import type {
+  Appearance,
+  Stripe,
+  StripePaymentElement,
+} from "@stripe/stripe-js";
 import { loadStripe } from "@stripe/stripe-js/pure";
 import { ArrowRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -16,6 +20,8 @@ import type {
 } from "@/lib/types";
 
 const copy = TABLE_BOOKING_CONTENT.payment;
+const PAID_STATUSES = new Set(["succeeded", "processing", "requires_capture"]);
+const CARD_PROBLEMS = new Set(["card_error", "validation_error"]);
 
 function formatAmount(amount: number, currency: string): string {
   return new Intl.NumberFormat("en-IE", {
@@ -24,24 +30,37 @@ function formatAmount(amount: number, currency: string): string {
   }).format(amount / 100);
 }
 
-async function prepare(step: TPaymentStep): Promise<IStripeReady | string> {
+async function intentOf(stripe: Stripe, step: TPaymentStep) {
+  const { clientSecret } = step.stripe;
+  if (step.kind === "card") {
+    const { setupIntent } = await stripe.retrieveSetupIntent(clientSecret);
+    return setupIntent
+      ? { status: setupIntent.status, amount: step.amountText }
+      : null;
+  }
+  const { paymentIntent } = await stripe.retrievePaymentIntent(clientSecret);
+  return paymentIntent
+    ? {
+        status: paymentIntent.status,
+        amount: formatAmount(paymentIntent.amount, paymentIntent.currency),
+      }
+    : null;
+}
+
+async function prepare(
+  step: TPaymentStep,
+): Promise<IStripeReady | "paid" | null> {
   const { publishableKey, accountId, clientSecret } = step.stripe;
   const stripe = await loadStripe(publishableKey, { stripeAccount: accountId });
-  if (!stripe) return copy.loadFailed;
-  let amount = step.amountText;
-  if (step.kind === "payment") {
-    const intent = await stripe.retrievePaymentIntent(clientSecret);
-    if (!intent.paymentIntent) return intent.error?.message ?? copy.loadFailed;
-    amount = formatAmount(
-      intent.paymentIntent.amount,
-      intent.paymentIntent.currency,
-    );
-  }
+  if (!stripe) return null;
+  const intent = await intentOf(stripe, step);
+  if (!intent) return null;
+  if (PAID_STATUSES.has(intent.status)) return "paid";
   const elements = stripe.elements({
     clientSecret,
     appearance: TABLE_BOOKING_CONTENT.stripeAppearance as Appearance,
   });
-  return { stripe, elements, amount };
+  return { stripe, elements, amount: intent.amount };
 }
 
 function actionLabel(step: TPaymentStep, amount: string, paying: boolean) {
@@ -89,11 +108,15 @@ function PaymentForm({
     let active = true;
     let element: StripePaymentElement | undefined;
     prepare(step)
-      .catch(() => copy.loadFailed)
+      .catch(() => null)
       .then((prepared) => {
         if (!active) return;
-        if (typeof prepared === "string") {
-          setError(prepared);
+        if (prepared === "paid") {
+          onPaid();
+          return;
+        }
+        if (!prepared) {
+          setError(copy.loadFailed);
           setLoadFailed(true);
           return;
         }
@@ -107,7 +130,7 @@ function PaymentForm({
       active = false;
       element?.destroy();
     };
-  }, [step]);
+  }, [step, onPaid]);
 
   async function pay() {
     if (!ready) return;
@@ -123,12 +146,19 @@ function PaymentForm({
       step.kind === "payment"
         ? await ready.stripe.confirmPayment(options)
         : await ready.stripe.confirmSetup(options);
-    if (result.error) {
-      setError(result.error.message ?? copy.failed);
-      setPaying(false);
+    if (!result.error) {
+      onPaid();
       return;
     }
-    onPaid();
+    if (!CARD_PROBLEMS.has(result.error.type)) {
+      const intent = await intentOf(ready.stripe, step).catch(() => null);
+      if (!intent || PAID_STATUSES.has(intent.status)) {
+        onPaid();
+        return;
+      }
+    }
+    setError(result.error.message ?? copy.failed);
+    setPaying(false);
   }
 
   return (

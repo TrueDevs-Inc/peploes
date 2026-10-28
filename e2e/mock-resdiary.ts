@@ -142,18 +142,31 @@ async function availableDates(body: string): Promise<Response> {
   return Response.json({ AvailableDates: days });
 }
 
+const booked = new Set<number>();
+
+function holdState(holdId: number): string {
+  if (holds.get(holdId)?.time === FAKE_RESDIARY.failingStatusTime) {
+    return "Failed";
+  }
+  return booked.has(holdId) ? "Confirmed" : "Pending";
+}
+
 function holdStatus(pathname: string): Response {
   const holdId = Number(pathname.split("/").at(-1));
-  const failed = holds.get(holdId)?.time === FAKE_RESDIARY.failingStatusTime;
-  return Response.json({
-    Status: failed ? "Failed" : "Pending",
-    Booking: null,
-  });
+  return Response.json({ Status: holdState(holdId), Booking: null });
 }
 
 let bookings = 0;
 
-function guestDetails(): Response {
+function guestDetails(body: string): Response {
+  const request = JSON.parse(body) as {
+    BookingId: number;
+    Customer: { Email: string };
+  };
+  if (request.Customer.Email === FAKE_RESDIARY.lostReplyEmail) {
+    return new Response(null, { status: 500 });
+  }
+  booked.add(request.BookingId);
   bookings += 1;
   return Response.json({
     Status: "Success",

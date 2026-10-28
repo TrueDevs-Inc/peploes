@@ -80,6 +80,10 @@ the page to them.
   seconds after the click.
 - If the hold fails, the times step shows the server's message and the guest can
   pick a time and continue again.
+- If the request gets no answer at all (a dropped connection), the times step
+  says "We couldn't reach our booking system. Check your connection and try
+  again, or call us on …" and Continue works again. The rest of the page stays
+  as it was; it never falls back to the error page.
 - Going back and choosing another time, date or party size moves the same hold:
   the reference stays, the revision goes up and the timer carries on.
 - The tab keeps the choice, `holdReference` and `holdRevision` in
@@ -101,6 +105,23 @@ the page to them.
   other error shows above the buttons. What the guest typed is kept.
 - A `confirmed` reply shows the confirmation with ResDiary's booking reference.
   A `payment` or `card` reply shows the Stripe step.
+- If the reply is lost (a dropped connection) or the server answers
+  `OutcomeUnknown`, the page doesn't offer Confirm again straight away. It says
+  "Checking whether your booking went through…" and asks `hold-status`:
+  - `confirmed`: shows the confirmation;
+  - `pending`: the details didn't land, so the form comes back with "We couldn't
+    tell whether your details reached us. Your table is still held, so please
+    press Confirm Reservation again." Sending again is safe because a hold turns
+    into one booking at most, and the server resends once in the same case;
+  - `failed` or `expired`: the hold-ran-out message and "Choose a Time Again";
+  - no answer: keeps asking every 2 seconds, and after 60 seconds says "Hang
+    tight! We're still confirming booking …" with the reference and the phone
+    number. Like the payment message, it doesn't promise an email.
+  The check belongs to the hold the details were sent for. If the guest goes
+  back and moves the hold meanwhile, the form shows for the new hold instead.
+- If the server's cookie change reaches the browser but the reply's body
+  doesn't, `hold-status` finds no hold and the check ends in that 60-second
+  message. The booking itself is unaffected.
 
 ## Paying a deposit or saving a card
 
@@ -128,6 +149,17 @@ the page to them.
   sending the details to ResDiary again. A
   declined card shows Stripe's message and the guest can try again. 3-D Secure
   opens Stripe's own check.
+- Before showing the card form, the page asks Stripe for the PaymentIntent's
+  (or SetupIntent's) status. If Stripe already took the payment (`succeeded`,
+  `processing` or `requires_capture`), for example after a reload during
+  payment, the page goes straight to checking ResDiary and never shows Pay
+  again.
+- If Stripe's reply to Pay is an error other than a card problem
+  (`card_error` or `validation_error`), such as a dropped connection, the page
+  asks Stripe for the payment's status first. Paid: it checks ResDiary. Not
+  paid: it shows Stripe's message and Pay works again. Stripe unreachable: it
+  checks ResDiary, which ends in the 60-second "Hang tight" message if nothing
+  was taken.
 - When the Stripe step appears, the tab saves it in `sessionStorage` under
   `peploes:booking-payment`. If a bank takes the guest to its own page, Stripe
   sends them back to `/book-a-table` with `payment_intent` (or `setup_intent`),
@@ -206,7 +238,9 @@ after ResDiary confirms it.
   may have been charged, with the phone number.
 - `pending`, `ServiceUnavailable` or `NotFound`: keep checking.
 - After 60 seconds without `confirmed`, stop and say "Hang tight! We're still
-  confirming booking …" with the reference, so the guest can quote it. Never say
+  confirming booking …" with the reference, so the guest can quote it. The 60
+  seconds run on their own timer, so a status request that never answers still
+  ends there, and a confirmation that arrives later still shows. Never say
   the booking failed, and never offer to pay again. This copy does not promise
   an email, because Peploe's live account's emails are not yet verified.
 - Make this "payment taken, not yet confirmed" state calm and reassuring, not
@@ -247,7 +281,9 @@ Not yet verified:
   doesn't mention the deposit.
 - **A confirmation that takes longer than 60 seconds.** The slowest seen was
   about 5 seconds.
-- **A completed 3-D Secure challenge.**
+- **A card guarantee's status check.** The page asks Stripe for the
+  SetupIntent's status the same way, but the sandbox has no card-guarantee
+  time to test it on.
 
 ### Resolving an unknown outcome
 

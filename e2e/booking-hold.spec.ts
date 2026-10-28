@@ -69,3 +69,34 @@ test("a failed hold shows the server's message and lets the guest try another ti
   await expect(reservations.getByRole("timer")).toBeVisible();
   await expect(reservations.getByRole("alert")).toHaveCount(0);
 });
+
+test("if the connection drops while holding, the panel says so and Continue works again", async ({
+  page,
+}) => {
+  const reservations = await openBooking(page);
+  await chooseDate(reservations, laterFreeDate());
+  await findTable(reservations);
+  await page.route("**/book-a-table", (route) =>
+    route.request().method() === "POST"
+      ? route.abort("internetdisconnected")
+      : route.fallback(),
+  );
+  await reservations
+    .getByRole("button", { name: label("18:00"), exact: true })
+    .click();
+  const next = reservations.getByRole("button", {
+    name: "Continue",
+    exact: true,
+  });
+  await next.click();
+
+  await expect(reservations.getByRole("alert")).toHaveText(
+    "We couldn't reach our booking system. Check your connection and try again, or call us on +353 1 676 3144.",
+    { timeout: 10_000 },
+  );
+  await page.unroute("**/book-a-table");
+  await next.click();
+  await expect(reservations.getByRole("timer")).toBeVisible({
+    timeout: 10_000,
+  });
+});

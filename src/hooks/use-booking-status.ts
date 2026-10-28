@@ -14,8 +14,11 @@ import type {
 
 function nextCheck(
   result: IHoldStatusResult | null,
-  startedAt: number,
+  untilPending: boolean,
 ): TBookingStatusCheck | null {
+  if (untilPending && result?.status === "pending") {
+    return { kind: "pending" };
+  }
   if (result?.status === "confirmed") {
     return {
       kind: "confirmed",
@@ -26,14 +29,12 @@ function nextCheck(
   if (result?.status === "failed" || result?.status === "expired") {
     return { kind: "failed" };
   }
-  if (performance.now() - startedAt >= BOOKING_STATUS_CHECK.giveUpMs) {
-    return { kind: "unknown" };
-  }
   return null;
 }
 
 export function useBookingStatus(
   hold: IHoldSummary | null,
+  untilPending = false,
 ): TBookingStatusCheck {
   const [check, setCheck] = useState<TBookingStatusCheck>({
     kind: "checking",
@@ -42,13 +43,18 @@ export function useBookingStatus(
   useEffect(() => {
     if (!hold) return;
     let active = true;
+    let gaveUp = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    const startedAt = performance.now();
     const query = new URLSearchParams({
       holdReference: hold.reference,
       holdRevision: String(hold.revision),
     });
     setCheck({ kind: "checking" });
+    const deadline = setTimeout(() => {
+      gaveUp = true;
+      clearTimeout(timer);
+      setCheck({ kind: "unknown" });
+    }, BOOKING_STATUS_CHECK.giveUpMs);
 
     async function ask() {
       const reply = await fetcher<never, TBookingResponse<IHoldStatusResult>>({
@@ -58,11 +64,12 @@ export function useBookingStatus(
       if (!active) return;
       const next = nextCheck(
         reply.data?.ok ? reply.data.data : null,
-        startedAt,
+        untilPending,
       );
       if (next) {
+        clearTimeout(deadline);
         setCheck(next);
-      } else {
+      } else if (!gaveUp) {
         timer = setTimeout(ask, BOOKING_STATUS_CHECK.everyMs);
       }
     }
@@ -71,8 +78,9 @@ export function useBookingStatus(
     return () => {
       active = false;
       clearTimeout(timer);
+      clearTimeout(deadline);
     };
-  }, [hold]);
+  }, [hold, untilPending]);
 
   return check;
 }

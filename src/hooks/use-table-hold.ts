@@ -8,6 +8,8 @@ import {
   removeSessionStorage,
   setSessionStorage,
 } from "@/helpers/storage";
+import { TABLE_BOOKING_CONTENT } from "@/lib/constants/table-booking";
+import { tryCatch } from "@/lib/errors";
 import type {
   IActiveHold,
   IHoldChoice,
@@ -33,11 +35,17 @@ export function useTableHold(): ITableHold {
       startTransition(async () => {
         setError(null);
         const reference = holdReference ?? storedHold()?.holdReference;
-        const reply = await holdTable({
-          ...choice,
-          offer: { kind: "standard" },
-          ...(reference && { holdReference: reference }),
-        });
+        const { data: reply } = await tryCatch(
+          holdTable({
+            ...choice,
+            offer: { kind: "standard" },
+            ...(reference && { holdReference: reference }),
+          }),
+        );
+        if (!reply) {
+          setError(TABLE_BOOKING_CONTENT.connectionLost);
+          return;
+        }
         if (!reply.ok) {
           setError(reply.error.message);
           return;

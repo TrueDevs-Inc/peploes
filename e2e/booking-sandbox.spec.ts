@@ -930,3 +930,49 @@ test("a reload on the payment step brings the card form back without sending the
     await cleanUp(held);
   }
 });
+
+test("a reload after Stripe has taken the deposit shows ResDiary's confirmation, not the card form", async ({
+  page,
+}) => {
+  test.setTimeout(240_000);
+  const { intent } = await depositIntent(page, "Paid Reload");
+  const held = await heldReference(page);
+  try {
+    expect(await payOutsideThePage(intent)).toBe("succeeded");
+    await page.reload();
+    const reservations = page.getByRole("region", {
+      name: "Table reservations",
+    });
+    expect(await confirmedReference(reservations)).toBe(held);
+    expect((await sandboxBooking(held, TEST_EMAIL)).BookingStatus).toBe(
+      "Booked",
+    );
+  } finally {
+    await cleanUp(held);
+  }
+});
+
+test("if Stripe's reply to Pay is lost after the charge, the page confirms the booking instead of offering Pay again", async ({
+  page,
+}) => {
+  test.setTimeout(240_000);
+  const { reservations, pay } = await depositStep(page, "Lost Stripe Reply");
+  const held = await heldReference(page);
+  try {
+    await page.route(
+      "https://api.stripe.com/v1/payment_intents/*/confirm",
+      async (route) => {
+        await route.fetch();
+        await route.abort("connectionreset");
+      },
+    );
+    await enterCard(reservations, "4242 4242 4242 4242");
+    await pay.click();
+    expect(await confirmedReference(reservations)).toBe(held);
+    const booking = await sandboxBooking(held, TEST_EMAIL);
+    expect(booking.BookingStatus).toBe("Booked");
+    expect(booking.DepositPaidAmount).toBeGreaterThan(0);
+  } finally {
+    await cleanUp(held);
+  }
+});

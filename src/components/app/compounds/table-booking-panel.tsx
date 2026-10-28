@@ -165,12 +165,12 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
     });
   }
 
-  function paymentAccepted() {
+  const paymentAccepted = useCallback(() => {
     if (!payment) return;
     setSessionStorage(PAID_KEY, payment.summary);
     removeSessionStorage(PAYMENT_KEY);
     setPaid(payment.summary);
-  }
+  }, [payment]);
 
   function holdChosenTime() {
     if (!time) return;
@@ -402,6 +402,29 @@ function BookingConfirmation({
   );
 }
 
+interface IDetailsCheckProps {
+  hold: IHoldSummary;
+  onSettled: (check: TBookingStatusCheck) => void;
+}
+
+function DetailsCheck({ hold, onSettled }: IDetailsCheckProps) {
+  const check = useBookingStatus(hold, true);
+
+  useEffect(() => {
+    if (check.kind !== "checking" && check.kind !== "unknown") {
+      onSettled(check);
+    }
+  }, [check, onSettled]);
+
+  return (
+    <p role="status" className={styles.flowDescription}>
+      {check.kind === "unknown"
+        ? content.details.stillConfirming(hold.reference)
+        : content.details.checking}
+    </p>
+  );
+}
+
 function PaymentOutcome({
   check,
   reference,
@@ -603,6 +626,8 @@ function HeldStep({
   onContinue,
 }: ITableBookingHeldStepProps) {
   const check = useBookingStatus(paid);
+  const { settle } = guest;
+  const { release } = hold;
 
   useEffect(() => {
     if (check.kind === "confirmed") {
@@ -610,6 +635,24 @@ function HeldStep({
     }
   }, [check, onConfirmed]);
 
+  const settleDetails = useCallback(
+    (detailsCheck: TBookingStatusCheck) => {
+      settle(detailsCheck);
+      if (detailsCheck.kind === "confirmed") {
+        onConfirmed({
+          reference: detailsCheck.reference,
+          summary: detailsCheck.summary,
+        });
+      } else if (detailsCheck.kind === "failed") {
+        release();
+      }
+    },
+    [settle, release, onConfirmed],
+  );
+
+  if (guest.unsure && guest.unsure === hold.active?.summary) {
+    return <DetailsCheck hold={guest.unsure} onSettled={settleDetails} />;
+  }
   if (paid) {
     return <PaymentOutcome check={check} reference={paid.reference} />;
   }

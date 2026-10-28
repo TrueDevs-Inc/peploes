@@ -24,6 +24,7 @@ export const TABLE_BOOKING_CONTENT = {
   action: "Find a Table",
   timesLabel: "Available times",
   findingTimes: "Finding tables…",
+  connectionLost: `We couldn't reach our booking system. Check your connection and try again, or call us on ${RESTAURANT_CONTACT.phoneLabel}.`,
   tableUntil: (time: string) => `Table until ${time}`,
   returnTime: {
     heading: "This table has a return time",
@@ -48,6 +49,11 @@ export const TABLE_BOOKING_CONTENT = {
     action: "Confirm Reservation",
     sending: "Confirming…",
     countryCode: "Country code",
+    checking: "Checking whether your booking went through…",
+    resend:
+      "We couldn't tell whether your details reached us. Your table is still held, so please press Confirm Reservation again.",
+    stillConfirming: (reference: string) =>
+      `Hang tight! We're still confirming booking ${reference}. If you hear nothing in a few minutes, please call us on ${RESTAURANT_CONTACT.phoneLabel} and quote this reference.`,
   },
   countryCodes: [
     { code: "353", label: "IE +353" },

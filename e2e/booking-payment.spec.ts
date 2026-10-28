@@ -63,6 +63,23 @@ test("when ResDiary stays pending after payment the page keeps calm and gives th
   );
 });
 
+test("a status check that never answers still gives the reference and phone after a minute", async ({
+  page,
+}) => {
+  await page.route("**/api/bookings/hold-status?**", () => undefined);
+  const { reservations, reference } = await paidFor(page, "18:00");
+
+  await expect(
+    reservations.getByText("Confirming your booking…", { exact: true }),
+  ).toBeVisible();
+  await page.clock.fastForward("01:01");
+  await expect(
+    reservations.getByText(
+      `Hang tight! We're still confirming booking ${reference}.`,
+    ),
+  ).toBeVisible({ timeout: 10_000 });
+});
+
 test("when ResDiary reports the booking failed after payment the page says so with the phone and reference", async ({
   page,
 }) => {

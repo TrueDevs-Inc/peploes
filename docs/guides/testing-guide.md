@@ -118,7 +118,14 @@ ClosedDates, AvailabilityForDateRangeV2 and AvailabilitySearch for `https://resd
 `e2e/booking-fixtures.ts`, with dates counted from today in Dublin, and fails on
 any other ResDiary request. Its availability depends on the party size: some
 sizes have full days, one answers slowly and one fails, so the tests can cover
-loading, failure and replies that arrive out of order. The second server points at `https://resdiary-down.e2e.test`, which
+loading, failure and replies that arrive out of order. Holds, hold status and
+guest details are faked too: some times fail or answer slowly, a hold whose
+details were accepted reads back as Confirmed, and the email address in
+`FAKE_RESDIARY.lostReplyEmail` gets a 500, so the server sees an unclear reply.
+To cover a reply lost on the way to the browser, a test aborts the page's own
+request with `page.route`. When the server should still act first, the test
+calls `route.fetch()` and then puts the cookies back, because `route.fetch()`
+applies the server's cookie changes, which a lost reply never would. The second server points at `https://resdiary-down.e2e.test`, which
 waits two seconds and answers 503, so `e2e/booking-unavailable.spec.ts` covers a
 slow, failing ResDiary. It needs its own server because the provider caches
 settings for five minutes. Playwright sets every `RESDIARY_*` value and a
