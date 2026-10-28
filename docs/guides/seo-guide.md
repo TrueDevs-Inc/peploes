@@ -47,7 +47,7 @@ describes.
 
 ## Robots and sitemap
 
-Outside the live site (`isLiveSite()` false: Vercel previews and local builds),
+Outside the live site (`isLiveSite()` false: Vercel previews and local development),
 `robots.txt` allows crawling and every response carries `X-Robots-Tag: noindex`
 (`next.config.ts`) while page metadata is `noindex`. `next.config.ts` cannot
 import `src/lib/env.ts`, so it repeats the `isLiveSite()` rule; change both
@@ -88,12 +88,11 @@ pages (home, What's On, Our Story, Visit & Contact), the seven menus and the fou
 private dining pages, each with the description from its own page metadata, then
 published What's On entries labelled by kind with their dates, then the sitemap
 and robots links. The CMS client fetches with no-store, so the route stays dynamic and sets a one-hour CDN `Cache-Control` header. If the CMS fails it serves the
-static sections. `/book-a-table` is left out while it is `noindex`. The root layout points agents to it with `rel="describedby"`.
+static sections with `no-store`, so the fallback is not cached. `/book-a-table` is left out while it is `noindex`. The root layout points agents to it with `rel="describedby"`.
 
 Add a public page to `llms.txt` only when the URL exists and its description
 matches the page. Do not copy the sitemap, claim unsupported features, or treat
-`llms.txt` as a ranking signal. `/book-a-table` is listed because every booking
-call to action links to it, although the page is `noindex` for now.
+`llms.txt` as a ranking signal.
 
 ## Streaming metadata and AI fetchers
 

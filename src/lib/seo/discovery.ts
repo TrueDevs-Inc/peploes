@@ -172,6 +172,13 @@ const LLMS_ENTRY_KIND_LABELS = {
   menuMoment: "Menu moment",
 } as const;
 
+function toMarkdownText(value: string): string {
+  return value
+    .replace(/\s+/gu, " ")
+    .trim()
+    .replace(/[\\`[\]]/gu, "\\$&");
+}
+
 function formatEntryDetail(entry: ILlmsEntry): string {
   const dates =
     entry.endDate && entry.endDate !== entry.date
@@ -201,7 +208,7 @@ export function buildLlmsText(
         "",
         ...entries.map(
           (entry) =>
-            `- [${entry.title}](${getAbsolutePublicUrl(siteUrl, seasonalPath(entry.slug))}): ${entry.summary} ${formatEntryDetail(entry)}`,
+            `- [${toMarkdownText(entry.title)}](${getAbsolutePublicUrl(siteUrl, seasonalPath(entry.slug))}): ${toMarkdownText(entry.summary)} ${formatEntryDetail(entry)}`,
         ),
         "",
       ]

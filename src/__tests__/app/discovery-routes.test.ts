@@ -64,6 +64,7 @@ describe("llms.txt route", function llmsRouteTests() {
     const body = await response.text();
 
     expect(response.status).toBe(200);
+    expect(response.headers.get("Cache-Control")).toBe("no-store");
     expect(body).toContain("## Menus");
     expect(body).not.toContain("What’s On entries");
   });

@@ -1,4 +1,4 @@
-import { HTTP_CONTENT_TYPE } from "@/lib/constants";
+import { HTTP_CONTENT_TYPE, NO_STORE_HEADERS } from "@/lib/constants";
 import { buildLlmsText, getSiteUrl } from "@/lib/seo";
 import { getSeasonalEntries } from "@/services/seasonal";
 
@@ -13,7 +13,9 @@ export async function GET() {
   return new Response(buildLlmsText(getSiteUrl(), entries), {
     headers: {
       "Content-Type": `${HTTP_CONTENT_TYPE.MARKDOWN}; charset=utf-8`,
-      "Cache-Control": CACHE_CONTROL,
+      "Cache-Control": result.isOk()
+        ? CACHE_CONTROL
+        : NO_STORE_HEADERS["Cache-Control"],
     },
   });
 }

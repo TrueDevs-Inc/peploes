@@ -130,10 +130,23 @@ describe("noindex outside the live site", function nonLiveMetadataTests() {
 
   const config = { title: "Page", description: "Page.", url: "/page" };
 
-  it("marks pages noindex on previews and local builds", function previewTest() {
+  it("marks Vercel previews noindex", async function previewTest() {
+    vi.resetModules();
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("VERCEL_ENV", "preview");
-    expect(buildSeoMetadata(config).robots).toEqual({
+    const { buildSeoMetadata: buildPreview } = await import("@/lib/seo");
+    expect(buildPreview(config).robots).toEqual({
+      index: false,
+      follow: true,
+    });
+  });
+
+  it("marks local development noindex", async function localTest() {
+    vi.resetModules();
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("VERCEL_ENV", undefined);
+    const { buildSeoMetadata: buildLocal } = await import("@/lib/seo");
+    expect(buildLocal(config).robots).toEqual({
       index: false,
       follow: true,
     });

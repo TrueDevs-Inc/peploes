@@ -43,8 +43,8 @@ test("metadata of a CMS-driven page reaches AI fetchers in the head", async ({
   const html = await response.text();
   const head = html.slice(0, html.indexOf("</head>"));
 
-  expect(head).toContain("<title>");
-  expect(head).toContain('rel="canonical"');
+  expect(head).toContain("<title>Lunch Menu | Peploe&#x27;s</title>");
+  expect(head).toMatch(/<link rel="canonical" href="[^"]*\/menus\/lunch"/u);
 });
 
 test("the live build is indexable", async ({ request }) => {

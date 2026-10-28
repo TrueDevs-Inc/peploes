@@ -133,6 +133,23 @@ describe("public discovery", function publicDiscoveryTests() {
     );
   });
 
+  it("keeps CMS text from breaking an entry's link or line", function llmsEscapeTest() {
+    const content = buildLlmsText("https://example.com", [
+      {
+        slug: "brunch",
+        title: "Chef`s [new](https://evil.example)",
+        summary: "Eggs.\n\n## Fake heading",
+        kind: "event",
+        date: "2026-12-01",
+      },
+    ]);
+
+    expect(content).toContain(
+      "- [Chef\\`s \\[new\\](https://evil.example)](https://example.com/seasonal/brunch): Eggs. ## Fake heading Event, 2026-12-01.",
+    );
+    expect(content).not.toContain("\n## Fake heading");
+  });
+
   it("keeps the sitemap and llms.txt page lists in step", function llmsDriftTest() {
     const policyPages: string[] = [
       ROUTES.PRIVACY_COOKIES,
