@@ -127,7 +127,11 @@ function persistPreferences(preferences: ICookiePreferences): boolean {
     if (typeof document !== "undefined") {
       // biome-ignore lint/suspicious/noDocumentCookie: PR #41 keeps consent checks synchronous; use Cookie Store when that interface becomes async.
       document.cookie = `${COOKIE_PREFERENCES.denialCookie}=; Path=/; Max-Age=0; SameSite=Lax`;
-      if (hasStoredDenial()) return false;
+      if (hasStoredDenial()) {
+        // A save reported as failed must not take effect when the denial cookie expires.
+        window.localStorage.removeItem(COOKIE_PREFERENCES.storageKey);
+        return false;
+      }
     }
     denyOptionalCookies = false;
     return true;

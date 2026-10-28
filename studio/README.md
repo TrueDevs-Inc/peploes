@@ -28,3 +28,16 @@ Remove the patch, its overrides, and the direct `picomatch` dependency together
 when an upstream codegen release removes both vulnerable dependency paths.
 Before removing them, run the codegen tests, `bun run ci`, and a Studio dev-server
 smoke test. No schema migration or content update is required for this patch.
+
+## Undici security override
+
+The Studio overrides `undici` to `^7.30.1` because
+`@module-federation/dts-plugin@2.9.2` pins vulnerable version `7.29.1`.
+Version `7.30.1` fixes
+[GHSA-xjj6-f33q-929c](https://github.com/advisories/GHSA-xjj6-f33q-929c)
+within the same major version. Other Studio consumers also resolve to this
+patched version.
+
+Remove this override when the upstream dependency accepts a patched release and
+the regenerated lockfile contains no affected copies. Run `bun run ci` to verify
+the Studio build, codegen tests and both dependency audits before removal.

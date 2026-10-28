@@ -48,6 +48,35 @@ describe("analytics consent", function analyticsConsentTests() {
     expect(consent.hasAnalyticsConsent()).toBe(true);
   });
 
+  it("keeps no choices from a failed save after the denial cookie expires", async () => {
+    let stored: string | null = null;
+    let denial = `${COOKIE_PREFERENCES.denialCookie}=1`;
+    vi.stubGlobal("document", {
+      get cookie() {
+        return denial;
+      },
+      set cookie(_value: string) {},
+    });
+    vi.stubGlobal("window", {
+      localStorage: {
+        getItem: () => stored,
+        setItem: (_key: string, value: string) => {
+          stored = value;
+        },
+        removeItem: () => {
+          stored = null;
+        },
+      },
+    });
+    vi.resetModules();
+    const consent = await import("@/lib/cookie-consent");
+    expect(consent.saveCookiePreferences(COOKIE_PREFERENCES.accepted)).toBe(
+      false,
+    );
+    denial = "";
+    expect(consent.hasAnalyticsConsent()).toBe(false);
+  });
+
   it("denies analytics without a browser consent decision", function defaultConsentTest() {
     expect(hasAnalyticsConsent()).toBe(false);
   });

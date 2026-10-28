@@ -75,7 +75,23 @@ test("Visit loads the map automatically and its location controls work", async (
   expect(popupBounds.y).toBeGreaterThan(
     recenterBounds.y + recenterBounds.height,
   );
+  const marker = page.getByRole("button", {
+    name: "Peploe’s, 16 St Stephen’s Green",
+    exact: true,
+  });
+  const markerX = async () => {
+    const bounds = await marker.boundingBox();
+    if (!bounds) throw new Error("Map marker is missing");
+    return bounds.x;
+  };
+  const centeredX = await markerX();
+  await map.getByRole("region", { name: "Map", exact: true }).focus();
+  await page.keyboard.press("ArrowRight");
+  await expect.poll(markerX).toBeLessThan(centeredX - 50);
   await page.getByRole("button", { name: "Recenter map on Peploe’s" }).click();
+  await expect
+    .poll(async () => Math.abs((await markerX()) - centeredX))
+    .toBeLessThanOrEqual(1);
   await expect(
     page.getByRole("link", {
       name: "Get directions to Peploe’s on Google Maps",

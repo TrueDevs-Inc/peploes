@@ -1,10 +1,12 @@
+import type { Event } from "@sentry/nextjs";
+
 const QUERY_KEYS = new Set([
   "http.query",
   "http.fragment",
   "url.query",
   "url.fragment",
 ]);
-const URL_KEYS = new Set(["url", "url.full", "http.url"]);
+const URL_KEYS = new Set(["url", "url.full", "http.url", "from", "to"]);
 
 function withoutQuery(value: string): string {
   return value.split(/[?#]/, 1)[0] ?? value;
@@ -39,4 +41,17 @@ export function scrubSpan<
     named.description = withoutQuery(named.description);
   }
   return span;
+}
+
+export function scrubEvent<T extends Event>(event: T): T {
+  if (event.request) {
+    const { url, method } = event.request;
+    event.request = { url: url ? withoutQuery(url) : undefined, method };
+  }
+  event.user = undefined;
+  event.breadcrumbs = event.breadcrumbs
+    ?.filter((breadcrumb) => breadcrumb.category !== "console")
+    .map(scrubBreadcrumb);
+  event.spans?.forEach(scrubSpan);
+  return event;
 }

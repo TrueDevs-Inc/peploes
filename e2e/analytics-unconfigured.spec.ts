@@ -24,7 +24,10 @@ test("accepting analytics without provider configuration contacts no provider", 
     .getByRole("dialog", { name: "Cookie Preferences", exact: true })
     .getByRole("button", { name: "Accept All", exact: true })
     .click();
-  await page.locator('a[href="/our-story"]:visible').first().click();
+  await page
+    .locator('a[href="/our-story"]:visible:not([aria-hidden="true"])')
+    .first()
+    .click();
   await expect(page).toHaveURL("/our-story");
   await page.waitForTimeout(4000);
   expect(providerRequests).toEqual([]);

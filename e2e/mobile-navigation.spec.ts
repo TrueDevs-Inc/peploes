@@ -13,7 +13,7 @@ test("mobile menu keeps navigation and vouchers without contact details", async 
 
   await expect(menu.getByText("Opening Hours", { exact: true })).toHaveCount(0);
   await expect(
-    menu.getByText("16 St Stephen’s Green, Dublin 2", { exact: true }),
+    menu.getByText(/^16 St Stephen['’]s Green, Dublin 2$/),
   ).toHaveCount(0);
   await expect(menu.locator('a[href^="tel:"], a[href^="mailto:"]')).toHaveCount(
     0,
