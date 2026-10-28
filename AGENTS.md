@@ -40,6 +40,11 @@ the linked owner documents, not here.
 Do not hide a lint, type, test, build, or audit failure. Report a genuine blocker
 instead of weakening a check.
 
+Write code without comments. Adding an inline, block or JSX comment is strictly
+not allowed; put the reason in a name, a test, the owning guide or the PR
+description. The only exceptions are listed under Comments in
+[`docs/architecture.md`](docs/architecture.md).
+
 ## Context routing
 
 | When the task changes | Read |
@@ -71,8 +76,8 @@ and only when the user explicitly requests the review operation.
 
 ## Agent skills
 
-For coding, apply the installed `ponytail` skill. For prose, comments and UI copy,
-apply `unslop`. Use `codebase-design` when changing an interface or dependency
+For coding, apply the installed `ponytail` skill. For prose and UI copy, apply
+`unslop`. Use `codebase-design` when changing an interface or dependency
 boundary, `tdd` at the approved test boundary, and `writing-for-agents` when
 editing agent guidance. Finish implementation with standards and spec review,
 using `code-review` and the codebase-fit checks in `elhaam-review` when available.

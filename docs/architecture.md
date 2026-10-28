@@ -72,10 +72,12 @@ Framework route files may repeat declarations that the framework reads staticall
 
 ## Comments
 
-Use comments for reasons the code cannot express: security constraints, library
-limitations, concurrency or deliberate tradeoffs. Place the reason beside the
-operation. Remove statement narration, redundant banners and implementation
-history. Preserve licence notices and tool directives.
+Write code without comments. Do not add inline, block or JSX comments, even to
+explain a reason. Carry a security constraint, library limitation, concurrency
+rule or deliberate tradeoff in a name, a test, the owning guide or the PR
+description. Only licence notices and tool directives may stay as comments:
+Biome suppressions with their reason, and the version comment beside a pinned
+Action.
 
 ## External libraries
 
