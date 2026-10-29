@@ -7,10 +7,30 @@
   --site-content-max-width: 1440px;
   --section-border-width: 2px;
   --section-border: color-mix(in srgb, var(--soft-stone) 80%, transparent);
+  --section-border-subtle-width: 1.5px;
 }
 
 .section-divider {
   border-top: var(--section-border-width) solid var(--section-border);
+}
+
+@utility section-divider-subtle {
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: 10;
+    height: var(--section-border-subtle-width);
+    background: var(--section-border);
+    pointer-events: none;
+  }
+}
+
+@utility section-divider-subtle-bottom {
+  box-shadow: inset 0 calc(-1 * var(--section-border-subtle-width)) 0
+    var(--section-border);
 }
 
 @utility site-container {

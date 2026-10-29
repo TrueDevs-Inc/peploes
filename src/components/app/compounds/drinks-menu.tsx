@@ -22,7 +22,7 @@ export function DrinksMenu({ menu }: IDrinksMenuProps) {
             <section
               key={section._key}
               aria-labelledby={section._key}
-              className="border-t border-soft-stone py-8 first-of-type:border-t-0 xl:py-10 xl:first-of-type:border-t"
+              className="section-divider-subtle py-8 xl:py-10"
             >
               <h2
                 data-scroll-reveal
@@ -65,7 +65,7 @@ export function DrinksMenu({ menu }: IDrinksMenuProps) {
         {menu.spirits.some((section) => section.dishes.length > 0) && (
           <section
             aria-labelledby="spirits-heading"
-            className="border-t border-soft-stone pt-8 xl:pt-10"
+            className="section-divider-subtle pt-8 xl:pt-10"
           >
             <h2
               data-scroll-reveal

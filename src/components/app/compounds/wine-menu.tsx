@@ -113,7 +113,7 @@ export function WineMenu({ menu }: IWineMenuProps) {
           <div className="site-container">
             <div
               style={getWineSectionStyle(section)}
-              className="border-t border-soft-stone pt-8 pb-(--wine-mobile-bottom-padding) xl:pt-9 xl:pb-(--wine-bottom-padding) [section:first-of-type_&]:border-t-0"
+              className="section-divider-subtle pt-8 pb-(--wine-mobile-bottom-padding) xl:pt-9 xl:pb-(--wine-bottom-padding)"
             >
               <h2
                 data-scroll-reveal

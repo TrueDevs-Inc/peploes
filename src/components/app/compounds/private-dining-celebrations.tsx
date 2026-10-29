@@ -21,7 +21,7 @@ export function PrivateDiningCelebrations() {
       <PrivateDiningHero hero={CELEBRATIONS.hero} variant="celebrations" />
       <PrivateDiningFeatureSection
         content={CELEBRATION_OCCASIONS}
-        className={styles.celebrationOccasions}
+        className={cn("section-divider-subtle", styles.celebrationOccasions)}
         featuresClassName={styles.fiveFeatures}
       />
       <section className={styles.personalDetails}>
@@ -40,11 +40,11 @@ export function PrivateDiningCelebrations() {
       />
       <PrivateDiningFeatureSection
         content={CELEBRATION_PLANNING}
-        className={styles.celebrationPlanning}
+        className={cn("section-divider-subtle", styles.celebrationPlanning)}
       />
       <PrivateDiningEnquiry
         content={CELEBRATIONS.enquiry}
-        className={styles.celebrationEnquiry}
+        className={cn("section-divider-subtle", styles.celebrationEnquiry)}
       />
       <PrivateDiningClosing
         content={CELEBRATIONS.closing}

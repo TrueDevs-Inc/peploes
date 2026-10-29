@@ -2062,6 +2062,8 @@
     transform: translate(-8.29218%, -20.718%) scale(0.58291011, 2.4140238);
   }
   .corporateMenus::after {
+    box-shadow: inset 0 var(--section-border-subtle-width) 0
+      var(--section-border);
     background: linear-gradient(
       90deg,
       rgb(242 234 229 / 0%),

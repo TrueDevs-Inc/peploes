@@ -104,7 +104,13 @@ export function PolicyPage({ policy }: IPolicyPageProps) {
         </div>
       </div>
 
-      <section className={styles.help} aria-labelledby="policy-help-title">
+      <section
+        className={cn(
+          "section-divider-subtle section-divider-subtle-bottom",
+          styles.help,
+        )}
+        aria-labelledby="policy-help-title"
+      >
         <div className={cn("site-container", styles.helpContainer)}>
           <div data-scroll-reveal className={styles.helpHeading}>
             <p className={styles.eyebrow}>{POLICY_HELP.eyebrow}</p>

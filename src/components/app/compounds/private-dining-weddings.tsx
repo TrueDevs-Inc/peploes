@@ -19,7 +19,13 @@ export function PrivateDiningWeddings() {
   return (
     <>
       <PrivateDiningHero hero={WEDDINGS.hero} variant="weddings" />
-      <section className={cn(styles.paleSection, styles.weddingDay)}>
+      <section
+        className={cn(
+          "section-divider-subtle",
+          styles.paleSection,
+          styles.weddingDay,
+        )}
+      >
         <div className="site-container">
           <PrivateDiningHeading {...WEDDING_DAY} />
           <ol className={styles.weddingSteps}>
@@ -60,7 +66,7 @@ export function PrivateDiningWeddings() {
           className={styles.weddingTouches}
         />
       </section>
-      <div className={styles.weddingEnquiry}>
+      <div className={cn("section-divider-subtle", styles.weddingEnquiry)}>
         <PrivateDiningEnquiry content={WEDDINGS.enquiry} />
       </div>
       <PrivateDiningClosing
