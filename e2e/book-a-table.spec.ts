@@ -128,7 +128,7 @@ test("navbar booking navigation works and closes the mobile drawer", async ({
     const menu = page.getByRole("dialog", { name: "Navigation menu" });
     await expect(menu).toBeVisible();
 
-    await menu.getByRole("link", { name: "Book", exact: true }).click();
+    await menu.getByRole("link", { name: "Book A Table", exact: true }).click();
 
     await expect(page).toHaveURL("/book-a-table");
     await expect(menu).not.toBeVisible();

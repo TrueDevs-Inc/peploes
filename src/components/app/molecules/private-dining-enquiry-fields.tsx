@@ -45,6 +45,7 @@ export function PrivateDiningEnquiryFields({
             name="date"
             aria-label={PRIVATE_DINING_FORM.date}
             type="date"
+            onClick={(event) => event.currentTarget.showPicker?.()}
             required
           />
           <span aria-hidden="true">{PRIVATE_DINING_FORM.date}</span>

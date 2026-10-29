@@ -930,6 +930,8 @@ export interface INavbarBrandProps {
 
 export interface INavbarBookingButtonProps {
   onNavigate?: () => void;
+  className?: string;
+  label?: string;
 }
 
 export interface INavbarContent {
@@ -1281,6 +1283,7 @@ export interface IMobileNavigationContent {
   navigationLabel: string;
   items: readonly IMobileNavigationItem[];
   giftVouchersLabel: string;
+  bookingLabel: string;
   brandPhrase: string;
 }
 

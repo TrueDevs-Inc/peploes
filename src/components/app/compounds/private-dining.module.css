@@ -179,6 +179,7 @@
   margin-top: 32px;
 }
 .gatheringImage {
+  --image-zoom-ease: ease-in-out;
   display: block;
   position: relative;
   height: 380px;
@@ -194,7 +195,9 @@
 }
 @media (prefers-reduced-motion: no-preference) {
   .gatheringImage .cover {
-    transition: transform var(--duration-slow) var(--ease-organic);
+    /* Avoid a sharpness jump when the completed zoom releases its layer. */
+    will-change: transform;
+    transition: transform var(--duration-base) var(--image-zoom-ease);
   }
   .gatheringImage:focus-visible .cover {
     transform: scale(1.05);
@@ -979,6 +982,103 @@
   }
 }
 
+@media (width < 40rem) {
+  .capacity {
+    padding-block: 40px;
+  }
+
+  .capacity .heading {
+    font-size: 32px;
+    line-height: 38px;
+  }
+
+  .capacityGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 28px;
+  }
+
+  .capacityGrid > li {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: 40px minmax(0, 1fr);
+    column-gap: 16px;
+    row-gap: 4px;
+    padding-block: 24px;
+  }
+
+  .capacityGrid > li:nth-child(n + 3) {
+    border-top: 1px solid rgb(var(--overlay-cream-rgb) / 25%);
+  }
+
+  .capacityGrid > li:nth-child(-n + 2) {
+    grid-column: auto;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    padding: 16px;
+    border: 1px solid rgb(var(--overlay-cream-rgb) / 25%);
+    border-radius: 4px;
+    background: rgb(var(--overlay-cream-rgb) / 4%);
+  }
+
+  .capacityGrid > li:last-child {
+    padding-bottom: 0;
+  }
+
+  .capacityGrid .illustration {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    width: 40px;
+    height: 40px;
+    margin: 4px 0 0;
+  }
+
+  .capacityGrid > li > :not(img) {
+    grid-column: 2;
+  }
+
+  .capacityGrid > li:nth-child(-n + 2) > :not(img) {
+    grid-column: 1;
+  }
+
+  .capacityGrid > li:nth-child(-n + 2) .illustration {
+    grid-row: auto;
+    width: 32px;
+    height: 32px;
+    margin: 0 0 8px;
+  }
+
+  .capacityGrid .capacityFigure {
+    font-size: 44px;
+    line-height: 46px;
+  }
+
+  .capacityGrid .capacityLabel,
+  .capacityGrid li:last-child .capacityLabel {
+    font-family: inherit;
+    font-size: 16px;
+    line-height: 22px;
+    margin-top: 0;
+  }
+
+  .capacityGrid li > p:last-child {
+    font-size: 16px;
+    line-height: 24px;
+    margin-top: 0;
+  }
+
+  .capacityGrid li:nth-child(n + 3) .capacityFigure {
+    font-size: 24px;
+    line-height: 30px;
+  }
+
+  .capacityGrid li:nth-child(-n + 2) > p:last-child,
+  .capacityGrid li:last-child > p:last-child {
+    font-size: 14px;
+    line-height: 22px;
+  }
+}
+
 @media (width >= 40rem) and (width < 64rem) {
   .gatheringCards,
   .features,
@@ -1646,8 +1746,8 @@
     padding: 8px 12px;
   }
   .compactEnquiry .enquiryFields textarea {
-    min-height: 58px;
-    height: 58px;
+    min-height: 90px;
+    height: 90px;
     padding-top: 8px;
   }
   .compactEnquiry .enquiryFields :is(input, select, textarea) {
@@ -2431,6 +2531,10 @@
     padding: 10px 16px;
     font-size: 16px;
     line-height: 22px;
+  }
+
+  .enquirySelect option:not(:disabled) + option:not(:disabled) {
+    border-top: 1px solid var(--soft-stone);
   }
 
   .enquirySelect option:is(:hover, :checked) {

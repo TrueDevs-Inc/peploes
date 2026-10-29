@@ -7,6 +7,7 @@ test.beforeEach(async ({ page, isMobile }) => {
 test("mobile menu keeps navigation and vouchers without contact details", async ({
   page,
 }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   await page.getByRole("button", { name: "Open menu" }).click();
   const menu = page.getByRole("dialog", { name: "Navigation menu" });
@@ -24,6 +25,21 @@ test("mobile menu keeps navigation and vouchers without contact details", async 
   await expect(
     menu.getByRole("button", { name: "Gift Vouchers" }),
   ).toBeInViewport();
+  const booking = menu.getByRole("link", { name: "Book A Table", exact: true });
+  await expect(booking).toBeInViewport();
+  const bookingBox = await booking.boundingBox();
+  const vouchersBox = await menu
+    .getByRole("button", { name: "Gift Vouchers" })
+    .boundingBox();
+  if (!bookingBox || !vouchersBox) {
+    throw new Error("The booking and voucher buttons must be visible.");
+  }
+  expect(bookingBox.y).toBeGreaterThanOrEqual(
+    vouchersBox.y + vouchersBox.height,
+  );
+  expect(bookingBox.x).toBeCloseTo(vouchersBox.x, 0);
+  expect(bookingBox.width).toBeCloseTo(vouchersBox.width, 0);
+  expect(bookingBox.height).toBeCloseTo(vouchersBox.height, 0);
   await expect(
     menu.getByText("People make Peploe’s.", { exact: true }),
   ).toBeInViewport();

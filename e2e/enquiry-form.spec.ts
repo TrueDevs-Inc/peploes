@@ -1,11 +1,60 @@
 import { expect, test } from "@playwright/test";
 
+test("private dining message area shows three lines without scrolling", async ({
+  page,
+  isMobile,
+}) => {
+  await page.goto("/private-dining");
+  const message = page.locator('#enquire textarea[name="message"]');
+  await message.fill(
+    "A corporate dinner\nFor twelve guests\nPlease share availability",
+  );
+  await expect(message).toHaveCSS("height", isMobile ? "190px" : "90px");
+  const dimensions = await message.evaluate((element) => ({
+    height: element.clientHeight,
+    contentHeight: element.scrollHeight,
+  }));
+  expect(dimensions.contentHeight).toBeLessThanOrEqual(dimensions.height);
+  await expect(message).toHaveCSS("resize", "vertical");
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+});
+
 for (const path of [
   "/private-dining",
   "/private-dining/groups-celebrations",
   "/private-dining/corporate-events",
   "/private-dining/weddings",
 ]) {
+  test(`${path} date picker opens from the entire input`, async ({ page }) => {
+    await page.goto(path);
+    const date = page.locator("#enquire").getByLabel("Preferred date");
+    await date.scrollIntoViewIfNeeded();
+    const width = await date.evaluate((element) => element.clientWidth);
+    for (const x of [16, width / 2, width - 16]) {
+      await date.click({ position: { x, y: 16 } });
+      await expect(
+        page.locator('#enquire input[type="date"]:open'),
+      ).toBeVisible();
+      await page.keyboard.press("Escape");
+    }
+    await date.fill("2026-12-01");
+    await expect(date).toHaveValue("2026-12-01");
+    await date.click({ position: { x: 16, y: 16 } });
+    await expect(
+      page.locator('#enquire input[type="date"]:open'),
+    ).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(date).toHaveValue("2026-12-01");
+    await date.click({ position: { x: width / 2, y: 16 } });
+    await page.keyboard.press("ArrowRight");
+    await page.keyboard.press("Enter");
+    await expect(date).toHaveValue("2026-12-02");
+  });
+
   test(`${path} enquiry controls share rounded styling and subtle focus`, async ({
     page,
   }) => {
@@ -102,6 +151,14 @@ for (const path of [
       await expect(select.locator('option[value=""]')).toBeHidden();
       const firstOption = select.locator("option:not(:disabled)").first();
       await expect(firstOption).toBeVisible();
+      await expect(firstOption).toHaveCSS("border-top-width", "0px");
+      const secondOption = select.locator("option:not(:disabled)").nth(1);
+      await expect(secondOption).toHaveCSS("border-top-width", "1px");
+      await expect(secondOption).toHaveCSS("border-top-style", "solid");
+      await expect(secondOption).toHaveCSS(
+        "border-top-color",
+        "rgb(217, 209, 198)",
+      );
       const restingBackground = await firstOption.evaluate(
         (element) => getComputedStyle(element).backgroundColor,
       );

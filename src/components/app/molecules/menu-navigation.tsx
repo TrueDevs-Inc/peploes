@@ -163,6 +163,7 @@ export function MenuNavigation({
                 ) : item.href ? (
                   <Link
                     href={item.href}
+                    prefetch={true}
                     scroll={false}
                     aria-current={currentPage}
                     data-menu-path={item.href}
@@ -200,6 +201,7 @@ export function MenuNavigation({
               <li key={item.href}>
                 <Link
                   href={item.href}
+                  prefetch={true}
                   onClick={() => setOpenHref(null)}
                   className={cn(
                     FOCUS_RING,

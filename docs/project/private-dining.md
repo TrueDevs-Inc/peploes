@@ -90,6 +90,12 @@ on mobile. At 390px, the image frames are
 342 × 380px with 24px side gutters. Wider layouts use the shared 1440px content
 limit described in the [project brief](brief.md#site-content-width).
 
+Occasion photographs zoom by 5% over 300ms with gentle ease-in-out timing on
+hover or keyboard focus. Leaving or re-entering during the zoom reverses from
+the current scale. Their rendering layer stays stable when the zoom finishes,
+preventing a sharpness jump at fractional display scaling. Reduced motion
+disables the image zoom and the retained layer.
+
 Occasion typography uses EB Garamond for headings and descriptions, and DM Sans
 for labels, numbers and links. Desktop section titles are 50/52px, card titles
 32/34px and descriptions 18px with 130% line height. Descriptions use the secondary
@@ -207,6 +213,13 @@ The hero-photo replacement comment is still pending; the current Figma photo
 is retained. The capacity comment asking to remove “~100 seated + standing”
 has a clarification request from the designer. The contributor asked to retain
 that item until the comment is resolved.
+
+Below 640px, the corporate capacity section presents the two guest capacities as
+equal-width cards, followed by full-width space and availability rows. Cards use
+32px icons and 44/46px numbers; detail rows use 40px icons and 24/30px headings.
+Labels use 16/22px body type; supporting text is at least 14/22px. Subtle cream
+borders separate the groups. All four items remain in the page flow. Tablet and
+desktop layouts retain their existing columns.
 
 The homepage's yellow “Distinct commercial journeys” note requires separate
 content and enquiry experiences for celebrations, corporate events and weddings.

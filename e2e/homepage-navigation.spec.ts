@@ -1,6 +1,27 @@
 import { rm, writeFile } from "node:fs/promises";
 import { expect, test } from "./menu-test";
 
+test("hero shading palette matches desktop on phones and tablets", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  const overlay = page.locator(
+    'section[aria-labelledby="hero-heading"] > div:first-child > div[aria-hidden="true"]',
+  );
+  const shading = () =>
+    overlay.evaluate((element) =>
+      getComputedStyle(element).backgroundImage.replace(/-?[\d.]+deg, /g, ""),
+    );
+  const desktopShading = await shading();
+  expect(desktopShading).not.toBe("none");
+
+  for (const width of [320, 390, 639, 640, 768, 1023, 1024]) {
+    await page.setViewportSize({ width, height: 844 });
+    await expect.poll(shading).toBe(desktopShading);
+  }
+});
+
 test("mobile hero fills the first screen before the entrance photograph", async ({
   page,
   viewport,

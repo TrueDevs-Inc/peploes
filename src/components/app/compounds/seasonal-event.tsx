@@ -70,7 +70,7 @@ export function SeasonalEvent({ content, join }: ISeasonalEventProps) {
 
       {menu && (
         <section className={styles.menu} aria-labelledby="event-menu">
-          <div className={cn("site-container", styles.menuContent)}>
+          <div className="site-container">
             <p
               data-scroll-reveal
               className={cn(styles.eyebrow, styles.ruledEyebrow)}
@@ -89,7 +89,7 @@ export function SeasonalEvent({ content, join }: ISeasonalEventProps) {
                   <Image
                     {...card.image}
                     fill
-                    sizes="(min-width: 1440px) 628px, (min-width: 1280px) calc((100vw - 184px) / 2), (min-width: 640px) calc((100vw - 88px) / 2), calc(100vw - 48px)"
+                    sizes="(min-width: 1584px) 700px, (min-width: 1280px) calc((100vw - 184px) / 2), (min-width: 640px) calc((100vw - 72px) / 2), calc(100vw - 32px)"
                     className={cn(
                       styles.cover,
                       "transition-transform duration-(--duration-base) ease-out motion-safe:group-hover:scale-105 motion-safe:group-focus-visible:scale-105 motion-reduce:transition-none",

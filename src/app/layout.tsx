@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 import { JsonLd } from "@/components/app/atoms/json-ld";
+import { RouteScrollReset } from "@/components/app/atoms/route-scroll-reset";
 import { SiteScrollReveal } from "@/components/app/atoms/site-scroll-reveal";
 import { VisitAnchorInitializer } from "@/components/app/atoms/visit-anchor-initializer";
 import { Footer } from "@/components/app/compounds/footer";
@@ -57,6 +58,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <RouteScrollReset />
         <SiteScrollReveal />
         <Navbar />
         <VisitAnchorInitializer />

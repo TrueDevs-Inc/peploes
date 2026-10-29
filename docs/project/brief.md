@@ -268,6 +268,8 @@ The Menus shelf is 218px high and the Private Dining & Events shelf is 292px
 high at 1440px, excluding the 76px header. Both grow with their content and cap
 their height to the available viewport space below
 the header and scroll when needed.
+A full-width 1px Soft Stone bottom stroke separates both shelves from page
+content and follows the shelf's animated edge.
 Six active menu links sit in three 146px-high columns, paired Lunch/Wine,
 Dinner/Cocktails and Pre-Theatre/Seasonal, with 40px column gaps, 24px row gaps
 and 1px Soft Stone dividers after the first two columns. The introduction and
@@ -327,6 +329,7 @@ Occasions and Peploe's navigation, then contact details, socials and legal links
 It uses the existing local logo and brand tokens, DM Sans body text and
 EB Garamond headings.
 Footer dividers, mobile row borders and the email field rule use 1px thickness.
+The navbar bottom edge and footer top edge have full-width Soft Stone dividers.
 The three burgundy heading underlines are 32px wide and 2px high, matching Figma.
 
 Telephone and email links are active. The footer lists Privacy Policy, Terms,
@@ -390,8 +393,10 @@ the panel to grow when short screens or enlarged text need more space. The
 520px entrance photograph has a separate 74px caption below it.
 
 The restaurant photo and transparent entrance artwork were downloaded from
-Figma. The entrance uses its original Figma backdrop behind the cutout. Narrow
-screens use the mobile design's vertical hero gradient over the centre crop.
+Figma. The entrance uses its original Figma backdrop behind the cutout. The
+hero photo uses the same shading colours and opacity stops on phones, tablets
+and desktop (issue #56). Below 1024px, the fade runs vertically to keep the
+full-width copy readable. The responsive image crop is unchanged.
 The desktop entrance retains the yellow note's gentle fade and rise through
 the existing scroll-reveal component and reduced-motion styles.
 
@@ -597,8 +602,11 @@ the hero uses a uniform cover crop instead of the source design’s slight
 vertical stretch. Two gallery sources are only 243px wide and need approved
 larger originals for sharper desktop rendering.
 
-The Menu & Experience container is capped at 1296px. Its heading is 64px/65px,
-with 20px gaps between the eyebrow, heading and body, then 48px before the cards.
+The Menu & Experience section uses the shared `site-container` width, aligning
+its heading and cards with the event hero, information and gallery. Follow the
+[site content width](#site-content-width) contract, including its 1440px maximum.
+Its heading is 64px/65px, with 20px gaps between the eyebrow, heading and body,
+then 48px before the cards.
 At the 1440px design width, the story has a 704px content column, a 48px gap and
 a 688px image. Its text block is 600px wide, with 54px top and 48px bottom padding,
 a 72px/73px heading and 22px/31px paragraphs. Both headings use -1px letter spacing.

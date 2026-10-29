@@ -124,7 +124,6 @@ export function MobileNavigation({
           <div className="flex h-[72px] items-center justify-between gap-2 px-4 shadow-[inset_0_-1px_0_var(--soft-stone)]">
             <NavbarBrand onClick={closeMenu} />
             <div className="flex shrink-0 items-center gap-3">
-              <NavbarBookingButton onNavigate={closeMenu} />
               <div ref={closeButtonRef}>
                 <CloseButton
                   onClick={closeMenu}
@@ -215,6 +214,11 @@ export function MobileNavigation({
             >
               {MOBILE_NAVIGATION_CONTENT.giftVouchersLabel}
             </Button>
+            <NavbarBookingButton
+              onNavigate={closeMenu}
+              className="h-12 w-full leading-[22px]"
+              label={MOBILE_NAVIGATION_CONTENT.bookingLabel}
+            />
             <p
               className={cn(
                 brandPhraseClassName,
