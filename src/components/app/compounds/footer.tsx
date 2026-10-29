@@ -15,12 +15,7 @@ import { cn } from "@/lib/utils";
 
 export function Footer() {
   return (
-    <footer
-      className={cn(
-        dmSans.className,
-        "border-t border-soft-stone bg-warm-cream text-ink",
-      )}
-    >
+    <footer className={cn(dmSans.className, "bg-warm-cream text-ink")}>
       <div
         data-footer-container
         className="site-container-inset pt-14 pb-10 xl:pt-20"

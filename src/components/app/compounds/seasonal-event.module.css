@@ -3,6 +3,11 @@
   font-weight: 400;
 }
 
+:where(.menu) + .gallery,
+:where(.menu, .gallery) + .related {
+  border-top: var(--section-border-width) solid var(--section-border);
+}
+
 .page .eyebrow {
   color: var(--peploe-burgundy);
   font-family: inherit;

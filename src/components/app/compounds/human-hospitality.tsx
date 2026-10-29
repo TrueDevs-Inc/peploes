@@ -12,7 +12,7 @@ export function HumanHospitality() {
       aria-labelledby="human-hospitality-heading"
       className={cn(
         dmSans.className,
-        "overflow-hidden bg-warm-cream bg-linear-to-b from-ink/10 to-transparent to-[66px] text-ink",
+        "section-divider overflow-hidden bg-warm-cream bg-linear-to-b from-ink/10 to-transparent to-[66px] text-ink",
       )}
     >
       <div className="relative isolate grid xl:ml-[max(0px,calc((100vw-var(--site-content-max-width))/2-72px))] xl:max-w-[calc(var(--site-content-max-width)+72px)] xl:grid-cols-[minmax(0,1fr)_min(37.5%,563px)] xl:gap-8">

@@ -15,7 +15,7 @@ export function Wine() {
       aria-labelledby="wine-heading"
       className={cn(
         dmSans.className,
-        "relative isolate scroll-mt-20 bg-ink text-warm-cream",
+        "relative isolate scroll-mt-20 bg-ink text-warm-cream before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:z-10 before:h-[1.5px] before:bg-soft-stone/50",
       )}
     >
       <div className="absolute inset-0 lg:h-[calc(100%/0.9815)] lg:origin-top lg:scale-y-[0.9815]">

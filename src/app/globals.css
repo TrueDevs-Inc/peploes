@@ -5,6 +5,12 @@
 
 :root {
   --site-content-max-width: 1440px;
+  --section-border-width: 2px;
+  --section-border: color-mix(in srgb, var(--soft-stone) 80%, transparent);
+}
+
+.section-divider {
+  border-top: var(--section-border-width) solid var(--section-border);
 }
 
 @utility site-container {

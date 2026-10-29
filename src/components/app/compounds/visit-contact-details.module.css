@@ -183,7 +183,7 @@
 }
 
 .gatherings {
-  border-top: 1px solid var(--soft-stone);
+  border-top: var(--section-border-width) solid var(--section-border);
   padding-top: 40px;
 }
 
@@ -424,7 +424,7 @@
     top: 0;
     bottom: 0;
     left: -48px;
-    width: 1px;
-    background: var(--soft-stone);
+    width: var(--section-border-width);
+    background: var(--section-border);
   }
 }

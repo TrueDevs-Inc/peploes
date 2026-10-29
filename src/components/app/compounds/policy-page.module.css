@@ -161,7 +161,8 @@
 }
 
 .policySection:not(:last-child) {
-  box-shadow: inset 0 -1px 0 var(--soft-stone);
+  box-shadow: inset 0 calc(-1 * var(--section-border-width)) 0
+    var(--section-border);
 }
 
 .number {
@@ -201,7 +202,6 @@
 }
 
 .help {
-  border: 1px solid var(--soft-stone);
   background: color-mix(in srgb, var(--peploe-burgundy) 6%, var(--warm-cream));
 }
 
@@ -415,8 +415,8 @@
     content: "";
     position: absolute;
     inset: 0 0 auto;
-    height: 1px;
-    background: var(--soft-stone);
+    height: var(--section-border-width);
+    background: var(--section-border);
   }
 
   .policySection:not(:last-child) {
