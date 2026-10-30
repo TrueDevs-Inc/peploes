@@ -63,10 +63,10 @@ export function useTableHold(): ITableHold {
     [holdReference],
   );
 
-  const release = useCallback(() => {
+  const forgetHold = useCallback(() => {
     setActive(null);
     removeSessionStorage(STORAGE_KEY);
   }, []);
 
-  return { active, pending, error, place, release };
+  return { active, pending, error, place, forgetHold };
 }

@@ -136,7 +136,7 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
     setPaid(saved.summary);
   }, [place, showHeld]);
 
-  const { release } = hold;
+  const { forgetHold } = hold;
   const confirmBooking = useCallback(
     (confirmed: ITableBookingConfirmationProps) => {
       setBooked(confirmed);
@@ -144,10 +144,10 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
       setPaid(null);
       removeSessionStorage(PAID_KEY);
       removeSessionStorage(PAYMENT_KEY);
-      release();
+      forgetHold();
       setStep(3);
     },
-    [release],
+    [forgetHold],
   );
 
   function sendDetails() {
@@ -178,7 +178,7 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
   }
 
   function startOver() {
-    release();
+    forgetHold();
     editSearch();
   }
 
@@ -662,7 +662,7 @@ function HeldStep({
 }: ITableBookingHeldStepProps) {
   const check = useBookingStatus(paid);
   const { settle } = guest;
-  const { release } = hold;
+  const { forgetHold } = hold;
 
   useEffect(() => {
     if (check.kind === "confirmed") {
@@ -679,10 +679,10 @@ function HeldStep({
           summary: detailsCheck.summary,
         });
       } else if (detailsCheck.kind === "failed") {
-        release();
+        forgetHold();
       }
     },
-    [settle, release, onConfirmed],
+    [settle, forgetHold, onConfirmed],
   );
 
   if (guest.unsure && guest.unsure === hold.active?.summary) {
@@ -715,7 +715,7 @@ function HeldStep({
     <>
       <TableBookingHoldTimer
         endsAt={hold.active.endsAt}
-        onExpire={hold.release}
+        onExpire={hold.forgetHold}
       />
       <TableBookingDetails
         details={details}

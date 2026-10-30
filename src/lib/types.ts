@@ -1781,7 +1781,7 @@ export interface ITableHold {
   pending: boolean;
   error: string | null;
   place: (choice: IHoldChoice, onHeld: (summary: IHoldSummary) => void) => void;
-  release: () => void;
+  forgetHold: () => void;
 }
 
 export type TPaymentStep = Exclude<TGuestDetailsView, { kind: "confirmed" }>;
