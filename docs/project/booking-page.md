@@ -348,8 +348,16 @@ after ResDiary confirms it.
   ends there, and a confirmation that arrives later still shows. Never say
   the booking failed, and never offer to pay again. This copy does not promise
   an email, because Peploe's live account's emails are not yet verified.
-  Offer Start Again under it. It forgets the paid state in this tab and opens a
-  fresh search. Until the guest presses it, a reload checks `hold-status` again.
+  Offer Check Again and Start Again. Check Again restarts the status checks.
+  Show "Confirming your booking…" while checking. Show the confirmation if
+  ResDiary confirms, the not-confirmed message if it fails, or "Hang tight"
+  after another 60 seconds.
+  Start Again shows an inline warning with the reference. Warn that the first
+  booking may still go through and booking again could mean two bookings and
+  two deposits. Move focus to the warning. Keep Waiting returns to "Hang tight"
+  and keeps the paid state. Start Again in the warning forgets the paid state
+  in this tab and opens a fresh search. Until then, a reload checks
+  `hold-status` again.
 - Make this "payment taken, not yet confirmed" state calm and reassuring, not
   an error. Elhaam's example of the tone is "Hang tight! You'll get a
   confirmation soon if your money is deducted." Follow how AnjomaZone

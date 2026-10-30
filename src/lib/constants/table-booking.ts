@@ -11,6 +11,7 @@ export const TABLE_BOOKING_CONTENT = {
   heldFor: (time: string) => `Table held for ${time}`,
   chooseAgain: "Choose a Time Again",
   startAgain: "Start Again",
+  checkAgain: "Check Again",
   changeBooking: {
     heading: "Change your booking?",
     text: (time: string, date: string) =>
@@ -20,7 +21,6 @@ export const TABLE_BOOKING_CONTENT = {
     releasing: "Releasing…",
     checking: "Checking whether your table was released…",
     checkingAction: "Checking…",
-    checkAgain: "Check Again",
     stillHeld:
       "We couldn't release your table, so it's still held for you. You can keep it or try again.",
     unknown: (reference: string) =>
@@ -110,6 +110,9 @@ export const TABLE_BOOKING_CONTENT = {
       `We can't check booking ${reference} from this page. If you finished it in another tab, your confirmation will follow; otherwise call us on ${RESTAURANT_CONTACT.phoneLabel} or start again.`,
     stillConfirming: (reference: string) =>
       `Hang tight! We're still confirming booking ${reference}. If your card was charged, your confirmation will follow shortly. If you hear nothing in a few minutes, please call us on ${RESTAURANT_CONTACT.phoneLabel}.`,
+    startAgainWarning: (reference: string) =>
+      `Booking ${reference} may still go through. If it does and you book again, you'll have two bookings and two deposits.`,
+    keepWaiting: "Keep Waiting",
     notConfirmed: (reference: string) =>
       `We couldn't confirm booking ${reference}. If your card was charged, please call us on ${RESTAURANT_CONTACT.phoneLabel} and quote this reference.`,
   },

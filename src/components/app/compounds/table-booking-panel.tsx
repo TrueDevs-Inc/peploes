@@ -339,6 +339,7 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
               onBack={() => setStep(1)}
               onContinue={sendDetails}
               onStartAgain={startOver}
+              onCheckAgain={() => setPaid(paid ? { ...paid } : null)}
             />
           )}
         </>
@@ -454,13 +455,23 @@ function PaymentOutcome({
   check,
   reference,
   onStartAgain,
+  onCheckAgain,
 }: {
   check: TBookingStatusCheck;
   reference: string;
   onStartAgain: () => void;
+  onCheckAgain: () => void;
 }) {
-  const failed = check.kind === "failed";
-  if (!failed && check.kind !== "unknown") {
+  if (check.kind === "unknown") {
+    return (
+      <StillConfirming
+        reference={reference}
+        onStartAgain={onStartAgain}
+        onCheckAgain={onCheckAgain}
+      />
+    );
+  }
+  if (check.kind !== "failed") {
     return (
       <p role="status" className={styles.flowDescription}>
         {content.payment.checking}
@@ -469,18 +480,71 @@ function PaymentOutcome({
   }
   return (
     <div className={styles.flowNotice}>
-      {failed ? (
-        <p role="alert" className={styles.formError}>
-          {content.payment.notConfirmed(reference)}
-        </p>
-      ) : (
-        <p role="status" className={styles.flowDescription}>
-          {content.payment.stillConfirming(reference)}
-        </p>
-      )}
+      <p role="alert" className={styles.formError}>
+        {content.payment.notConfirmed(reference)}
+      </p>
       <Button type="button" variant="brand-primary" onClick={onStartAgain}>
         {content.startAgain}
       </Button>
+    </div>
+  );
+}
+
+function StillConfirming({
+  reference,
+  onStartAgain,
+  onCheckAgain,
+}: {
+  reference: string;
+  onStartAgain: () => void;
+  onCheckAgain: () => void;
+}) {
+  const [warning, setWarning] = useState(false);
+  const message = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    if (warning) message.current?.focus();
+  }, [warning]);
+
+  return (
+    <div className={styles.flowNotice}>
+      <p
+        ref={message}
+        tabIndex={-1}
+        role="status"
+        className={styles.flowDescription}
+      >
+        {warning
+          ? content.payment.startAgainWarning(reference)
+          : content.payment.stillConfirming(reference)}
+      </p>
+      {warning ? (
+        <>
+          <Button
+            type="button"
+            variant="brand-contact"
+            onClick={() => setWarning(false)}
+          >
+            {content.payment.keepWaiting}
+          </Button>
+          <Button type="button" variant="brand-primary" onClick={onStartAgain}>
+            {content.startAgain}
+          </Button>
+        </>
+      ) : (
+        <>
+          <Button type="button" variant="brand-contact" onClick={onCheckAgain}>
+            {content.checkAgain}
+          </Button>
+          <Button
+            type="button"
+            variant="brand-primary"
+            onClick={() => setWarning(true)}
+          >
+            {content.startAgain}
+          </Button>
+        </>
+      )}
     </div>
   );
 }
@@ -686,6 +750,7 @@ function HeldStep({
   onBack,
   onContinue,
   onStartAgain,
+  onCheckAgain,
 }: ITableBookingHeldStepProps) {
   const check = useBookingStatus(paid);
   const { settle } = guest;
@@ -724,6 +789,7 @@ function HeldStep({
         check={check}
         reference={paid.reference}
         onStartAgain={onStartAgain}
+        onCheckAgain={onCheckAgain}
       />
     );
   }

@@ -64,7 +64,8 @@ function ChangeDialog({
   const waiting = releasing || (check !== null && check.kind !== "unknown");
   let actionLabel: string = copy.release;
   if (releasing) actionLabel = copy.releasing;
-  else if (check?.kind === "unknown") actionLabel = copy.checkAgain;
+  else if (check?.kind === "unknown")
+    actionLabel = TABLE_BOOKING_CONTENT.checkAgain;
   else if (check) actionLabel = copy.checkingAction;
 
   useEffect(() => {
