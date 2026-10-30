@@ -1697,14 +1697,21 @@ export interface ITableBookingDetailsProps {
   onContinue: () => void;
 }
 
+export interface IGuestDetailsAttempt {
+  hold: IActiveHold;
+  startedAt: number;
+}
+
 export interface IGuestDetailsSending {
   sending: boolean;
   formError: string | null;
   fieldErrors: TTableBookingDetailsErrors;
   unsure: IHoldSummary | null;
+  pendingFrom: number;
+  restore: (attempt: IGuestDetailsAttempt) => void;
   send: (
     details: ITableBookingGuestDetails,
-    hold: IHoldSummary,
+    active: IActiveHold,
     onReply: (reply: TGuestDetailsView) => void,
   ) => void;
   settle: (check: TBookingStatusCheck) => void;
@@ -1779,6 +1786,7 @@ export interface IActiveHold {
 }
 
 export interface ITableHold {
+  resume: (active: IActiveHold) => void;
   active: IActiveHold | null;
   pending: boolean;
   error: string | null;

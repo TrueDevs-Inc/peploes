@@ -135,6 +135,248 @@ test("if the reply is lost after the booking landed, the page shows the confirma
   ).toHaveText(/^E2E\d{5}$/);
 });
 
+test("reloading the details check finds the booked table without holding or sending again", async ({
+  page,
+  isMobile,
+}) => {
+  const actions: string[] = [];
+  page.on("request", (request) => {
+    if (
+      request.method() === "POST" &&
+      new URL(request.url()).pathname === "/book-a-table"
+    ) {
+      actions.push(request.headers()["next-action"] ?? "");
+    }
+  });
+  const { reservations, confirm, booked } = await heldWithDetails(
+    page,
+    isMobile,
+  );
+  const held = await page.evaluate(() =>
+    JSON.parse(sessionStorage.getItem("peploes:booking-hold") ?? "{}"),
+  );
+  await page.route("**/api/bookings/hold-status?**", () => undefined);
+  await dropPosts(page, true);
+  await confirm.click();
+  await expect(
+    reservations.getByText("Checking whether your booking went through…", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  expect(actions).toHaveLength(2);
+  expect(new Set(actions).size).toBe(2);
+  expect(actions).not.toContain("");
+  const sentActions = [...actions];
+  await page.unroute("**/api/bookings/hold-status?**");
+  await page.unroute("**/book-a-table");
+  await page.reload();
+
+  await expect(booked).toBeVisible({ timeout: 10_000 });
+  await expect(
+    reservations
+      .locator("p", { hasText: "Booking reference" })
+      .locator("strong"),
+  ).toHaveText(held.holdReference);
+  expect(actions).toEqual(sentActions);
+  expect(
+    await page.evaluate(() =>
+      sessionStorage.getItem("peploes:booking-details"),
+    ),
+  ).toBeNull();
+});
+
+test("reloading the details check shows a failed hold rather than a fresh search", async ({
+  page,
+  isMobile,
+}) => {
+  const { reservations, confirm } = await heldWithDetails(page, isMobile, {
+    time: "12:00 pm",
+  });
+  await page.route("**/api/bookings/hold-status?**", () => undefined);
+  await dropPosts(page, false);
+  await confirm.click();
+  await expect(
+    reservations.getByText("Checking whether your booking went through…", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page.unroute("**/api/bookings/hold-status?**");
+  await page.unroute("**/book-a-table");
+  await page.reload();
+
+  await expect(reservations.getByRole("alert")).toHaveText(
+    "Your table hold ran out. Please choose a time again.",
+  );
+  await expect(
+    reservations.getByRole("button", {
+      name: "Choose a Time Again",
+      exact: true,
+    }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(() =>
+      sessionStorage.getItem("peploes:booking-details"),
+    ),
+  ).toBeNull();
+});
+
+test("reloading an unanswered details check keeps the summary and eventually shows the reference", async ({
+  page,
+  isMobile,
+}) => {
+  await page.clock.install();
+  const { reservations, confirm } = await heldWithDetails(page, isMobile);
+  const held = await page.evaluate(() =>
+    JSON.parse(sessionStorage.getItem("peploes:booking-hold") ?? "{}"),
+  );
+  await page.route("**/api/bookings/hold-status?**", () => undefined);
+  await dropPosts(page, false);
+  await confirm.click();
+  await expect(
+    reservations.getByText("Checking whether your booking went through…", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page.unroute("**/book-a-table");
+  await page.reload();
+
+  await expect(
+    reservations.getByText("Checking whether your booking went through…", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(reservations.getByText(/6:00 pm.*4 guests/)).toBeVisible();
+  await expect(
+    reservations.getByRole("button", { name: "Edit date & guests" }),
+  ).toBeDisabled();
+  await page.clock.fastForward("01:01");
+  await expect(
+    reservations.getByText(
+      `Hang tight! We're still confirming booking ${held.holdReference}. If you hear nothing in a few minutes, please call us on +353 1 676 3144 and quote this reference.`,
+      { exact: true },
+    ),
+  ).toBeVisible();
+  await page.reload();
+  await expect(
+    reservations.getByText("Checking whether your booking went through…", {
+      exact: true,
+    }),
+  ).toBeVisible();
+});
+
+test("reloading while details are still sending waits for the send budget before accepting pending", async ({
+  page,
+  isMobile,
+}) => {
+  await page.clock.install();
+  const { reservations, confirm } = await heldWithDetails(page, isMobile);
+  await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
+  let sending: () => void = () => undefined;
+  const sent = new Promise<void>((resolve) => {
+    sending = resolve;
+  });
+  await page.route("**/book-a-table", async (route) => {
+    if (route.request().method() !== "POST") {
+      await route.fallback();
+      return;
+    }
+    sending();
+  });
+  await page.route("**/api/bookings/hold-status?**", () => undefined);
+  await confirm.click();
+  await sent;
+  await expect(
+    reservations.getByRole("button", { name: "Confirming…", exact: true }),
+  ).toBeDisabled();
+  const startedAt = await page.evaluate(
+    () =>
+      JSON.parse(sessionStorage.getItem("peploes:booking-details") ?? "{}")
+        .startedAt,
+  );
+  await page.clock.fastForward("00:04");
+  await page.unroute("**/book-a-table");
+  await page.unroute("**/api/bookings/hold-status?**");
+  await page.clock.resume();
+  await page.reload();
+
+  const checking = reservations.getByText(
+    "Checking whether your booking went through…",
+    { exact: true },
+  );
+  await expect(checking).toBeVisible();
+  await page.clock.pauseAt(startedAt + 16_000);
+  await expect(checking).toBeVisible();
+  await expect(
+    reservations.getByText(RESEND_NOTE, { exact: true }),
+  ).toHaveCount(0);
+  await expect(confirm).toHaveCount(0);
+  await page.clock.fastForward("00:04");
+  await expect(reservations.getByRole("alert")).toHaveText(RESEND_NOTE);
+  await expect(reservations.getByRole("timer")).toBeVisible();
+  expect(
+    await page.evaluate(() =>
+      sessionStorage.getItem("peploes:booking-details"),
+    ),
+  ).toBeNull();
+});
+
+test("Back to search hides a hold error from the times step", async ({
+  page,
+}) => {
+  const reservations = await openBooking(page);
+  await chooseDate(reservations, laterFreeDate());
+  await findTable(reservations);
+  await reservations
+    .getByRole("button", { name: "8:00 pm", exact: true })
+    .click();
+  await reservations
+    .getByRole("button", { name: "Continue", exact: true })
+    .click();
+  await expect(reservations.getByRole("alert")).toHaveText(
+    "Online booking isn't available right now. Please call us on +353 1 676 3144 or email reception@peploes.com.",
+    { timeout: 10_000 },
+  );
+  await reservations
+    .getByRole("button", { name: "Back to search", exact: true })
+    .click();
+
+  await expect(
+    reservations.getByRole("button", { name: "Find a Table", exact: true }),
+  ).toBeVisible();
+  await expect(reservations.getByRole("alert")).toHaveCount(0);
+});
+
+test("an already booked held choice shows its reference on the restored search", async ({
+  page,
+  isMobile,
+}) => {
+  const { reservations, confirm } = await heldWithDetails(page, isMobile);
+  const held = await page.evaluate(() =>
+    JSON.parse(sessionStorage.getItem("peploes:booking-hold") ?? "{}"),
+  );
+  await page.route("**/api/bookings/hold-status?**", () => undefined);
+  await dropPosts(page, true);
+  await confirm.click();
+  await expect(
+    reservations.getByText("Checking whether your booking went through…", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page.evaluate(() =>
+    sessionStorage.removeItem("peploes:booking-details"),
+  );
+  await page.unroute("**/api/bookings/hold-status?**");
+  await page.unroute("**/book-a-table");
+  await page.reload();
+
+  await expect(
+    reservations.getByRole("button", { name: "Find a Table", exact: true }),
+  ).toBeVisible();
+  await expect(reservations.getByRole("alert")).toHaveText(
+    `You've already booked this table. Your booking reference is ${held.holdReference}.`,
+  );
+});
+
 test("when ResDiary's reply to the details is unclear and the hold is still pending, the guest is asked to confirm again", async ({
   page,
   isMobile,
@@ -259,6 +501,46 @@ function savedPaymentStep(page: Page, reference: string, revision: number) {
     { date: laterFreeDate(), reference, revision },
   );
 }
+
+test("a saved payment wins over the details check and confirmation clears the old attempt", async ({
+  page,
+  isMobile,
+}) => {
+  const { reservations, confirm, booked } = await heldWithDetails(
+    page,
+    isMobile,
+  );
+  const held = await page.evaluate(() =>
+    JSON.parse(sessionStorage.getItem("peploes:booking-hold") ?? "{}"),
+  );
+  await page.route("**/api/bookings/hold-status?**", () => undefined);
+  await dropPosts(page, true);
+  await confirm.click();
+  await expect(
+    reservations.getByText("Checking whether your booking went through…", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await stubStripe(page, "succeeded");
+  await savedPaymentStep(page, held.holdReference, held.holdRevision);
+  await page.unroute("**/api/bookings/hold-status?**");
+  await page.unroute("**/book-a-table");
+  await page.reload();
+
+  await expect(booked).toBeVisible({ timeout: 10_000 });
+  expect(await page.evaluate(() => Reflect.get(window, "stripeMounts"))).toBe(
+    0,
+  );
+  expect(
+    await page.evaluate(() =>
+      sessionStorage.getItem("peploes:booking-details"),
+    ),
+  ).toBeNull();
+  await page.reload();
+  await expect(
+    reservations.getByRole("button", { name: "Find a Table", exact: true }),
+  ).toBeVisible();
+});
 
 async function stubStripe(page: Page, status = "requires_payment_method") {
   await page.route("https://js.stripe.com/**", (route) =>

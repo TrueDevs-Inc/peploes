@@ -97,9 +97,10 @@ the page to them.
   those. The payment step counts as loading until Stripe's card form is ready
   or has failed to load.
 - The tab keeps the choice, `holdReference` and `holdRevision` in
-  `sessionStorage` under `peploes:booking-hold`. A reload or a return to the
-  page sends them to `holdTable` again and brings the guest back to their held
-  table.
+  `sessionStorage` under `peploes:booking-hold`. Unless details or payment are
+  being checked, a reload sends them to `holdTable` again and brings the guest
+  back to their held table. If restoring the hold fails, the search shows the
+  server's message, including any booking reference.
 - When the timer reaches zero, the details form is replaced by "Your table hold
   ran out. Please choose a time again." and a "Choose a Time Again" button.
   Everything the guest typed is kept.
@@ -127,6 +128,14 @@ the page to them.
   - no answer: keeps asking every 2 seconds, and after 60 seconds says "Hang
     tight! We're still confirming booking …" with the reference and the phone
     number. Like the payment message, it doesn't promise an email.
+  Before sending, the tab saves the hold and send start time under
+  `peploes:booking-details`. A reload brings back the held summary and checks
+  that hold. It does not send details or place a hold again. A bank return,
+  accepted payment or saved card step takes priority. After a reload, a pending
+  hold keeps the check running until 18 seconds after sending started: the
+  server's 15-second budget plus a margin. Only then can it ask the guest to
+  confirm again. A known reply or settled check clears the saved send. An
+  unanswered check keeps it for another reload.
   The check belongs to the hold the details were sent for. If the guest goes
   back and moves the hold meanwhile, the form shows for the new hold instead.
 - If the server's cookie change reaches the browser but the reply's body
@@ -269,9 +278,9 @@ The timer tells the guest how long their table is held.
    for up to 15 seconds. If the reply is a plain error, the hold-ran-out view
    shows straight after it; if the reply is lost or unclear, the booking check
    runs.
-6. **After a reload,** send the stored choice and `holdReference` to
-   `holdTable` again. The server hands back the same hold and its time left,
-   without making a new hold or counting against the limit. If 30 seconds or
+6. **After a reload,** resume any details or payment check first. Otherwise,
+   send the stored choice and `holdReference` to `holdTable` again. The server
+   hands back the same hold and its time left, without making a new hold or counting against the limit. If 30 seconds or
    less remain, it makes a new hold instead.
 7. **During payment,** hide the timer once the details step returns a payment
    or card step. Ask ResDiary whether the hold is still pending before payment; its

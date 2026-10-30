@@ -21,7 +21,11 @@ import {
 } from "@/helpers/storage";
 import { useBookingStatus } from "@/hooks/use-booking-status";
 import { useBookingTimes } from "@/hooks/use-booking-times";
-import { useGuestDetails } from "@/hooks/use-guest-details";
+import {
+  forgetGuestDetails,
+  storedGuestDetails,
+  useGuestDetails,
+} from "@/hooks/use-guest-details";
 import { useOpenDates } from "@/hooks/use-open-dates";
 import { storedHold, useTableHold } from "@/hooks/use-table-hold";
 import { ROUTES } from "@/lib/constants";
@@ -32,6 +36,7 @@ import {
 import { TABLE_BOOKING_CONTENT as content } from "@/lib/constants/table-booking";
 import type {
   IBookingTime,
+  IGuestDetailsAttempt,
   IGuestDetailsSending,
   IHoldChoice,
   IHoldSummary,
@@ -71,6 +76,7 @@ export function TableBookingNotice({
 
 export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
   const [step, setStep] = useState(0);
+  const [showRestoreError, setShowRestoreError] = useState(false);
   const [date, setDate] = useState(findTable.calendar.defaultDate);
   const [partySize, setPartySize] = useState(
     String(findTable.partySize.default),
@@ -86,6 +92,7 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
     null,
   );
   const guest = useGuestDetails();
+  const { restore: restoreDetails } = guest;
   const [payment, setPayment] = useState<TPaymentStep | null>(null);
   const [paid, setPaid] = useState<IHoldSummary | null>(null);
   const [paymentError, setPaymentError] = useState<string | null>(null);
@@ -98,7 +105,7 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
   const returnBy = returnByOf(time);
   const times = useBookingTimes(date, partySize, step === 1 || step === 2);
   const hold = useTableHold();
-  const { place } = hold;
+  const { place, resume } = hold;
   const restoring = useRef(true);
 
   const showHeld = useCallback((choice: IHoldChoice, summary: IHoldSummary) => {
@@ -121,11 +128,18 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
     restoring.current = false;
     const saved = savedBooking();
     if (saved?.kind === "held") {
+      setShowRestoreError(true);
       place(saved.choice, (summary) => showHeld(saved.choice, summary));
       return;
     }
     if (!saved) return;
     showHeld(saved.choice, saved.summary);
+    if (saved.kind === "details") {
+      resume(saved.attempt.hold);
+      restoreDetails(saved.attempt);
+      return;
+    }
+    forgetGuestDetails();
     if (saved.kind !== "paid") {
       setPayment(saved.step);
       if (saved.kind === "refused") setPaymentError(content.payment.bankFailed);
@@ -134,11 +148,12 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
     setSessionStorage(PAID_KEY, saved.summary);
     removeSessionStorage(PAYMENT_KEY);
     setPaid(saved.summary);
-  }, [place, showHeld]);
+  }, [place, resume, restoreDetails, showHeld]);
 
   const { forgetHold } = hold;
   const confirmBooking = useCallback(
     (confirmed: ITableBookingConfirmationProps) => {
+      forgetGuestDetails();
       setBooked(confirmed);
       setPayment(null);
       setPaid(null);
@@ -151,9 +166,9 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
   );
 
   function sendDetails() {
-    const held = hold.active?.summary;
-    if (!held) return;
-    guest.send(details, held, (reply) => {
+    const active = hold.active;
+    if (!active) return;
+    guest.send(details, active, (reply) => {
       if (reply.kind === "confirmed") {
         confirmBooking({ reference: reply.reference, summary: reply.summary });
       } else {
@@ -193,6 +208,7 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
 
   function holdChosenTime() {
     if (!time) return;
+    setShowRestoreError(false);
     const choice = {
       searchDate: time.searchDate,
       time: time.time,
@@ -267,6 +283,7 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
               variant="brand-primary"
               className={styles.findTable}
               onClick={() => {
+                setShowRestoreError(false);
                 setTime(null);
                 setReturnAccepted(false);
                 setStep(1);
@@ -279,6 +296,7 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
           <p role="status" className={styles.dateNote}>
             {dateFull && !moveDate && content.fullDate(guests, shortDate)}
           </p>
+          <HoldError message={hold.error} visible={showRestoreError} />
           <TableBookingSupport />
         </>
       )}
@@ -430,11 +448,12 @@ function BookingConfirmation({
 
 interface IDetailsCheckProps {
   hold: IHoldSummary;
+  pendingFrom: number;
   onSettled: (check: TBookingStatusCheck) => void;
 }
 
-function DetailsCheck({ hold, onSettled }: IDetailsCheckProps) {
-  const check = useBookingStatus(hold, 0);
+function DetailsCheck({ hold, pendingFrom, onSettled }: IDetailsCheckProps) {
+  const check = useBookingStatus(hold, pendingFrom);
 
   useEffect(() => {
     if (check.kind !== "checking" && check.kind !== "unknown") {
@@ -557,6 +576,12 @@ type TSavedBooking =
   | { kind: "held"; choice: IHoldChoice }
   | { kind: "paid"; choice: IHoldChoice; summary: IHoldSummary }
   | {
+      kind: "details";
+      choice: IHoldChoice;
+      summary: IHoldSummary;
+      attempt: IGuestDetailsAttempt;
+    }
+  | {
       kind: "refused" | "paying";
       choice: IHoldChoice;
       summary: IHoldSummary;
@@ -600,6 +625,15 @@ function savedBooking(): TSavedBooking | null {
   if (step) {
     const { summary } = step;
     return { kind: "paying", choice: choiceFor(summary), summary, step };
+  }
+  return savedDetailsOrHold();
+}
+
+function savedDetailsOrHold(): TSavedBooking | null {
+  const attempt = storedGuestDetails();
+  if (attempt) {
+    const { summary } = attempt.hold;
+    return { kind: "details", choice: choiceFor(summary), summary, attempt };
   }
   const held = storedHold();
   return held ? { kind: "held", choice: held.choice } : null;
@@ -665,6 +699,21 @@ function BookingProgress({ step }: ITableBookingProgressProps) {
   );
 }
 
+function HoldError({
+  message,
+  visible = true,
+}: {
+  message: string | null;
+  visible?: boolean;
+}) {
+  if (!visible || !message) return null;
+  return (
+    <p role="alert" className={styles.timesMessage}>
+      {message}
+    </p>
+  );
+}
+
 function BookingTimes({
   longDate,
   guests,
@@ -705,11 +754,7 @@ function BookingTimes({
           </label>
         </div>
       )}
-      {holdError && (
-        <p role="alert" className={styles.timesMessage}>
-          {holdError}
-        </p>
-      )}
+      <HoldError message={holdError} />
       <div className={styles.flowActions}>
         <button
           type="button"
@@ -781,7 +826,13 @@ function HeldStep({
   );
 
   if (guest.unsure) {
-    return <DetailsCheck hold={guest.unsure} onSettled={settleDetails} />;
+    return (
+      <DetailsCheck
+        hold={guest.unsure}
+        pendingFrom={guest.pendingFrom}
+        onSettled={settleDetails}
+      />
+    );
   }
   if (paid) {
     return (

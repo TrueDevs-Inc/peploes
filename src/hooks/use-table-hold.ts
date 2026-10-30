@@ -68,5 +68,5 @@ export function useTableHold(): ITableHold {
     removeSessionStorage(STORAGE_KEY);
   }, []);
 
-  return { active, pending, error, place, forgetHold };
+  return { active, pending, error, place, forgetHold, resume: setActive };
 }
