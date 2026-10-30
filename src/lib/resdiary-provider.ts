@@ -23,6 +23,7 @@ import {
   RESDIARY_PATTERNS,
   RESDIARY_PAYMENT_PROVIDERS,
   RESDIARY_QUERY,
+  RESDIARY_REASONS_CACHE_KEY,
   RESDIARY_REQUEST_ID,
   RESDIARY_SIGN_IN_SUCCESS,
   RESDIARY_TIMING,
@@ -37,6 +38,8 @@ import { logToSentry } from "@/lib/error-handler";
 import { getErrorMetadata, UNSENT_NETWORK_CODES } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 import {
+  cancelReasonsReplySchema,
+  cancelReplySchema,
   changeHoldBody,
   changeHoldReplySchema,
   closedDatesReplySchema,
@@ -58,6 +61,8 @@ import {
 } from "@/lib/resdiary-schema";
 import type {
   IResDiaryCallOptions,
+  IResDiaryCancelHoldInput,
+  IResDiaryCancelReason,
   IResDiaryChangeHoldInput,
   IResDiaryClock,
   IResDiaryClosedDates,
@@ -76,6 +81,7 @@ import type {
   IResDiaryTimeSearchInput,
   IResDiaryTimes,
   IResDiaryWeekdays,
+  TResDiaryCancelReasonsReply,
   TResDiaryClosedDatesReply,
   TResDiaryDateRangeReply,
   TResDiaryFailure,
@@ -105,6 +111,7 @@ interface IResDiaryConnection {
   signInPausedUntil: number;
   rules: TResDiaryCache<IResDiaryRules>;
   closedDates: TResDiaryCache<IResDiaryClosedDates>;
+  cancelReasons: TResDiaryCache<IResDiaryCancelReason[]>;
 }
 
 interface IResDiaryRequest {
@@ -1210,6 +1217,142 @@ async function getHoldStatus(
   return reply.map(toHoldStatus);
 }
 
+function toCancelReasons(
+  reasons: TResDiaryCancelReasonsReply,
+): IResDiaryCancelReason[] {
+  return reasons
+    .filter(
+      (reason) =>
+        reason.DisplayOnline &&
+        reason.ApplyToStandardBookings &&
+        !reason.IsNoShow &&
+        !reason.DoesBlock,
+    )
+    .map((reason) => ({ id: reason.Id, label: reason.Description }));
+}
+
+function getCancellationReasons(
+  connection: IResDiaryConnection,
+  deadlineAt: number,
+): TResDiaryResult<IResDiaryCancelReason[]> {
+  const caller = { operation: "getCancellationReasons" as const, deadlineAt };
+  return connection.cancelReasons(
+    RESDIARY_REASONS_CACHE_KEY,
+    caller,
+    async (loadDeadlineAt) => {
+      const query = new URLSearchParams({
+        [RESDIARY_QUERY.onlyEnabledReasons]: "true",
+      });
+      const reasons = await call(
+        connection,
+        {
+          operation: "getCancellationReasons",
+          method: "GET",
+          path: `${restaurantPath(connection, RESDIARY_ENDPOINTS.cancellationReasons)}?${query}`,
+          emptyBody: [],
+          deadlineAt: loadDeadlineAt,
+        },
+        cancelReasonsReplySchema,
+      );
+      return reasons.map(toCancelReasons);
+    },
+  );
+}
+
+function sendCancel(
+  connection: IResDiaryConnection,
+  input: IResDiaryCancelHoldInput,
+  deadlineAt: number,
+): TResDiaryResult<unknown> {
+  const query = new URLSearchParams({
+    [RESDIARY_QUERY.cancellationReasonId]: String(input.reasonId),
+  });
+  const endpoint = [
+    RESDIARY_ENDPOINTS.booking,
+    encodeURIComponent(input.reference),
+    RESDIARY_ENDPOINTS.cancel,
+  ].join("/");
+  return call(
+    connection,
+    {
+      operation: "cancelHold",
+      method: "POST",
+      path: `${restaurantPath(connection, endpoint)}?${query}`,
+      write: true,
+      emptyBody: null,
+      deadlineAt,
+    },
+    cancelReplySchema,
+  );
+}
+
+async function stateAfterCancel(
+  connection: IResDiaryConnection,
+  holdId: number,
+  deadlineAt: number,
+): TResDiaryResult<"ended" | "pending" | "confirmed"> {
+  for (const delay of RESDIARY_TIMING.cancelCheckDelaysMs) {
+    await sleep(delay);
+    const reply = await getHoldStatus(connection, holdId, deadlineAt);
+    if (reply.isErr()) {
+      return err({
+        kind: "outcome_unknown",
+        operation: "cancelHold",
+        detail: `check ${reply.error.kind}`,
+      });
+    }
+    const { status } = reply.value;
+    if (status === "failed" || status === "cancelled") {
+      return ok("ended");
+    }
+    if (status === "confirmed") {
+      return ok("confirmed");
+    }
+  }
+  return ok("pending");
+}
+
+async function cancelHold(
+  connection: IResDiaryConnection,
+  input: IResDiaryCancelHoldInput,
+  deadlineAt: number,
+): TResDiaryResult<void> {
+  const operation = "cancelHold";
+  const fields = invalidFields({
+    holdId: isPositiveId(input.holdId),
+    reference: RESDIARY_PATTERNS.reference.test(input.reference),
+    reasonId: isPositiveId(input.reasonId),
+  });
+  if (fields.length > 0) {
+    return err(rejectedInput(operation, fields));
+  }
+  for (let round = 0; round < RESDIARY_LIMITS.cancelRounds; round += 1) {
+    const sent = await sendCancel(connection, input, deadlineAt);
+    if (sent.isErr() && sent.error.kind !== "outcome_unknown") {
+      return err(sent.error);
+    }
+    const state = await stateAfterCancel(connection, input.holdId, deadlineAt);
+    if (state.isErr()) {
+      return err(state.error);
+    }
+    if (state.value === "ended") {
+      return ok(undefined);
+    }
+    if (state.value === "confirmed") {
+      return err({
+        kind: "outcome_unknown",
+        operation,
+        detail: RESDIARY_DETAILS.confirmedBeforeCancel,
+      });
+    }
+  }
+  return err({
+    kind: "outcome_unknown",
+    operation,
+    detail: RESDIARY_DETAILS.cancelNotApplied,
+  });
+}
+
 function readConfigFromEnv(): IResDiaryConfig | null {
   const apiUrl = env.RESDIARY_API_URL;
   const micrositeName = env.RESDIARY_MICROSITE_NAME;
@@ -1243,6 +1386,7 @@ export function createResDiaryProvider(deps: IResDiaryDeps = {}) {
         signInPausedUntil: 0,
         rules: createCache(),
         closedDates: createCache(),
+        cancelReasons: createCache(),
       }
     : null;
 
@@ -1339,6 +1483,19 @@ export function createResDiaryProvider(deps: IResDiaryDeps = {}) {
     getClosedDates: (options?: IResDiaryCallOptions) =>
       run("getClosedDates", (connected) =>
         getClosedDates(connected, deadline(options)),
+      ),
+    getCancellationReasons: (options?: IResDiaryCallOptions) =>
+      run("getCancellationReasons", (connected) =>
+        getCancellationReasons(connected, deadline(options)),
+      ),
+    cancelHold: (
+      input: IResDiaryCancelHoldInput,
+      options?: IResDiaryCallOptions,
+    ) =>
+      run(
+        "cancelHold",
+        (connected) => cancelHold(connected, input, deadline(options)),
+        { holdId: input.holdId },
       ),
   };
 }

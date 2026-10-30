@@ -28,6 +28,7 @@ import type { cookiePreferencesSchema } from "@/lib/cookie-consent";
 import type { ErrorCode, HttpVerb, LogLevel } from "@/lib/enums";
 import type { createResDiaryProvider } from "@/lib/resdiary-provider";
 import type {
+  cancelReasonsReplySchema,
   closedDatesReplySchema,
   dateRangeReplySchema,
   guestReplySchema,
@@ -339,7 +340,9 @@ export type TResDiaryOperation =
   | "changeHold"
   | "submitHoldGuest"
   | "getHoldStatus"
-  | "getClosedDates";
+  | "getClosedDates"
+  | "getCancellationReasons"
+  | "cancelHold";
 
 interface IResDiaryFailureBase {
   operation: TResDiaryOperation;
@@ -477,6 +480,17 @@ export interface IResDiaryHoldStatus {
   reference: string | null;
 }
 
+export interface IResDiaryCancelReason {
+  id: number;
+  label: string;
+}
+
+export interface IResDiaryCancelHoldInput {
+  holdId: number;
+  reference: string;
+  reasonId: number;
+}
+
 export interface IResDiaryClosedDates {
   closedWeekdays: number[];
   closedPeriods: IDatePeriod[];
@@ -527,6 +541,9 @@ export type TResDiaryClosedDatesReply = z.infer<typeof closedDatesReplySchema>;
 export type TResDiaryHoldReply = z.infer<typeof holdReplySchema>;
 export type TResDiaryGuestReply = z.infer<typeof guestReplySchema>;
 export type TResDiaryHoldStatusReply = z.infer<typeof holdStatusReplySchema>;
+export type TResDiaryCancelReasonsReply = z.infer<
+  typeof cancelReasonsReplySchema
+>;
 
 export type TBookingProvider = Pick<
   TResDiaryProvider,
@@ -538,6 +555,8 @@ export type TBookingProvider = Pick<
   | "changeHold"
   | "submitHoldGuest"
   | "getHoldStatus"
+  | "getCancellationReasons"
+  | "cancelHold"
 >;
 
 export type TBookingOperation =
@@ -546,7 +565,8 @@ export type TBookingOperation =
   | "getTimes"
   | "holdTable"
   | "submitGuestDetails"
-  | "getHoldStatus";
+  | "getHoldStatus"
+  | "releaseHold";
 
 export type TBookingSkipReason =
   (typeof BOOKING_SKIP_REASONS)[keyof typeof BOOKING_SKIP_REASONS];
@@ -741,6 +761,10 @@ export interface IHoldStatusResult {
   summary: IHoldSummary;
   clearHold: boolean;
 }
+
+export type TReleasedHold =
+  | { kind: "released" }
+  | { kind: "confirmed"; reference: string; summary: IHoldSummary };
 
 export interface IHoldCookieOptions {
   httpOnly: boolean;

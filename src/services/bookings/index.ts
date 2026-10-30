@@ -22,6 +22,7 @@ import { findTableData } from "@/services/bookings/find-table-data";
 import { submitGuestDetails } from "@/services/bookings/guest-details";
 import { holdStatus } from "@/services/bookings/hold-status";
 import { holdTable } from "@/services/bookings/hold-table";
+import { releaseHold } from "@/services/bookings/release-hold";
 import { findTimes } from "@/services/bookings/times";
 
 export function createBookingService(deps: IBookingServiceDeps = {}) {
@@ -69,6 +70,10 @@ export function createBookingService(deps: IBookingServiceDeps = {}) {
     getHoldStatus: (query: unknown, holdToken?: string) =>
       guarded("getHoldStatus", (secret) =>
         holdStatus(provider, secret, query, holdToken),
+      ),
+    releaseHold: (query: unknown, holdToken?: string) =>
+      guarded("releaseHold", (secret) =>
+        releaseHold(provider, secret, query, holdToken),
       ),
     submitGuestDetails: (input: unknown, holdToken?: string) =>
       guarded(

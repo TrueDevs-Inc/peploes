@@ -226,6 +226,40 @@ The hold cookie lasts until the hold ends plus 15 minutes, so the payment check
 still works after the timer reaches zero. The server refuses an older cookie
 without asking ResDiary, even if a client keeps sending it.
 
+## Releasing a hold
+
+The `releaseHold` server action cancels the page's own hold on ResDiary, so a
+guest who changes their mind frees the table at once instead of blocking it
+until it lapses. It takes the page's `holdReference` and `holdRevision` and
+needs the signed hold cookie, like the other booking actions.
+
+1. It asks ResDiary for the hold's status first. If the booking is already
+   confirmed (paid in another tab, for example), it cancels nothing and sends
+   the confirmation instead, so it can never cancel a paid booking. A hold
+   ResDiary has already ended counts as released.
+2. Otherwise it sends ResDiary's `Booking/{reference}/Cancel` with a
+   cancellation reason. Reasons come from ResDiary's `CancellationReasons`
+   (cached for 5 minutes): only those a guest may give online that apply to
+   standard bookings, never a no-show or a reason that blocks the guest. It
+   picks the first one whose name mentions a change ("Change of plans" on the
+   sandbox), or else the first allowed one.
+3. It reads the hold back and counts it released only when ResDiary reports it
+   ended. A 204 that leaves the hold pending gets one more cancel. If the
+   status can't be read, the cancel isn't applied, or no reason can be used, it
+   answers `ServiceUnavailable` and keeps the cookie; the hold then lapses by
+   itself.
+
+When released or confirmed, the action deletes the hold cookie.
+
+On the sandbox on 28 Oct 2026, a hold waiting for its deposit (B9JFHNM9) was
+released in 2.4 seconds and read back as Failed; a hold without guest details
+(BLLZRPQR) was released too.
+
+Before launch, check two things on Peploe's live ResDiary account. A released
+hold shows in the diary as a cancelled booking with the guest's name. And if
+the account sends cancellation emails (the sandbox doesn't), the guest would
+get one for a table they never booked.
+
 ## After payment
 
 Stripe accepting a payment is not a confirmed booking. Show a confirmation only

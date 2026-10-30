@@ -20,15 +20,21 @@ export const RESDIARY_ENDPOINTS = {
   guestDetails: "UpdateTableHoldWithCustomer",
   holdStatus: "TableHoldBookingStatus",
   closedDates: "ClosedDates",
+  booking: "Booking",
+  cancel: "Cancel",
+  cancellationReasons: "CancellationReasons",
 } as const;
 
 export const RESDIARY_QUERY = {
   date: "date",
   channelCode: "channelCode",
+  onlyEnabledReasons: "onlyEnabledReasons",
+  cancellationReasonId: "cancellationReasonId",
 } as const;
 
 export const RESDIARY_AVAILABILITY_TYPE = "Reservation";
 export const RESDIARY_CLOSED_DATES_CACHE_KEY = "all";
+export const RESDIARY_REASONS_CACHE_KEY = "all";
 
 export const RESDIARY_TIMING = {
   budgetMs: 8000,
@@ -42,6 +48,7 @@ export const RESDIARY_TIMING = {
   cacheTtlMs: DURATION.FIVE_MINUTES_MS,
   maxHoldMs: DURATION.FIFTEEN_MINUTES_MS,
   dateHeaderMarginMs: 1000,
+  cancelCheckDelaysMs: [500, 1500],
 } as const;
 
 export const RESDIARY_LIMITS = {
@@ -54,6 +61,7 @@ export const RESDIARY_LIMITS = {
   loggedIssuesMax: 10,
   millisecondDigits: 3,
   lastSuccessStatus: 299,
+  cancelRounds: 2,
 } as const;
 
 export const RESDIARY_REQUEST_ID = {
@@ -114,6 +122,7 @@ export const RESDIARY_WRITE_OPERATIONS = new Set<TResDiaryOperation>([
   "createHold",
   "changeHold",
   "submitHoldGuest",
+  "cancelHold",
 ]);
 
 export const RESDIARY_DETAILS = {
@@ -125,6 +134,8 @@ export const RESDIARY_DETAILS = {
   signInUnreadable: "sign-in unreadable",
   signInRefused: "sign-in refused",
   noReference: "no reference",
+  cancelNotApplied: "cancel not applied",
+  confirmedBeforeCancel: "confirmed before the cancel",
   unreadableExpiry: "unreadable expiry",
   unusableExpiry: "unusable expiry",
   root: "(root)",

@@ -122,6 +122,14 @@ export function fakeProvider(
         );
       },
     ),
+    getCancellationReasons: vi.fn<TBookingProvider["getCancellationReasons"]>(
+      function reasonsReply() {
+        return Promise.resolve(ok([{ id: 26952, label: "Change of plans" }]));
+      },
+    ),
+    cancelHold: vi.fn<TBookingProvider["cancelHold"]>(function cancelReply() {
+      return Promise.resolve(ok(undefined));
+    }),
   };
 }
 

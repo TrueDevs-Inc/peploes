@@ -2130,3 +2130,169 @@ describe("searchTimes with one unreadable slot", function badSlotTests() {
     expect(loggedText()).toContain("ResDiary sent unreadable time slots");
   });
 });
+
+describe("getCancellationReasons", function cancellationReasonsTests() {
+  const REASONS = [
+    {
+      Id: 1,
+      Description: "Illness",
+      DisplayOnline: true,
+      ApplyToStandardBookings: true,
+      IsNoShow: false,
+      DoesBlock: false,
+    },
+    {
+      Id: 2,
+      Description: "Staff only",
+      DisplayOnline: false,
+      ApplyToStandardBookings: true,
+      IsNoShow: false,
+      DoesBlock: false,
+    },
+    {
+      Id: 3,
+      Description: "Events only",
+      DisplayOnline: true,
+      ApplyToStandardBookings: false,
+      IsNoShow: false,
+      DoesBlock: false,
+    },
+    {
+      Id: 4,
+      Description: "No show",
+      DisplayOnline: true,
+      ApplyToStandardBookings: true,
+      IsNoShow: true,
+      DoesBlock: false,
+    },
+    {
+      Id: 5,
+      Description: "Blocked guest",
+      DisplayOnline: true,
+      ApplyToStandardBookings: true,
+      IsNoShow: false,
+      DoesBlock: true,
+    },
+    {
+      Id: 6,
+      Description: "Change of plans",
+      DisplayOnline: true,
+      ApplyToStandardBookings: true,
+      IsNoShow: false,
+      DoesBlock: false,
+    },
+  ];
+
+  it("keeps only reasons a guest may give online, and asks ResDiary once in five minutes", async function onlineReasons() {
+    const fake = fakeResDiary({
+      "POST /api/Jwt/v2/Authenticate": signedIn(),
+      "GET /CancellationReasons": reply(200, REASONS),
+    });
+    const resdiary = createResDiaryProvider({
+      config: CONFIG,
+      fetch: fake.fetch,
+    });
+
+    const first = await settle(resdiary.getCancellationReasons());
+    const second = await settle(resdiary.getCancellationReasons());
+
+    expect(first._unsafeUnwrap()).toEqual([
+      { id: 1, label: "Illness" },
+      { id: 6, label: "Change of plans" },
+    ]);
+    expect(second._unsafeUnwrap()).toEqual(first._unsafeUnwrap());
+    expect(fake.count("GET /CancellationReasons")).toBe(1);
+    expect(fake.requests.at(-1)?.search.get("onlyEnabledReasons")).toBe("true");
+  });
+});
+
+describe("cancelHold", function cancelHoldTests() {
+  const CANCEL = "POST /Booking/B9GXWPLY/Cancel";
+  const STATUS = "GET /TableHoldBookingStatus/425742";
+  const INPUT = { holdId: 425742, reference: "B9GXWPLY", reasonId: 26952 };
+
+  function holdStatus(status: string): THandler {
+    return reply(200, {
+      Status: status,
+      Booking: { Reference: "B9GXWPLY", BookingId: 425742 },
+    });
+  }
+
+  function provider(routes: Record<string, THandler | THandler[]>) {
+    const fake = fakeResDiary({
+      "POST /api/Jwt/v2/Authenticate": signedIn(),
+      ...routes,
+    });
+    return {
+      fake,
+      resdiary: createResDiaryProvider({ config: CONFIG, fetch: fake.fetch }),
+    };
+  }
+
+  it("sends the reason, then confirms on ResDiary that the hold has ended", async function cancels() {
+    const { fake, resdiary } = provider({
+      [CANCEL]: reply(204),
+      [STATUS]: holdStatus("Failed"),
+    });
+
+    const result = await settle(resdiary.cancelHold(INPUT));
+
+    expect(result.isOk()).toBe(true);
+    const sent = fake.requests.find(function isCancel(request) {
+      return request.path.endsWith("/Booking/B9GXWPLY/Cancel");
+    });
+    expect(sent?.search.get("cancellationReasonId")).toBe("26952");
+    expect(fake.count(STATUS)).toBe(1);
+  });
+
+  it("sends once more when a 204 leaves the hold pending, then reports the cancel wasn't applied", async function notApplied() {
+    const { fake, resdiary } = provider({
+      [CANCEL]: reply(204),
+      [STATUS]: holdStatus("Pending"),
+    });
+
+    const result = await settle(resdiary.cancelHold(INPUT));
+
+    expect(result._unsafeUnwrapErr()).toMatchObject({
+      kind: "outcome_unknown",
+      operation: "cancelHold",
+    });
+    expect(fake.count(CANCEL)).toBe(2);
+  });
+
+  it("checks the hold after a cancel whose reply was lost", async function lostReply() {
+    const { fake, resdiary } = provider({
+      [CANCEL]: failsWith("ECONNRESET"),
+      [STATUS]: holdStatus("Failed"),
+    });
+
+    const result = await settle(resdiary.cancelHold(INPUT));
+
+    expect(result.isOk()).toBe(true);
+    expect(fake.count(CANCEL)).toBe(1);
+  });
+
+  it("stops without checking when ResDiary refuses the cancel", async function refused() {
+    const { fake, resdiary } = provider({
+      [CANCEL]: reply(400, { Message: "Booking cannot be cancelled" }),
+      [STATUS]: holdStatus("Failed"),
+    });
+
+    const result = await settle(resdiary.cancelHold(INPUT));
+
+    expect(result.isErr()).toBe(true);
+    expect(fake.count(STATUS)).toBe(0);
+  });
+
+  it("refuses a hold id or reason id that is not a positive whole number", async function refusesBadIds() {
+    const { fake, resdiary } = provider({});
+
+    const result = await resdiary.cancelHold({ ...INPUT, reasonId: 0 });
+
+    expect(result._unsafeUnwrapErr()).toMatchObject({
+      kind: "rejected",
+      fields: ["reasonId"],
+    });
+    expect(fake.requests).toHaveLength(0);
+  });
+});

@@ -8,6 +8,7 @@ import {
   fakeProvider,
   GUEST_DETAILS,
   HOLD,
+  HOLD_QUERY,
   HOLD_SECRET,
   LUNCH,
   NOW,
@@ -464,5 +465,60 @@ describe("two tabs", function twoTabTests() {
       ok: true,
       data: { kind: "confirmed", reference: "BTABTWO" },
     });
+  });
+});
+
+describe("the releaseHold action", function releaseHoldActionTests() {
+  async function held() {
+    const edgesSetUp = setUp();
+    vi.resetModules();
+    const actions = await import("@/actions/bookings");
+    await actions.holdTable(DINNER);
+    return { ...edgesSetUp, actions };
+  }
+
+  it("cancels the hold on ResDiary and forgets its cookie", async function releases() {
+    const { provider, cookies, actions } = await held();
+
+    const response = await actions.releaseHold(HOLD_QUERY);
+
+    expect(response).toStrictEqual({ ok: true, data: { kind: "released" } });
+    expect(provider.cancelHold).toHaveBeenCalledTimes(1);
+    expect(cookies.has(COOKIE)).toBe(false);
+  });
+
+  it("keeps the cookie when ResDiary can't confirm the hold was released", async function keepsCookie() {
+    const { provider, cookies, actions } = await held();
+    provider.cancelHold.mockResolvedValue(
+      err({ kind: "outcome_unknown", operation: "cancelHold" }),
+    );
+
+    const response = await actions.releaseHold(HOLD_QUERY);
+
+    expect(response).toMatchObject({
+      ok: false,
+      error: { code: ErrorCode.ServiceUnavailable },
+    });
+    expect(cookies.has(COOKIE)).toBe(true);
+  });
+
+  it("sends the booking instead when ResDiary has already confirmed it", async function confirmed() {
+    const { provider, cookies, actions } = await held();
+    provider.getHoldStatus.mockResolvedValue(
+      ok({ status: "confirmed", reference: HOLD.reference }),
+    );
+
+    const response = await actions.releaseHold(HOLD_QUERY);
+
+    expect(response).toStrictEqual({
+      ok: true,
+      data: {
+        kind: "confirmed",
+        reference: "B9GXWPLY",
+        summary: expect.objectContaining({ timeLabel: "7:30 pm" }),
+      },
+    });
+    expect(provider.cancelHold).not.toHaveBeenCalled();
+    expect(cookies.has(COOKIE)).toBe(false);
   });
 });
