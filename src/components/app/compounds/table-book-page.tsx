@@ -4,10 +4,8 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import styles from "@/components/app/compounds/table-book-page.module.css";
-import {
-  TableBookingNotice,
-  TableBookingPanel,
-} from "@/components/app/compounds/table-booking-panel";
+import { TableBookingLoader } from "@/components/app/compounds/table-booking-loader";
+import { TableBookingNotice } from "@/components/app/compounds/table-booking-panel";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/lib/constants";
 import { TABLE_BOOK_PAGE_CONTENT } from "@/lib/constants/table-book-page";
@@ -93,9 +91,5 @@ export function TableBookPage({ booking }: ITableBookPageProps) {
 
 async function TableBookingSection({ booking }: ITableBookPageProps) {
   const result = await booking;
-  return result.ok ? (
-    <TableBookingPanel findTable={result.data} />
-  ) : (
-    <TableBookingNotice message={result.error.message} />
-  );
+  return <TableBookingLoader result={result} />;
 }

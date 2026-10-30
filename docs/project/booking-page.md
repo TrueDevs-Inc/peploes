@@ -26,8 +26,11 @@ the page to them.
   panel behind `Suspense`, so the hero and the rest of the page never wait for
   ResDiary. While it loads, the panel says "Loading available dates…", shows
   the phone and email, and reserves roughly its final height.
-- If the call fails, the panel shows the server's message, which names the
+- If the first load fails, the panel shows the server's message, which names the
   phone and email. The rest of the page is unchanged.
+- After a booking action changes a cookie, the page re-renders on the server.
+  If loading the booking data fails then, the panel stays mounted with the data
+  it already has.
 - The date picker opens on `calendar.defaultDate`. A day can be chosen only when
   `isBookableDay` in `src/lib/dates.ts` allows it: from `today` to `lastDate`,
   and not on a closed weekday or in a closed period. The server checks closed
