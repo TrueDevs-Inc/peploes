@@ -19,7 +19,10 @@ export const FOOTER_CONTENT: IFooterContent = {
     { label: NAVBAR_CONTENT.groupsLabel, href: ROUTES.PRIVATE_DINING },
     { label: "What’s On", href: ROUTES.WHATS_ON },
     { label: "The Journal" },
-    { label: "Visit & Contact", href: ROUTES.VISIT_CONTACT },
+    {
+      label: "Visit & Contact",
+      href: ROUTES.VISIT_CONTACT,
+    },
     { label: "Gift Vouchers" },
   ],
   newsletter: {
@@ -28,14 +31,29 @@ export const FOOTER_CONTENT: IFooterContent = {
       "Seasonal notes from St Stephen's Green — food, wine, people and what's happening at Peploe's.",
     emailLabel: "Your email address",
     submitLabel: "Subscribe",
-    status: "Newsletter signup is not available yet.",
+    status:
+      "Newsletter signup is not available yet. Your email has not been sent or saved.",
+    requiredError: "Please enter your email address.",
+    invalidError: "Please enter a valid email address, such as name@gmail.com.",
+    completionHint: "Press Tab to complete your email, or Escape to dismiss.",
+    domains: [
+      "gmail.com",
+      "outlook.com",
+      "hotmail.com",
+      "yahoo.com",
+      "icloud.com",
+    ],
   },
   copyright: "© 2026 Peploe’s",
   legalNavigationLabel: "Legal and accessibility",
   legalLabels: [
-    { label: "Privacy", href: ROUTES.PRIVACY_COOKIES },
+    { label: "Privacy Policy", href: ROUTES.PRIVACY_POLICY },
     { label: "Terms", href: ROUTES.TERMS_CONDITIONS },
     { label: "Accessibility", href: ROUTES.ACCESSIBILITY_POLICY },
+    {
+      label: "Booking & Cancellation",
+      href: ROUTES.BOOKING_CANCELLATION_TERMS,
+    },
   ],
   instagramHref: "https://www.instagram.com/peploesstephensgreen/",
   instagramLabel: "Peploe’s on Instagram",

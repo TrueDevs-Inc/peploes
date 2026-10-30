@@ -1,3 +1,64 @@
+.card {
+  position: relative;
+  cursor: pointer;
+}
+
+.card [data-story-details] {
+  display: flex;
+  flex-direction: column;
+  gap: inherit;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card [data-story-copy] {
+    transform: translateY(var(--story-hidden-offset, 0px));
+    transition: transform 400ms var(--ease-organic);
+  }
+
+  .card [data-story-details] {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 400ms var(--ease-organic);
+  }
+
+  .card:where(:hover, :has(:focus-visible)) [data-story-copy] {
+    transform: translateY(0);
+  }
+
+  .card:where(:hover, :has(:focus-visible)) [data-story-details] {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .card [data-story-copy] {
+    transition:
+      opacity 350ms var(--ease-organic),
+      transform 350ms var(--ease-organic);
+  }
+
+  .card:where([data-copy-reveal="pending"]) [data-story-copy] {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  .card:where([data-copy-reveal="visible"], :focus-within) [data-story-copy] {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card [data-story-copy],
+  .card [data-story-details] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+    pointer-events: auto;
+  }
+}
+
 .familyOverlay {
   background: linear-gradient(
     -161.49deg,

@@ -19,6 +19,3 @@ export const HUMAN_HOSPITALITY_CONTENT = {
     alt: "A glowing lamp and vintage telephone on the Peploe’s reception desk.",
   },
 } as const satisfies IHumanHospitalityContent;
-
-export const HUMAN_HOSPITALITY_CONTACT_CLASSNAME =
-  "h-auto min-h-11 gap-2 rounded-[4px] border-peploe-burgundy/25 bg-transparent py-2.5 text-[15px] leading-[22px] font-medium text-peploe-burgundy shadow-none focus-visible:border-peploe-burgundy focus-visible:ring-peploe-burgundy/40 has-[>svg]:pr-5 has-[>svg]:pl-4";

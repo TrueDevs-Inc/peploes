@@ -1,11 +1,10 @@
-import Image from "next/image";
-
+import { MenuIntroImage } from "@/components/app/atoms/menu-intro-image";
 import { Breadcrumbs } from "@/components/app/compounds/breadcrumb-navigation";
 import { MenuBooking } from "@/components/app/compounds/menu-booking";
 import { MenuCourse } from "@/components/app/molecules/menu-course";
 import { MenuEditorialIntro } from "@/components/app/molecules/menu-editorial-intro";
 import { MenuNotes } from "@/components/app/molecules/menu-notes";
-import { ROUTES } from "@/lib/constants";
+import { MENU_ROUTES, ROUTES } from "@/lib/constants";
 import { dmSans, ebGaramond } from "@/lib/fonts";
 import type { IMenuContentProps, IMenuImageStyle } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -35,11 +34,11 @@ export function RestaurantMenu({ menu }: IMenuContentProps) {
               menu.image && "xl:min-h-72 xl:grid-cols-2",
             )}
           >
-            <div className="relative z-10">
+            <div data-scroll-reveal className="relative z-10">
               <Breadcrumbs
                 items={[
                   { name: "Menus", url: ROUTES.MENUS },
-                  { name: menu.slug, url: `${ROUTES.MENUS}/${menu.slug}` },
+                  { name: menu.slug, url: MENU_ROUTES[menu.slug] },
                 ]}
                 className="[&_ol]:gap-4 [&_ol]:text-sm [&_ol]:leading-5 [&_ol]:font-medium [&_ol]:tracking-[0.08em] [&_ol]:text-peploe-burgundy [&_ol]:uppercase [&_li]:gap-4 [&_[aria-current]]:text-peploe-burgundy"
               />
@@ -70,10 +69,8 @@ export function RestaurantMenu({ menu }: IMenuContentProps) {
                       "xl:absolute xl:left-(--menu-image-crop-left) xl:top-(--menu-image-crop-top) xl:h-auto xl:w-(--menu-image-crop-width) xl:aspect-(--menu-image-crop-aspect) xl:origin-top-left xl:rotate-(--menu-image-crop-rotation)",
                   )}
                 >
-                  <Image
-                    src={menu.image.src}
-                    alt={menu.image.alt}
-                    fill
+                  <MenuIntroImage
+                    image={menu.image}
                     sizes={
                       crop
                         ? `(min-width: 1584px) ${(1440 * crop.widthPercent) / 100}px, (min-width: 1280px) calc((100vw - 144px) * ${crop.widthPercent / 100}), (min-width: 640px) 100vw, calc(100vw - 48px)`

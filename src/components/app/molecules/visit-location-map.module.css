@@ -1,0 +1,67 @@
+.shell:fullscreen {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+}
+.canvas {
+  position: absolute;
+  inset: 0;
+}
+.notice,
+.recenter {
+  position: absolute;
+  z-index: 1;
+  background: var(--warm-cream);
+  color: var(--peploe-burgundy);
+  border-radius: 2px;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+.notice {
+  bottom: 28px;
+  left: 12px;
+  right: 12px;
+}
+.recenter {
+  top: 12px;
+  right: 52px;
+  min-width: 44px;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.marker {
+  width: 34px;
+  height: 44px;
+  background: var(--peploe-burgundy);
+  clip-path: polygon(
+    50% 100%,
+    4% 40%,
+    0 25%,
+    8% 10%,
+    25% 0,
+    75% 0,
+    92% 10%,
+    100% 25%,
+    96% 40%
+  );
+  cursor: pointer;
+}
+.marker::after {
+  content: "";
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--warm-cream);
+}
+.marker:focus-visible {
+  background: var(--ink);
+}
+.popupAddress {
+  white-space: pre-line;
+  padding-right: 16px;
+}

@@ -22,7 +22,7 @@ test("arrows animate when hovering the whole control and respect reduced motion"
     name: "Subscribe",
     exact: true,
   });
-  await expect(subscribe).toHaveAttribute("aria-disabled", "true");
+  await expect(subscribe).toBeEnabled();
 
   for (const control of [booking, email, subscribe]) {
     const arrow = control.locator("svg.lucide-arrow-right");

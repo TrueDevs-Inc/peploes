@@ -31,6 +31,10 @@ export const VISIT_CONTACT_CONTENT = {
     map: {
       src: "/peploes-visit-map.webp",
       alt: "Map showing Peploe’s on the north side of St Stephen’s Green in central Dublin.",
+      label: "Interactive map showing Peploe’s",
+      unavailable: "Interactive map unavailable. You can still get directions.",
+      recenterLabel: "Recenter map on Peploe’s",
+      markerLabel: "Peploe’s, 16 St Stephen’s Green",
     },
     transportHeading: "Getting here",
     transport: [
@@ -43,7 +47,6 @@ export const VISIT_CONTACT_CONTENT = {
         heading: "DART",
         description: "Dublin Pearse Station is within walking distance.",
         icon: "/peploes-visit-luas.svg",
-        accent: true,
       },
       {
         heading: "Taxi",
@@ -65,5 +68,18 @@ export const VISIT_CONTACT_CONTENT = {
     description:
       "From St Stephen’s Green into a warmer world of food, wine and hospitality.",
     image: { src: "/peploes-entrance-backdrop.png", alt: "" },
+  },
+} as const;
+
+export const VISIT_MAP = {
+  center: [-6.25817, 53.33949] as [number, number],
+  zoom: 15,
+  minZoom: 10,
+  maxZoom: 19,
+  loadTimeoutMs: 20_000,
+  colors: {
+    land: "#faf6ed",
+    water: "#c3d7dc",
+    park: "#dce3cc",
   },
 } as const;

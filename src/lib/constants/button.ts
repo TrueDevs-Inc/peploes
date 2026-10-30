@@ -29,6 +29,7 @@ export const buttonVariants = cva(
           "border border-peploe-burgundy/25 bg-transparent text-peploe-burgundy shadow-none hover:border-peploe-burgundy/60 hover:bg-peploe-burgundy/6",
       },
       size: {
+        cta: "h-11 w-fit max-w-full rounded-[4px] px-5 py-2.5 text-base leading-6 has-[>svg]:px-5",
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
         sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
         lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
@@ -36,6 +37,12 @@ export const buttonVariants = cva(
       },
     },
     compoundVariants: [
+      {
+        variant: "brand-contact",
+        size: "cta",
+        className:
+          "pl-4 text-[15px] leading-[22px] focus-visible:border-peploe-burgundy focus-visible:ring-peploe-burgundy/40 has-[>svg]:pl-4",
+      },
       {
         variant: [
           "brand-primary",

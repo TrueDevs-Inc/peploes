@@ -6,7 +6,8 @@ export const optionalMenuTextSchema = z
   .string()
   .trim()
   .nullish()
-  .transform((value) => value || undefined);
+  .transform((value) => value || undefined)
+  .optional();
 export const menuPriceSchema = z
   .number()
   .finite()

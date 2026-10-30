@@ -1,0 +1,36 @@
+.exit {
+  animation: menu-exit 150ms ease-in both;
+}
+
+.enter {
+  animation: menu-enter 220ms ease-out both;
+}
+
+@keyframes menu-exit {
+  from {
+    opacity: var(--menu-motion-opacity, 1);
+    transform: var(--menu-motion-transform, translateY(0));
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes menu-enter {
+  from {
+    opacity: var(--menu-motion-opacity, 0);
+    transform: var(--menu-motion-transform, translateY(8px));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exit,
+  .enter {
+    animation: none;
+  }
+}

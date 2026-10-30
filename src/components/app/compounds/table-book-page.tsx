@@ -30,7 +30,10 @@ export function TableBookPage({ booking }: ITableBookPageProps) {
             className={styles.heroPhoto}
           />
         </div>
-        <div className={cn("site-container", styles.heroCopy)}>
+        <div
+          data-scroll-reveal
+          className={cn("site-container", styles.heroCopy)}
+        >
           <p className={styles.eyebrow}>
             {TABLE_BOOK_PAGE_CONTENT.hero.eyebrow}
           </p>
@@ -40,7 +43,7 @@ export function TableBookPage({ booking }: ITableBookPageProps) {
           </p>
         </div>
       </section>
-      <div className={styles.bookingContainer}>
+      <div data-scroll-reveal className={styles.bookingContainer}>
         <Suspense
           fallback={
             <TableBookingNotice
@@ -62,7 +65,7 @@ export function TableBookPage({ booking }: ITableBookPageProps) {
             className={styles.groupPhoto}
           />
         </div>
-        <div className={styles.groupCopy}>
+        <div data-scroll-reveal className={styles.groupCopy}>
           <p className={styles.eyebrow}>
             {TABLE_BOOK_PAGE_CONTENT.groups.eyebrow}
           </p>

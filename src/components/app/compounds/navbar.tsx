@@ -28,18 +28,19 @@ export function Navbar() {
             {
               id: "menus",
               label: NAVBAR_CONTENT.menusLabel,
+              href: ROUTES.MENUS,
               content: <DesktopMenus />,
-            },
-            {
-              id: "our-story",
-              label: NAVBAR_CONTENT.ourStoryLabel,
-              href: ROUTES.OUR_STORY,
             },
             {
               id: NAVBAR_CONTENT.groupsId,
               label: NAVBAR_CONTENT.groupsLabel,
               href: ROUTES.PRIVATE_DINING,
               content: <DesktopGroups />,
+            },
+            {
+              id: "our-story",
+              label: NAVBAR_CONTENT.ourStoryLabel,
+              href: ROUTES.OUR_STORY,
             },
             {
               id: "whats-on",
@@ -53,6 +54,7 @@ export function Navbar() {
           <Button
             asChild
             data-navbar-visit
+            data-navigation-id={ROUTES.VISIT_CONTACT}
             variant="brand-nav"
             className="hidden h-11 rounded-sm p-0 text-base leading-[22px] font-medium text-ink xl:inline-flex"
           >
@@ -62,6 +64,7 @@ export function Navbar() {
           </Button>
           <Button
             data-navbar-gift
+            data-navigation-id="gift-vouchers"
             type="button"
             variant="brand-nav"
             aria-disabled="true"

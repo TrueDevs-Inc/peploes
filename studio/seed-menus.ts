@@ -89,7 +89,7 @@ async function main() {
     ...MENU_PAGE_CONTENT,
     navigation: MENU_PAGE_CONTENT.navigation.map((link) => ({
       label: link.label,
-      menu: link.href.split("/").at(-1),
+      menu: new URL(link.href, "https://example.com").searchParams.get("menu"),
     })),
   });
   const settingsFields = z.record(z.string(), z.unknown()).parse(settings);

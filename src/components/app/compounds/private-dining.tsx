@@ -8,7 +8,7 @@ import { PrivateDiningFeatures } from "@/components/app/molecules/private-dining
 import { PrivateDiningHeading } from "@/components/app/molecules/private-dining-heading";
 import { PrivateDiningHero } from "@/components/app/molecules/private-dining-hero";
 import { Button } from "@/components/ui/button";
-import { ROUTES } from "@/lib/constants";
+import { FOCUS_RING, ROUTES } from "@/lib/constants";
 import {
   PRIVATE_DINING,
   PRIVATE_DINING_BENEFITS,
@@ -27,7 +27,11 @@ export function PrivateDining() {
         <ul className={styles.gatheringCards}>
           {PRIVATE_DINING_GATHERINGS.items.map((item, index) => (
             <li key={item._key}>
-              <div className={styles.gatheringImage}>
+              <Link
+                href={item.href}
+                aria-label={item.title}
+                className={cn(FOCUS_RING, styles.gatheringImage)}
+              >
                 <Image
                   src={item.image.src}
                   alt={item.image.alt}
@@ -35,8 +39,8 @@ export function PrivateDining() {
                   sizes="(min-width: 1584px) 464px, (min-width: 1280px) calc((100vw - 192px) / 3), (min-width: 1024px) calc((100vw - 96px) / 3), (min-width: 640px) calc((100vw - 80px) / 2), calc(100vw - 48px)"
                   className={styles.cover}
                 />
-              </div>
-              <div className={styles.gatheringCopy}>
+              </Link>
+              <div data-scroll-reveal className={styles.gatheringCopy}>
                 <p className={styles.cardNumber}>
                   {String(index + 1).padStart(2, "0")}
                 </p>
@@ -86,7 +90,7 @@ export function PrivateDining() {
             className={styles.cover}
           />
         </div>
-        <div className={styles.overviewMenuCopy}>
+        <div data-scroll-reveal className={styles.overviewMenuCopy}>
           <PrivateDiningHeading
             eyebrow={PRIVATE_DINING_MENUS.eyebrow}
             heading={PRIVATE_DINING_MENUS.heading}

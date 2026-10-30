@@ -22,6 +22,11 @@ function getConfiguredOrigin(value: string | undefined): string | undefined {
 }
 
 const nextConfig: NextConfig = {
+  env: {
+    // NODE_ENV is also production on previews and local production builds.
+    // biome-ignore lint/style/useNamingConvention: Next.js env keys must match the public environment variable name.
+    NEXT_PUBLIC_SENTRY_ENVIRONMENT: process.env.VERCEL_ENV || "development",
+  },
   typedRoutes: true,
   experimental: {
     optimizePackageImports: [
@@ -61,6 +66,8 @@ const nextConfig: NextConfig = {
       process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ||
         process.env.NEXT_PUBLIC_GTM_ID,
     );
+    // Next Link retains the original document CSP when navigating to Visit.
+    const hasMapbox = Boolean(process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN);
     const scriptSources = [
       "script-src",
       "'self'",
@@ -93,7 +100,14 @@ const nextConfig: NextConfig = {
         "style-src 'self' 'unsafe-inline'",
         imageSources,
         "font-src 'self' data:",
-        [...connectionSources, ...extra.connect].join(" "),
+        [
+          ...connectionSources,
+          ...extra.connect,
+          ...(hasMapbox
+            ? ["https://api.mapbox.com", "https://events.mapbox.com"]
+            : []),
+        ].join(" "),
+        ...(hasMapbox ? ["worker-src 'self' blob:"] : []),
         ...(extra.frame.length > 0
           ? [["frame-src", ...extra.frame].join(" ")]
           : []),
@@ -176,8 +190,16 @@ const nextConfig: NextConfig = {
         : []),
     ];
   },
+  rewrites() {
+    return [{ source: "/privacy-policy", destination: "/privacy-cookies" }];
+  },
   redirects() {
     return [
+      {
+        source: "/menus/:menu",
+        destination: "/menus?menu=:menu",
+        permanent: true,
+      },
       {
         source: "/home",
         destination: "/",
@@ -188,19 +210,19 @@ const nextConfig: NextConfig = {
 };
 
 const shouldEnableSentry = Boolean(
-  process.env.SENTRY_AUTH_TOKEN &&
+  process.env.VERCEL_ENV === "production" &&
+    process.env.SENTRY_AUTH_TOKEN &&
     process.env.SENTRY_ORG &&
     process.env.SENTRY_PROJECT,
 );
 
-const isProductionDeployment =
-  process.env.VERCEL_ENV === "production" ||
-  process.env.NODE_ENV === "production";
-
 const sentryConfig = {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
   disableLogger: true,
   silent: !process.env.CI,
-  hideSourceMaps: isProductionDeployment,
+  sourcemaps: { deleteSourcemapsAfterUpload: true },
 };
 
 const exportConfig = shouldEnableSentry

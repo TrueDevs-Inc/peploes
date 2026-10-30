@@ -259,15 +259,25 @@ test("all four policies share the responsive contents and reading layout", async
   expect(new Set(headingStyles).size).toBe(1);
 });
 
-test("footer legal links open the policies requested in Figma", async ({
+test("footer legal links open the requested policies", async ({
   page,
+  isMobile,
 }) => {
   await page.goto("/");
 
+  if (!isMobile) {
+    await expect(
+      page.locator('[data-footer-section="explore"]').getByRole("link", {
+        name: "Visit & Contact",
+        exact: true,
+      }),
+    ).toHaveAttribute("href", "/visit-contact");
+  }
+
   for (const destination of [
     {
-      label: "Privacy",
-      path: "/privacy-cookies",
+      label: "Privacy Policy",
+      path: "/privacy-policy",
       heading: "Your privacy matters.",
     },
     {
@@ -279,6 +289,11 @@ test("footer legal links open the policies requested in Figma", async ({
       label: "Accessibility",
       path: "/accessibility-policy",
       heading: "A warm welcome for everyone.",
+    },
+    {
+      label: "Booking & Cancellation",
+      path: "/booking-cancellation-terms",
+      heading: "Before you book.",
     },
   ]) {
     const legalNavigation = page
@@ -294,6 +309,16 @@ test("footer legal links open the policies requested in Figma", async ({
     await expect(link).toHaveAttribute("href", destination.path);
     await link.click();
     await expect(page).toHaveURL(destination.path);
+    if (destination.path === "/privacy-policy") {
+      await page.reload();
+      await expect(page).toHaveURL("/privacy-policy");
+      if (isMobile) {
+        await expect(page.locator("[data-footer-container]")).toHaveCSS(
+          "padding-top",
+          "56px",
+        );
+      }
+    }
     await expect(
       page.getByRole("heading", {
         name: destination.heading,

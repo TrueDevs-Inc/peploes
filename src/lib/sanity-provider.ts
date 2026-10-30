@@ -45,7 +45,7 @@ const SEASONAL_ENTRY_PROJECTION = `{
  ...,"slug":slug.current,
  hero{...,image{alt,"src":asset->url}},
  menu{..., "cards": cards[_type == "seasonalMenuHighlight" || defined(href) || !defined(menu) || defined(menu->slug.current)]{
-  ...,"href":coalesce(href,select(defined(menu->slug.current) => "/menus/" + menu->slug.current)),image{alt,"src":asset->url}
+  ...,"href":coalesce(href,select(defined(menu->slug.current) => "/menus?menu=" + menu->slug.current)),image{alt,"src":asset->url}
  }},
  story{...,image{alt,"src":asset->url}},
  gallery{...,images[]{_key,alt,"src":asset->url}},

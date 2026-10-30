@@ -25,6 +25,7 @@ export function CookiePreferences() {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const id = useId();
   const [isOpen, setIsOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const [preferences, setPreferences] = useState<ICookiePreferences>(
     COOKIE_PREFERENCES.defaults,
   );
@@ -40,6 +41,31 @@ export function CookiePreferences() {
     };
   }, [isOpen]);
 
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!isClosing || !dialog) return;
+    let cancelled = false;
+    const animations = dialog
+      .getAnimations({ subtree: true })
+      .filter(
+        (animation) =>
+          animation.effect instanceof KeyframeEffect &&
+          animation.effect.target === dialog,
+      );
+    void Promise.allSettled(
+      animations.map((animation) => animation.finished),
+    ).then(() => {
+      if (!cancelled) dialog.close();
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isClosing]);
+
+  function closePreferences() {
+    setIsClosing(true);
+  }
+
   function persist(next: ICookiePreferences, close = false) {
     if (!saveCookiePreferences(next)) {
       setPreferences(getCookiePreferences());
@@ -48,7 +74,7 @@ export function CookiePreferences() {
     }
     setPreferences(next);
     setError(false);
-    if (close) dialogRef.current?.close();
+    if (close) closePreferences();
   }
 
   return (
@@ -58,7 +84,7 @@ export function CookiePreferences() {
         variant="brand-nav"
         aria-haspopup="dialog"
         aria-controls={isOpen ? id : undefined}
-        className="h-auto rounded-none p-0 text-xs leading-[18px] font-normal text-text-secondary xl:leading-5"
+        className="min-h-11 min-w-11 h-auto justify-start rounded-none p-0 text-sm leading-[21px] font-normal text-text-secondary xl:min-h-0 xl:min-w-0 xl:justify-center xl:text-xs xl:leading-5"
         onClick={() => {
           setPreferences(getCookiePreferences());
           setError(false);
@@ -74,11 +100,19 @@ export function CookiePreferences() {
             id={id}
             aria-labelledby={`${id}-title`}
             aria-describedby={`${id}-description`}
-            onClose={() => setIsOpen(false)}
+            data-closing={isClosing || undefined}
+            onClose={() => {
+              setIsOpen(false);
+              setIsClosing(false);
+            }}
+            onCancel={(event) => {
+              event.preventDefault();
+              closePreferences();
+            }}
             onKeyDown={(event) => {
               if (event.key === "Escape") {
                 event.preventDefault();
-                event.currentTarget.close();
+                closePreferences();
               }
             }}
             onClick={(event) => {
@@ -90,14 +124,14 @@ export function CookiePreferences() {
                 event.clientY < bounds.top ||
                 event.clientY > bounds.bottom
               ) {
-                event.currentTarget.close();
+                closePreferences();
               }
             }}
             className={cn(dmSans.className, styles.dialog)}
           >
             <CloseButton
               ariaLabel={content.closeLabel}
-              onClick={() => dialogRef.current?.close()}
+              onClick={closePreferences}
               className={styles.close}
             />
             <h2
@@ -140,7 +174,7 @@ export function CookiePreferences() {
             ))}
             <Link
               href={ROUTES.PRIVACY_COOKIES}
-              onClick={() => dialogRef.current?.close()}
+              onClick={closePreferences}
               className={styles.policy}
             >
               {content.policyLabel}

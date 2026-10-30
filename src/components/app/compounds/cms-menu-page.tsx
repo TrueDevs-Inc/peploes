@@ -2,14 +2,28 @@ import { DrinksMenu } from "@/components/app/compounds/drinks-menu";
 import { RestaurantMenu } from "@/components/app/compounds/restaurant-menu";
 import { SetMenuCollection } from "@/components/app/compounds/set-menu-collection";
 import { WineMenu } from "@/components/app/compounds/wine-menu";
+import { MenuContentTransition } from "@/components/app/molecules/menu-content-transition";
 import { MENU_ROUTES } from "@/lib/constants";
 import { getMenuBooking, loadMenu, loadMenusPage } from "@/lib/menu-content";
 import { buildSeoMetadata } from "@/lib/seo";
-import type { ICmsMenuPageProps, TMenuSlug } from "@/lib/types";
+import type {
+  ICmsMenuPageProps,
+  IMenuBooking,
+  TCmsMenu,
+  TMenuSlug,
+} from "@/lib/types";
 
 export async function CmsMenuPage({ slug }: ICmsMenuPageProps) {
   const [menu, settings] = await Promise.all([loadMenu(slug), loadMenusPage()]);
   const booking = getMenuBooking(slug, menu.booking ?? settings.booking);
+  return (
+    <MenuContentTransition slug={slug}>
+      {renderMenu(menu, booking)}
+    </MenuContentTransition>
+  );
+}
+
+function renderMenu(menu: TCmsMenu, booking: IMenuBooking) {
   switch (menu._type) {
     case "restaurantMenu":
       return <RestaurantMenu menu={{ ...menu, booking }} />;

@@ -34,7 +34,10 @@ export function Wine() {
 
       <div className="site-container relative">
         <div className="flex min-h-[720px] w-full max-w-[748px] flex-col justify-end gap-[18px] pt-[210px] pb-[52px] sm:min-h-0 sm:justify-start sm:gap-8 sm:py-20">
-          <p className="flex items-center gap-2.5 text-sm leading-4 font-medium tracking-[0.1em] uppercase">
+          <p
+            data-scroll-reveal
+            className="flex items-center gap-2.5 text-sm leading-4 font-medium tracking-[0.1em] uppercase"
+          >
             <span
               aria-hidden="true"
               className="h-0.5 w-12 shrink-0 bg-current"
@@ -43,6 +46,7 @@ export function Wine() {
           </p>
 
           <h2
+            data-scroll-reveal
             id="wine-heading"
             className={cn(
               ebGaramond.className,
@@ -52,15 +56,22 @@ export function Wine() {
             {WINE_CONTENT.heading}
           </h2>
 
-          <p className="text-base leading-6 text-warm-cream/90 sm:text-lg sm:text-warm-cream/85">
+          <p
+            data-scroll-reveal
+            className="text-base leading-6 text-warm-cream/90 sm:text-lg sm:text-warm-cream/85"
+          >
             {WINE_CONTENT.description}
           </p>
 
-          <div className="flex flex-col items-start gap-2.5 sm:gap-6">
+          <div
+            data-scroll-reveal
+            className="flex flex-col items-start gap-2.5 sm:gap-6"
+          >
             <Button
               asChild
               variant="brand-primary"
-              className="h-11 w-full gap-2 rounded-[4px] bg-peploe-burgundy px-5 has-[>svg]:px-5 text-base leading-[22px] font-medium sm:leading-6 text-warm-cream shadow-none sm:w-[220px]"
+              size="cta"
+              className="w-full sm:w-[220px]"
             >
               <Link href={ROUTES.WINE}>
                 {WINE_CONTENT.primaryCtaLabel}
