@@ -3,8 +3,6 @@ import type { NextConfig } from "next";
 import { HTML_LIMITED_BOT_UA_RE } from "next/dist/shared/lib/router/utils/html-bots";
 import { HTML_LIMITED_AI_FETCHERS } from "./src/lib/constants/crawlers";
 
-const BOOKING_PAGE = "/book-a-table";
-
 const STRIPE_SOURCES = {
   script: ["https://js.stripe.com", "https://*.js.stripe.com"],
   frame: [
@@ -14,8 +12,6 @@ const STRIPE_SOURCES = {
   ],
   connect: ["https://api.stripe.com"],
 } as const;
-
-const NO_EXTRA_SOURCES = { script: [], frame: [], connect: [] } as const;
 
 function getConfiguredOrigin(value: string | undefined): string | undefined {
   if (!value || !URL.canParse(value)) return undefined;
@@ -127,25 +123,22 @@ const nextConfig: NextConfig = {
       "https://cdn.sanity.io",
     ].join(" ");
 
-    function contentSecurityPolicy(stripe: boolean): string {
-      const extra = stripe ? STRIPE_SOURCES : NO_EXTRA_SOURCES;
+    function contentSecurityPolicy(): string {
       return [
         "default-src 'self'",
-        [...scriptSources, ...extra.script].join(" "),
+        [...scriptSources, ...STRIPE_SOURCES.script].join(" "),
         "style-src 'self' 'unsafe-inline'",
         imageSources,
         "font-src 'self' data:",
         [
           ...connectionSources,
-          ...extra.connect,
+          ...STRIPE_SOURCES.connect,
           ...(hasMapbox
             ? ["https://api.mapbox.com", "https://events.mapbox.com"]
             : []),
         ].join(" "),
         ...(hasMapbox ? ["worker-src 'self' blob:"] : []),
-        ...(extra.frame.length > 0
-          ? [["frame-src", ...extra.frame].join(" ")]
-          : []),
+        ["frame-src", ...STRIPE_SOURCES.frame].join(" "),
         "object-src 'none'",
         "base-uri 'self'",
         "form-action 'self'",
@@ -180,18 +173,9 @@ const nextConfig: NextConfig = {
           },
           {
             key: "Content-Security-Policy",
-            value: contentSecurityPolicy(false),
+            value: contentSecurityPolicy(),
           },
           ...(isLiveSite ? [] : [{ key: "X-Robots-Tag", value: "noindex" }]),
-        ],
-      },
-      {
-        source: BOOKING_PAGE,
-        headers: [
-          {
-            key: "Content-Security-Policy",
-            value: contentSecurityPolicy(true),
-          },
         ],
       },
       {

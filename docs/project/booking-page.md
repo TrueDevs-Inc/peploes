@@ -145,6 +145,9 @@ the page to them.
   { stripeAccount: accountId })` and the `clientSecret`. Stripe.js is imported
   from `@stripe/stripe-js/pure`, so it loads only at this step, not for every
   visitor.
+- Every page's CSP allows Stripe.js, its 3-D Secure frames and api.stripe.com.
+  Following an in-site booking link keeps the original document's CSP, so
+  payment must work under that policy too.
 - A deposit's amount comes from Stripe's PaymentIntent
   (`retrievePaymentIntent`), so the page shows exactly what the card will be
   charged. A card guarantee charges nothing now, so its possible charge comes

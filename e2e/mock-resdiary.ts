@@ -134,7 +134,8 @@ async function availableTimes(body: string): Promise<Response> {
           TimeSlot: `${date}T${slot.time}:00`,
           ServiceId: slot.time < "17:30" ? 1 : 2,
           HasStandardAvailability: true,
-          StandardAvailabilityFeeAmount: 0,
+          StandardAvailabilityFeeAmount:
+            slot.time === FAKE_RESDIARY.depositTime ? 20 : 0,
           IsLeaveTimeRequired: slot.required,
           LeaveTime: `${slot.leave}:00`,
           AvailablePromotions: [],
@@ -189,6 +190,16 @@ function guestDetails(body: string): Response {
   };
   if (request.Customer.Email === FAKE_RESDIARY.lostReplyEmail) {
     return new Response(null, { status: 500 });
+  }
+  if (holds.get(request.BookingId)?.time === FAKE_RESDIARY.depositTime) {
+    return Response.json({
+      Status: "PaymentRequired",
+      PaymentAmount: 20,
+      FormattedPaymentAmount: "€20.00",
+      StripePublishableKey: "pk_live_e2e_stub_only",
+      StripeAccountId: "acct_e2e",
+      PaymentIntentSecret: "pi_e2e_secret_stub_only",
+    });
   }
   booked.add(request.BookingId);
   bookings += 1;

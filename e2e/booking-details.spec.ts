@@ -12,12 +12,28 @@ import { expect, test } from "./menu-test";
 const RESEND_NOTE =
   "We couldn't tell whether your details reached us. Your table is still held, so please press Confirm Reservation again.";
 
+async function openBookingFromHome(page: Page) {
+  await page.goto("/");
+  const documentStarted = await page.evaluate(() => performance.timeOrigin);
+  await page
+    .getByRole("navigation", { name: "Main navigation", exact: true })
+    .getByRole("link", { name: /^Book(?: a Table)?$/ })
+    .click();
+  await expect(page).toHaveURL("/book-a-table");
+  expect(await page.evaluate(() => performance.timeOrigin)).toBe(
+    documentStarted,
+  );
+  return page.getByRole("region", { name: "Table reservations" });
+}
+
 async function heldWithDetails(
   page: Page,
   isMobile: boolean,
-  { email = "preview@example.com", time = "6:00 pm" } = {},
+  { email = "preview@example.com", time = "6:00 pm", fromHome = false } = {},
 ) {
-  const reservations = await openBooking(page);
+  const reservations = fromHome
+    ? await openBookingFromHome(page)
+    : await openBooking(page);
   await chooseDate(reservations, laterFreeDate());
   await findTable(reservations);
   await reservations.getByRole("button", { name: time, exact: true }).click();
@@ -272,6 +288,33 @@ async function stubStripe(page: Page, status = "requires_payment_method") {
     }),
   );
 }
+
+test("the card form loads after following Book from the home page and booking a deposit time", async ({
+  page,
+  isMobile,
+}) => {
+  await stubStripe(page);
+  const { reservations, confirm } = await heldWithDetails(page, isMobile, {
+    time: "6:30 pm",
+    fromHome: true,
+  });
+  await confirm.click();
+
+  await expect(
+    reservations.getByText("Card details", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    reservations.getByRole("button", {
+      name: "Pay €20.00 and Reserve",
+      exact: true,
+    }),
+  ).toBeEnabled();
+  await expect(
+    reservations.getByText("We couldn't load the secure payment form.", {
+      exact: false,
+    }),
+  ).toHaveCount(0);
+});
 
 function changeDialog(page: Page) {
   const dialog = page.getByRole("dialog", { name: "Change your booking?" });

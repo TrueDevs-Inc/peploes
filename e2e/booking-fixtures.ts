@@ -43,6 +43,7 @@ export const FAKE_RESDIARY = {
   failingHoldTime: "20:00",
   failingStatusTime: "12:00",
   confirmedOnCancelTime: "19:00",
+  depositTime: "18:30",
   lostReplyEmail: "lost-reply@example.com",
 } as const;
 
@@ -50,6 +51,7 @@ export const FAKE_TIMES = [
   { time: "12:00", label: "12:00 pm", leave: "13:30", required: false },
   { time: "12:30", label: "12:30 pm", leave: "14:00", required: false },
   { time: "18:00", label: "6:00 pm", leave: "20:00", required: false },
+  { time: "18:30", label: "6:30 pm", leave: "20:30", required: false },
   { time: "19:00", label: "7:00 pm", leave: "21:00", required: true },
   { time: "20:00", label: "8:00 pm", leave: "22:00", required: false },
 ] as const;
