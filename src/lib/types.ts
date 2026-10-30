@@ -1813,9 +1813,11 @@ export interface ITableBookingChangeDialogProps {
   summary: IHoldSummary;
   releasing: boolean;
   check: TBookingStatusCheck | null;
+  stillHeld: boolean;
   onKeep: () => void;
   onRelease: () => void;
   onCheckAgain: () => void;
+  onStartAgain: () => void;
 }
 
 export interface IReleaseHold {

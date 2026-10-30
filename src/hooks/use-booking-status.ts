@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 import { fetcher } from "@/helpers/api";
 import { BOOKING_API, BOOKING_STATUS_CHECK } from "@/lib/constants/booking";
-import { HttpVerb } from "@/lib/enums";
+import { ErrorCode, HttpVerb } from "@/lib/enums";
 import type {
   IHoldStatusResult,
   IHoldSummary,
@@ -12,11 +12,21 @@ import type {
   TBookingStatusCheck,
 } from "@/lib/types";
 
+const CHECKING: TBookingStatusCheck = { kind: "checking" };
+
 function nextCheck(
-  result: IHoldStatusResult | null,
-  untilPending: boolean,
+  reply: TBookingResponse<IHoldStatusResult> | null,
+  pendingFrom: number | undefined,
 ): TBookingStatusCheck | null {
-  if (untilPending && result?.status === "pending") {
+  if (reply?.ok === false && reply.error.code === ErrorCode.NotFound) {
+    return { kind: "unknown" };
+  }
+  const result = reply?.ok ? reply.data : null;
+  if (
+    pendingFrom !== undefined &&
+    result?.status === "pending" &&
+    Date.now() >= pendingFrom
+  ) {
     return { kind: "pending" };
   }
   if (result?.status === "confirmed") {
@@ -34,11 +44,12 @@ function nextCheck(
 
 export function useBookingStatus(
   hold: IHoldSummary | null,
-  untilPending = false,
+  pendingFrom?: number,
 ): TBookingStatusCheck {
-  const [check, setCheck] = useState<TBookingStatusCheck>({
-    kind: "checking",
-  });
+  const [answer, setAnswer] = useState<{
+    hold: IHoldSummary | null;
+    check: TBookingStatusCheck;
+  }>({ hold: null, check: CHECKING });
 
   useEffect(() => {
     if (!hold) return;
@@ -49,11 +60,11 @@ export function useBookingStatus(
       holdReference: hold.reference,
       holdRevision: String(hold.revision),
     });
-    setCheck({ kind: "checking" });
+    setAnswer({ hold, check: CHECKING });
     const deadline = setTimeout(() => {
       gaveUp = true;
       clearTimeout(timer);
-      setCheck({ kind: "unknown" });
+      setAnswer({ hold, check: { kind: "unknown" } });
     }, BOOKING_STATUS_CHECK.giveUpMs);
 
     async function ask() {
@@ -62,13 +73,10 @@ export function useBookingStatus(
         method: HttpVerb.Get,
       });
       if (!active) return;
-      const next = nextCheck(
-        reply.data?.ok ? reply.data.data : null,
-        untilPending,
-      );
+      const next = nextCheck(reply.data, pendingFrom);
       if (next) {
         clearTimeout(deadline);
-        setCheck(next);
+        setAnswer({ hold, check: next });
       } else if (!gaveUp) {
         timer = setTimeout(ask, BOOKING_STATUS_CHECK.everyMs);
       }
@@ -80,7 +88,7 @@ export function useBookingStatus(
       clearTimeout(timer);
       clearTimeout(deadline);
     };
-  }, [hold, untilPending]);
+  }, [hold, pendingFrom]);
 
-  return check;
+  return answer.hold === hold ? answer.check : CHECKING;
 }

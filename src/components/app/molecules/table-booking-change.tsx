@@ -12,6 +12,7 @@ import {
 } from "@/helpers/storage";
 import { useBookingStatus } from "@/hooks/use-booking-status";
 import { useReleaseHold } from "@/hooks/use-release-hold";
+import { BOOKING_BUDGET_MS } from "@/lib/constants/booking";
 import { TABLE_BOOKING_CONTENT } from "@/lib/constants/table-booking";
 import type {
   IHoldSummary,
@@ -22,21 +23,45 @@ import type {
 
 const copy = TABLE_BOOKING_CONTENT.changeBooking;
 const RELEASE_KEY = "peploes:booking-release";
+const RELEASE_MARGIN_MS = 3000;
+const RELEASE_SETTLED_MS = BOOKING_BUDGET_MS.release + RELEASE_MARGIN_MS;
+
+interface ISavedRelease {
+  reference: string;
+  revision: number;
+  startedAt?: number;
+}
+
+interface IUncertainRelease {
+  hold: IHoldSummary;
+  pendingFrom: number;
+}
+
+function dialogText(
+  check: ITableBookingChangeDialogProps["check"],
+  stillHeld: boolean,
+  summary: IHoldSummary,
+): string {
+  if (check?.kind === "unknown") return copy.unknown(summary.reference);
+  if (check) return copy.checking;
+  if (stillHeld) return copy.stillHeld;
+  return copy.text(summary.timeLabel, summary.dateLabel);
+}
 
 function ChangeDialog({
   summary,
   releasing,
   check,
+  stillHeld,
   onKeep,
   onRelease,
   onCheckAgain,
+  onStartAgain,
 }: ITableBookingChangeDialogProps) {
   const dialog = useRef<HTMLDialogElement>(null);
   const id = useId();
   const dismissLocked = releasing || check !== null;
   const waiting = releasing || (check !== null && check.kind !== "unknown");
-  const checkMessage =
-    check?.kind === "unknown" ? copy.unknown(summary.reference) : copy.checking;
   let actionLabel: string = copy.release;
   if (releasing) actionLabel = copy.releasing;
   else if (check?.kind === "unknown") actionLabel = copy.checkAgain;
@@ -74,10 +99,10 @@ function ChangeDialog({
       </h2>
       <p
         id={`${id}-text`}
-        role={check ? "status" : undefined}
+        role={check || stillHeld ? "status" : undefined}
         className={styles.flowDescription}
       >
-        {check ? checkMessage : copy.text(summary.timeLabel, summary.dateLabel)}
+        {dialogText(check, stillHeld, summary)}
       </p>
       <div className={styles.changeActions}>
         <Button
@@ -89,6 +114,11 @@ function ChangeDialog({
         >
           {copy.keep}
         </Button>
+        {check?.kind === "unknown" && (
+          <Button type="button" variant="brand-contact" onClick={onStartAgain}>
+            {TABLE_BOOKING_CONTENT.startAgain}
+          </Button>
+        )}
         <Button
           type="button"
           variant="brand-primary"
@@ -110,14 +140,19 @@ export function TableBookingChange({
   onConfirmed,
 }: ITableBookingChangeProps) {
   const [asking, setAsking] = useState(false);
-  const [uncertain, setUncertain] = useState<IHoldSummary | null>(null);
+  const [uncertain, setUncertain] = useState<IUncertainRelease | null>(null);
+  const [stillHeld, setStillHeld] = useState(false);
   const releaser = useReleaseHold();
-  const check = useBookingStatus(uncertain);
+  const check = useBookingStatus(
+    uncertain?.hold ?? null,
+    uncertain?.pendingFrom,
+  );
 
   const settleRelease = useCallback(
     (reply: TReleasedHold) => {
       removeSessionStorage(RELEASE_KEY);
       setUncertain(null);
+      setStillHeld(false);
       setAsking(false);
       if (reply.kind === "confirmed") {
         onConfirmed({ reference: reply.reference, summary: reply.summary });
@@ -129,16 +164,16 @@ export function TableBookingChange({
   );
 
   useEffect(() => {
-    const saved =
-      getSessionStorage<Pick<IHoldSummary, "reference" | "revision">>(
-        RELEASE_KEY,
-      );
+    const saved = getSessionStorage<ISavedRelease>(RELEASE_KEY);
     if (
       payment &&
       saved?.reference === payment.summary.reference &&
       saved.revision === payment.summary.revision
     ) {
-      setUncertain(payment.summary);
+      setUncertain({
+        hold: payment.summary,
+        pendingFrom: (saved.startedAt ?? Date.now()) + RELEASE_SETTLED_MS,
+      });
       setAsking(true);
     }
   }, [payment]);
@@ -149,21 +184,31 @@ export function TableBookingChange({
       settleRelease(check);
     } else if (check.kind === "failed") {
       settleRelease({ kind: "released" });
+    } else if (check.kind === "pending") {
+      removeSessionStorage(RELEASE_KEY);
+      setUncertain(null);
+      setStillHeld(true);
     }
   }, [check, uncertain, settleRelease]);
 
   function releaseAndChange() {
     if (!payment) return;
     const { summary } = payment;
+    const startedAt = Date.now();
+    setStillHeld(false);
     setSessionStorage(RELEASE_KEY, {
       reference: summary.reference,
       revision: summary.revision,
-    });
+      startedAt,
+    } satisfies ISavedRelease);
     releaser.release(payment.summary, (reply) => {
       if (reply) {
         settleRelease(reply);
       } else {
-        setUncertain(summary);
+        setUncertain({
+          hold: { ...summary },
+          pendingFrom: startedAt + RELEASE_SETTLED_MS,
+        });
       }
     });
   }
@@ -186,10 +231,22 @@ export function TableBookingChange({
           summary={payment.summary}
           releasing={releaser.releasing}
           check={uncertain ? check : null}
-          onKeep={() => setAsking(false)}
+          stillHeld={stillHeld}
+          onKeep={() => {
+            setStillHeld(false);
+            setAsking(false);
+          }}
           onRelease={releaseAndChange}
           onCheckAgain={() => {
-            if (uncertain) setUncertain({ ...uncertain });
+            if (uncertain) {
+              setUncertain({ ...uncertain, hold: { ...uncertain.hold } });
+            }
+          }}
+          onStartAgain={() => {
+            removeSessionStorage(RELEASE_KEY);
+            setUncertain(null);
+            setAsking(false);
+            onReleased();
           }}
         />
       )}

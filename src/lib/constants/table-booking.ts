@@ -10,6 +10,7 @@ export const TABLE_BOOKING_CONTENT = {
   holding: "Holding Your Table…",
   heldFor: (time: string) => `Table held for ${time}`,
   chooseAgain: "Choose a Time Again",
+  startAgain: "Start Again",
   changeBooking: {
     heading: "Change your booking?",
     text: (time: string, date: string) =>
@@ -20,6 +21,8 @@ export const TABLE_BOOKING_CONTENT = {
     checking: "Checking whether your table was released…",
     checkingAction: "Checking…",
     checkAgain: "Check Again",
+    stillHeld:
+      "We couldn't release your table, so it's still held for you. You can keep it or try again.",
     unknown: (reference: string) =>
       `We couldn't confirm whether booking ${reference} was released. Please call us on ${RESTAURANT_CONTACT.phoneLabel} before booking or paying again.`,
   },

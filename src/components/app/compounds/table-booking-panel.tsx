@@ -422,7 +422,7 @@ interface IDetailsCheckProps {
 }
 
 function DetailsCheck({ hold, onSettled }: IDetailsCheckProps) {
-  const check = useBookingStatus(hold, true);
+  const check = useBookingStatus(hold, 0);
 
   useEffect(() => {
     if (check.kind !== "checking" && check.kind !== "unknown") {

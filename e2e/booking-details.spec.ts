@@ -391,15 +391,23 @@ test("an uncertain release offers status checks without another cancellation, th
   await page.reload();
   let ended = false;
   await page.route("**/api/bookings/hold-status?**", (route) =>
-    route.fulfill({
-      json: {
-        ok: true,
-        data: {
-          status: ended ? "failed" : "pending",
-          reference: held.holdReference,
-        },
-      },
-    }),
+    ended
+      ? route.fulfill({
+          json: {
+            ok: true,
+            data: { status: "failed", reference: held.holdReference },
+          },
+        })
+      : route.fulfill({
+          status: 503,
+          json: {
+            ok: false,
+            error: {
+              code: "SERVICE_UNAVAILABLE",
+              message: "Online booking isn't available right now.",
+            },
+          },
+        }),
   );
   let releaseRequests = 0;
   page.on("request", (request) => {
@@ -620,4 +628,89 @@ test("while the payment form is still loading, the guest can't edit the search",
   await expect(
     reservations.getByRole("button", { name: "Edit date & guests" }),
   ).toBeDisabled();
+});
+
+test("if a release cancelled nothing, the guest is told the table is still held and can keep it", async ({
+  page,
+  isMobile,
+}) => {
+  await page.clock.install();
+  const { reservations } = await heldWithDetails(page, isMobile);
+  const held = await page.evaluate(() =>
+    JSON.parse(sessionStorage.getItem("peploes:booking-hold") ?? "{}"),
+  );
+  await page.route("https://js.stripe.com/**", (route) => route.abort());
+  await savedPaymentStep(page, held.holdReference, held.holdRevision);
+  await page.reload();
+  await dropPosts(page, false);
+  await reservations
+    .getByRole("button", { name: "Edit date & guests" })
+    .click();
+  const { dialog, release, keep } = changeDialog(page);
+  await release.click();
+  await expect(dialog.getByRole("status")).toHaveText(
+    "Checking whether your table was released…",
+  );
+  await expect(keep).toBeDisabled();
+
+  const stillHeld =
+    "We couldn't release your table, so it's still held for you. You can keep it or try again.";
+  await page.clock.fastForward("00:16");
+  await expect(dialog.getByRole("status")).toHaveText(stillHeld);
+  await expect(keep).toBeEnabled();
+
+  await release.click();
+  await expect(dialog.getByRole("status")).toHaveText(
+    "Checking whether your table was released…",
+  );
+  await page.clock.fastForward("00:16");
+  await expect(dialog.getByRole("status")).toHaveText(stillHeld);
+  await keep.click();
+  await expect(dialog).toBeHidden();
+  await expect(
+    reservations.getByRole("heading", {
+      name: "Secure your table",
+      exact: true,
+    }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(() =>
+      sessionStorage.getItem("peploes:booking-release"),
+    ),
+  ).toBeNull();
+});
+
+test("if the hold can no longer be checked, the release dialog says so and lets the guest start again", async ({
+  page,
+}) => {
+  const reservations = await openBooking(page);
+  await page.route("https://js.stripe.com/**", (route) => route.abort());
+  await page.route("**/api/bookings/hold-status?**", (route) =>
+    route.fulfill({ json: { ok: true, data: { status: "pending" } } }),
+  );
+  await savedPaymentStep(page, "E2E99999", 1);
+  await page.reload();
+  await reservations
+    .getByRole("button", { name: "Edit date & guests" })
+    .click();
+  const { dialog, release } = changeDialog(page);
+  await page.unroute("**/api/bookings/hold-status?**");
+  await release.click();
+
+  await expect(dialog.getByRole("status")).toHaveText(
+    "We couldn't confirm whether booking E2E99999 was released. Please call us on +353 1 676 3144 before booking or paying again.",
+    { timeout: 10_000 },
+  );
+  await dialog
+    .getByRole("button", { name: "Start Again", exact: true })
+    .click();
+  await expect(
+    reservations.getByRole("button", { name: "Find a Table", exact: true }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(() => [
+      sessionStorage.getItem("peploes:booking-release"),
+      sessionStorage.getItem("peploes:booking-payment"),
+    ]),
+  ).toEqual([null, null]);
 });

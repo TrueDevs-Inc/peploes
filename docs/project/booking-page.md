@@ -187,9 +187,17 @@ the page to them.
   failed or expired hold returns to date and guests. After 60 seconds without
   an answer, the dialog shows the reference and phone number and asks the guest
   to call before booking or paying again. Check Again restarts the status
-  checks without sending another cancellation. The tab saves the hold reference
-  and revision under `peploes:booking-release` before requesting release, so
-  a reload resumes checking. Only a known release clears the payment step and
+  checks without sending another cancellation, and Start Again leaves the
+  dialog for a new search. From 15 seconds after the release started (the
+  server's 12-second budget plus a margin), a pending hold means nothing was
+  cancelled, because ResDiary marks a cancelled hold Failed at once: the
+  dialog says "We couldn't release your table, so it's still held for you",
+  Keep My Table works again, and Release and Change can be tried again. If the
+  hold can no longer be checked from this tab (`NotFound`, for example once
+  its cookie has expired), the dialog shows the reference and phone number at
+  once. The tab saves the hold reference, revision and start time under
+  `peploes:booking-release` before requesting release, so a reload resumes
+  checking. Only a known release clears the payment step and
   starts a new search. The next Continue then makes a new hold, and Confirm
   Reservation brings a payment step for the new time.
 - Before showing the card form, the page asks Stripe for the PaymentIntent's
@@ -314,7 +322,9 @@ after ResDiary confirms it.
 - `confirmed`: show the confirmation.
 - `failed` or `expired`: say the booking was not confirmed and that the guest
   may have been charged, with the phone number.
-- `pending`, `ServiceUnavailable` or `NotFound`: keep checking.
+- `pending` or `ServiceUnavailable`: keep checking.
+- `NotFound`: the hold can no longer be checked from this tab (its cookie has
+  ended), so show the 60-second message at once instead of waiting.
 - After 60 seconds without `confirmed`, stop and say "Hang tight! We're still
   confirming booking …" with the reference, so the guest can quote it. The 60
   seconds run on their own timer, so a status request that never answers still
