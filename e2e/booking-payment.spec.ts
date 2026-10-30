@@ -137,3 +137,72 @@ test("a return address from a different payment is cleared and never counts as p
     reservations.getByText("Confirming your booking…", { exact: true }),
   ).toHaveCount(0);
 });
+
+test("Edit is already disabled when the payment step first appears, before Stripe has answered", async ({
+  page,
+}) => {
+  await page.route("https://js.stripe.com/**", () => undefined);
+  await page.addInitScript(() => {
+    const seen: boolean[] = [];
+    Object.assign(window, { editWhenPaymentAppeared: seen });
+    new MutationObserver(() => {
+      if (seen.length > 0) return;
+      const heading = [...document.querySelectorAll("h2")].find(
+        (element) => element.textContent === "Secure your table",
+      );
+      const edit = document.querySelector<HTMLButtonElement>(
+        'button[aria-label="Edit date & guests"]',
+      );
+      if (heading && edit) seen.push(edit.disabled);
+    }).observe(document, { childList: true, subtree: true });
+  });
+  const reservations = await openBooking(page);
+  await page.evaluate(
+    (date) =>
+      sessionStorage.setItem(
+        "peploes:booking-payment",
+        JSON.stringify({
+          kind: "payment",
+          amountCents: 2000,
+          amountText: "€20.00",
+          stripe: {
+            publishableKey: "pk_test_e2e",
+            accountId: "acct_e2e",
+            clientSecret: "pi_saved_secret_saved",
+          },
+          summary: {
+            reference: "E2E99999",
+            revision: 1,
+            date,
+            dateLabel: "Sat, 7 Nov 2026",
+            time: "18:00",
+            timeLabel: "6:00 pm",
+            partySize: 4,
+            guestsLabel: "4 guests",
+            offer: {
+              kind: "standard",
+              feeCents: 2000,
+              mayRequireCard: false,
+              returnBy: null,
+            },
+          },
+        }),
+      ),
+    laterFreeDate(),
+  );
+  await page.reload();
+
+  await expect(
+    reservations.getByRole("heading", {
+      name: "Secure your table",
+      exact: true,
+    }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () =>
+        (window as unknown as { editWhenPaymentAppeared: boolean[] })
+          .editWhenPaymentAppeared,
+    ),
+  ).toEqual([true]);
+});

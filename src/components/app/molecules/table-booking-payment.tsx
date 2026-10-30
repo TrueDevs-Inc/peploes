@@ -7,7 +7,7 @@ import type {
 } from "@stripe/stripe-js";
 import { loadStripe } from "@stripe/stripe-js/pure";
 import { ArrowRight } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import styles from "@/components/app/compounds/table-booking-panel.module.css";
 import { Button } from "@/components/ui/button";
@@ -109,7 +109,7 @@ function PaymentForm({
 
   const busy = paying || !(ready || loadFailed);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     onBusyChange(busy);
     return () => onBusyChange(false);
   }, [busy, onBusyChange]);
