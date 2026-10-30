@@ -86,6 +86,13 @@ the page to them.
   as it was; it never falls back to the error page.
 - Going back and choosing another time, date or party size moves the same hold:
   the reference stays, the revision goes up and the timer carries on.
+- "Edit date & guests", "Back to search" and "Back to times" are disabled
+  while the table is being held, the details are sending, the payment step is
+  still loading or checking with Stripe whether it was already paid, Stripe is
+  processing a payment, or the page is checking ResDiary after a payment or an
+  unclear reply. A booking or a payment may already be on its way in each of
+  those. The payment step counts as loading until Stripe's card form is ready
+  or has failed to load.
 - The tab keeps the choice, `holdReference` and `holdRevision` in
   `sessionStorage` under `peploes:booking-hold`. A reload or a return to the
   page sends them to `holdTable` again and brings the guest back to their held
@@ -144,11 +151,25 @@ the page to them.
 - If Stripe's script fails to load (a dropped connection or a blocking browser
   extension), the step says "We couldn't load the secure payment form. Check
   your connection and try again, or call us on …" and shows a "Try Again"
-  button, which loads Stripe again.
+  button, which loads Stripe again. The same happens when Stripe's script
+  loads but its card form doesn't (Stripe's `loaderror`). The message
+  replaces "Loading secure payment…" and the space kept for the card form, so
+  the step shows one message under its heading.
 - A reload on this step brings the card form back from the saved step without
   sending the details to ResDiary again. A
   declined card shows Stripe's message and the guest can try again. 3-D Secure
   opens Stripe's own check.
+- "Edit date & guests" on this step asks first, in a "Change your booking?"
+  dialog: "We'll release your table for 7:30 pm on Sat, 7 Nov 2026 so you can
+  choose another time. You haven't been charged." Focus starts on "Keep My
+  Table", which (like Escape) closes the dialog and leaves the payment step as
+  it was. "Release and Change" calls `releaseHold` (see "Releasing a hold"),
+  then drops the payment step, its saved copy and the hold, and goes back to
+  date and guests with the guest's details kept. If ResDiary says the booking
+  is already confirmed, the page shows the confirmation instead. If the
+  release fails or gets no answer, the page still moves on and the old hold
+  lapses by itself. The next Continue makes a new hold, and Confirm
+  Reservation brings a payment step for the new time.
 - Before showing the card form, the page asks Stripe for the PaymentIntent's
   (or SetupIntent's) status. If Stripe already took the payment (`succeeded`,
   `processing` or `requires_capture`), for example after a reload during

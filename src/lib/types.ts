@@ -1761,10 +1761,34 @@ export interface IStripeReady {
   amount: string;
 }
 
+export interface ITableBookingChangeProps {
+  busy: boolean;
+  payment: TPaymentStep | null;
+  onEdit: () => void;
+  onReleased: () => void;
+  onConfirmed: (booked: ITableBookingConfirmationProps) => void;
+}
+
+export interface ITableBookingChangeDialogProps {
+  summary: IHoldSummary;
+  releasing: boolean;
+  onKeep: () => void;
+  onRelease: () => void;
+}
+
+export interface IReleaseHold {
+  releasing: boolean;
+  release: (
+    hold: IHoldSummary,
+    onReply: (reply: TReleasedHold | null) => void,
+  ) => void;
+}
+
 export interface ITableBookingPaymentProps {
   step: TPaymentStep;
   initialError: string | null;
   onPaid: () => void;
+  onBusyChange: (busy: boolean) => void;
 }
 
 export interface IPaymentFormProps extends ITableBookingPaymentProps {
@@ -1779,6 +1803,7 @@ export interface ITableBookingHeldStepProps {
   paymentError: string | null;
   paid: IHoldSummary | null;
   onPaid: () => void;
+  onBusyChange: (busy: boolean) => void;
   onConfirmed: (booked: ITableBookingConfirmationProps) => void;
   onDetailsChange: (details: ITableBookingGuestDetails) => void;
   onBack: () => void;

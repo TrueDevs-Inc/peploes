@@ -100,3 +100,33 @@ test("if the connection drops while holding, the panel says so and Continue work
     timeout: 10_000,
   });
 });
+
+test("while the table is being held, the guest can't edit the search or go back", async ({
+  page,
+}) => {
+  const reservations = await openBooking(page);
+  await chooseDate(reservations, laterFreeDate());
+  await findTable(reservations);
+  await reservations
+    .getByRole("button", { name: label("12:30"), exact: true })
+    .click();
+  await reservations
+    .getByRole("button", { name: "Continue", exact: true })
+    .click();
+  const edit = reservations.getByRole("button", { name: "Edit date & guests" });
+
+  await expect(
+    reservations.getByRole("button", {
+      name: "Holding Your Table…",
+      exact: true,
+    }),
+  ).toBeDisabled();
+  await expect(edit).toBeDisabled();
+  await expect(
+    reservations.getByRole("button", { name: "Back to search", exact: true }),
+  ).toBeDisabled();
+  await expect(reservations.getByRole("timer")).toBeVisible({
+    timeout: 10_000,
+  });
+  await expect(edit).toBeEnabled();
+});

@@ -1,17 +1,12 @@
 "use client";
 
 import { format, parseISO, startOfMonth } from "date-fns";
-import {
-  ArrowLeft,
-  ArrowRight,
-  CalendarDays,
-  Check,
-  Pencil,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarDays, Check } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import styles from "@/components/app/compounds/table-booking-panel.module.css";
+import { TableBookingChange } from "@/components/app/molecules/table-booking-change";
 import { TableBookingDate } from "@/components/app/molecules/table-booking-date";
 import { TableBookingDetails } from "@/components/app/molecules/table-booking-details";
 import { TableBookingHoldTimer } from "@/components/app/molecules/table-booking-hold-timer";
@@ -37,6 +32,7 @@ import {
 import { TABLE_BOOKING_CONTENT as content } from "@/lib/constants/table-booking";
 import type {
   IBookingTime,
+  IGuestDetailsSending,
   IHoldChoice,
   IHoldSummary,
   IReturnBy,
@@ -47,6 +43,7 @@ import type {
   ITableBookingPanelProps,
   ITableBookingProgressProps,
   ITableBookingTimesProps,
+  ITableHold,
   TBookingStatusCheck,
   TBookingTimes,
   TPaymentStep,
@@ -92,6 +89,7 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
   const [payment, setPayment] = useState<TPaymentStep | null>(null);
   const [paid, setPaid] = useState<IHoldSummary | null>(null);
   const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [paymentBusy, setPaymentBusy] = useState(false);
   const panel = useRef<HTMLElement>(null);
   const previousStep = useRef(0);
   const shortDate = format(parseISO(date), "EEE, d MMM yyyy");
@@ -172,6 +170,18 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
     setPaid(payment.summary);
   }, [payment]);
 
+  function editSearch() {
+    setPayment(null);
+    setPaymentError(null);
+    removeSessionStorage(PAYMENT_KEY);
+    setStep(0);
+  }
+
+  function startOver() {
+    release();
+    editSearch();
+  }
+
   function holdChosenTime() {
     if (!time) return;
     const choice = {
@@ -181,6 +191,7 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
     };
     place(choice, (summary) => showHeld(choice, summary));
   }
+  const busy = isBusy(hold, guest, paymentBusy, paid);
   const monthDates = availability.datesFor(startOfMonth(parseISO(date)));
   const dateFull = Array.isArray(monthDates) && !monthDates.includes(date);
   const firstFree = Array.isArray(monthDates) ? monthDates[0] : undefined;
@@ -282,16 +293,13 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
                 <small>{content.tableUntil(returnBy.label)}</small>
               )}
             </p>
-            <button
-              type="button"
-              className={styles.editAction}
-              aria-label="Edit date & guests"
-              onClick={() => setStep(0)}
-            >
-              <Pencil aria-hidden="true" />
-              <span className={styles.desktopOnly}>Edit date &amp; guests</span>
-              <span className={styles.mobileOnly}>Edit</span>
-            </button>
+            <TableBookingChange
+              busy={busy}
+              payment={payment}
+              onEdit={editSearch}
+              onReleased={startOver}
+              onConfirmed={confirmBooking}
+            />
           </div>
           {step === 1 ? (
             <BookingTimes
@@ -316,6 +324,7 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
               paymentError={paymentError}
               paid={paid}
               onPaid={paymentAccepted}
+              onBusyChange={setPaymentBusy}
               onConfirmed={confirmBooking}
               onDetailsChange={setDetails}
               onBack={() => setStep(1)}
@@ -510,6 +519,21 @@ function savedBooking(): TSavedBooking | null {
   return held ? { kind: "held", choice: held.choice } : null;
 }
 
+function isBusy(
+  hold: ITableHold,
+  guest: IGuestDetailsSending,
+  paymentBusy: boolean,
+  paid: IHoldSummary | null,
+): boolean {
+  return (
+    hold.pending ||
+    guest.sending ||
+    guest.unsure !== null ||
+    paymentBusy ||
+    paid !== null
+  );
+}
+
 function emptyDetails(): ITableBookingGuestDetails {
   return {
     firstName: "",
@@ -599,7 +623,12 @@ function BookingTimes({
         </p>
       )}
       <div className={styles.flowActions}>
-        <button type="button" className={styles.backAction} onClick={onBack}>
+        <button
+          type="button"
+          className={styles.backAction}
+          disabled={holding}
+          onClick={onBack}
+        >
           <ArrowLeft aria-hidden="true" />
           Back to search
         </button>
@@ -626,6 +655,7 @@ function HeldStep({
   paymentError,
   paid,
   onPaid,
+  onBusyChange,
   onConfirmed,
   onDetailsChange,
   onBack,
@@ -668,6 +698,7 @@ function HeldStep({
         step={payment}
         initialError={paymentError}
         onPaid={onPaid}
+        onBusyChange={onBusyChange}
       />
     );
   }

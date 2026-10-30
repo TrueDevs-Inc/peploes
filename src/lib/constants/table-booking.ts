@@ -12,6 +12,14 @@ export const TABLE_BOOKING_CONTENT = {
   holding: "Holding Your Table…",
   heldFor: (time: string) => `Table held for ${time}`,
   chooseAgain: "Choose a Time Again",
+  changeBooking: {
+    heading: "Change your booking?",
+    text: (time: string, date: string) =>
+      `We'll release your table for ${time} on ${date} so you can choose another time. You haven't been charged.`,
+    keep: "Keep My Table",
+    release: "Release and Change",
+    releasing: "Releasing…",
+  },
   steps: [
     { number: "01", mobileNumber: "1", label: "Find a table" },
     { number: "02", mobileNumber: "2", label: "Choose a time" },

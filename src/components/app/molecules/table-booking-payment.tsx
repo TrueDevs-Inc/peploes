@@ -79,6 +79,7 @@ export function TableBookingPayment({
   step,
   initialError,
   onPaid,
+  onBusyChange,
 }: ITableBookingPaymentProps) {
   const [attempt, setAttempt] = useState(0);
   return (
@@ -87,6 +88,7 @@ export function TableBookingPayment({
       step={step}
       initialError={attempt === 0 ? initialError : null}
       onPaid={onPaid}
+      onBusyChange={onBusyChange}
       onRetry={() => setAttempt((count) => count + 1)}
     />
   );
@@ -96,6 +98,7 @@ function PaymentForm({
   step,
   initialError,
   onPaid,
+  onBusyChange,
   onRetry,
 }: IPaymentFormProps) {
   const mountPoint = useRef<HTMLDivElement>(null);
@@ -103,6 +106,13 @@ function PaymentForm({
   const [error, setError] = useState(initialError);
   const [paying, setPaying] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
+
+  const busy = paying || !(ready || loadFailed);
+
+  useEffect(() => {
+    onBusyChange(busy);
+    return () => onBusyChange(false);
+  }, [busy, onBusyChange]);
 
   useEffect(() => {
     let active = true;
@@ -123,6 +133,12 @@ function PaymentForm({
         element = prepared.elements.create("payment");
         element.on("ready", () => {
           if (active) setReady(prepared);
+        });
+        element.on("loaderror", () => {
+          element = undefined;
+          if (!active) return;
+          setError(copy.loadFailed);
+          setLoadFailed(true);
         });
         if (mountPoint.current) element.mount(mountPoint.current);
       });
@@ -166,10 +182,16 @@ function PaymentForm({
       <h2 className={styles.flowHeading}>
         {step.kind === "payment" ? copy.depositHeading : copy.cardHeading}
       </h2>
-      <p role="status" className={styles.flowDescription}>
-        {description(step, ready)}
-      </p>
-      <div ref={mountPoint} className={styles.paymentElement} />
+      {!loadFailed && (
+        <p role="status" className={styles.flowDescription}>
+          {description(step, ready)}
+        </p>
+      )}
+      <div
+        ref={mountPoint}
+        className={styles.paymentElement}
+        hidden={loadFailed}
+      />
       {error && (
         <p role="alert" className={styles.formError}>
           {error}

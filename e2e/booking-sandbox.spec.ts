@@ -886,6 +886,9 @@ test("if Stripe's script fails to load the guest sees why and can try again", as
         { exact: true },
       ),
     ).toBeVisible({ timeout: 30_000 });
+    await expect(
+      reservations.getByText("Loading secure payment…", { exact: true }),
+    ).toHaveCount(0);
     await page.unroute("https://js.stripe.com/**");
     await reservations
       .getByRole("button", { name: "Try Again", exact: true })
@@ -939,10 +942,32 @@ test("a reload after Stripe has taken the deposit shows ResDiary's confirmation,
   const held = await heldReference(page);
   try {
     expect(await payOutsideThePage(intent)).toBe("succeeded");
+    let answer: () => void = () => undefined;
+    const answered = new Promise<void>((resolve) => {
+      answer = resolve;
+    });
+    await page.route(
+      `https://api.stripe.com/v1/payment_intents/${intent.id}?**`,
+      async (route) => {
+        await answered;
+        await route.fallback();
+      },
+    );
     await page.reload();
     const reservations = page.getByRole("region", {
       name: "Table reservations",
     });
+    await expect(
+      reservations.getByRole("heading", {
+        name: "Secure your table",
+        exact: true,
+      }),
+    ).toBeVisible({ timeout: 30_000 });
+    const edit = reservations.getByRole("button", {
+      name: "Edit date & guests",
+    });
+    await expect(edit).toBeDisabled();
+    answer();
     expect(await confirmedReference(reservations)).toBe(held);
     expect((await sandboxBooking(held, TEST_EMAIL)).BookingStatus).toBe(
       "Booked",
@@ -972,6 +997,158 @@ test("if Stripe's reply to Pay is lost after the charge, the page confirms the b
     const booking = await sandboxBooking(held, TEST_EMAIL);
     expect(booking.BookingStatus).toBe("Booked");
     expect(booking.DepositPaidAmount).toBeGreaterThan(0);
+  } finally {
+    await cleanUp(held);
+  }
+});
+
+test("Edit on the deposit step asks first, releases the old table on ResDiary, and the new time gets its own deposit and booking", async ({
+  page,
+}) => {
+  test.setTimeout(300_000);
+  const tomorrow = addDays(dublinToday(), 1);
+  const [date] = [
+    ...(await sandboxOpenDates(tomorrow, addDays(tomorrow, 13), 2)),
+  ].sort();
+  if (!date)
+    throw new Error("The sandbox has no open day in the next two weeks.");
+  const [first, second] = (await sandboxTimes(date, 2)).filter(
+    (candidate) => candidate.fee > 0,
+  );
+  if (!(first && second))
+    throw new Error(`The sandbox has fewer than two deposit times on ${date}.`);
+
+  const reservations = await holdTime(page, date, first.time);
+  const firstHold = await heldReference(page);
+  let secondHold = "";
+  try {
+    await fillDetails(reservations, "Edit Deposit");
+    await reservations
+      .getByRole("button", { name: "Confirm Reservation", exact: true })
+      .click();
+    await expect(
+      reservations.getByRole("heading", {
+        name: "Secure your table",
+        exact: true,
+      }),
+    ).toBeVisible({ timeout: 30_000 });
+
+    const edit = reservations.getByRole("button", {
+      name: "Edit date & guests",
+    });
+    const dialog = page.getByRole("dialog", { name: "Change your booking?" });
+    await edit.click();
+    await expect(dialog).toContainText(
+      `We'll release your table for ${clockLabel(first.time)}`,
+    );
+    await dialog
+      .getByRole("button", { name: "Keep My Table", exact: true })
+      .click();
+    await expect(dialog).toBeHidden();
+    await expect(
+      reservations.getByRole("heading", {
+        name: "Secure your table",
+        exact: true,
+      }),
+    ).toBeVisible();
+    await edit.click();
+    await dialog
+      .getByRole("button", { name: "Release and Change", exact: true })
+      .click();
+    const findTable = reservations.getByRole("button", {
+      name: "Find a Table",
+      exact: true,
+    });
+    await expect(findTable).toBeVisible({ timeout: 20_000 });
+    expect((await sandboxBooking(firstHold, TEST_EMAIL)).BookingStatus).toBe(
+      "Cancelled",
+    );
+    await findTable.click();
+    await reservations
+      .getByRole("group", { name: "Available times", exact: true })
+      .getByRole("button", { name: clockLabel(second.time), exact: true })
+      .click();
+    const required = reservations.getByLabel(
+      /I understand the table is required back by/,
+    );
+    if (await required.count()) await required.check();
+    await reservations
+      .getByRole("button", { name: "Continue", exact: true })
+      .click();
+    const confirm = reservations.getByRole("button", {
+      name: "Confirm Reservation",
+      exact: true,
+    });
+    await expect(confirm).toBeVisible({ timeout: 20_000 });
+    await expect(
+      reservations.getByRole("button", { name: /^Pay / }),
+    ).toHaveCount(0);
+    secondHold = await heldReference(page);
+    expect(secondHold).not.toBe(firstHold);
+
+    await confirm.click();
+    const pay = reservations.getByRole("button", {
+      name: /^Pay .* and Reserve$/,
+    });
+    await expect(pay).toBeEnabled({ timeout: 30_000 });
+    await enterCard(reservations, "4242 4242 4242 4242");
+    let release: () => void = () => undefined;
+    const confirmed = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await page.route(
+      "https://api.stripe.com/v1/payment_intents/*/confirm",
+      async (route) => {
+        await confirmed;
+        await route.fallback();
+      },
+    );
+    await pay.click();
+    await expect(
+      reservations.getByRole("button", { name: "Processing Payment…" }),
+    ).toBeDisabled();
+    await expect(edit).toBeDisabled();
+    release();
+
+    expect(await confirmedReference(reservations)).toBe(secondHold);
+    await expect(
+      reservations.getByText(clockLabel(second.time), { exact: false }),
+    ).toBeVisible();
+    expect((await sandboxBooking(secondHold, TEST_EMAIL)).BookingStatus).toBe(
+      "Booked",
+    );
+  } finally {
+    await cleanUp(firstHold);
+    if (secondHold) await cleanUp(secondHold);
+  }
+});
+
+test("if Stripe's card form fails to load inside Stripe, the guest sees why and can try again", async ({
+  page,
+}) => {
+  test.setTimeout(240_000);
+  await page.route("https://api.stripe.com/v1/elements/sessions**", (route) =>
+    route.abort(),
+  );
+  const reservations = await holdDeposit(page, "Card Form Blocked");
+  const held = await heldReference(page);
+  try {
+    await expect(
+      reservations.getByText(
+        "We couldn't load the secure payment form. Check your connection and try again, or call us on +353 1 676 3144.",
+        { exact: true },
+      ),
+    ).toBeVisible({ timeout: 30_000 });
+    await expect(
+      reservations.getByRole("button", { name: "Edit date & guests" }),
+    ).toBeEnabled();
+    await page.unroute("https://api.stripe.com/v1/elements/sessions**");
+    await reservations
+      .getByRole("button", { name: "Try Again", exact: true })
+      .click();
+    await expect(
+      reservations.getByRole("button", { name: /^Pay .* and Reserve$/ }),
+    ).toBeEnabled({ timeout: 30_000 });
   } finally {
     await cleanUp(held);
   }

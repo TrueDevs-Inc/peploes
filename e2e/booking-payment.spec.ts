@@ -50,6 +50,9 @@ test("when ResDiary stays pending after payment the page keeps calm and gives th
   await expect(
     reservations.getByText("Confirming your booking…", { exact: true }),
   ).toBeVisible();
+  await expect(
+    reservations.getByRole("button", { name: "Edit date & guests" }),
+  ).toBeDisabled();
   await page.clock.fastForward("01:01");
   await expect(
     reservations.getByText(

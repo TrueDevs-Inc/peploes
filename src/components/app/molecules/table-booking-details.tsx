@@ -258,7 +258,12 @@ export function TableBookingDetails({
         </p>
       )}
       <div className={styles.flowActions}>
-        <button type="button" className={styles.backAction} onClick={onBack}>
+        <button
+          type="button"
+          className={styles.backAction}
+          disabled={sending}
+          onClick={onBack}
+        >
           <ArrowLeft aria-hidden="true" /> Back to times
         </button>
         <Button
