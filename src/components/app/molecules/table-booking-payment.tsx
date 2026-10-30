@@ -102,7 +102,7 @@ async function paymentHoldStatus(step: TPaymentStep) {
   ]);
   clearTimeout(timer);
   if (reply?.ok === false && reply.error.code === ErrorCode.NotFound) {
-    return { status: "expired" } as const;
+    return { status: "uncheckable" } as const;
   }
   return reply?.ok ? reply.data : null;
 }
@@ -125,6 +125,7 @@ export function TableBookingPayment({
   onPaid,
   onBusyChange,
   onExpired,
+  onStartAgain,
   onConfirmed,
 }: ITableBookingPaymentProps) {
   const [attempt, setAttempt] = useState(0);
@@ -135,6 +136,7 @@ export function TableBookingPayment({
       initialError={attempt === 0 ? initialError : null}
       onPaid={onPaid}
       onExpired={onExpired}
+      onStartAgain={onStartAgain}
       onConfirmed={onConfirmed}
       onBusyChange={onBusyChange}
       onRetry={() => setAttempt((count) => count + 1)}
@@ -149,6 +151,7 @@ function PaymentForm({
   onBusyChange,
   onRetry,
   onExpired,
+  onStartAgain,
   onConfirmed,
 }: IPaymentFormProps) {
   const mountPoint = useRef<HTMLDivElement>(null);
@@ -156,6 +159,7 @@ function PaymentForm({
   const [error, setError] = useState(initialError);
   const [paying, setPaying] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
+  const [cantCheck, setCantCheck] = useState(false);
 
   const endForHold = useCallback(
     (result: Awaited<ReturnType<typeof paymentHoldStatus>>) => {
@@ -167,12 +171,17 @@ function PaymentForm({
         onExpired();
         return true;
       }
+      if (result?.status === "uncheckable") {
+        setCantCheck(true);
+        setPaying(false);
+        return true;
+      }
       return false;
     },
     [onConfirmed, onExpired],
   );
 
-  const busy = paying || !(ready || loadFailed);
+  const busy = paying || !(ready || loadFailed || cantCheck);
 
   useLayoutEffect(() => {
     onBusyChange(busy);
@@ -220,11 +229,23 @@ function PaymentForm({
     };
   }, [step, onPaid, endForHold]);
 
+  async function endBeforePay(stripe: Stripe) {
+    const hold = await paymentHoldStatus(step);
+    if (hold?.status === "uncheckable") {
+      const intent = await intentOf(stripe, step).catch(() => null);
+      if (intent && PAID_STATUSES.has(intent.status)) {
+        onPaid();
+        return true;
+      }
+    }
+    return endForHold(hold);
+  }
+
   async function pay() {
     if (!ready || paying) return;
     setPaying(true);
     setError(null);
-    if (endForHold(await paymentHoldStatus(step))) return;
+    if (await endBeforePay(ready.stripe)) return;
     const options = {
       elements: ready.elements,
       redirect: "if_required" as const,
@@ -245,6 +266,19 @@ function PaymentForm({
     }
     setError(result.error.message ?? copy.failed);
     setPaying(false);
+  }
+
+  if (cantCheck) {
+    return (
+      <div className={styles.flowNotice}>
+        <p role="status" className={styles.flowDescription}>
+          {copy.cantCheck(step.summary.reference)}
+        </p>
+        <Button type="button" variant="brand-primary" onClick={onStartAgain}>
+          {TABLE_BOOKING_CONTENT.startAgain}
+        </Button>
+      </div>
+    );
   }
 
   return (

@@ -734,6 +734,7 @@ function HeldStep({
         initialError={paymentError}
         onPaid={onPaid}
         onExpired={onExpired}
+        onStartAgain={onStartAgain}
         onConfirmed={onConfirmed}
         onBusyChange={onBusyChange}
       />

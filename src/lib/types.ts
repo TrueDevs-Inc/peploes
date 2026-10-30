@@ -1834,6 +1834,7 @@ export interface ITableBookingPaymentProps {
   onConfirmed: (booked: ITableBookingConfirmationProps) => void;
   onPaid: () => void;
   onExpired: () => void;
+  onStartAgain: () => void;
   onBusyChange: (busy: boolean) => void;
 }
 

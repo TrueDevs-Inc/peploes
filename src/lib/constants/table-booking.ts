@@ -106,6 +106,8 @@ export const TABLE_BOOKING_CONTENT = {
     bankFailed:
       "Your bank didn't approve the payment. Please try again or use another card.",
     checking: "Confirming your booking…",
+    cantCheck: (reference: string) =>
+      `We can't check booking ${reference} from this page. If you finished it in another tab, your confirmation will follow; otherwise call us on ${RESTAURANT_CONTACT.phoneLabel} or start again.`,
     stillConfirming: (reference: string) =>
       `Hang tight! We're still confirming booking ${reference}. If your card was charged, your confirmation will follow shortly. If you hear nothing in a few minutes, please call us on ${RESTAURANT_CONTACT.phoneLabel}.`,
     notConfirmed: (reference: string) =>

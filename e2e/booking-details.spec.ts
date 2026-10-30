@@ -251,8 +251,12 @@ async function stubStripe(page: Page, status = "requires_payment_method") {
       body: `
     window.stripeConfirmations = 0;
     window.stripeMounts = 0;
+    window.stripeRetrievals = 0;
     window.Stripe = () => ({
-      retrievePaymentIntent: async () => ({ paymentIntent: { status: ${JSON.stringify(status)}, amount: 2000, currency: "eur" } }),
+      retrievePaymentIntent: async () => {
+        window.stripeRetrievals += 1;
+        return { paymentIntent: { status: window.stripeIntentStatus ?? ${JSON.stringify(status)}, amount: 2000, currency: "eur" } };
+      },
       elements: () => ({ create: () => {
         let ready;
         return {
@@ -801,6 +805,231 @@ test("if the hold time runs out while the details are sending and the reply is l
   answer();
   await expect(booked).toBeVisible({ timeout: 10_000 });
 });
+
+test("a restored payment with no access to the hold keeps its reference until Start Again", async ({
+  page,
+  isMobile,
+}) => {
+  const { reservations } = await heldWithDetails(page, isMobile);
+  const held = await page.evaluate(() =>
+    JSON.parse(sessionStorage.getItem("peploes:booking-hold") ?? "{}"),
+  );
+  await stubStripe(page);
+  await page.route("**/api/bookings/hold-status?**", (route) =>
+    route.fulfill({
+      status: 404,
+      json: {
+        ok: false,
+        error: {
+          code: "NOT_FOUND",
+          message:
+            "We couldn't find your table hold. Please choose a time again.",
+        },
+      },
+    }),
+  );
+  await savedPaymentStep(page, held.holdReference, held.holdRevision);
+  const saved = await page.evaluate(() => [
+    sessionStorage.getItem("peploes:booking-payment"),
+    sessionStorage.getItem("peploes:booking-hold"),
+  ]);
+  await page.reload();
+  const message = reservations.getByText(
+    `We can't check booking ${held.holdReference} from this page. If you finished it in another tab, your confirmation will follow; otherwise call us on +353 1 676 3144 or start again.`,
+    { exact: true },
+  );
+  await expect(message).toBeVisible();
+  await expect(
+    reservations.getByText("Card details", { exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    reservations.getByRole("button", {
+      name: "Choose a Time Again",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  expect(await page.evaluate(() => Reflect.get(window, "stripeMounts"))).toBe(
+    0,
+  );
+  expect(
+    await page.evaluate(() => [
+      sessionStorage.getItem("peploes:booking-payment"),
+      sessionStorage.getItem("peploes:booking-hold"),
+    ]),
+  ).toEqual(saved);
+  await page.reload();
+  await expect(message).toBeVisible();
+  expect(
+    await page.evaluate(() =>
+      sessionStorage.getItem("peploes:booking-payment"),
+    ),
+  ).toBe(saved[0]);
+  await reservations
+    .getByRole("button", { name: "Start Again", exact: true })
+    .click();
+  await expect(
+    reservations.getByRole("button", { name: "Find a Table", exact: true }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(() => [
+      sessionStorage.getItem("peploes:booking-payment"),
+      sessionStorage.getItem("peploes:booking-hold"),
+    ]),
+  ).toEqual([null, null]);
+  await page.reload();
+  await expect(
+    reservations.getByRole("button", { name: "Find a Table", exact: true }),
+  ).toBeVisible();
+});
+
+test("Pay with no access to the hold checks Stripe and keeps an unpaid reference without confirming", async ({
+  page,
+  isMobile,
+}) => {
+  const { reservations } = await heldWithDetails(page, isMobile);
+  const held = await page.evaluate(() =>
+    JSON.parse(sessionStorage.getItem("peploes:booking-hold") ?? "{}"),
+  );
+  await stubStripe(page);
+  let missing = false;
+  await page.route("**/api/bookings/hold-status?**", (route) =>
+    route.fulfill({
+      status: missing ? 404 : 200,
+      json: missing
+        ? {
+            ok: false,
+            error: {
+              code: "NOT_FOUND",
+              message:
+                "We couldn't find your table hold. Please choose a time again.",
+            },
+          }
+        : { ok: true, data: { status: "pending" } },
+    }),
+  );
+  await savedPaymentStep(page, held.holdReference, held.holdRevision);
+  await page.reload();
+  const pay = reservations.getByRole("button", {
+    name: "Pay €20.00 and Reserve",
+    exact: true,
+  });
+  await expect(pay).toBeEnabled();
+  missing = true;
+  await pay.click();
+  await expect(
+    reservations.getByText(
+      `We can't check booking ${held.holdReference} from this page. If you finished it in another tab, your confirmation will follow; otherwise call us on +353 1 676 3144 or start again.`,
+      { exact: true },
+    ),
+  ).toBeVisible();
+  await expect(
+    reservations.getByText("Card details", { exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    reservations.getByRole("button", { name: "Start Again", exact: true }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(() => Reflect.get(window, "stripeRetrievals")),
+  ).toBe(2);
+  expect(
+    await page.evaluate(() => Reflect.get(window, "stripeConfirmations")),
+  ).toBe(0);
+  expect(
+    await page.evaluate(
+      () =>
+        JSON.parse(sessionStorage.getItem("peploes:booking-payment") ?? "{}")
+          .summary?.reference,
+    ),
+  ).toBe(held.holdReference);
+  expect(
+    await page.evaluate(
+      () =>
+        JSON.parse(sessionStorage.getItem("peploes:booking-hold") ?? "{}")
+          .holdReference,
+    ),
+  ).toBe(held.holdReference);
+  await reservations
+    .getByRole("button", { name: "Start Again", exact: true })
+    .click();
+  await expect(
+    reservations.getByRole("button", { name: "Find a Table", exact: true }),
+  ).toBeVisible();
+});
+
+for (const status of ["succeeded", "processing", "requires_capture"]) {
+  test(`Pay with no access to the hold goes to the paid check when Stripe reports ${status}`, async ({
+    page,
+    isMobile,
+  }) => {
+    const { reservations } = await heldWithDetails(page, isMobile);
+    const held = await page.evaluate(() =>
+      JSON.parse(sessionStorage.getItem("peploes:booking-hold") ?? "{}"),
+    );
+    await stubStripe(page);
+    let missing = false;
+    await page.route("**/api/bookings/hold-status?**", (route) =>
+      route.fulfill({
+        status: missing ? 404 : 200,
+        json: missing
+          ? {
+              ok: false,
+              error: {
+                code: "NOT_FOUND",
+                message:
+                  "We couldn't find your table hold. Please choose a time again.",
+              },
+            }
+          : { ok: true, data: { status: "pending" } },
+      }),
+    );
+    await savedPaymentStep(page, held.holdReference, held.holdRevision);
+    await page.reload();
+    const pay = reservations.getByRole("button", {
+      name: "Pay €20.00 and Reserve",
+      exact: true,
+    });
+    await expect(pay).toBeEnabled();
+    await page.evaluate(
+      (paidStatus) => Reflect.set(window, "stripeIntentStatus", paidStatus),
+      status,
+    );
+    missing = true;
+    await pay.click();
+    await expect(
+      reservations.getByText(
+        `Hang tight! We're still confirming booking ${held.holdReference}. If your card was charged, your confirmation will follow shortly. If you hear nothing in a few minutes, please call us on +353 1 676 3144.`,
+        { exact: true },
+      ),
+    ).toBeVisible();
+    await expect(
+      reservations.getByText("Card details", { exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      reservations.getByText(
+        `We can't check booking ${held.holdReference} from this page.`,
+        { exact: false },
+      ),
+    ).toHaveCount(0);
+    expect(
+      await page.evaluate(() => Reflect.get(window, "stripeRetrievals")),
+    ).toBe(2);
+    expect(
+      await page.evaluate(() => Reflect.get(window, "stripeConfirmations")),
+    ).toBe(0);
+    expect(
+      await page.evaluate(
+        () =>
+          JSON.parse(sessionStorage.getItem("peploes:booking-paid") ?? "{}")
+            .reference,
+      ),
+    ).toBe(held.holdReference);
+    expect(
+      await page.evaluate(() =>
+        sessionStorage.getItem("peploes:booking-payment"),
+      ),
+    ).toBeNull();
+  });
+}
 
 test("a restored payment whose hold failed never mounts the card form and stays cleared after reload", async ({
   page,

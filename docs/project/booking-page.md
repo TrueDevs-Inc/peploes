@@ -204,11 +204,17 @@ the page to them.
   SetupIntent's status first. If it is `succeeded`, `processing` or
   `requires_capture`, go straight to the paid check and never show Pay again.
   Otherwise, ask ResDiary for the hold's status. A confirmed hold shows the
-  booking. A failed, expired or missing hold clears the saved payment and hold
-  and asks the guest to choose a time again. Only then show a Stripe loading
-  error or mount the card form. Check ResDiary again on Pay. Pending,
-  unavailable or unanswered checks allow payment to continue. Use ResDiary's
-  answer rather than the clock. On 30 October 2026, sandbox hold BDAZR3NZ stayed
+  booking. A failed or expired hold clears the saved payment and hold and asks
+  the guest to choose a time again. If the check answers `NotFound`, keep the
+  saved payment and hold. Show the reference, phone number and Start Again
+  without the card form. A reload shows this message again. Start Again clears
+  the saved payment and hold and opens a fresh search. For pending, unavailable
+  or unanswered checks,
+  show the Stripe loading error or mount the card form as usual. Check ResDiary again
+  on Pay. If it answers `NotFound`, ask Stripe again first. A paid intent goes
+  to the paid check. Otherwise show the same message without confirming
+  payment. Pending, unavailable or unanswered checks allow payment to continue.
+  Use ResDiary's answer rather than the clock. On 30 October 2026, sandbox hold BDAZR3NZ stayed
   Pending past expiry. It accepted its €20 deposit 116 seconds after expiry and
   confirmed seven seconds later.
 - If Stripe's reply to Pay is an error other than a card problem
