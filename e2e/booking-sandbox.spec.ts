@@ -37,6 +37,7 @@ async function resDiary(
   method: string,
   path: string,
   body?: object,
+  signal?: AbortSignal,
 ): Promise<unknown> {
   token ??= fetch(`${base()}/api/Jwt/v2/Authenticate`, {
     method: "POST",
@@ -45,11 +46,13 @@ async function resDiary(
       Username: process.env.RESDIARY_USERNAME,
       Password: process.env.RESDIARY_PASSWORD,
     }),
+    signal,
   })
     .then((reply) => reply.json())
     .then((reply) => (reply as { Token: string }).Token);
   const reply = await fetch(`${base()}${restaurantPath()}/${path}`, {
     method,
+    signal,
     headers: {
       "content-type": "application/json",
       authorization: `Bearer ${await token}`,
@@ -68,15 +71,22 @@ function sandbox(endpoint: string, body: object): Promise<unknown> {
   });
 }
 
-async function sandboxBooking(reference: string, email: string) {
+async function sandboxBooking(
+  reference: string,
+  email: string,
+  signal?: AbortSignal,
+) {
   const { Result } = (await resDiary(
     "POST",
     `Booking/${encodeURIComponent(reference)}/AuthenticateV2`,
     { Email: email },
+    signal,
   )) as { Result: string };
   return (await resDiary(
     "GET",
     `Booking/${encodeURIComponent(reference)}?${new URLSearchParams({ authenticationToken: Result })}`,
+    undefined,
+    signal,
   )) as { BookingStatus: string; DepositPaidAmount?: number | null };
 }
 
@@ -91,9 +101,28 @@ async function cancelSandboxBooking(reference: string, email: string) {
     "POST",
     `Booking/${encodeURIComponent(reference)}/Cancel?${new URLSearchParams({ cancellationReasonId: String(reason.Id) })}`,
   );
-  const after = await sandboxBooking(reference, email);
-  console.info(`[cleanup] ${reference}: ${after.BookingStatus}`);
-  return after.BookingStatus;
+  return cleanupStatus(reference, email);
+}
+
+async function cleanupStatus(reference: string, email: string) {
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      const { BookingStatus } = await sandboxBooking(
+        reference,
+        email,
+        AbortSignal.timeout(2_000),
+      );
+      if (typeof BookingStatus !== "string") throw new Error();
+      console.info(`[cleanup] ${reference}: ${BookingStatus}`);
+      return BookingStatus;
+    } catch {
+      console.info(`[cleanup] ${reference}: status read ${attempt}/3 failed`);
+      if (attempt < 3) {
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      }
+    }
+  }
+  throw new Error(`[cleanup] ${reference}: could not read booking status`);
 }
 
 async function sandboxTimes(date: string, partySize: number) {
@@ -437,13 +466,44 @@ function heldReference(page: Page): Promise<string> {
 }
 
 async function cleanUp(reference: string) {
-  const { BookingStatus } = await sandboxBooking(reference, TEST_EMAIL);
-  if (BookingStatus === "Booked") {
-    expect(await cancelSandboxBooking(reference, TEST_EMAIL)).toBe("Cancelled");
-  } else {
-    console.info(`[cleanup] ${reference}: ${BookingStatus}, nothing to cancel`);
+  let status = await cleanupStatus(reference, TEST_EMAIL);
+  if (status === "Booked" || status === "TableHold") {
+    console.info(`[cleanup] ${reference}: cancelling ${status}`);
+    try {
+      status = await cancelSandboxBooking(reference, TEST_EMAIL);
+    } catch {
+      throw new Error(
+        `[cleanup] ${reference}: cancellation could not be verified`,
+      );
+    }
   }
+  if (status !== "Cancelled" && status !== "TableHoldExpired") {
+    throw new Error(
+      `[cleanup] ${reference}: unresolved booking status ${status}`,
+    );
+  }
+  console.info(`[cleanup] ${reference}: verified final status ${status}`);
 }
+
+test("cleanup cancels a deposit hold before payment and verifies it has ended", async ({
+  page,
+}) => {
+  test.setTimeout(180_000);
+  let held = "";
+  try {
+    await depositStep(page, "Pending Cleanup");
+    held = await heldReference(page);
+    expect((await sandboxBooking(held, TEST_EMAIL)).BookingStatus).toBe(
+      "TableHold",
+    );
+  } finally {
+    const reference = held || (await heldReference(page));
+    if (reference) await cleanUp(reference);
+  }
+  expect((await sandboxBooking(held, TEST_EMAIL)).BookingStatus).toBe(
+    "Cancelled",
+  );
+});
 
 test("Confirm Reservation books a no-deposit table on ResDiary and shows its reference", async ({
   page,
