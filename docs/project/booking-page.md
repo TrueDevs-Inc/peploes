@@ -175,6 +175,11 @@ the page to them.
   reserve this table." and "Pay €20.00 and Reserve". A card guarantee's button
   is "Save Card and Reserve". Buttons capitalise each main word, like the rest
   of the panel.
+- The page writes the payment step to session storage and reads it back before
+  showing the card form. If it cannot save the step, it shows the heading and
+  amount but takes no payment. It asks the guest to allow site data, try a
+  normal browser window or call the restaurant. Edit and the release dialog
+  still work. Other booking steps are not blocked by storage failures.
 - The pay button turns on only when Stripe's form reports it is ready.
 - If Stripe's script fails to load (a dropped connection or a blocking browser
   extension), the step says "We couldn't load the secure payment form. Check
@@ -243,16 +248,35 @@ the page to them.
   checks ResDiary, which ends in the 60-second "Hang tight" message if nothing
   was taken.
 - When the Stripe step appears, the tab saves it in `sessionStorage` under
-  `peploes:booking-payment`. If a bank takes the guest to its own page, Stripe
-  sends them back to `/book-a-table` with `payment_intent` (or `setup_intent`),
-  its client secret and `redirect_status`. The page checks that the secret
-  matches the saved step, removes these values from the address bar, and then:
-  - after `succeeded` or `processing`, checks ResDiary until the booking is
-    confirmed, as after Stripe's popup;
-  - after `failed` or `requires_payment_method`, shows the card form again with
+  `peploes:booking-payment`. Stripe's return URL is `/book-a-table` with only
+  `holdReference` and `holdRevision` from the hold summary. Neither grants
+  access without the hold's httpOnly cookie. The page adds no keys or secrets.
+- If a bank takes the guest to its own page, Stripe appends `payment_intent`
+  (or `setup_intent`), its client secret and `redirect_status` to the return URL.
+  If the secret matches the saved step, remove the query string and:
+  - after `succeeded` or `processing`, check ResDiary until it confirms;
+  - after `failed` or `requires_payment_method`, show the card form again with
     "Your bank didn't approve the payment. Please try again or use another
     card."
-  A return address that doesn't match the saved step is ignored.
+- A return in another tab has no saved step. If a return cannot match a saved
+  step but names a hold, show "Confirming your booking…" and check hold-status.
+  The cookie is shared across tabs in the same browser. A confirmed hold shows
+  its confirmation. A pending hold after `succeeded` or `processing` supplies
+  the summary and starts the paid check. Save the paid state when storage works.
+  A refused payment with a pending hold shows the reference, phone and Start
+  Again. It cannot rebuild the card form without the saved step.
+- A failed or expired hold shows the not-confirmed message with the reference.
+  `NotFound` shows that this page cannot check the booking, with the reference
+  and phone. This can happen in another browser or after the cookie ends.
+  Unavailable or unanswered checks keep checking and show the still-confirming
+  message after a minute. Check Again retries. Start Again first warns that the
+  booking may still go through. Never silently open an empty search.
+- During recovery, strip Stripe's secrets from the address. Keep the hold
+  reference, revision and return status until the paid state is saved, the
+  booking is confirmed or the guest starts again. A reload can resume even
+  when storage fails or the first check never answers.
+- A return that does not match the saved step and names no hold is cleared
+  and ignored.
 - The hold timer is hidden from this step on (rule 7).
 - On the sandbox on 23 Oct 2026 the deposit step appeared 1.4 to 1.9 seconds
   after "Confirm Reservation", and ResDiary confirmed 4.5 to 6.1 seconds after
@@ -352,6 +376,9 @@ get one for a table they never booked.
 Stripe accepting a payment is not a confirmed booking. Show a confirmation only
 after ResDiary confirms it.
 
+- A bank return without saved state reaches this check once a pending hold
+  supplies its summary. It uses the same paid outcomes, Check Again and Start
+  Again warning.
 - Start checking `GET /api/bookings/hold-status` once Stripe reports success.
   Check every 2 seconds.
 - `confirmed`: show the confirmation.

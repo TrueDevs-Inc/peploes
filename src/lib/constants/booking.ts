@@ -168,3 +168,13 @@ export const BOOKING_HOLD_COOKIE = {
   sameSite: "lax",
   path: "/",
 } as const;
+
+export const BOOKING_RETURN_PARAMS = {
+  reference: "holdReference",
+  revision: "holdRevision",
+} as const;
+
+export const BOOKING_BANK_REFUSED_STATUSES: ReadonlySet<string> = new Set([
+  "failed",
+  "requires_payment_method",
+]);

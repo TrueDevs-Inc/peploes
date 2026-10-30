@@ -12,6 +12,10 @@ import { TableBookingDetails } from "@/components/app/molecules/table-booking-de
 import { TableBookingHoldTimer } from "@/components/app/molecules/table-booking-hold-timer";
 import { TableBookingPartySize } from "@/components/app/molecules/table-booking-party-size";
 import { TableBookingPayment } from "@/components/app/molecules/table-booking-payment";
+import {
+  PaymentOutcome,
+  TableBookingReturn,
+} from "@/components/app/molecules/table-booking-payment-outcome";
 import { TableBookingSupport } from "@/components/app/molecules/table-booking-support";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,13 +32,17 @@ import {
 } from "@/hooks/use-guest-details";
 import { useOpenDates } from "@/hooks/use-open-dates";
 import { storedHold, useTableHold } from "@/hooks/use-table-hold";
+import { holdReferenceSchema } from "@/lib/booking-schema";
 import { ROUTES } from "@/lib/constants";
 import {
+  BOOKING_BANK_REFUSED_STATUSES,
   BOOKING_GUEST_LIMITS,
   BOOKING_MESSAGES,
+  BOOKING_RETURN_PARAMS,
 } from "@/lib/constants/booking";
 import { TABLE_BOOKING_CONTENT as content } from "@/lib/constants/table-booking";
 import type {
+  IBookingBankReturn,
   IBookingTime,
   IGuestDetailsAttempt,
   IGuestDetailsSending,
@@ -51,6 +59,7 @@ import type {
   ITableHold,
   TBookingStatusCheck,
   TBookingTimes,
+  TOpenDates,
   TPaymentStep,
   TTableBookingTimesListProps,
 } from "@/lib/types";
@@ -94,7 +103,9 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
   const guest = useGuestDetails();
   const { restore: restoreDetails } = guest;
   const [payment, setPayment] = useState<TPaymentStep | null>(null);
+  const [returned, setReturned] = useState<IBookingBankReturn | null>(null);
   const [paid, setPaid] = useState<IHoldSummary | null>(null);
+  const [paymentSaved, setPaymentSaved] = useState(true);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [paymentBusy, setPaymentBusy] = useState(false);
   const panel = useRef<HTMLElement>(null);
@@ -133,6 +144,10 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
       return;
     }
     if (!saved) return;
+    if (saved.kind === "returning") {
+      setReturned(saved.returned);
+      return;
+    }
     showHeld(saved.choice, saved.summary);
     if (saved.kind === "details") {
       resume(saved.attempt.hold);
@@ -154,6 +169,8 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
   const confirmBooking = useCallback(
     (confirmed: ITableBookingConfirmationProps) => {
       forgetGuestDetails();
+      forgetBankReturn();
+      setReturned(null);
       setBooked(confirmed);
       setPayment(null);
       setPaid(null);
@@ -172,18 +189,27 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
       if (reply.kind === "confirmed") {
         confirmBooking({ reference: reply.reference, summary: reply.summary });
       } else {
-        setSessionStorage(PAYMENT_KEY, reply);
+        setPaymentSaved(setSessionStorage(PAYMENT_KEY, reply));
         setPayment(reply);
       }
     });
   }
 
+  const resumePaid = useCallback(
+    (summary: IHoldSummary) => {
+      forgetGuestDetails();
+      if (setSessionStorage(PAID_KEY, summary)) forgetBankReturn();
+      removeSessionStorage(PAYMENT_KEY);
+      showHeld(choiceFor(summary), summary);
+      setReturned(null);
+      setPaid(summary);
+    },
+    [showHeld],
+  );
+
   const paymentAccepted = useCallback(() => {
-    if (!payment) return;
-    setSessionStorage(PAID_KEY, payment.summary);
-    removeSessionStorage(PAYMENT_KEY);
-    setPaid(payment.summary);
-  }, [payment]);
+    if (payment) resumePaid(payment.summary);
+  }, [payment, resumePaid]);
 
   const paymentExpired = useCallback(() => {
     setPayment(null);
@@ -200,6 +226,8 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
   }
 
   function startOver() {
+    forgetBankReturn();
+    setReturned(null);
     setPaid(null);
     removeSessionStorage(PAID_KEY);
     forgetHold();
@@ -218,7 +246,7 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
   }
   const busy = isBusy(hold, guest, paymentBusy, paid);
   const monthDates = availability.datesFor(startOfMonth(parseISO(date)));
-  const dateFull = Array.isArray(monthDates) && !monthDates.includes(date);
+  const dateFull = isDateFull(monthDates, date);
   const firstFree = Array.isArray(monthDates) ? monthDates[0] : undefined;
   const moveDate = dateFull && !datePicked && firstFree !== undefined;
 
@@ -243,6 +271,23 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
       }
     }
   }, [step]);
+
+  if (returned) {
+    return (
+      <section
+        aria-label={content.label}
+        className={cn(styles.panel, styles.flowPanel)}
+      >
+        <BookingProgress step={2} />
+        <TableBookingReturn
+          returned={returned}
+          onPaid={resumePaid}
+          onConfirmed={confirmBooking}
+          onStartAgain={startOver}
+        />
+      </section>
+    );
+  }
 
   return (
     <section
@@ -348,6 +393,7 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
               guest={guest}
               payment={payment}
               paymentError={paymentError}
+              paymentSaved={paymentSaved}
               paid={paid}
               onPaid={paymentAccepted}
               onExpired={paymentExpired}
@@ -470,109 +516,11 @@ function DetailsCheck({ hold, pendingFrom, onSettled }: IDetailsCheckProps) {
   );
 }
 
-function PaymentOutcome({
-  check,
-  reference,
-  onStartAgain,
-  onCheckAgain,
-}: {
-  check: TBookingStatusCheck;
-  reference: string;
-  onStartAgain: () => void;
-  onCheckAgain: () => void;
-}) {
-  if (check.kind === "unknown") {
-    return (
-      <StillConfirming
-        reference={reference}
-        onStartAgain={onStartAgain}
-        onCheckAgain={onCheckAgain}
-      />
-    );
-  }
-  if (check.kind !== "failed") {
-    return (
-      <p role="status" className={styles.flowDescription}>
-        {content.payment.checking}
-      </p>
-    );
-  }
-  return (
-    <div className={styles.flowNotice}>
-      <p role="alert" className={styles.formError}>
-        {content.payment.notConfirmed(reference)}
-      </p>
-      <Button type="button" variant="brand-primary" onClick={onStartAgain}>
-        {content.startAgain}
-      </Button>
-    </div>
-  );
-}
-
-function StillConfirming({
-  reference,
-  onStartAgain,
-  onCheckAgain,
-}: {
-  reference: string;
-  onStartAgain: () => void;
-  onCheckAgain: () => void;
-}) {
-  const [warning, setWarning] = useState(false);
-  const message = useRef<HTMLParagraphElement>(null);
-
-  useEffect(() => {
-    if (warning) message.current?.focus();
-  }, [warning]);
-
-  return (
-    <div className={styles.flowNotice}>
-      <p
-        ref={message}
-        tabIndex={-1}
-        role="status"
-        className={styles.flowDescription}
-      >
-        {warning
-          ? content.payment.startAgainWarning(reference)
-          : content.payment.stillConfirming(reference)}
-      </p>
-      {warning ? (
-        <>
-          <Button
-            type="button"
-            variant="brand-contact"
-            onClick={() => setWarning(false)}
-          >
-            {content.payment.keepWaiting}
-          </Button>
-          <Button type="button" variant="brand-primary" onClick={onStartAgain}>
-            {content.startAgain}
-          </Button>
-        </>
-      ) : (
-        <>
-          <Button type="button" variant="brand-contact" onClick={onCheckAgain}>
-            {content.checkAgain}
-          </Button>
-          <Button
-            type="button"
-            variant="brand-primary"
-            onClick={() => setWarning(true)}
-          >
-            {content.startAgain}
-          </Button>
-        </>
-      )}
-    </div>
-  );
-}
-
 const PAID_KEY = "peploes:booking-paid";
 const PAYMENT_KEY = "peploes:booking-payment";
-const REFUSED_BY_BANK = new Set(["failed", "requires_payment_method"]);
 
 type TSavedBooking =
+  | { kind: "returning"; returned: IBookingBankReturn }
   | { kind: "held"; choice: IHoldChoice }
   | { kind: "paid"; choice: IHoldChoice; summary: IHoldSummary }
   | {
@@ -589,31 +537,71 @@ type TSavedBooking =
     };
 
 function choiceFor(summary: IHoldSummary): IHoldChoice {
-  return (
-    storedHold()?.choice ?? {
-      searchDate: summary.date,
-      time: summary.time,
-      partySize: summary.partySize,
-    }
-  );
+  const saved = storedHold();
+  if (
+    saved?.holdReference === summary.reference &&
+    saved.holdRevision === summary.revision
+  ) {
+    return saved.choice;
+  }
+  return {
+    searchDate: summary.date,
+    time: summary.time,
+    partySize: summary.partySize,
+  };
+}
+
+function forgetBankReturn() {
+  if (new URLSearchParams(window.location.search).has("redirect_status")) {
+    window.history.replaceState(null, "", window.location.pathname);
+  }
 }
 
 function bankReturn(): TSavedBooking | null {
   const params = new URLSearchParams(window.location.search);
   const status = params.get("redirect_status");
   if (!status) return null;
-  window.history.replaceState(null, "", window.location.pathname);
   const step = getSessionStorage<TPaymentStep>(PAYMENT_KEY);
   const secret = params.get(
     step?.kind === "card"
       ? "setup_intent_client_secret"
       : "payment_intent_client_secret",
   );
-  if (!step || secret !== step.stripe.clientSecret) return null;
+  if (!step || secret !== step.stripe.clientSecret) {
+    const returned = returnedHold(params, status);
+    if (!returned) forgetBankReturn();
+    return returned;
+  }
+  forgetBankReturn();
   const { summary } = step;
-  return REFUSED_BY_BANK.has(status)
+  return BOOKING_BANK_REFUSED_STATUSES.has(status)
     ? { kind: "refused", choice: choiceFor(summary), summary, step }
     : { kind: "paid", choice: choiceFor(summary), summary };
+}
+
+function returnedHold(
+  params: URLSearchParams,
+  status: string,
+): TSavedBooking | null {
+  const hold = holdReferenceSchema.safeParse({
+    holdReference: params.get(BOOKING_RETURN_PARAMS.reference),
+    holdRevision: params.get(BOOKING_RETURN_PARAMS.revision),
+  });
+  if (!hold.success) return null;
+  const query = new URLSearchParams([
+    [BOOKING_RETURN_PARAMS.reference, hold.data.holdReference],
+    [BOOKING_RETURN_PARAMS.revision, String(hold.data.holdRevision)],
+    ["redirect_status", status],
+  ]);
+  window.history.replaceState(null, "", `${window.location.pathname}?${query}`);
+  return {
+    kind: "returning",
+    returned: {
+      reference: hold.data.holdReference,
+      revision: hold.data.holdRevision,
+      status,
+    },
+  };
 }
 
 function savedBooking(): TSavedBooking | null {
@@ -654,6 +642,10 @@ function isBusy(
     paymentBusy ||
     paid !== null
   );
+}
+
+function isDateFull(dates: TOpenDates | undefined, date: string): boolean {
+  return Array.isArray(dates) && !dates.includes(date);
 }
 
 function emptyDetails(): ITableBookingGuestDetails {
@@ -786,6 +778,7 @@ function HeldStep({
   guest,
   payment,
   paymentError,
+  paymentSaved,
   paid,
   onPaid,
   onExpired,
@@ -849,6 +842,7 @@ function HeldStep({
       <TableBookingPayment
         step={payment}
         initialError={paymentError}
+        storageBlocked={!paymentSaved}
         onPaid={onPaid}
         onExpired={onExpired}
         onStartAgain={onStartAgain}

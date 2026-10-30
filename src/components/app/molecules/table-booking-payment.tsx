@@ -18,7 +18,11 @@ import {
 import styles from "@/components/app/compounds/table-booking-panel.module.css";
 import { Button } from "@/components/ui/button";
 import { fetcher } from "@/helpers/api";
-import { BOOKING_API, BOOKING_BUDGET_MS } from "@/lib/constants/booking";
+import {
+  BOOKING_API,
+  BOOKING_BUDGET_MS,
+  BOOKING_RETURN_PARAMS,
+} from "@/lib/constants/booking";
 import { TABLE_BOOKING_CONTENT } from "@/lib/constants/table-booking";
 import { ErrorCode, HttpVerb } from "@/lib/enums";
 import type {
@@ -112,15 +116,14 @@ function actionLabel(step: TPaymentStep, amount: string, paying: boolean) {
   return step.kind === "payment" ? copy.pay(amount) : copy.saveCard;
 }
 
-function description(step: TPaymentStep, ready: IStripeReady | null) {
-  if (!ready) return copy.loading;
-  return step.kind === "payment"
-    ? copy.deposit(ready.amount)
-    : copy.card(ready.amount);
+function description(step: TPaymentStep, amount: string | undefined) {
+  if (amount === undefined) return copy.loading;
+  return step.kind === "payment" ? copy.deposit(amount) : copy.card(amount);
 }
 
 export function TableBookingPayment({
   step,
+  storageBlocked = false,
   initialError,
   onPaid,
   onBusyChange,
@@ -129,6 +132,21 @@ export function TableBookingPayment({
   onConfirmed,
 }: ITableBookingPaymentProps) {
   const [attempt, setAttempt] = useState(0);
+  if (storageBlocked) {
+    return (
+      <div className={styles.payment}>
+        <h2 className={styles.flowHeading}>
+          {step.kind === "payment" ? copy.depositHeading : copy.cardHeading}
+        </h2>
+        <p className={styles.flowDescription}>
+          {description(step, step.amountText)}
+        </p>
+        <p role="alert" className={styles.formError}>
+          {copy.storageBlocked}
+        </p>
+      </div>
+    );
+  }
   return (
     <PaymentForm
       key={attempt}
@@ -246,11 +264,22 @@ function PaymentForm({
     setPaying(true);
     setError(null);
     if (await endBeforePay(ready.stripe)) return;
+    const returnUrl = new URL(
+      window.location.origin + window.location.pathname,
+    );
+    returnUrl.searchParams.set(
+      BOOKING_RETURN_PARAMS.reference,
+      step.summary.reference,
+    );
+    returnUrl.searchParams.set(
+      BOOKING_RETURN_PARAMS.revision,
+      String(step.summary.revision),
+    );
     const options = {
       elements: ready.elements,
       redirect: "if_required" as const,
       // biome-ignore lint/style/useNamingConvention: Stripe's API field name.
-      confirmParams: { return_url: window.location.href },
+      confirmParams: { return_url: returnUrl.href },
     };
     const result =
       step.kind === "payment"
@@ -288,7 +317,7 @@ function PaymentForm({
       </h2>
       {!loadFailed && (
         <p role="status" className={styles.flowDescription}>
-          {description(step, ready)}
+          {description(step, ready?.amount)}
         </p>
       )}
       <div

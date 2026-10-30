@@ -105,6 +105,9 @@ export const TABLE_BOOKING_CONTENT = {
       "Your card wasn't accepted. Please check the details or try another card.",
     bankFailed:
       "Your bank didn't approve the payment. Please try again or use another card.",
+    bankFailedWithoutStep: (reference: string) =>
+      `Your bank didn't approve the payment for booking ${reference}. Please start again, or call us on ${RESTAURANT_CONTACT.phoneLabel}.`,
+    storageBlocked: `Your browser isn't letting this page save your booking, so we can't safely take a card payment here. Allow site data or try a normal browser window, or call us on ${RESTAURANT_CONTACT.phoneLabel}.`,
     checking: "Confirming your booking…",
     cantCheck: (reference: string) =>
       `We can't check booking ${reference} from this page. If you finished it in another tab, your confirmation will follow; otherwise call us on ${RESTAURANT_CONTACT.phoneLabel} or start again.`,

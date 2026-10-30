@@ -1,6 +1,8 @@
 import type { Page } from "@playwright/test";
 
-import { FAKE_RESDIARY } from "./booking-fixtures";
+import type { TPaymentStep } from "../src/lib/types";
+
+import { FAKE_RESDIARY, FAKE_TIMES } from "./booking-fixtures";
 import {
   chooseDate,
   findTable,
@@ -563,7 +565,7 @@ async function stubStripe(page: Page, status = "requires_payment_method") {
           destroy: () => {}
         };
       } }),
-      confirmPayment: async () => { window.stripeConfirmations += 1; return {}; }
+      confirmPayment: async (options) => { window.stripeConfirmations += 1; window.stripeReturnUrl = options.confirmParams.return_url; return {}; }
     });
     window.Stripe.version = "endive";
   `,
@@ -1471,4 +1473,450 @@ test("an already paid Stripe intent wins over a failed restored hold", async ({
   expect(await page.evaluate(() => Reflect.get(window, "stripeMounts"))).toBe(
     0,
   );
+});
+
+async function depositStep(page: Page, isMobile: boolean) {
+  await stubStripe(page);
+  const time = FAKE_TIMES.find(
+    (slot) => slot.time === FAKE_RESDIARY.depositTime,
+  );
+  const { reservations, confirm } = await heldWithDetails(page, isMobile, {
+    time: time?.label,
+  });
+  await confirm.click();
+  await expect(
+    reservations.getByText("Card details", { exact: true }),
+  ).toBeVisible();
+  const step = await page.evaluate(
+    () =>
+      JSON.parse(
+        sessionStorage.getItem("peploes:booking-payment") ?? "null",
+      ) as TPaymentStep,
+  );
+  return { reservations, step };
+}
+
+function returnedUrl(step: TPaymentStep, status: string) {
+  const query = new URLSearchParams({
+    holdReference: step.summary.reference,
+    holdRevision: String(step.summary.revision),
+  });
+  query.set("payment_intent", "pi_e2e");
+  query.set("payment_intent_client_secret", step.stripe.clientSecret);
+  query.set("redirect_status", status);
+  return `/book-a-table?${query}`;
+}
+
+test("Stripe's return URL names only the held booking", async ({
+  page,
+  isMobile,
+}) => {
+  const { reservations, step } = await depositStep(page, isMobile);
+  await page.evaluate(() =>
+    history.replaceState(null, "", "?unrelated=value#details"),
+  );
+  await reservations
+    .getByRole("button", { name: "Pay €20.00 and Reserve", exact: true })
+    .click();
+  await expect
+    .poll(() => page.evaluate(() => Reflect.get(window, "stripeConfirmations")))
+    .toBe(1);
+  const value = await page.evaluate(() =>
+    String(Reflect.get(window, "stripeReturnUrl")),
+  );
+  const url = new URL(value);
+  expect(url.origin).toBe(new URL(page.url()).origin);
+  expect(url.pathname).toBe("/book-a-table");
+  expect([...url.searchParams.entries()]).toEqual([
+    ["holdReference", step.summary.reference],
+    ["holdRevision", String(step.summary.revision)],
+  ]);
+  expect(url.hash).toBe("");
+  expect(value).not.toContain(step.stripe.clientSecret);
+  expect(value).not.toContain(step.stripe.publishableKey);
+});
+
+for (const status of ["succeeded", "processing"]) {
+  test(`a ${status} bank return in a new tab recovers a pending deposit and keeps the paid check`, async ({
+    page,
+    isMobile,
+  }) => {
+    const { step } = await depositStep(page, isMobile);
+    const returned = await page.context().newPage();
+    try {
+      await returned.clock.install();
+      await returned.goto(returnedUrl(step, status));
+      const reservations = returned.getByRole("region", {
+        name: "Table reservations",
+      });
+      await expect(
+        reservations.getByText("Confirming your booking…", { exact: true }),
+      ).toBeVisible();
+      await expect(reservations).toContainText(step.summary.timeLabel);
+      await expect(reservations).toContainText(step.summary.guestsLabel);
+      await expect
+        .poll(() =>
+          returned.evaluate(() =>
+            JSON.parse(
+              sessionStorage.getItem("peploes:booking-paid") ?? "null",
+            ),
+          ),
+        )
+        .toEqual(step.summary);
+      await expect(returned).toHaveURL(/\/book-a-table$/);
+      await expect(
+        reservations.getByText("Card details", { exact: true }),
+      ).toHaveCount(0);
+      await returned.clock.fastForward("01:01");
+      await expect(
+        reservations.getByText(
+          `Hang tight! We're still confirming booking ${step.summary.reference}.`,
+        ),
+      ).toBeVisible();
+      await reservations
+        .getByRole("button", { name: "Start Again", exact: true })
+        .click();
+      await expect(
+        reservations.getByText(
+          `Booking ${step.summary.reference} may still go through.`,
+        ),
+      ).toBeVisible();
+      await reservations
+        .getByRole("button", { name: "Keep Waiting", exact: true })
+        .click();
+      await returned.route("**/api/bookings/hold-status?**", (route) =>
+        route.fulfill({
+          json: {
+            ok: true,
+            data: {
+              status: "confirmed",
+              reference: step.summary.reference,
+              summary: step.summary,
+            },
+          },
+        }),
+      );
+      await reservations
+        .getByRole("button", { name: "Check Again", exact: true })
+        .click();
+      await expect(
+        reservations.getByRole("heading", {
+          name: "Your table is booked.",
+          exact: true,
+        }),
+      ).toBeVisible();
+      await expect(reservations).toContainText(step.summary.reference);
+    } finally {
+      await returned.close();
+    }
+  });
+}
+
+test("a bank return in a new tab shows a confirmed booking with its reference", async ({
+  page,
+  isMobile,
+}) => {
+  const { step } = await depositStep(page, isMobile);
+  const returned = await page.context().newPage();
+  try {
+    await returned.route("**/api/bookings/hold-status?**", async (route) => {
+      const reply = await route.fetch();
+      const body = await reply.json();
+      expect(body.ok).toBe(true);
+      expect(body.data.status).toBe("pending");
+      await route.fulfill({
+        json: { ok: true, data: { ...body.data, status: "confirmed" } },
+      });
+    });
+    await returned.goto(returnedUrl(step, "succeeded"));
+    const reservations = returned.getByRole("region", {
+      name: "Table reservations",
+    });
+    await expect(
+      reservations.getByRole("heading", {
+        name: "Your table is booked.",
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(reservations).toContainText(step.summary.reference);
+    await expect(reservations).toContainText(step.summary.timeLabel);
+  } finally {
+    await returned.close();
+  }
+});
+
+for (const status of ["failed", "requires_payment_method"]) {
+  test(`a ${status} bank return without a saved step keeps the reference without a card form`, async ({
+    page,
+    isMobile,
+  }) => {
+    const { step } = await depositStep(page, isMobile);
+    const returned = await page.context().newPage();
+    try {
+      await returned.goto(returnedUrl(step, status));
+      const reservations = returned.getByRole("region", {
+        name: "Table reservations",
+      });
+      await expect(
+        reservations.getByText(
+          `Your bank didn't approve the payment for booking ${step.summary.reference}. Please start again, or call us on +353 1 676 3144.`,
+        ),
+      ).toBeVisible();
+      await expect(
+        reservations.getByText("Card details", { exact: true }),
+      ).toHaveCount(0);
+      await expect(
+        reservations.getByRole("button", { name: /^Pay / }),
+      ).toHaveCount(0);
+      await reservations
+        .getByRole("button", { name: "Start Again", exact: true })
+        .click();
+      await expect(
+        reservations.getByRole("button", { name: "Find a Table", exact: true }),
+      ).toBeVisible();
+    } finally {
+      await returned.close();
+    }
+  });
+}
+
+test("a bank return in another browser keeps the reference and says it cannot check", async ({
+  page,
+  isMobile,
+  browser,
+}) => {
+  const { step } = await depositStep(page, isMobile);
+  const context = await browser.newContext();
+  try {
+    const returned = await context.newPage();
+    await returned.goto(
+      new URL(returnedUrl(step, "succeeded"), page.url()).href,
+    );
+    const reservations = returned.getByRole("region", {
+      name: "Table reservations",
+    });
+    await expect(
+      reservations.getByText(
+        `We can't check booking ${step.summary.reference} from this page.`,
+        { exact: false },
+      ),
+    ).toBeVisible();
+    await expect(reservations).toContainText("+353 1 676 3144");
+    await expect(
+      reservations.getByRole("button", { name: "Find a Table", exact: true }),
+    ).toHaveCount(0);
+  } finally {
+    await context.close();
+  }
+});
+
+for (const status of ["failed", "expired"]) {
+  test(`a bank return without saved state keeps the reference when the hold is ${status}`, async ({
+    page,
+    isMobile,
+  }) => {
+    const { step } = await depositStep(page, isMobile);
+    const returned = await page.context().newPage();
+    try {
+      await returned.route("**/api/bookings/hold-status?**", (route) =>
+        route.fulfill({ json: { ok: true, data: { status } } }),
+      );
+      await returned.goto(returnedUrl(step, "succeeded"));
+      const reservations = returned.getByRole("region", {
+        name: "Table reservations",
+      });
+      await expect(reservations.getByRole("alert")).toHaveText(
+        `We couldn't confirm booking ${step.summary.reference}. If your card was charged, please call us on +353 1 676 3144 and quote this reference.`,
+      );
+      await expect(
+        reservations.getByRole("button", { name: "Start Again", exact: true }),
+      ).toBeVisible();
+    } finally {
+      await returned.close();
+    }
+  });
+}
+
+for (const answer of ["unanswered", "unavailable"]) {
+  test(`an ${answer} bank recovery check gives the reference after a minute and can check again`, async ({
+    page,
+    isMobile,
+  }) => {
+    const { step } = await depositStep(page, isMobile);
+    const returned = await page.context().newPage();
+    try {
+      await returned.clock.install();
+      await returned.route("**/api/bookings/hold-status?**", (route) => {
+        if (answer === "unavailable")
+          return route.fulfill({
+            status: 503,
+            json: {
+              ok: false,
+              error: { code: "SERVICE_UNAVAILABLE", message: "Unavailable" },
+            },
+          });
+      });
+      await returned.goto(returnedUrl(step, "succeeded"));
+      const reservations = returned.getByRole("region", {
+        name: "Table reservations",
+      });
+      await expect(
+        reservations.getByText("Confirming your booking…", { exact: true }),
+      ).toBeVisible();
+      expect(returned.url()).not.toContain(step.stripe.clientSecret);
+      await returned.reload();
+      await expect(
+        reservations.getByText("Confirming your booking…", { exact: true }),
+      ).toBeVisible();
+      await returned.clock.fastForward("01:01");
+      await expect(
+        reservations.getByText(
+          `Hang tight! We're still confirming booking ${step.summary.reference}.`,
+        ),
+      ).toBeVisible();
+      await reservations
+        .getByRole("button", { name: "Check Again", exact: true })
+        .click();
+      await expect(
+        reservations.getByText("Confirming your booking…", { exact: true }),
+      ).toBeVisible();
+    } finally {
+      await returned.close();
+    }
+  });
+}
+
+for (const failure of ["throws", "drops"]) {
+  test(`when booking storage ${failure} writes, payment is blocked and Edit still asks to release`, async ({
+    page,
+    isMobile,
+  }) => {
+    await page.addInitScript((mode) => {
+      Reflect.set(window, "stripeConfirmations", 0);
+      const save = Storage.prototype.setItem;
+      Storage.prototype.setItem = function (key, value) {
+        if (this === sessionStorage && key.startsWith("peploes:booking-")) {
+          if (mode === "throws") throw new Error("Storage blocked");
+          return;
+        }
+        save.call(this, key, value);
+      };
+    }, failure);
+    await stubStripe(page);
+    const { reservations, confirm } = await heldWithDetails(page, isMobile, {
+      time: "6:30 pm",
+    });
+    await confirm.click();
+    await expect(
+      reservations.getByRole("heading", {
+        name: "Secure your table",
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(
+      reservations.getByText(
+        "A €20.00 deposit is needed to reserve this table.",
+        { exact: true },
+      ),
+    ).toBeVisible();
+    await expect(
+      reservations.getByText(
+        "Your browser isn't letting this page save your booking, so we can't safely take a card payment here. Allow site data or try a normal browser window, or call us on +353 1 676 3144.",
+        { exact: true },
+      ),
+    ).toBeVisible();
+    await expect(
+      reservations.getByText("Card details", { exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      reservations.getByRole("button", { name: /^Pay / }),
+    ).toHaveCount(0);
+    expect(
+      await page.evaluate(() => Reflect.get(window, "stripeConfirmations")),
+    ).toBe(0);
+    await reservations
+      .getByRole("button", { name: "Edit date & guests" })
+      .click();
+    await expect(changeDialog(page).dialog).toBeVisible();
+    await changeDialog(page).keep.click();
+    await expect(
+      reservations.getByRole("heading", {
+        name: "Secure your table",
+        exact: true,
+      }),
+    ).toBeVisible();
+  });
+}
+
+test("a return with unrelated saved state shows the recovered hold's summary", async ({
+  page,
+  isMobile,
+}) => {
+  const { step } = await depositStep(page, isMobile);
+  const returned = await page.context().newPage();
+  try {
+    await returned.addInitScript((payment) => {
+      sessionStorage.setItem(
+        "peploes:booking-hold",
+        JSON.stringify({
+          holdReference: "OTHERHOLD",
+          holdRevision: 1,
+          choice: { searchDate: "2026-01-01", time: "12:00", partySize: 2 },
+        }),
+      );
+      sessionStorage.setItem(
+        "peploes:booking-payment",
+        JSON.stringify({
+          ...payment,
+          stripe: { ...payment.stripe, clientSecret: "pi_other_secret_other" },
+        }),
+      );
+    }, step);
+    await returned.goto(returnedUrl(step, "succeeded"));
+    const reservations = returned.getByRole("region", {
+      name: "Table reservations",
+    });
+    await expect(
+      reservations.getByText("Confirming your booking…", { exact: true }),
+    ).toBeVisible();
+    await expect(reservations).toContainText(step.summary.dateLabel);
+    await expect(reservations).toContainText(step.summary.guestsLabel);
+    await expect(reservations).not.toContainText("2 guests");
+  } finally {
+    await returned.close();
+  }
+});
+
+test("a recovered paid booking survives another reload when session writes fail", async ({
+  page,
+  isMobile,
+}) => {
+  const { step } = await depositStep(page, isMobile);
+  const returned = await page.context().newPage();
+  try {
+    await returned.addInitScript(() => {
+      const save = Storage.prototype.setItem;
+      Storage.prototype.setItem = function (key, value) {
+        if (this === sessionStorage && key.startsWith("peploes:booking-"))
+          throw new Error("Storage blocked");
+        save.call(this, key, value);
+      };
+    });
+    await returned.goto(returnedUrl(step, "succeeded"));
+    const reservations = returned.getByRole("region", {
+      name: "Table reservations",
+    });
+    await expect(reservations).toContainText(step.summary.timeLabel);
+    expect(returned.url()).not.toContain(step.stripe.clientSecret);
+    await returned.reload();
+    await expect(
+      reservations.getByText("Confirming your booking…", { exact: true }),
+    ).toBeVisible();
+    await expect(reservations).toContainText(step.summary.timeLabel);
+    await expect(
+      reservations.getByRole("button", { name: "Find a Table", exact: true }),
+    ).toHaveCount(0);
+  } finally {
+    await returned.close();
+  }
 });

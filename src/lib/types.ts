@@ -1798,10 +1798,23 @@ export type TPaymentStep = Exclude<TGuestDetailsView, { kind: "confirmed" }>;
 
 export type TBookingStatusCheck =
   | { kind: "checking" }
-  | { kind: "pending" }
+  | { kind: "pending"; summary: IHoldSummary }
   | { kind: "confirmed"; reference: string; summary: IHoldSummary }
   | { kind: "failed" }
-  | { kind: "unknown" };
+  | { kind: "unknown"; notFound?: boolean };
+
+export interface IBookingBankReturn {
+  reference: string;
+  revision: number;
+  status: string;
+}
+
+export interface ITableBookingReturnProps {
+  returned: IBookingBankReturn;
+  onPaid: (summary: IHoldSummary) => void;
+  onConfirmed: (booked: ITableBookingConfirmationProps) => void;
+  onStartAgain: () => void;
+}
 
 export interface IStripeReady {
   stripe: Stripe;
@@ -1838,6 +1851,7 @@ export interface IReleaseHold {
 
 export interface ITableBookingPaymentProps {
   step: TPaymentStep;
+  storageBlocked?: boolean;
   initialError: string | null;
   onConfirmed: (booked: ITableBookingConfirmationProps) => void;
   onPaid: () => void;
@@ -1856,6 +1870,7 @@ export interface ITableBookingHeldStepProps {
   guest: IGuestDetailsSending;
   payment: TPaymentStep | null;
   paymentError: string | null;
+  paymentSaved: boolean;
   paid: IHoldSummary | null;
   onPaid: () => void;
   onExpired: () => void;

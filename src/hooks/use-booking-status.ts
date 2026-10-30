@@ -19,7 +19,7 @@ function nextCheck(
   pendingFrom: number | undefined,
 ): TBookingStatusCheck | null {
   if (reply?.ok === false && reply.error.code === ErrorCode.NotFound) {
-    return { kind: "unknown" };
+    return { kind: "unknown", notFound: true };
   }
   const result = reply?.ok ? reply.data : null;
   if (
@@ -27,7 +27,7 @@ function nextCheck(
     result?.status === "pending" &&
     Date.now() >= pendingFrom
   ) {
-    return { kind: "pending" };
+    return { kind: "pending", summary: result.summary };
   }
   if (result?.status === "confirmed") {
     return {
@@ -43,11 +43,11 @@ function nextCheck(
 }
 
 export function useBookingStatus(
-  hold: IHoldSummary | null,
+  hold: Pick<IHoldSummary, "reference" | "revision"> | null,
   pendingFrom?: number,
 ): TBookingStatusCheck {
   const [answer, setAnswer] = useState<{
-    hold: IHoldSummary | null;
+    hold: Pick<IHoldSummary, "reference" | "revision"> | null;
     check: TBookingStatusCheck;
   }>({ hold: null, check: CHECKING });
 
