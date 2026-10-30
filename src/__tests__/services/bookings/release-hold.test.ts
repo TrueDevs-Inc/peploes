@@ -78,6 +78,19 @@ describe("releaseHold", function releaseHoldTests() {
     expect(provider.cancelHold).not.toHaveBeenCalled();
   });
 
+  it("shows the booking when ResDiary confirms it during release", async function confirmedDuringRelease() {
+    const { provider, token } = await held();
+    provider.cancelHold.mockResolvedValue(ok("confirmed"));
+
+    const result = await service(provider).releaseHold(HOLD_QUERY, token);
+
+    expect(result._unsafeUnwrap()).toEqual({
+      kind: "confirmed",
+      reference: HOLD.reference,
+      summary: expect.objectContaining({ timeLabel: "7:30 pm" }),
+    });
+  });
+
   it.each(["failed", "cancelled"] as const)(
     "treats a hold ResDiary reports as %s as already released",
     async function alreadyGone(status) {

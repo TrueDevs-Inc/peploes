@@ -507,6 +507,8 @@ export interface IResDiaryCancelHoldInput {
   reasonId: number;
 }
 
+export type TResDiaryCancelOutcome = "released" | "confirmed";
+
 export interface IResDiaryClosedDates {
   closedWeekdays: number[];
   closedPeriods: IDatePeriod[];
@@ -1810,8 +1812,10 @@ export interface ITableBookingChangeProps {
 export interface ITableBookingChangeDialogProps {
   summary: IHoldSummary;
   releasing: boolean;
+  check: TBookingStatusCheck | null;
   onKeep: () => void;
   onRelease: () => void;
+  onCheckAgain: () => void;
 }
 
 export interface IReleaseHold {

@@ -135,7 +135,6 @@ export const RESDIARY_DETAILS = {
   signInRefused: "sign-in refused",
   noReference: "no reference",
   cancelNotApplied: "cancel not applied",
-  confirmedBeforeCancel: "confirmed before the cancel",
   unreadableExpiry: "unreadable expiry",
   unusableExpiry: "unusable expiry",
   root: "(root)",

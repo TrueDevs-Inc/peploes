@@ -2237,7 +2237,7 @@ describe("cancelHold", function cancelHoldTests() {
 
     const result = await settle(resdiary.cancelHold(INPUT));
 
-    expect(result.isOk()).toBe(true);
+    expect(result._unsafeUnwrap()).toBe("released");
     const sent = fake.requests.find(function isCancel(request) {
       return request.path.endsWith("/Booking/B9GXWPLY/Cancel");
     });
@@ -2268,7 +2268,19 @@ describe("cancelHold", function cancelHoldTests() {
 
     const result = await settle(resdiary.cancelHold(INPUT));
 
-    expect(result.isOk()).toBe(true);
+    expect(result._unsafeUnwrap()).toBe("released");
+    expect(fake.count(CANCEL)).toBe(1);
+  });
+
+  it("reports a booking confirmed during cancellation instead of losing that outcome", async function confirmedDuringCancel() {
+    const { fake, resdiary } = provider({
+      [CANCEL]: reply(204),
+      [STATUS]: holdStatus("Confirmed"),
+    });
+
+    const result = await settle(resdiary.cancelHold(INPUT));
+
+    expect(result._unsafeUnwrap()).toBe("confirmed");
     expect(fake.count(CANCEL)).toBe(1);
   });
 

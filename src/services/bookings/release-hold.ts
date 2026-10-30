@@ -78,5 +78,15 @@ export async function releaseHold(
     { holdId: hold.holdId, reference: hold.reference, reasonId: reason.id },
     options,
   );
-  return cancelled.isOk() ? ok({ kind: "released" }) : err(unavailable());
+  if (cancelled.isErr()) {
+    return err(unavailable());
+  }
+  if (cancelled.value === "confirmed") {
+    return ok({
+      kind: "confirmed",
+      reference: hold.reference,
+      summary: holdSummary(hold),
+    });
+  }
+  return ok({ kind: "released" });
 }

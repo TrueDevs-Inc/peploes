@@ -128,7 +128,7 @@ export function fakeProvider(
       },
     ),
     cancelHold: vi.fn<TBookingProvider["cancelHold"]>(function cancelReply() {
-      return Promise.resolve(ok(undefined));
+      return Promise.resolve(ok("released"));
     }),
   };
 }

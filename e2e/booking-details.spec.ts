@@ -21,6 +21,11 @@ async function heldWithDetails(
   await chooseDate(reservations, laterFreeDate());
   await findTable(reservations);
   await reservations.getByRole("button", { name: time, exact: true }).click();
+  if (time === "7:00 pm") {
+    await reservations
+      .getByLabel("I understand the table is required back by 9:00 pm")
+      .check();
+  }
   await reservations
     .getByRole("button", { name: "Continue", exact: true })
     .click();
@@ -251,11 +256,202 @@ function changeDialog(page: Page) {
   };
 }
 
-test("Edit on the payment step asks first, and Keep My Table leaves the payment alone", async ({
+test("repeated Escape and platform close requests cannot dismiss the dialog while release is pending", async ({
   page,
 }) => {
   const reservations = await openBooking(page);
+  await page.route("https://js.stripe.com/**", (route) => route.abort());
   await savedPaymentStep(page, "E2E99999", 1);
+  await page.reload();
+  await page.route("**/book-a-table", (route) => {
+    if (route.request().method() !== "POST") return route.fallback();
+  });
+  await reservations
+    .getByRole("button", { name: "Edit date & guests" })
+    .click();
+  const { dialog, release, keep } = changeDialog(page);
+  await release.click();
+  await expect(
+    dialog.getByRole("button", { name: "Releasing…", exact: true }),
+  ).toBeDisabled();
+  await expect(keep).toBeDisabled();
+
+  await page.keyboard.press("Escape");
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeVisible();
+  await dialog.evaluate((element: HTMLDialogElement) => element.requestClose());
+  await expect(dialog).toBeVisible();
+  await dialog.evaluate((element) => element.removeAttribute("closedby"));
+  await page.keyboard.press("Escape");
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeVisible();
+  await dialog.evaluate(
+    (element: HTMLDialogElement) =>
+      new Promise<void>((resolve) => {
+        element.addEventListener("close", () => queueMicrotask(resolve), {
+          once: true,
+        });
+        element.close();
+      }),
+  );
+  await expect(dialog).toBeVisible();
+  await expect(keep).toBeDisabled();
+  expect(
+    await page.evaluate(() =>
+      sessionStorage.getItem("peploes:booking-payment"),
+    ),
+  ).not.toBeNull();
+});
+
+test("when the release reply is lost, the page checks the booking and preserves it across reload", async ({
+  page,
+  isMobile,
+}) => {
+  const { reservations, booked } = await heldWithDetails(page, isMobile);
+  const held = await page.evaluate(() =>
+    JSON.parse(sessionStorage.getItem("peploes:booking-hold") ?? "{}"),
+  );
+  await page.route("https://js.stripe.com/**", (route) => route.abort());
+  await savedPaymentStep(page, held.holdReference, held.holdRevision);
+  await page.reload();
+  const saved = await page.evaluate(() =>
+    JSON.parse(sessionStorage.getItem("peploes:booking-payment") ?? "{}"),
+  );
+  let status = "pending";
+  await page.route("**/api/bookings/hold-status?**", (route) =>
+    route.fulfill({
+      json: {
+        ok: true,
+        data: {
+          status,
+          reference: held.holdReference,
+          summary: saved.summary,
+          clearHold: status !== "pending",
+        },
+      },
+    }),
+  );
+  await dropPosts(page, false);
+  await reservations
+    .getByRole("button", { name: "Edit date & guests" })
+    .click();
+  const { dialog, release, keep } = changeDialog(page);
+  await release.click();
+
+  await expect(dialog.getByRole("status")).toHaveText(
+    "Checking whether your table was released…",
+  );
+  await expect(
+    dialog.getByRole("button", { name: "Checking…", exact: true }),
+  ).toBeDisabled();
+  expect(
+    await dialog.evaluate(
+      (element) => element.scrollWidth - element.clientWidth,
+    ),
+  ).toBeLessThanOrEqual(1);
+  await expect(keep).toBeDisabled();
+  await expect(
+    reservations.getByRole("button", { name: "Find a Table", exact: true }),
+  ).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeVisible();
+
+  await page.reload();
+  await expect(dialog.getByRole("status")).toHaveText(
+    "Checking whether your table was released…",
+  );
+  expect(
+    await page.evaluate(() =>
+      sessionStorage.getItem("peploes:booking-payment"),
+    ),
+  ).not.toBeNull();
+  status = "confirmed";
+
+  await expect(booked).toBeVisible({ timeout: 10_000 });
+  await expect(dialog).toHaveCount(0);
+  expect(
+    await page.evaluate(() =>
+      sessionStorage.getItem("peploes:booking-release"),
+    ),
+  ).toBeNull();
+});
+
+test("an uncertain release offers status checks without another cancellation, then returns to search only when the hold ends", async ({
+  page,
+  isMobile,
+}) => {
+  await page.clock.install();
+  const { reservations } = await heldWithDetails(page, isMobile);
+  const held = await page.evaluate(() =>
+    JSON.parse(sessionStorage.getItem("peploes:booking-hold") ?? "{}"),
+  );
+  await page.route("https://js.stripe.com/**", (route) => route.abort());
+  await savedPaymentStep(page, held.holdReference, held.holdRevision);
+  await page.reload();
+  let ended = false;
+  await page.route("**/api/bookings/hold-status?**", (route) =>
+    route.fulfill({
+      json: {
+        ok: true,
+        data: {
+          status: ended ? "failed" : "pending",
+          reference: held.holdReference,
+        },
+      },
+    }),
+  );
+  let releaseRequests = 0;
+  page.on("request", (request) => {
+    if (
+      request.method() === "POST" &&
+      new URL(request.url()).pathname === "/book-a-table"
+    ) {
+      releaseRequests += 1;
+    }
+  });
+  await dropPosts(page, false);
+  await reservations
+    .getByRole("button", { name: "Edit date & guests" })
+    .click();
+  const { dialog, release, keep } = changeDialog(page);
+  await release.click();
+  await expect(dialog.getByRole("status")).toHaveText(
+    "Checking whether your table was released…",
+  );
+  await page.clock.fastForward("01:01");
+  await expect(dialog.getByRole("status")).toHaveText(
+    `We couldn't confirm whether booking ${held.holdReference} was released. Please call us on +353 1 676 3144 before booking or paying again.`,
+  );
+  await expect(keep).toBeDisabled();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeVisible();
+  ended = true;
+  await dialog
+    .getByRole("button", { name: "Check Again", exact: true })
+    .click();
+
+  await expect(
+    reservations.getByRole("button", { name: "Find a Table", exact: true }),
+  ).toBeVisible();
+  expect(releaseRequests).toBe(1);
+  expect(
+    await page.evaluate(() =>
+      sessionStorage.getItem("peploes:booking-payment"),
+    ),
+  ).toBeNull();
+});
+
+test("Edit on the payment step asks first, and Keep My Table leaves the payment alone", async ({
+  page,
+  isMobile,
+}) => {
+  const { reservations } = await heldWithDetails(page, isMobile);
+  const held = await page.evaluate(() =>
+    JSON.parse(sessionStorage.getItem("peploes:booking-hold") ?? "{}"),
+  );
+  await page.route("https://js.stripe.com/**", (route) => route.abort());
+  await savedPaymentStep(page, held.holdReference, held.holdRevision);
   await page.reload();
   const payment = reservations.getByRole("heading", {
     name: "Secure your table",
@@ -270,6 +466,18 @@ test("Edit on the payment step asks first, and Keep My Table leaves the payment 
   await expect(dialog).toContainText(
     "We'll release your table for 6:00 pm on Sat, 7 Nov 2026 so you can choose another time. You haven't been charged.",
   );
+  await expect(keep).toBeFocused();
+  await dialog.evaluate(
+    (element: HTMLDialogElement) =>
+      new Promise<void>((resolve) => {
+        element.addEventListener("close", () => queueMicrotask(resolve), {
+          once: true,
+        });
+        element.close();
+        element.showModal();
+      }),
+  );
+  await expect(dialog).toBeVisible();
   await expect(keep).toBeFocused();
   await keep.click();
   await expect(dialog).toBeHidden();
@@ -294,6 +502,30 @@ test("Edit on the payment step asks first, and Keep My Table leaves the payment 
       sessionStorage.getItem("peploes:booking-payment"),
     ),
   ).toBeNull();
+});
+
+test("a booking confirmed during release shows confirmation instead of a new search", async ({
+  page,
+  isMobile,
+}) => {
+  const { reservations, booked } = await heldWithDetails(page, isMobile, {
+    time: "7:00 pm",
+  });
+  const held = await page.evaluate(() =>
+    JSON.parse(sessionStorage.getItem("peploes:booking-hold") ?? "{}"),
+  );
+  await page.route("https://js.stripe.com/**", (route) => route.abort());
+  await savedPaymentStep(page, held.holdReference, held.holdRevision);
+  await page.reload();
+  await reservations
+    .getByRole("button", { name: "Edit date & guests" })
+    .click();
+  await changeDialog(page).release.click();
+
+  await expect(booked).toBeVisible({ timeout: 10_000 });
+  await expect(
+    reservations.getByRole("button", { name: "Find a Table", exact: true }),
+  ).toHaveCount(0);
 });
 
 test("if the old table was already booked, Release and Change shows the booking instead of cancelling it", async ({

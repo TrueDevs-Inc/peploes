@@ -17,6 +17,11 @@ export const TABLE_BOOKING_CONTENT = {
     keep: "Keep My Table",
     release: "Release and Change",
     releasing: "Releasing…",
+    checking: "Checking whether your table was released…",
+    checkingAction: "Checking…",
+    checkAgain: "Check Again",
+    unknown: (reference: string) =>
+      `We couldn't confirm whether booking ${reference} was released. Please call us on ${RESTAURANT_CONTACT.phoneLabel} before booking or paying again.`,
   },
   steps: [
     { number: "01", mobileNumber: "1", label: "Find a table" },

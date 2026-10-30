@@ -166,9 +166,22 @@ the page to them.
   it was. "Release and Change" calls `releaseHold` (see "Releasing a hold"),
   then drops the payment step, its saved copy and the hold, and goes back to
   date and guests with the guest's details kept. If ResDiary says the booking
-  is already confirmed, the page shows the confirmation instead. If the
-  release fails or gets no answer, the page still moves on and the old hold
-  lapses by itself. The next Continue makes a new hold, and Confirm
+  is confirmed, including during the release, the page shows the confirmation
+  instead. If the release fails or gets no answer, the page keeps the hold and
+  saved payment step and checks ResDiary every two seconds. The dialog says
+  "Checking whether your table was released…" and blocks further payment,
+  release and back actions. Native dismissal is disabled while releasing or
+  checking, including repeated Escape presses and platform close requests.
+  If a browser still closes the dialog, the page reopens it while the outcome
+  remains unresolved. A delayed close event after the dialog reopens does not
+  dismiss it. A confirmed booking shows its confirmation; a
+  failed or expired hold returns to date and guests. After 60 seconds without
+  an answer, the dialog shows the reference and phone number and asks the guest
+  to call before booking or paying again. Check Again restarts the status
+  checks without sending another cancellation. The tab saves the hold reference
+  and revision under `peploes:booking-release` before requesting release, so
+  a reload resumes checking. Only a known release clears the payment step and
+  starts a new search. The next Continue then makes a new hold, and Confirm
   Reservation brings a payment step for the new time.
 - Before showing the card form, the page asks Stripe for the PaymentIntent's
   (or SetupIntent's) status. If Stripe already took the payment (`succeeded`,
@@ -256,8 +269,7 @@ needs the signed hold cookie, like the other booking actions.
 
 1. It asks ResDiary for the hold's status first. If the booking is already
    confirmed (paid in another tab, for example), it cancels nothing and sends
-   the confirmation instead, so it can never cancel a paid booking. A hold
-   ResDiary has already ended counts as released.
+   the confirmation instead. A hold ResDiary has already ended counts as released.
 2. Otherwise it sends ResDiary's `Booking/{reference}/Cancel` with a
    cancellation reason. Reasons come from ResDiary's `CancellationReasons`
    (cached for 5 minutes): only those a guest may give online that apply to
@@ -265,10 +277,12 @@ needs the signed hold cookie, like the other booking actions.
    picks the first one whose name mentions a change ("Change of plans" on the
    sandbox), or else the first allowed one.
 3. It reads the hold back and counts it released only when ResDiary reports it
-   ended. A 204 that leaves the hold pending gets one more cancel. If the
-   status can't be read, the cancel isn't applied, or no reason can be used, it
-   answers `ServiceUnavailable` and keeps the cookie; the hold then lapses by
-   itself.
+   ended. If ResDiary confirms the booking during this check, the provider
+   returns `confirmed`, the service returns the booking's confirmation and no
+   further cancellation is sent. A 204 that leaves the hold pending gets one
+   more cancel. If the status can't be read, the cancel isn't applied, or no
+   reason can be used, it answers `ServiceUnavailable` and keeps the cookie;
+   the page checks the existing hold instead of assuming it was released.
 
 When released or confirmed, the action deletes the hold cookie.
 

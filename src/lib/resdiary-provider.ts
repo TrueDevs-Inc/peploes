@@ -81,6 +81,7 @@ import type {
   IResDiaryTimeSearchInput,
   IResDiaryTimes,
   IResDiaryWeekdays,
+  TResDiaryCancelOutcome,
   TResDiaryCancelReasonsReply,
   TResDiaryClosedDatesReply,
   TResDiaryDateRangeReply,
@@ -1316,7 +1317,7 @@ async function cancelHold(
   connection: IResDiaryConnection,
   input: IResDiaryCancelHoldInput,
   deadlineAt: number,
-): TResDiaryResult<void> {
+): TResDiaryResult<TResDiaryCancelOutcome> {
   const operation = "cancelHold";
   const fields = invalidFields({
     holdId: isPositiveId(input.holdId),
@@ -1336,14 +1337,10 @@ async function cancelHold(
       return err(state.error);
     }
     if (state.value === "ended") {
-      return ok(undefined);
+      return ok("released");
     }
     if (state.value === "confirmed") {
-      return err({
-        kind: "outcome_unknown",
-        operation,
-        detail: RESDIARY_DETAILS.confirmedBeforeCancel,
-      });
+      return ok("confirmed");
     }
   }
   return err({
