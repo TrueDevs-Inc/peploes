@@ -92,6 +92,7 @@ function unsupportedSetting(
 function fromOutcome(
   outcome: TResDiaryGuestOutcome,
   hold: THoldToken,
+  liveSite: boolean,
 ): Result<TGuestDetailsView, IBookingError> {
   const summary = holdSummary(hold);
   switch (outcome.kind) {
@@ -99,6 +100,12 @@ function fromOutcome(
       return ok({ kind: "confirmed", reference: outcome.reference, summary });
     case "payment":
     case "card":
+      if (liveSite && !outcome.stripe.publishableKey.startsWith("pk_live_")) {
+        logger.error(LogContext.Api, BOOKING_LOG.formUnsupported, {
+          setting: BOOKING_UNSUPPORTED_SETTINGS.stripeTestKey,
+        });
+        return err(unavailable());
+      }
       return ok({ ...outcome, summary });
     case "table_taken":
       return err({ ...timeGone(), clearHold: true });
@@ -122,6 +129,7 @@ async function afterUnclearReply(
   hold: THoldToken,
   input: IResDiaryGuestInput,
   startedAt: number,
+  liveSite: boolean,
 ): TBookingResult<TGuestDetailsView> {
   const status = await provider.getHoldStatus(hold.holdId, {
     deadlineAt: Date.now() + BOOKING_BUDGET_MS.guestStatus,
@@ -146,7 +154,7 @@ async function afterUnclearReply(
   ) {
     const again = await provider.submitHoldGuest(input, { deadlineAt });
     if (again.isOk()) {
-      return fromOutcome(again.value, hold);
+      return fromOutcome(again.value, hold, liveSite);
     }
     if (again.error.kind !== "outcome_unknown") {
       return err(fromFailure(again.error));
@@ -164,13 +172,14 @@ async function sendDetails(
   guest: IResDiaryGuestInput,
   startedAt: number,
   sendBy: number,
+  liveSite: boolean,
 ): TBookingResult<TGuestDetailsView> {
   const reply = await provider.submitHoldGuest(guest, { deadlineAt: sendBy });
   if (reply.isOk()) {
-    return fromOutcome(reply.value, hold);
+    return fromOutcome(reply.value, hold, liveSite);
   }
   if (reply.error.kind === "outcome_unknown") {
-    return afterUnclearReply(provider, hold, guest, startedAt);
+    return afterUnclearReply(provider, hold, guest, startedAt, liveSite);
   }
   return err(fromFailure(reply.error));
 }
@@ -238,6 +247,13 @@ export async function submitGuestDetails(
   }
 
   const guest = guestInput(hold, details.data);
-  const sent = await sendDetails(provider, hold, guest, startedAt, sendBy);
+  const sent = await sendDetails(
+    provider,
+    hold,
+    guest,
+    startedAt,
+    sendBy,
+    liveSite,
+  );
   return markDetailsSent(sent, hold, secret);
 }

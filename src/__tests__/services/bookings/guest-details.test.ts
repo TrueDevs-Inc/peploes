@@ -17,6 +17,10 @@ import {
   setUpBookingTests,
 } from "@/__tests__/services/bookings/fixtures";
 import { readHold, signHold } from "@/lib/booking-token";
+import {
+  BOOKING_LOG,
+  BOOKING_UNSUPPORTED_SETTINGS,
+} from "@/lib/constants/booking";
 import { ErrorCode } from "@/lib/enums";
 import { logToSentry } from "@/lib/error-handler";
 import type {
@@ -616,6 +620,74 @@ describe("submitGuestDetails", function submitGuestDetailsTests() {
   });
 
   describe("the restaurant's form settings", function settingsTests() {
+    it.each([
+      ["payment", false],
+      ["card", false],
+      ["payment", true],
+      ["card", true],
+    ] as const)(
+      "on the live site, refuses a test key in a %s reply when Setup has no Stripe settings (retried: %s)",
+      async function replyTestKey(kind, retried) {
+        const { provider, token } = await held();
+        provider.submitHoldGuest.mockResolvedValue(
+          answered({
+            kind,
+            amountCents: 2000,
+            amountText: "€20.00",
+            stripe: STRIPE_STEP,
+          }),
+        );
+        if (retried) {
+          provider.submitHoldGuest.mockResolvedValueOnce(err(unclear()));
+        }
+
+        const result = await createBookingService({
+          provider,
+          holdSecret: HOLD_SECRET,
+          liveSite: true,
+        }).submitGuestDetails(GUEST_DETAILS, token);
+
+        const failure = result._unsafeUnwrapErr();
+        expect(failure.code).toBe(ErrorCode.ServiceUnavailable);
+        expect(failure.clearHold ?? false).toBe(false);
+        expect(
+          readHold(failure.holdCookie?.token ?? "", HOLD_SECRET),
+        ).toMatchObject({
+          holdId: HOLD.holdId,
+          detailsSent: true,
+        });
+        expect(provider.cancelHold).not.toHaveBeenCalled();
+        expect(errorLogs()).toContain(BOOKING_LOG.formUnsupported);
+        expect(errorLogs()).toContain(
+          BOOKING_UNSUPPORTED_SETTINGS.stripeTestKey,
+        );
+        expect(logged()).not.toContain(STRIPE_STEP.clientSecret);
+      },
+    );
+
+    it.each(["payment", "card"] as const)(
+      "on the live site, accepts a live key in a %s reply when Setup has no Stripe settings",
+      async function replyLiveKey(kind) {
+        const { provider, token } = await held();
+        const outcome = {
+          kind,
+          amountCents: 2000,
+          amountText: "€20.00",
+          stripe: { ...STRIPE_STEP, publishableKey: "pk_live_fixture" },
+        };
+        provider.submitHoldGuest.mockResolvedValue(answered(outcome));
+
+        const result = await createBookingService({
+          provider,
+          holdSecret: HOLD_SECRET,
+          liveSite: true,
+        }).submitGuestDetails(GUEST_DETAILS, token);
+
+        expect(result._unsafeUnwrap()).toMatchObject(outcome);
+        expect(console.error).not.toHaveBeenCalled();
+      },
+    );
+
     it.each([
       [
         "a membership id",

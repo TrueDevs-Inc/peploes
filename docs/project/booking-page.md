@@ -132,6 +132,12 @@ the page to them.
 
 ## Paying a deposit or saving a card
 
+- On the live site, the server keeps the Setup-based Stripe check and also
+  requires the publishable key in each `payment` or `card` reply to start with
+  `pk_live_`, even when Setup has no Stripe settings. Otherwise it logs
+  `formUnsupported` with `stripeTestKey` and returns the usual unavailable
+  error. The hold is not cancelled; its cookie is marked `detailsSent`, so a
+  later change of time cannot move it.
 - The Stripe step uses only what ResDiary sends: `loadStripe(publishableKey,
   { stripeAccount: accountId })` and the `clientSecret`. Stripe.js is imported
   from `@stripe/stripe-js/pure`, so it loads only at this step, not for every
