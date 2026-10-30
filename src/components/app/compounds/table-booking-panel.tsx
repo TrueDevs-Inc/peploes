@@ -170,6 +170,13 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
     setPaid(payment.summary);
   }, [payment]);
 
+  const paymentExpired = useCallback(() => {
+    setPayment(null);
+    setPaymentError(null);
+    removeSessionStorage(PAYMENT_KEY);
+    forgetHold();
+  }, [forgetHold]);
+
   function editSearch() {
     setPayment(null);
     setPaymentError(null);
@@ -325,6 +332,7 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
               paymentError={paymentError}
               paid={paid}
               onPaid={paymentAccepted}
+              onExpired={paymentExpired}
               onBusyChange={setPaymentBusy}
               onConfirmed={confirmBooking}
               onDetailsChange={setDetails}
@@ -671,6 +679,7 @@ function HeldStep({
   paymentError,
   paid,
   onPaid,
+  onExpired,
   onBusyChange,
   onConfirmed,
   onDetailsChange,
@@ -724,6 +733,8 @@ function HeldStep({
         step={payment}
         initialError={paymentError}
         onPaid={onPaid}
+        onExpired={onExpired}
+        onConfirmed={onConfirmed}
         onBusyChange={onBusyChange}
       />
     );

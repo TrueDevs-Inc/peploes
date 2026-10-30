@@ -162,7 +162,11 @@ test("while the booking is still confirming the guest can start again, and a rel
 test("a return address from a different payment is cleared and never counts as paid", async ({
   page,
 }) => {
+  await page.route("https://js.stripe.com/**", (route) => route.abort());
   const reservations = await openBooking(page);
+  await page.route("**/api/bookings/hold-status?**", (route) =>
+    route.fulfill({ json: { ok: true, data: { status: "pending" } } }),
+  );
   await page.evaluate(
     (date) =>
       sessionStorage.setItem(
@@ -222,6 +226,9 @@ test("Edit is already disabled when the payment step first appears, before Strip
     }).observe(document, { childList: true, subtree: true });
   });
   const reservations = await openBooking(page);
+  await page.route("**/api/bookings/hold-status?**", (route) =>
+    route.fulfill({ json: { ok: true, data: { status: "pending" } } }),
+  );
   await page.evaluate(
     (date) =>
       sessionStorage.setItem(

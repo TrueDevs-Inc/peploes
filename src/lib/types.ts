@@ -1831,7 +1831,9 @@ export interface IReleaseHold {
 export interface ITableBookingPaymentProps {
   step: TPaymentStep;
   initialError: string | null;
+  onConfirmed: (booked: ITableBookingConfirmationProps) => void;
   onPaid: () => void;
+  onExpired: () => void;
   onBusyChange: (busy: boolean) => void;
 }
 
@@ -1847,6 +1849,7 @@ export interface ITableBookingHeldStepProps {
   paymentError: string | null;
   paid: IHoldSummary | null;
   onPaid: () => void;
+  onExpired: () => void;
   onBusyChange: (busy: boolean) => void;
   onConfirmed: (booked: ITableBookingConfirmationProps) => void;
   onDetailsChange: (details: ITableBookingGuestDetails) => void;

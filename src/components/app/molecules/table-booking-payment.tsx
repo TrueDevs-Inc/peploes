@@ -7,15 +7,26 @@ import type {
 } from "@stripe/stripe-js";
 import { loadStripe } from "@stripe/stripe-js/pure";
 import { ArrowRight } from "lucide-react";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
 import styles from "@/components/app/compounds/table-booking-panel.module.css";
 import { Button } from "@/components/ui/button";
+import { fetcher } from "@/helpers/api";
+import { BOOKING_API, BOOKING_BUDGET_MS } from "@/lib/constants/booking";
 import { TABLE_BOOKING_CONTENT } from "@/lib/constants/table-booking";
+import { ErrorCode, HttpVerb } from "@/lib/enums";
 import type {
+  IHoldStatusResult,
   IPaymentFormProps,
   IStripeReady,
   ITableBookingPaymentProps,
+  TBookingResponse,
   TPaymentStep,
 } from "@/lib/types";
 
@@ -47,6 +58,16 @@ async function intentOf(stripe: Stripe, step: TPaymentStep) {
     : null;
 }
 
+async function paymentMayHaveSucceeded(
+  stripe: Stripe,
+  step: TPaymentStep,
+  errorType: string,
+) {
+  if (CARD_PROBLEMS.has(errorType)) return false;
+  const intent = await intentOf(stripe, step).catch(() => null);
+  return !intent || PAID_STATUSES.has(intent.status);
+}
+
 async function prepare(
   step: TPaymentStep,
 ): Promise<IStripeReady | "paid" | null> {
@@ -61,6 +82,29 @@ async function prepare(
     appearance: TABLE_BOOKING_CONTENT.stripeAppearance as Appearance,
   });
   return { stripe, elements, amount: intent.amount };
+}
+
+async function paymentHoldStatus(step: TPaymentStep) {
+  const query = new URLSearchParams({
+    holdReference: step.summary.reference,
+    holdRevision: String(step.summary.revision),
+  });
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<null>((resolve) => {
+    timer = setTimeout(() => resolve(null), BOOKING_BUDGET_MS.holdCheck);
+  });
+  const reply = await Promise.race([
+    fetcher<never, TBookingResponse<IHoldStatusResult>>({
+      url: `${BOOKING_API.holdStatus}?${query}`,
+      method: HttpVerb.Get,
+    }).then((response) => response.data),
+    timeout,
+  ]);
+  clearTimeout(timer);
+  if (reply?.ok === false && reply.error.code === ErrorCode.NotFound) {
+    return { status: "expired" } as const;
+  }
+  return reply?.ok ? reply.data : null;
 }
 
 function actionLabel(step: TPaymentStep, amount: string, paying: boolean) {
@@ -80,6 +124,8 @@ export function TableBookingPayment({
   initialError,
   onPaid,
   onBusyChange,
+  onExpired,
+  onConfirmed,
 }: ITableBookingPaymentProps) {
   const [attempt, setAttempt] = useState(0);
   return (
@@ -88,6 +134,8 @@ export function TableBookingPayment({
       step={step}
       initialError={attempt === 0 ? initialError : null}
       onPaid={onPaid}
+      onExpired={onExpired}
+      onConfirmed={onConfirmed}
       onBusyChange={onBusyChange}
       onRetry={() => setAttempt((count) => count + 1)}
     />
@@ -100,12 +148,29 @@ function PaymentForm({
   onPaid,
   onBusyChange,
   onRetry,
+  onExpired,
+  onConfirmed,
 }: IPaymentFormProps) {
   const mountPoint = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState<IStripeReady | null>(null);
   const [error, setError] = useState(initialError);
   const [paying, setPaying] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
+
+  const endForHold = useCallback(
+    (result: Awaited<ReturnType<typeof paymentHoldStatus>>) => {
+      if (result?.status === "confirmed") {
+        onConfirmed({ reference: result.reference, summary: result.summary });
+        return true;
+      }
+      if (result?.status === "failed" || result?.status === "expired") {
+        onExpired();
+        return true;
+      }
+      return false;
+    },
+    [onConfirmed, onExpired],
+  );
 
   const busy = paying || !(ready || loadFailed);
 
@@ -117,41 +182,49 @@ function PaymentForm({
   useEffect(() => {
     let active = true;
     let element: StripePaymentElement | undefined;
-    prepare(step)
-      .catch(() => null)
-      .then((prepared) => {
-        if (!active) return;
-        if (prepared === "paid") {
-          onPaid();
-          return;
-        }
-        if (!prepared) {
-          setError(copy.loadFailed);
-          setLoadFailed(true);
-          return;
-        }
-        element = prepared.elements.create("payment");
-        element.on("ready", () => {
-          if (active) setReady(prepared);
-        });
-        element.on("loaderror", () => {
-          element = undefined;
-          if (!active) return;
-          setError(copy.loadFailed);
-          setLoadFailed(true);
-        });
-        if (mountPoint.current) element.mount(mountPoint.current);
+    function mount(prepared: IStripeReady) {
+      element = prepared.elements.create("payment");
+      element.on("ready", () => {
+        if (active) setReady(prepared);
       });
+      element.on("loaderror", () => {
+        element = undefined;
+        if (!active) return;
+        setError(copy.loadFailed);
+        setLoadFailed(true);
+      });
+      if (mountPoint.current) element.mount(mountPoint.current);
+    }
+
+    async function load() {
+      const prepared = await prepare(step).catch(() => null);
+      if (!active) return;
+      if (prepared === "paid") {
+        onPaid();
+        return;
+      }
+      const hold = await paymentHoldStatus(step);
+      if (!active) return;
+      if (endForHold(hold)) return;
+      if (!prepared) {
+        setError(copy.loadFailed);
+        setLoadFailed(true);
+        return;
+      }
+      mount(prepared);
+    }
+    void load();
     return () => {
       active = false;
       element?.destroy();
     };
-  }, [step, onPaid]);
+  }, [step, onPaid, endForHold]);
 
   async function pay() {
-    if (!ready) return;
+    if (!ready || paying) return;
     setPaying(true);
     setError(null);
+    if (endForHold(await paymentHoldStatus(step))) return;
     const options = {
       elements: ready.elements,
       redirect: "if_required" as const,
@@ -166,12 +239,9 @@ function PaymentForm({
       onPaid();
       return;
     }
-    if (!CARD_PROBLEMS.has(result.error.type)) {
-      const intent = await intentOf(ready.stripe, step).catch(() => null);
-      if (!intent || PAID_STATUSES.has(intent.status)) {
-        onPaid();
-        return;
-      }
+    if (await paymentMayHaveSucceeded(ready.stripe, step, result.error.type)) {
+      onPaid();
+      return;
     }
     setError(result.error.message ?? copy.failed);
     setPaying(false);

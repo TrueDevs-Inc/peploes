@@ -200,11 +200,17 @@ the page to them.
   checking. Only a known release clears the payment step and
   starts a new search. The next Continue then makes a new hold, and Confirm
   Reservation brings a payment step for the new time.
-- Before showing the card form, the page asks Stripe for the PaymentIntent's
-  (or SetupIntent's) status. If Stripe already took the payment (`succeeded`,
-  `processing` or `requires_capture`), for example after a reload during
-  payment, the page goes straight to checking ResDiary and never shows Pay
-  again.
+- Before showing the card form, ask Stripe for the PaymentIntent's or
+  SetupIntent's status first. If it is `succeeded`, `processing` or
+  `requires_capture`, go straight to the paid check and never show Pay again.
+  Otherwise, ask ResDiary for the hold's status. A confirmed hold shows the
+  booking. A failed, expired or missing hold clears the saved payment and hold
+  and asks the guest to choose a time again. Only then show a Stripe loading
+  error or mount the card form. Check ResDiary again on Pay. Pending,
+  unavailable or unanswered checks allow payment to continue. Use ResDiary's
+  answer rather than the clock. On 30 October 2026, sandbox hold BDAZR3NZ stayed
+  Pending past expiry. It accepted its €20 deposit 116 seconds after expiry and
+  confirmed seven seconds later.
 - If Stripe's reply to Pay is an error other than a card problem
   (`card_error` or `validation_error`), such as a dropped connection, the page
   asks Stripe for the payment's status first. Paid: it checks ResDiary. Not
@@ -259,8 +265,8 @@ The timer tells the guest how long their table is held.
    without making a new hold or counting against the limit. If 30 seconds or
    less remain, it makes a new hold instead.
 7. **During payment,** hide the timer once the details step returns a payment
-   or card step. Whether ResDiary extends a hold while the guest pays is not yet
-   known.
+   or card step. Ask ResDiary whether the hold is still pending before payment; its
+   recorded expiry alone does not mean it has ended.
 
 ### Why the screen and the server can differ
 
