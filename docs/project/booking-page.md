@@ -46,9 +46,16 @@ the page to them.
   per party size and month, so a late reply for another party size never
   changes what is shown.
 - Days missing from `openDates` are disabled as well as closed days. While a
-  month loads, the calendar says "Checking which days are full…" and stays
-  usable. If the request fails, the calendar works on the closed-day rules
-  alone and does not ask again; the times step has the final word.
+  month first loads, the calendar says "Checking which days are full…" and stays
+  usable. A successful reply stays fresh for two minutes from receipt. Opening
+  the picker, showing a month again or returning to search then refreshes stale
+  months. Two minutes limits repeat requests while finding tables freed by
+  cancellations or holds, which last five minutes and can take up to eleven
+  minutes to clear on ResDiary. A refresh keeps the last known days until the
+  new reply arrives. Each party size and month has at most one request in flight.
+  A failed month retries the next time it is needed, without waiting. If no
+  reply has succeeded, only the closed-day rules apply. A failed refresh keeps
+  the last known days. The times step has the final word.
 - If the selected date turns out full, a date the page chose moves to the first
   free day in the reply. A date the guest chose stays, with a note such as "No
   tables for 2 guests on Thu, 22 Oct 2026. Please choose another day."

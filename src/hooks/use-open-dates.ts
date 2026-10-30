@@ -16,6 +16,7 @@ import type {
 
 const DAY = "yyyy-MM-dd";
 const MONTH = "yyyy-MM";
+const MONTH_FRESHNESS_MS = 120_000;
 
 export function useOpenDates(
   partySize: string,
@@ -23,6 +24,7 @@ export function useOpenDates(
 ): IOpenDates {
   const [months, setMonths] = useState<Record<string, TOpenDates>>({});
   const requested = useRef(new Set<string>());
+  const loadedAt = useRef(new Map<string, number>());
 
   const load = useCallback(
     (month: Date) => {
@@ -31,20 +33,35 @@ export function useOpenDates(
         const from = format(days[0] ?? shown, DAY);
         const to = format(days.at(-1) ?? shown, DAY);
         const key = `${partySize}:${format(shown, MONTH)}`;
+        const receivedAt = loadedAt.current.get(key);
         if (
           (lastDate !== null && from > lastDate) ||
-          requested.current.has(key)
+          requested.current.has(key) ||
+          (receivedAt !== undefined &&
+            performance.now() - receivedAt < MONTH_FRESHNESS_MS)
         ) {
           continue;
         }
         requested.current.add(key);
-        setMonths((all) => ({ ...all, [key]: "loading" }));
+        setMonths((all) =>
+          Array.isArray(all[key]) ? all : { ...all, [key]: "loading" },
+        );
         fetcher<never, TBookingResponse<ICalendarDays>>({
           url: `${BOOKING_API.calendar}?${new URLSearchParams({ from, to, partySize })}`,
           method: HttpVerb.Get,
         }).then((reply) => {
           const dates = reply.data?.ok ? reply.data.data.openDates : "failed";
-          setMonths((all) => ({ ...all, [key]: dates }));
+          requested.current.delete(key);
+          if (Array.isArray(dates)) {
+            loadedAt.current.set(key, performance.now());
+          } else {
+            loadedAt.current.delete(key);
+          }
+          setMonths((all) => ({
+            ...all,
+            [key]:
+              dates === "failed" && Array.isArray(all[key]) ? all[key] : dates,
+          }));
         });
       }
     },

@@ -1,3 +1,5 @@
+import type { Page } from "@playwright/test";
+
 import {
   addDays,
   closedPeriod,
@@ -10,7 +12,13 @@ import {
   shortDayLabel,
   weekdayName,
 } from "./booking-fixtures";
-import { bookingCalendar, chooseDate } from "./booking-page";
+import {
+  bookingCalendar,
+  chooseDate,
+  chooseGuests,
+  findTable,
+  laterFreeDate,
+} from "./booking-page";
 import { expect, test } from "./menu-test";
 
 test("the date picker opens on the first open day and offers only the days ResDiary allows", async ({
@@ -191,10 +199,9 @@ test("the calendar stays usable while availability loads and when it fails", asy
     .click();
   await expect.poll(() => failures, { timeout: 10_000 }).toEqual([503, 503]);
   await picker.open();
-  await expect(checking).toBeHidden();
+  await expect(checking).toBeHidden({ timeout: 10_000 });
   await picker.showMonth(usuallyFull);
   await picker.day(usuallyFull).click();
-  expect(failures).toEqual([503, 503]);
   await expect(
     reservations.getByRole("button", { name: /^Date / }),
   ).toHaveAccessibleName(`Date ${shortDayLabel(usuallyFull)}`);
@@ -248,3 +255,275 @@ test("a date the guest chose stays when it becomes fully booked, with a note", a
     reservations.getByRole("button", { name: /^Date / }),
   ).toHaveAccessibleName(`Date ${shortDayLabel(chosen)}`);
 });
+
+for (const returnTo of ["picker", "search", "month"]) {
+  test(`stale full days refresh on returning to the ${returnTo}, keeping known days during the request`, async ({
+    page,
+  }) => {
+    await page.clock.install();
+    const date = laterFreeDate();
+    const replies = await mockCalendar(page, [date]);
+    await page.goto("/book-a-table");
+    const reservations = page.getByRole("region", {
+      name: "Table reservations",
+    });
+    const picker = bookingCalendar(reservations);
+    await picker.open();
+    await picker.showMonth(date);
+    await expect(picker.day(date)).toBeDisabled();
+    const startsThisMonth = date.slice(0, 7) === dublinToday().slice(0, 7);
+    if (returnTo === "month") {
+      await (startsThisMonth ? picker.next : picker.previous).click();
+    } else {
+      await picker.close();
+    }
+    if (returnTo === "search") {
+      await findTable(reservations);
+      await expect(
+        reservations.getByRole("heading", {
+          name: "Available times",
+          exact: true,
+        }),
+      ).toBeVisible();
+    }
+    await replies.settle();
+    const before = replies.requests.length;
+    replies.full = [];
+    replies.pause = true;
+    await page.clock.fastForward("02:01");
+    if (returnTo === "search") {
+      await reservations
+        .getByRole("button", { name: "Back to search", exact: true })
+        .click();
+      await expect.poll(() => replies.requests.length).toBeGreaterThan(before);
+      await picker.open();
+      await picker.showMonth(date);
+    } else if (returnTo === "month") {
+      await (startsThisMonth ? picker.previous : picker.next).click();
+    } else {
+      await picker.open();
+    }
+    await expect.poll(() => replies.pending.length).toBeGreaterThan(0);
+    await expect(picker.day(date)).toBeDisabled();
+    await expect(picker.calendar.getByRole("status")).toHaveText("");
+    const refreshing = replies.requests.length;
+    await picker.close();
+    await picker.open();
+    await replies.settle();
+    await expect(picker.day(date)).toBeDisabled();
+    expect(replies.requests).toHaveLength(refreshing);
+    await replies.release();
+    await expect(picker.day(date)).toBeEnabled();
+    await picker.day(date).click();
+    await expect(
+      reservations.getByRole("button", { name: /^Date / }),
+    ).toHaveAccessibleName(`Date ${shortDayLabel(date)}`);
+  });
+}
+
+test("reopening a fresh calendar sends no new request", async ({ page }) => {
+  await page.clock.install();
+  const date = laterFreeDate();
+  const replies = await mockCalendar(page, [date]);
+  await page.goto("/book-a-table");
+  const reservations = page.getByRole("region", { name: "Table reservations" });
+  const picker = bookingCalendar(reservations);
+  await picker.open();
+  await picker.showMonth(date);
+  await expect(picker.day(date)).toBeDisabled();
+  await replies.settle();
+  const before = replies.requests.length;
+  await picker.close();
+  await page.clock.fastForward("01:00");
+  await picker.open();
+  await replies.settle();
+  await expect(picker.day(date)).toBeDisabled();
+  expect(replies.requests).toHaveLength(before);
+});
+
+test("a failed calendar retries on reopening without waiting for freshness", async ({
+  page,
+}) => {
+  const date = laterFreeDate();
+  const replies = await mockCalendar(page, [date]);
+  replies.fail = true;
+  replies.pause = true;
+  await page.goto("/book-a-table");
+  const reservations = page.getByRole("region", { name: "Table reservations" });
+  const picker = bookingCalendar(reservations);
+  await picker.open();
+  await picker.showMonth(date);
+  await expect(picker.calendar.getByRole("status")).toHaveText(
+    "Checking which days are full…",
+  );
+  await replies.release();
+  await expect(picker.calendar.getByRole("status")).toHaveText("");
+  await expect(picker.day(date)).toBeEnabled();
+  await picker.close();
+  const failedRequests = [...replies.requests];
+  replies.fail = false;
+  await picker.open();
+  await expect(picker.day(date)).toBeDisabled();
+  await replies.settle();
+  const retried = replies.requests.slice(failedRequests.length);
+  expect(retried.length).toBeGreaterThan(0);
+  expect(new Set(retried).size).toBe(retried.length);
+  for (const url of retried) expect(failedRequests).toContain(url);
+});
+
+test("a late refresh for the previous party size does not change the current calendar", async ({
+  page,
+}) => {
+  await page.clock.install();
+  const date = laterFreeDate();
+  const replies = await mockCalendar(page, []);
+  await page.goto("/book-a-table");
+  const reservations = page.getByRole("region", { name: "Table reservations" });
+  await chooseDate(reservations, date);
+  await replies.settle();
+  const picker = bookingCalendar(reservations);
+  replies.full = [date];
+  replies.pause = true;
+  await page.clock.fastForward("02:01");
+  await picker.open();
+  await expect.poll(() => replies.pending.length).toBeGreaterThan(0);
+  await picker.close();
+  replies.full = [];
+  replies.pause = false;
+  await chooseGuests(reservations, 3);
+  await picker.open();
+  await picker.showMonth(date);
+  await expect(picker.calendar.getByRole("status")).toHaveText("");
+  await replies.release();
+  await expect(picker.day(date)).toBeEnabled();
+  await expect(
+    reservations.getByRole("button", { name: /^Date / }),
+  ).toHaveAccessibleName(`Date ${shortDayLabel(date)}`);
+  await expect(reservations.getByText(/^No tables for/)).toHaveCount(0);
+});
+
+test("a refresh keeps the guest's chosen date and updates its full-day note", async ({
+  page,
+}) => {
+  await page.clock.install();
+  const date = laterFreeDate();
+  const replies = await mockCalendar(page, []);
+  await page.goto("/book-a-table");
+  const reservations = page.getByRole("region", { name: "Table reservations" });
+  await chooseDate(reservations, date);
+  await replies.settle();
+  const picker = bookingCalendar(reservations);
+  replies.full = [date];
+  await page.clock.fastForward("02:01");
+  await picker.open();
+  await expect(picker.day(date)).toBeDisabled();
+  const note = reservations.getByText(
+    `No tables for ${FAKE_RESDIARY.defaultPartySize} guests on ${shortDayLabel(date)}. Please choose another day.`,
+    { exact: true },
+  );
+  await expect(note).toBeVisible();
+  await expect(
+    reservations.getByRole("button", { name: /^Date / }),
+  ).toHaveAccessibleName(`Date ${shortDayLabel(date)}`);
+  await picker.close();
+  replies.full = [];
+  await page.clock.fastForward("02:01");
+  await picker.open();
+  await expect(picker.day(date)).toBeEnabled();
+  await expect(note).toBeHidden();
+});
+
+test("a refreshed full default date moves to the first free day", async ({
+  page,
+}) => {
+  await page.clock.install();
+  const [date, nextFree] = openDates(dublinToday());
+  if (!(date && nextFree))
+    throw new Error("The fake ResDiary needs two open days.");
+  const replies = await mockCalendar(page, []);
+  await page.goto("/book-a-table");
+  const reservations = page.getByRole("region", { name: "Table reservations" });
+  const picker = bookingCalendar(reservations);
+  await picker.open();
+  await expect(picker.calendar.getByRole("status")).toHaveText("");
+  await expect(
+    reservations.getByRole("button", { name: /^Date / }),
+  ).toHaveAccessibleName(`Date ${shortDayLabel(date)}`);
+  await replies.settle();
+  await picker.close();
+  replies.full = [date];
+  await page.clock.fastForward("02:01");
+  await picker.open();
+  await expect(
+    reservations.getByRole("button", { name: /^Date / }),
+  ).toHaveAccessibleName(`Date ${shortDayLabel(nextFree)}`);
+});
+
+async function mockCalendar(page: Page, full: string[]) {
+  const requests: string[] = [];
+  const pending: (() => Promise<void>)[] = [];
+  const responses: Promise<void>[] = [];
+  const replies = {
+    full,
+    fail: false,
+    pause: false,
+    requests,
+    pending,
+    async release() {
+      replies.pause = false;
+      await Promise.all(replies.pending.splice(0).map((send) => send()));
+      await replies.settle();
+    },
+    async settle() {
+      await expect
+        .poll(() => replies.requests.length)
+        .toBeGreaterThanOrEqual(2);
+      await Promise.all(responses);
+      await page.evaluate(
+        () =>
+          new Promise<void>((resolve) => {
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+          }),
+      );
+    },
+  };
+  await page.route("**/api/bookings/calendar?**", async (route) => {
+    const url = new URL(route.request().url());
+    const from = url.searchParams.get("from") ?? "";
+    const to = url.searchParams.get("to") ?? "";
+    const dates = openDates(dublinToday()).filter(
+      (date) => date >= from && date <= to && !replies.full.includes(date),
+    );
+    replies.requests.push(url.href);
+    const response = replies.fail
+      ? {
+          status: 503,
+          json: { ok: false, error: { message: "Calendar unavailable" } },
+        }
+      : {
+          json: {
+            ok: true,
+            data: {
+              from,
+              to,
+              partySize: Number(url.searchParams.get("partySize")),
+              openDates: dates,
+            },
+          },
+        };
+    const send = () => {
+      const received = page.waitForResponse(url.href);
+      const finished = route.fulfill(response).then(async () => {
+        await (await received).finished();
+      });
+      responses.push(finished);
+      return finished;
+    };
+    if (replies.pause) {
+      replies.pending.push(send);
+      return;
+    }
+    await send();
+  });
+  return replies;
+}

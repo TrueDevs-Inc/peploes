@@ -223,8 +223,8 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
   const moveDate = dateFull && !datePicked && firstFree !== undefined;
 
   useEffect(() => {
-    load(startOfMonth(parseISO(date)));
-  }, [load, date]);
+    if (step === 0) load(startOfMonth(parseISO(date)));
+  }, [load, date, step]);
 
   useEffect(() => {
     if (moveDate) setDate(firstFree);
