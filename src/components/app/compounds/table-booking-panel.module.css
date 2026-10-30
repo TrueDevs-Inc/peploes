@@ -470,16 +470,6 @@
   }
 }
 
-.previewNotice {
-  margin: 0 0 24px;
-  padding: 10px 14px;
-  border: 1px solid var(--booking-border);
-  border-radius: 4px;
-  color: var(--booking-accent);
-  background: var(--booking-control);
-  font-size: 12px;
-  line-height: 18px;
-}
 .panel {
   scroll-margin-top: 100px;
 }
@@ -1001,10 +991,6 @@
 @media (min-width: 1024px) {
   .flowPanel {
     min-height: 0;
-  }
-  .previewNotice {
-    font-size: 14px;
-    line-height: 20px;
   }
   .completedIcon {
     width: 18px;

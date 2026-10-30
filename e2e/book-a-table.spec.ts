@@ -148,7 +148,10 @@ test("the booking journey holds a time, sends the details and shows ResDiary's c
   });
   await page.goto("/book-a-table");
   const reservations = page.getByRole("region", { name: "Table reservations" });
-  await expect(reservations.getByText(/Booking preview/)).toBeVisible();
+  const previewNotice = reservations.getByText(
+    /Booking preview|no reservation (?:is|was) made/i,
+  );
+  await expect(previewNotice).toHaveCount(0);
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
     "content",
     /noindex/,
@@ -161,6 +164,7 @@ test("the booking journey holds a time, sends the details and shows ResDiary's c
   await expect(
     reservations.getByRole("heading", { name: "Available times", exact: true }),
   ).toBeVisible();
+  await expect(previewNotice).toHaveCount(0);
   await expect(
     reservations.getByRole("button", { name: "Continue", exact: true }),
   ).toBeDisabled();
@@ -183,6 +187,7 @@ test("the booking journey holds a time, sends the details and shows ResDiary's c
       .filter({ visible: true })
       .first(),
   ).toBeVisible();
+  await expect(previewNotice).toHaveCount(0);
   await expect(
     reservations.getByRole("heading", {
       name: "Your table is booked.",
@@ -227,6 +232,7 @@ test("the booking journey holds a time, sends the details and shows ResDiary's c
       .locator("p", { hasText: "Booking reference" })
       .locator("strong"),
   ).toHaveText(/^E2EBK\d{4}$/);
+  await expect(previewNotice).toHaveCount(0);
   await expect(
     reservations.getByRole("button", { name: "Add to Calendar", exact: true }),
   ).toBeDisabled();
@@ -467,7 +473,7 @@ test("party size menu fits the field and supports keyboard selection and dismiss
   else await fourGuests.click();
   await expect(partySize).toHaveText("4 guests");
   await partySize.click();
-  await reservations.getByText("Booking preview", { exact: false }).click();
+  await reservations.getByRole("list", { name: "Booking progress" }).click();
   await expect(options).not.toBeVisible();
   await partySize.click();
   await partySize.press("Tab");

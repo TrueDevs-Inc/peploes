@@ -231,7 +231,6 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
         step === 3 && styles.confirmedPanel,
       )}
     >
-      <p className={styles.previewNotice}>{content.previewMessage}</p>
       <BookingProgress step={step} />
 
       {step === 0 && (

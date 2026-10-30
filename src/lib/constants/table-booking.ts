@@ -7,8 +7,6 @@ export const TABLE_BOOKING_CONTENT = {
   checkingDates: "Checking which days are full…",
   fullDate: (guests: string, date: string) =>
     `No tables for ${guests} on ${date}. Please choose another day.`,
-  previewMessage:
-    "Booking preview: your table is held on ResDiary for a few minutes, but no reservation is made.",
   holding: "Holding Your Table…",
   heldFor: (time: string) => `Table held for ${time}`,
   chooseAgain: "Choose a Time Again",

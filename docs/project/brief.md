@@ -6,14 +6,16 @@ content contract are documented in [Menu pages](menus.md).
 Dedicated occasion pages, their Figma references and enquiry preview are
 documented in [Private dining and events](private-dining.md).
 
-## Book a Table design preview
+## Book a Table
 
 The /book-a-table page follows the desktop and mobile booking frames in Figma.
 Its server contract, hold timer and failure behaviour are documented in
 [Booking page and the table hold](booking-page.md).
-Its four steps run in browser memory: choose a date and party size, select a
-sample time, enter guest details, and view the confirmation layout. The page
-stays noindex. A visible notice identifies the flow as a design preview.
+Its four steps connect to ResDiary: choose a date and party size, select an
+available time, enter guest details, and view the confirmed reservation. Some
+bookings require a Stripe deposit or card guarantee before confirmation.
+The page stays noindex. A reservation is confirmed only after ResDiary returns
+its confirmation and booking reference.
 
 The booking layout and colours retain the Figma structure. Its controls and
 typography use the site's smaller scale: desktop actions are 48px tall with
@@ -21,25 +23,24 @@ typography use the site's smaller scale: desktop actions are 48px tall with
 existing card width, column counts and responsive arrangement. Let each step
 fit its content instead of retaining the design artboard's fixed minimum height.
 
-This preview does not query ResDiary, create reservations, send email, store
-guest details, or export calendar entries. The confirmation explicitly says no
-reservation was made. Refreshing the page resets the preview. Menu, Visit &
-Contact, telephone and email links use the existing destinations.
+Availability, table holds and guest details use the booking service. Reloading
+restores the tab's held table or payment step from session storage. Add to
+Calendar remains disabled. Menu, Visit & Contact, telephone and email links use
+the existing destinations. Confirmation email behaviour depends on the connected
+ResDiary account, as documented in the booking contract.
 
-The available-times frame includes the two-hour return-time acknowledgement for
-the sample 7pm slot. Changing the date or party size clears the previous time
-selection. Guest fields validate before advancing; back navigation preserves
+ResDiary supplies return times; guests must acknowledge those marked as required.
+Changing the date or party size clears the previous time selection. Guest fields
+validate before advancing; back navigation preserves
 the entered details. First name and surname are stored independently, including
 spaces within either part. Mobile displays them together in one field; switching
-widths does not reinterpret the name. Returning from guest details reopens the
-extra time slots when the retained selection is in that list. Booking terms remain placeholder
-copy until the restaurant supplies the final terms and ResDiary is integrated.
+widths does not reinterpret the name. Booking terms come from ResDiary.
 
 Verify the forward and back journey, invalid guest details, contact destinations,
 image loading and overflow at 1440px, 390px and 320px. Every Book a Table link,
 including the homepage hero and closing banner, menu banners, and Visit &
 Contact buttons, opens `/book-a-table`. Visit's Check Online Availability action
-opens the same preview. Group enquiry links keep their existing destinations.
+opens the same booking page. Group enquiry links keep their existing destinations.
 
 ## Visit & Contact
 
@@ -78,7 +79,7 @@ Set `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN` to a public development token locally and
 replace it with the client's URL-restricted public token for production.
 Mapbox attribution stays visible. Zoom, fullscreen and recenter controls are
 available; scroll-wheel zoom is disabled so the page remains easy to scroll.
-Booking controls open the [Book a Table design preview](#book-a-table-design-preview).
+Booking controls open the [Book a Table page](#book-a-table).
 Main navigation and footer opening-hours and location links point to this page,
 using its `#opening-hours` and `#find-us` anchors where relevant. The desktop
 Explore footer's Visit & Contact link uses
@@ -801,11 +802,11 @@ the banner is 318px tall with 72px vertical padding.
 On narrow screens the text wraps, margins reduce and the illustration fades
 to keep the copy readable.
 
-Book a Table opens the [booking design preview](#book-a-table-design-preview).
+Book a Table opens the [booking page](#book-a-table).
 The nearby Booking fallback note (`3131:11704`) requires
 working phone and email options when online availability is missing. The
-footer retains those active links; ResDiary integration remains future work.
+footer retains those active links alongside the connected ResDiary booking flow.
 
 When changing the banner, compare the italic text, botanical crop, background,
 spacing and button with Figma. Check artwork and font loading, narrow-screen
-wrapping, horizontal overflow and navigation to the booking preview.
+wrapping, horizontal overflow and navigation to the booking page.

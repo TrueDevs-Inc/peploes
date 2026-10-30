@@ -18,7 +18,7 @@ Each menu supplies its closing photograph and copy. The site header
 and footer remain shared with the homepage, including the footer's spacing,
 gutters and mobile section order.
 The Group Set Menu enquiry action opens the private-dining enquiry section.
-Book a Table actions open the [booking design preview](brief.md#book-a-table-design-preview).
+Book a Table actions open the [booking page](brief.md#book-a-table).
 Enquiry submission remains inactive until its integration exists.
 
 ## Design and approved comments
