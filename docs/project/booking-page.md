@@ -249,7 +249,11 @@ The timer tells the guest how long their table is held.
    server always use the same number.
 5. **At zero,** show `BOOKING_MESSAGES.holdExpired` ("Your table hold ran out.
    Please choose a time again."). Keep everything the guest typed. Choosing a
-   time again makes a new hold.
+   time again makes a new hold. While the guest details are sending, the timer
+   stays at 0:00 and doesn't end the hold: the server may still be booking it
+   for up to 15 seconds. If the reply is a plain error, the hold-ran-out view
+   shows straight after it; if the reply is lost or unclear, the booking check
+   runs.
 6. **After a reload,** send the stored choice and `holdReference` to
    `holdTable` again. The server hands back the same hold and its time left,
    without making a new hold or counting against the limit. If 30 seconds or

@@ -518,6 +518,8 @@ function savedBooking(): TSavedBooking | null {
   return held ? { kind: "held", choice: held.choice } : null;
 }
 
+const KEEP_HOLD = () => undefined;
+
 function isBusy(
   hold: ITableHold,
   guest: IGuestDetailsSending,
@@ -685,7 +687,7 @@ function HeldStep({
     [settle, forgetHold, onConfirmed],
   );
 
-  if (guest.unsure && guest.unsure === hold.active?.summary) {
+  if (guest.unsure) {
     return <DetailsCheck hold={guest.unsure} onSettled={settleDetails} />;
   }
   if (paid) {
@@ -715,7 +717,7 @@ function HeldStep({
     <>
       <TableBookingHoldTimer
         endsAt={hold.active.endsAt}
-        onExpire={hold.forgetHold}
+        onExpire={guest.sending ? KEEP_HOLD : hold.forgetHold}
       />
       <TableBookingDetails
         details={details}

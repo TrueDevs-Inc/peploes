@@ -714,3 +714,47 @@ test("if the hold can no longer be checked, the release dialog says so and lets 
     ]),
   ).toEqual([null, null]);
 });
+
+test("if the hold time runs out while the details are sending and the reply is lost, the page still checks the booking", async ({
+  page,
+  isMobile,
+}) => {
+  await page.clock.install();
+  const { reservations, confirm, booked } = await heldWithDetails(
+    page,
+    isMobile,
+  );
+  let answer: () => void = () => undefined;
+  const answered = new Promise<void>((resolve) => {
+    answer = resolve;
+  });
+  await page.route("**/book-a-table", async (route) => {
+    if (route.request().method() !== "POST") {
+      await route.fallback();
+      return;
+    }
+    const cookies = await page.context().cookies();
+    await route.fetch();
+    await page.context().clearCookies();
+    await page.context().addCookies(cookies);
+    await answered;
+    await route.abort("internetdisconnected");
+  });
+  await confirm.click();
+  await expect(
+    reservations.getByRole("button", { name: "Confirming…", exact: true }),
+  ).toBeVisible();
+
+  await page.clock.fastForward("05:00");
+  await expect(reservations.getByRole("timer")).toHaveText(
+    "Table held for 0:00",
+  );
+  await page.waitForTimeout(500);
+  await expect(
+    reservations.getByText(
+      "Your table hold ran out. Please choose a time again.",
+    ),
+  ).toHaveCount(0);
+  answer();
+  await expect(booked).toBeVisible({ timeout: 10_000 });
+});
