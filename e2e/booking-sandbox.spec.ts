@@ -425,6 +425,26 @@ async function fillDetails(reservations: Locator, surname: string) {
   await reservations.getByRole("checkbox", { name: /By confirming/ }).check();
 }
 
+function heldReference(page: Page): Promise<string> {
+  return page.evaluate(
+    () =>
+      (
+        JSON.parse(sessionStorage.getItem("peploes:booking-hold") ?? "{}") as {
+          holdReference?: string;
+        }
+      ).holdReference ?? "",
+  );
+}
+
+async function cleanUp(reference: string) {
+  const { BookingStatus } = await sandboxBooking(reference, TEST_EMAIL);
+  if (BookingStatus === "Booked") {
+    expect(await cancelSandboxBooking(reference, TEST_EMAIL)).toBe("Cancelled");
+  } else {
+    console.info(`[cleanup] ${reference}: ${BookingStatus}, nothing to cancel`);
+  }
+}
+
 test("Confirm Reservation books a no-deposit table on ResDiary and shows its reference", async ({
   page,
 }) => {
@@ -442,27 +462,30 @@ test("Confirm Reservation books a no-deposit table on ResDiary and shows its ref
 
   const reservations = await holdTime(page, date, slot.time);
   await fillDetails(reservations, "Booking Test");
-  const started = Date.now();
-  await reservations
-    .getByRole("button", { name: "Confirm Reservation", exact: true })
-    .click();
-  await expect(
-    reservations.getByRole("heading", {
-      name: "Your table is booked.",
-      exact: true,
-    }),
-  ).toBeVisible({ timeout: 30_000 });
-  console.info(
-    `[speed] ${date} ${slot.time}: booked after ${Date.now() - started} ms`,
-  );
-  const reference = (
-    await reservations
-      .locator("p", { hasText: "Booking reference" })
-      .locator("strong")
-      .textContent()
-  )?.trim();
-  expect(reference).toMatch(/^[A-Z0-9]{6,12}$/);
+  const held = await heldReference(page);
+  expect(held).toMatch(/^[A-Z0-9]{6,12}$/);
   try {
+    const started = Date.now();
+    await reservations
+      .getByRole("button", { name: "Confirm Reservation", exact: true })
+      .click();
+    await expect(
+      reservations.getByRole("heading", {
+        name: "Your table is booked.",
+        exact: true,
+      }),
+    ).toBeVisible({ timeout: 30_000 });
+    console.info(
+      `[speed] ${date} ${slot.time}: booked after ${Date.now() - started} ms`,
+    );
+    const reference = (
+      await reservations
+        .locator("p", { hasText: "Booking reference" })
+        .locator("strong")
+        .textContent()
+    )?.trim();
+    expect(reference).toMatch(/^[A-Z0-9]{6,12}$/);
+    expect(reference).toBe(held);
     expect(
       (await sandboxBooking(reference ?? "", TEST_EMAIL)).BookingStatus,
     ).toBe("Booked");
@@ -470,9 +493,7 @@ test("Confirm Reservation books a no-deposit table on ResDiary and shows its ref
       reservations.getByText("Sample booking reference"),
     ).toHaveCount(0);
   } finally {
-    expect(await cancelSandboxBooking(reference ?? "", TEST_EMAIL)).toBe(
-      "Cancelled",
-    );
+    await cleanUp(held);
   }
 });
 
@@ -502,92 +523,95 @@ test("a deposit is paid with Stripe on ResDiary's key and ResDiary confirms the 
 
   const reservations = await holdTime(page, date, slot.time);
   await fillDetails(reservations, "Deposit Test");
-  const intentReply = page.waitForResponse(
-    (response) =>
-      /api\.stripe\.com\/v1\/payment_intents\/pi_[^/?]+\?/.test(
-        response.url(),
-      ) && response.request().method() === "GET",
-  );
-  const started = Date.now();
-  await reservations
-    .getByRole("button", { name: "Confirm Reservation", exact: true })
-    .click();
-  await expect(
-    reservations.getByRole("heading", {
-      name: "Secure your table",
-      exact: true,
-    }),
-  ).toBeVisible({ timeout: 30_000 });
-  console.info(
-    `[speed] ${date} ${slot.time}: deposit step after ${Date.now() - started} ms`,
-  );
-
-  const intent = (await (await intentReply).json()) as {
-    amount: number;
-    currency: string;
-  };
-  expect(intent.amount).toBe(Math.round(slot.fee * 100));
-  const amount = new Intl.NumberFormat("en-IE", {
-    style: "currency",
-    currency: intent.currency.toUpperCase(),
-  }).format(intent.amount / 100);
-  await expect(
-    reservations.getByText(
-      `A ${amount} deposit is needed to reserve this table.`,
-      {
-        exact: true,
-      },
-    ),
-  ).toBeVisible();
-  await expect(
-    reservations.getByRole("button", { name: `Pay ${amount} and Reserve` }),
-  ).toBeEnabled({ timeout: 20_000 });
-  await expect(
-    reservations
-      .locator('iframe[title="Secure payment input frame"]')
-      .contentFrame()
-      .locator('input[name="number"]'),
-  ).toBeVisible();
-  await reservations.screenshot({
-    path: test.info().outputPath("deposit-step.png"),
-  });
-  expect(stripeKeys.size).toBeGreaterThan(0);
-  expect([...stripeKeys].every((key) => key.startsWith("pk_test_"))).toBe(true);
-
-  const card = reservations
-    .locator('iframe[title="Secure payment input frame"]')
-    .contentFrame();
-  await card.locator('input[name="number"]').fill("4242 4242 4242 4242");
-  await card.locator('input[name="expiry"]').fill("12 / 34");
-  await card.locator('input[name="cvc"]').fill("123");
-  const paid = Date.now();
-  await reservations
-    .getByRole("button", { name: `Pay ${amount} and Reserve`, exact: true })
-    .click();
-  await expect(
-    reservations.getByRole("heading", {
-      name: "Your table is booked.",
-      exact: true,
-    }),
-  ).toBeVisible({ timeout: 90_000 });
-  console.info(
-    `[speed] ${date} ${slot.time}: confirmed ${Date.now() - paid} ms after Pay`,
-  );
-  const reference = (
-    await reservations
-      .locator("p", { hasText: "Booking reference" })
-      .locator("strong")
-      .textContent()
-  )?.trim();
-  expect(reference).toMatch(/^[A-Z0-9]{6,12}$/);
+  const held = await heldReference(page);
+  expect(held).toMatch(/^[A-Z0-9]{6,12}$/);
   try {
+    const intentReply = page.waitForResponse(
+      (response) =>
+        /api\.stripe\.com\/v1\/payment_intents\/pi_[^/?]+\?/.test(
+          response.url(),
+        ) && response.request().method() === "GET",
+    );
+    const started = Date.now();
+    await reservations
+      .getByRole("button", { name: "Confirm Reservation", exact: true })
+      .click();
+    await expect(
+      reservations.getByRole("heading", {
+        name: "Secure your table",
+        exact: true,
+      }),
+    ).toBeVisible({ timeout: 30_000 });
+    console.info(
+      `[speed] ${date} ${slot.time}: deposit step after ${Date.now() - started} ms`,
+    );
+
+    const intent = (await (await intentReply).json()) as {
+      amount: number;
+      currency: string;
+    };
+    expect(intent.amount).toBe(Math.round(slot.fee * 100));
+    const amount = new Intl.NumberFormat("en-IE", {
+      style: "currency",
+      currency: intent.currency.toUpperCase(),
+    }).format(intent.amount / 100);
+    await expect(
+      reservations.getByText(
+        `A ${amount} deposit is needed to reserve this table.`,
+        {
+          exact: true,
+        },
+      ),
+    ).toBeVisible();
+    await expect(
+      reservations.getByRole("button", { name: `Pay ${amount} and Reserve` }),
+    ).toBeEnabled({ timeout: 20_000 });
+    await expect(
+      reservations
+        .locator('iframe[title="Secure payment input frame"]')
+        .contentFrame()
+        .locator('input[name="number"]'),
+    ).toBeVisible();
+    await reservations.screenshot({
+      path: test.info().outputPath("deposit-step.png"),
+    });
+    expect(stripeKeys.size).toBeGreaterThan(0);
+    expect([...stripeKeys].every((key) => key.startsWith("pk_test_"))).toBe(
+      true,
+    );
+
+    const card = reservations
+      .locator('iframe[title="Secure payment input frame"]')
+      .contentFrame();
+    await card.locator('input[name="number"]').fill("4242 4242 4242 4242");
+    await card.locator('input[name="expiry"]').fill("12 / 34");
+    await card.locator('input[name="cvc"]').fill("123");
+    const paid = Date.now();
+    await reservations
+      .getByRole("button", { name: `Pay ${amount} and Reserve`, exact: true })
+      .click();
+    await expect(
+      reservations.getByRole("heading", {
+        name: "Your table is booked.",
+        exact: true,
+      }),
+    ).toBeVisible({ timeout: 90_000 });
+    console.info(
+      `[speed] ${date} ${slot.time}: confirmed ${Date.now() - paid} ms after Pay`,
+    );
+    const reference = (
+      await reservations
+        .locator("p", { hasText: "Booking reference" })
+        .locator("strong")
+        .textContent()
+    )?.trim();
+    expect(reference).toMatch(/^[A-Z0-9]{6,12}$/);
+    expect(reference).toBe(held);
     const booking = await sandboxBooking(reference ?? "", TEST_EMAIL);
     expect(booking.BookingStatus).toBe("Booked");
     expect(booking.DepositPaidAmount).toBe(slot.fee);
   } finally {
-    expect(await cancelSandboxBooking(reference ?? "", TEST_EMAIL)).toBe(
-      "Cancelled",
-    );
+    await cleanUp(held);
   }
 });
 
@@ -697,17 +721,20 @@ test("a 3-D Secure card completes Stripe's bank check and ResDiary confirms the 
 }) => {
   test.setTimeout(240_000);
   const { reservations, pay } = await depositStep(page, "Secure Test");
-  await enterCard(reservations, "4000 0027 6000 3184");
-  await pay.click();
-  await completeTestChallenge(page);
-  const reference = await confirmedReference(reservations);
-  expect(reference).toMatch(/^[A-Z0-9]{6,12}$/);
+  const held = await heldReference(page);
+  expect(held).toMatch(/^[A-Z0-9]{6,12}$/);
   try {
+    await enterCard(reservations, "4000 0027 6000 3184");
+    await pay.click();
+    await completeTestChallenge(page);
+    const reference = await confirmedReference(reservations);
+    expect(reference).toMatch(/^[A-Z0-9]{6,12}$/);
+    expect(reference).toBe(held);
     const booking = await sandboxBooking(reference, TEST_EMAIL);
     expect(booking.BookingStatus).toBe("Booked");
     expect(booking.DepositPaidAmount).toBeGreaterThan(0);
   } finally {
-    expect(await cancelSandboxBooking(reference, TEST_EMAIL)).toBe("Cancelled");
+    await cleanUp(held);
   }
 });
 
@@ -716,23 +743,26 @@ test("a declined card shows Stripe's message and a second card books the table",
 }) => {
   test.setTimeout(240_000);
   const { reservations, pay } = await depositStep(page, "Declined Test");
-  await enterCard(reservations, "4000 0000 0000 0002");
-  await pay.click();
-  await expect(reservations.getByRole("alert")).toContainText(/declined/i, {
-    timeout: 30_000,
-  });
-  await expect(pay).toBeEnabled();
-
-  await enterCard(reservations, "4242 4242 4242 4242");
-  await pay.click();
-  const reference = await confirmedReference(reservations);
-  expect(reference).toMatch(/^[A-Z0-9]{6,12}$/);
+  const held = await heldReference(page);
+  expect(held).toMatch(/^[A-Z0-9]{6,12}$/);
   try {
+    await enterCard(reservations, "4000 0000 0000 0002");
+    await pay.click();
+    await expect(reservations.getByRole("alert")).toContainText(/declined/i, {
+      timeout: 30_000,
+    });
+    await expect(pay).toBeEnabled();
+
+    await enterCard(reservations, "4242 4242 4242 4242");
+    await pay.click();
+    const reference = await confirmedReference(reservations);
+    expect(reference).toMatch(/^[A-Z0-9]{6,12}$/);
+    expect(reference).toBe(held);
     expect((await sandboxBooking(reference, TEST_EMAIL)).BookingStatus).toBe(
       "Booked",
     );
   } finally {
-    expect(await cancelSandboxBooking(reference, TEST_EMAIL)).toBe("Cancelled");
+    await cleanUp(held);
   }
 });
 
@@ -794,26 +824,6 @@ function bankReturn(intent: IStripeIntent, status: string) {
     payment_intent_client_secret: intent.clientSecret,
     redirect_status: status,
   })}`;
-}
-
-function heldReference(page: Page): Promise<string> {
-  return page.evaluate(
-    () =>
-      (
-        JSON.parse(sessionStorage.getItem("peploes:booking-hold") ?? "{}") as {
-          holdReference?: string;
-        }
-      ).holdReference ?? "",
-  );
-}
-
-async function cleanUp(reference: string) {
-  const { BookingStatus } = await sandboxBooking(reference, TEST_EMAIL);
-  if (BookingStatus === "Booked") {
-    expect(await cancelSandboxBooking(reference, TEST_EMAIL)).toBe("Cancelled");
-  } else {
-    console.info(`[cleanup] ${reference}: ${BookingStatus}, nothing to cancel`);
-  }
 }
 
 test("returning from a bank's own page after paying shows ResDiary's confirmation", async ({
