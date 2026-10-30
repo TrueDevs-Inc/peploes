@@ -33,6 +33,7 @@ test("booking brings hidden step controls back into view on forward and back nav
 }) => {
   await page.goto("/book-a-table");
   const reservations = page.getByRole("region", { name: "Table reservations" });
+  await chooseDate(reservations, laterFreeDate());
   await reservations
     .getByRole("button", { name: "Find a Table", exact: true })
     .click();
@@ -61,6 +62,7 @@ test("booking terms open the policy without changing agreement or leaving the fo
 }) => {
   await page.goto("/book-a-table");
   const reservations = page.getByRole("region", { name: "Table reservations" });
+  await chooseDate(reservations, laterFreeDate());
   await reservations
     .getByRole("button", { name: "Find a Table", exact: true })
     .click();
