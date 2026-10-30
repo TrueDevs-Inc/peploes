@@ -1,8 +1,11 @@
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { Reveal } from "@/components/app/atoms/scroll-reveal";
 import revealStyles from "@/components/app/atoms/site-scroll-reveal.module.css";
+import {
+  TrackedAnchor,
+  TrackedLink,
+} from "@/components/app/atoms/tracked-link";
 import styles from "@/components/app/compounds/hero.module.css";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +14,7 @@ import {
   ROUTES,
 } from "@/lib/constants";
 import { HERO_CONTENT } from "@/lib/constants/hero";
+import { GA4Event } from "@/lib/enums";
 import { dmSans, ebGaramond } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
 
@@ -76,10 +80,16 @@ export function Hero() {
               size="cta"
               className="w-full sm:w-[156px]"
             >
-              <Link href={ROUTES.BOOK_A_TABLE}>
+              <TrackedLink
+                href={ROUTES.BOOK_A_TABLE}
+                interaction={{
+                  event: GA4Event.BookingClick,
+                  placement: "hero",
+                }}
+              >
                 {HERO_CONTENT.bookingLabel}
                 <ArrowRight aria-hidden="true" className="size-4" />
-              </Link>
+              </TrackedLink>
             </Button>
             <Button
               asChild
@@ -87,9 +97,16 @@ export function Hero() {
               size="cta"
               className="w-full sm:w-[136px]"
             >
-              <a href={`tel:${RESTAURANT_CONTACT.phone}`}>
+              <TrackedAnchor
+                href={`tel:${RESTAURANT_CONTACT.phone}`}
+                interaction={{
+                  event: GA4Event.ContactClick,
+                  placement: "hero",
+                  destination: "phone",
+                }}
+              >
                 {HERO_CONTENT.callLabel}
-              </a>
+              </TrackedAnchor>
             </Button>
           </div>
         </div>

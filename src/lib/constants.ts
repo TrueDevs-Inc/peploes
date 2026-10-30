@@ -1,10 +1,11 @@
-import { ErrorCode } from "@/lib/enums";
+import { ErrorCode, GA4Event } from "@/lib/enums";
 import type {
   IBookingBannerContent,
   INavbarContent,
   IOpeningHours,
   IWhatsOnContent,
   IWineContent,
+  TUrlPart,
 } from "@/lib/types";
 
 export const HTTP_STATUS = {
@@ -80,6 +81,12 @@ export const RESTAURANT_CONTACT = {
   email: "reception@peploes.com",
 } as const;
 
+export const RESTAURANT_ADDRESS = {
+  streetAddress: "16 St Stephen's Green",
+  locality: "Dublin 2",
+  countryCode: "IE",
+} as const;
+
 export const RESTAURANT_OPENING_HOURS = [
   { days: "Monday – Wednesday", hours: "12pm to 10pm" },
   { days: "Thursday – Saturday", hours: "12pm to Late" },
@@ -92,24 +99,7 @@ export const SOCIAL_IMAGE = {
   FORMAT: "image/png",
 } as const;
 
-export const AI_CRAWLER_POLICY = {
-  SEARCH: {
-    USER_AGENTS: [
-      "OAI-SearchBot",
-      "PerplexityBot",
-      "Claude-SearchBot",
-    ] as const,
-    ALLOW: true,
-  },
-  TRAINING: {
-    USER_AGENTS: ["GPTBot", "ClaudeBot"] as const,
-    ALLOW: false,
-  },
-  MIXED_USE: {
-    USER_AGENTS: ["Google-Extended", "CCBot"] as const,
-    ALLOW: true,
-  },
-} as const;
+export { AI_CRAWLER_POLICY } from "./constants/crawlers";
 
 export const ROUTES = {
   HOME: "/",
@@ -138,6 +128,28 @@ export const ROUTES = {
   ROBOTS: "/robots.txt",
   SITEMAP: "/sitemap.xml",
 } as const;
+
+export const SITEMAP_STATIC_ROUTES = [
+  ROUTES.HOME,
+  ROUTES.WHATS_ON,
+  ROUTES.OUR_STORY,
+  ROUTES.LUNCH,
+  ROUTES.DINNER,
+  ROUTES.PRE_THEATRE,
+  ROUTES.WINE,
+  ROUTES.COCKTAILS,
+  ROUTES.GROUP_SET_MENU,
+  ROUTES.SEASONAL,
+  ROUTES.PRIVATE_DINING,
+  ROUTES.CELEBRATIONS,
+  ROUTES.CORPORATE_EVENTS,
+  ROUTES.WEDDINGS,
+  ROUTES.VISIT_CONTACT,
+  ROUTES.PRIVACY_COOKIES,
+  ROUTES.ACCESSIBILITY_POLICY,
+  ROUTES.TERMS_CONDITIONS,
+  ROUTES.BOOKING_CANCELLATION_TERMS,
+] as const;
 
 export const EXAMPLE_LIMITS = {
   NAME_MIN_LENGTH: 1,
@@ -180,8 +192,9 @@ export const ISR_REVALIDATE = {
 } as const;
 
 export const ANALYTICS = {
-  DEDUP_WINDOW_MS: 2000,
   MAX_HISTORY_SIZE: 100,
+  MAX_QUEUE_SIZE: 20,
+  SCRIPT_LOAD_TIMEOUT_MS: 10_000,
   WEB_VITALS_LOAD_DELAY_MS: 2_500,
   UTM_KEYS: [
     "utm_source",
@@ -192,6 +205,10 @@ export const ANALYTICS = {
   ] as const,
   UTM_STORAGE_KEY: "app_utm_params",
   UTM_EXPIRY_HOURS: 24,
+  UTM_VALUE_MAX_LENGTH: 64,
+  UTM_VALUE_PATTERN: /^[a-z0-9][a-z0-9 _.+~-]*$/i,
+  PHONE_LIKE_MIN_DIGITS: 7,
+  PATH_MAX_LENGTH: 200,
   THRESHOLDS: {
     LCP: { good: 2500, needsImprovement: 4000 },
     CLS: { good: 0.1, needsImprovement: 0.25 },
@@ -417,6 +434,99 @@ export const MENU_SLUGS = [
   "group-set-menu",
   "seasonal",
 ] as const;
+
+/** Where an interaction happens on the live site; never a destination value. */
+export const ANALYTICS_PLACEMENTS = [
+  "navbar",
+  "hero",
+  "booking_banner",
+  "seasonal",
+  "seasonal_event",
+  "visit_contact",
+  "visit_contact_details",
+  "footer",
+  "private_dining",
+  "policy_page",
+  "table_booking_support",
+] as const;
+
+export const ANALYTICS_CONTACT_DESTINATIONS = ["phone", "email"] as const;
+
+/**
+ * The only events and properties that may reach an analytics provider. A
+ * closed list is an allowlist of values; a string names a sanitised URL part.
+ */
+export const ANALYTICS_EVENT_PARAMS = {
+  [GA4Event.PageView]: {
+    page_location: "url",
+    page_path: "path",
+    page_referrer: "referrer",
+  },
+  [GA4Event.BookingClick]: { placement: ANALYTICS_PLACEMENTS },
+  [GA4Event.MenuView]: { menu: MENU_SLUGS },
+  [GA4Event.ContactClick]: {
+    placement: ANALYTICS_PLACEMENTS,
+    destination: ANALYTICS_CONTACT_DESTINATIONS,
+  },
+  [GA4Event.DirectionsClick]: { placement: ANALYTICS_PLACEMENTS },
+} as const;
+
+/** GA4 name to PostHog name where the providers disagree. */
+export const POSTHOG_EVENT_NAMES = {
+  [GA4Event.PageView]: "$pageview",
+} as const;
+
+// Everything posthog-js adds on its own is dropped unless named here: its
+// session and campaign tracking invent properties (`$session_entry_ph_keyword`,
+// ...) that carry raw query values.
+export const POSTHOG_SDK_PROPERTIES = new Set([
+  "distinct_id",
+  "token",
+  "$os",
+  "$browser",
+  "$browser_version",
+  "$browser_language",
+  "$browser_language_prefix",
+  "$device_type",
+  "$device_id",
+  "$timezone",
+  "$timezone_offset",
+  "$screen_height",
+  "$screen_width",
+  "$viewport_height",
+  "$viewport_width",
+  "$lib",
+  "$lib_version",
+  "$insert_id",
+  "$time",
+  "$session_id",
+  "$window_id",
+  "$pageview_id",
+  "$is_identified",
+  "$process_person_profile",
+]);
+export const POSTHOG_DOMAIN_PROPERTIES = new Set([
+  "$host",
+  "$referring_domain",
+  "$session_entry_host",
+  "$session_entry_referring_domain",
+]);
+export const POSTHOG_DOMAIN_VALUE = /^(\$direct|[a-z0-9.-]+(:\d+)?)$/i;
+export const POSTHOG_CAMPAIGN_PROPERTY =
+  /^\$(?:session_entry_|initial_)?utm_(?:source|medium|campaign|term|content)$/;
+export const POSTHOG_VALUE_MAX_LENGTH = 200;
+
+export const POSTHOG_URL_PROPERTIES: Record<string, TUrlPart> = {
+  $current_url: "url",
+  $initial_current_url: "url",
+  $session_entry_url: "url",
+  $pathname: "path",
+  $initial_pathname: "path",
+  $session_entry_pathname: "path",
+  $referrer: "referrer",
+  $initial_referrer: "referrer",
+  $session_entry_referrer: "referrer",
+};
 
 export const SEASONAL_DETAIL_ICONS = {
   date: { src: "/peploes-event-calendar.svg", width: 48, height: 48 },

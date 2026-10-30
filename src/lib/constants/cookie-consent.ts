@@ -1,5 +1,6 @@
 export const COOKIE_PREFERENCES = {
   storageKey: "peploes.cookie-preferences.v1",
+  broadcastChannel: "peploes.cookie-preferences",
   denialCookie: "peploes-optional-cookies-denied",
   denialMaxAgeSeconds: 31536000,
   defaults: { analytics: false, performance: false, marketing: false },

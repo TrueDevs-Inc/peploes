@@ -1,8 +1,10 @@
 import { Mail, Phone } from "lucide-react";
+import { TrackedAnchor } from "@/components/app/atoms/tracked-link";
 import styles from "@/components/app/compounds/table-booking-panel.module.css";
 import { Button } from "@/components/ui/button";
 import { RESTAURANT_CONTACT } from "@/lib/constants";
 import { TABLE_BOOKING_CONTENT } from "@/lib/constants/table-booking";
+import { GA4Event } from "@/lib/enums";
 import type { ITableBookingSupportProps } from "@/lib/types";
 import { cn } from "@/lib/utils";
 export function TableBookingSupport({
@@ -28,7 +30,14 @@ export function TableBookingSupport({
           variant="brand-contact"
           className={cn(styles.contactAction, styles.emailAction)}
         >
-          <a href={`mailto:${RESTAURANT_CONTACT.email}`}>
+          <TrackedAnchor
+            href={`mailto:${RESTAURANT_CONTACT.email}`}
+            interaction={{
+              event: GA4Event.ContactClick,
+              placement: "table_booking_support",
+              destination: "email",
+            }}
+          >
             <Mail aria-hidden="true" className={styles.contactActionIcon} />
             <span className={styles.desktopEmail}>
               {TABLE_BOOKING_CONTENT.support.emailLabel}
@@ -36,17 +45,24 @@ export function TableBookingSupport({
             <span className={styles.mobileEmail}>
               {RESTAURANT_CONTACT.email}
             </span>
-          </a>
+          </TrackedAnchor>
         </Button>
         <Button
           asChild
           variant="brand-contact"
           className={cn(styles.contactAction, styles.phoneAction)}
         >
-          <a href={`tel:${RESTAURANT_CONTACT.phone}`}>
+          <TrackedAnchor
+            href={`tel:${RESTAURANT_CONTACT.phone}`}
+            interaction={{
+              event: GA4Event.ContactClick,
+              placement: "table_booking_support",
+              destination: "phone",
+            }}
+          >
             <Phone aria-hidden="true" className={styles.contactActionIcon} />
             {RESTAURANT_CONTACT.phoneLabel}
-          </a>
+          </TrackedAnchor>
         </Button>
       </div>
     </div>

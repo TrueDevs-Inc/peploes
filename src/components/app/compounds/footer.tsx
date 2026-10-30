@@ -1,5 +1,9 @@
 import { ArrowRight, Clock3, Mail, MapPin, Phone } from "lucide-react";
 import Link from "next/link";
+import {
+  TrackedAnchor,
+  TrackedLink,
+} from "@/components/app/atoms/tracked-link";
 import { FooterMeta } from "@/components/app/compounds/footer-meta";
 import { MobileFooterNavigation } from "@/components/app/compounds/mobile-footer-navigation";
 import { NewsletterSignup } from "@/components/app/molecules/newsletter-signup";
@@ -10,6 +14,7 @@ import {
   FOOTER_STYLES,
   MOBILE_FOOTER_CONTENT,
 } from "@/lib/constants/footer";
+import { GA4Event } from "@/lib/enums";
 import { dmSans, ebGaramond } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
 
@@ -147,20 +152,30 @@ export function Footer() {
               </span>
             </h2>
             <div className="mt-4 flex flex-col gap-4 xl:mt-6">
-              <a
+              <TrackedAnchor
+                interaction={{
+                  event: GA4Event.ContactClick,
+                  placement: "footer",
+                  destination: "phone",
+                }}
                 href={`tel:${RESTAURANT_CONTACT.phone}`}
                 className={cn(FOCUS_RING, FOOTER_STYLES.contactLink)}
               >
                 <Phone aria-hidden="true" className="size-4 shrink-0" />
                 {RESTAURANT_CONTACT.phoneLabel}
-              </a>
-              <a
+              </TrackedAnchor>
+              <TrackedAnchor
+                interaction={{
+                  event: GA4Event.ContactClick,
+                  placement: "footer",
+                  destination: "email",
+                }}
                 href={`mailto:${RESTAURANT_CONTACT.email}`}
                 className={cn(FOCUS_RING, FOOTER_STYLES.contactLink)}
               >
                 <Mail aria-hidden="true" className="size-4 shrink-0" />
                 {RESTAURANT_CONTACT.email}
-              </a>
+              </TrackedAnchor>
             </div>
             <div className="mt-4 xl:relative xl:mt-6 xl:pt-[25px] xl:before:absolute xl:before:inset-x-0 xl:before:top-0 xl:before:h-px xl:before:bg-soft-stone">
               <h3 className="flex items-center gap-2 text-sm leading-5 font-medium xl:leading-[21px]">
@@ -206,10 +221,16 @@ export function Footer() {
                 variant="brand-text"
                 className="h-[18px] rounded-none p-0 has-[>svg]:px-0 text-[13px] leading-[18px] text-peploe-burgundy"
               >
-                <Link href={`${ROUTES.VISIT_CONTACT}#find-us`}>
+                <TrackedLink
+                  href={`${ROUTES.VISIT_CONTACT}#find-us`}
+                  interaction={{
+                    event: GA4Event.DirectionsClick,
+                    placement: "footer",
+                  }}
+                >
                   {MOBILE_FOOTER_CONTENT.directionsLabel}
                   <ArrowRight aria-hidden="true" className="size-4" />
-                </Link>
+                </TrackedLink>
               </Button>
             </div>
           </section>

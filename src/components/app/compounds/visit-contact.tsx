@@ -1,7 +1,9 @@
 import { ArrowRight, MapPin } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
-
+import {
+  TrackedAnchor,
+  TrackedLink,
+} from "@/components/app/atoms/tracked-link";
 import styles from "@/components/app/compounds/visit-contact.module.css";
 import { VisitContactDetails } from "@/components/app/compounds/visit-contact-details";
 import { VisitLocationMap } from "@/components/app/molecules/visit-location-map";
@@ -12,6 +14,7 @@ import {
   ROUTES,
 } from "@/lib/constants";
 import { VISIT_CONTACT_CONTENT } from "@/lib/constants/visit-contact";
+import { GA4Event } from "@/lib/enums";
 import { dmSans, ebGaramond } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
 
@@ -22,10 +25,16 @@ function VisitBookingButton() {
       variant="brand-primary"
       className={cn(styles.action, styles.booking)}
     >
-      <Link href={ROUTES.BOOK_A_TABLE}>
+      <TrackedLink
+        href={ROUTES.BOOK_A_TABLE}
+        interaction={{
+          event: GA4Event.BookingClick,
+          placement: "visit_contact",
+        }}
+      >
         {VISIT_CONTACT_CONTENT.bookingLabel}
         <ArrowRight aria-hidden="true" className="size-4" />
-      </Link>
+      </TrackedLink>
     </Button>
   );
 }
@@ -60,14 +69,18 @@ function VisitHero() {
               variant="brand-contact"
               className={cn(styles.action, styles.directions)}
             >
-              <a
+              <TrackedAnchor
                 href={VISIT_CONTACT_CONTENT.directionsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
+                interaction={{
+                  event: GA4Event.DirectionsClick,
+                  placement: "visit_contact",
+                }}
               >
                 <MapPin aria-hidden="true" className="size-4" />
                 {VISIT_CONTACT_CONTENT.directionsLabel}
-              </a>
+              </TrackedAnchor>
             </Button>
           </div>
         </div>
@@ -120,12 +133,26 @@ function VisitContactInformation() {
           <div>
             <h2>{VISIT_CONTACT_CONTENT.contact.heading}</h2>
             <div className={styles.contactLinks}>
-              <a href={`tel:${RESTAURANT_CONTACT.phone}`}>
+              <TrackedAnchor
+                href={`tel:${RESTAURANT_CONTACT.phone}`}
+                interaction={{
+                  event: GA4Event.ContactClick,
+                  placement: "visit_contact",
+                  destination: "phone",
+                }}
+              >
                 {RESTAURANT_CONTACT.phoneLabel}
-              </a>
-              <a href={`mailto:${RESTAURANT_CONTACT.email}`}>
+              </TrackedAnchor>
+              <TrackedAnchor
+                href={`mailto:${RESTAURANT_CONTACT.email}`}
+                interaction={{
+                  event: GA4Event.ContactClick,
+                  placement: "visit_contact",
+                  destination: "email",
+                }}
+              >
                 {RESTAURANT_CONTACT.email}
-              </a>
+              </TrackedAnchor>
             </div>
           </div>
         </div>

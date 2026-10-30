@@ -1,24 +1,39 @@
 import { Mail, Phone } from "lucide-react";
-
+import { TrackedAnchor } from "@/components/app/atoms/tracked-link";
 import styles from "@/components/app/compounds/private-dining.module.css";
 import { Button } from "@/components/ui/button";
 import { RESTAURANT_CONTACT } from "@/lib/constants";
 import { PRIVATE_DINING_FORM } from "@/lib/constants/private-dining";
+import { GA4Event } from "@/lib/enums";
 
 export function PrivateDiningContacts() {
   return (
     <div className={styles.contacts}>
       <Button asChild variant="brand-contact">
-        <a href={`tel:${RESTAURANT_CONTACT.phone}`}>
+        <TrackedAnchor
+          href={`tel:${RESTAURANT_CONTACT.phone}`}
+          interaction={{
+            event: GA4Event.ContactClick,
+            placement: "private_dining",
+            destination: "phone",
+          }}
+        >
           <Phone aria-hidden="true" className="size-4" />
           {RESTAURANT_CONTACT.phoneLabel}
-        </a>
+        </TrackedAnchor>
       </Button>
       <Button asChild variant="brand-contact">
-        <a href={`mailto:${RESTAURANT_CONTACT.email}`}>
+        <TrackedAnchor
+          href={`mailto:${RESTAURANT_CONTACT.email}`}
+          interaction={{
+            event: GA4Event.ContactClick,
+            placement: "private_dining",
+            destination: "email",
+          }}
+        >
           <Mail aria-hidden="true" className="size-4" />
           {PRIVATE_DINING_FORM.emailAction}
-        </a>
+        </TrackedAnchor>
       </Button>
     </div>
   );

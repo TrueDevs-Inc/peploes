@@ -1,5 +1,6 @@
 import {
   NAVBAR_CONTENT,
+  RESTAURANT_ADDRESS,
   RESTAURANT_OPENING_HOURS,
   ROUTES,
 } from "@/lib/constants";
@@ -7,7 +8,7 @@ import type { IFooterContent } from "@/lib/types";
 
 export const FOOTER_CONTENT: IFooterContent = {
   homeLabel: "Peploe’s home",
-  address: "16 St Stephen's Green, Dublin 2",
+  address: `${RESTAURANT_ADDRESS.streetAddress}, ${RESTAURANT_ADDRESS.locality}`,
   tagline: "A Dublin Restaurant",
   contactHeading: "Contact",
   openingHoursHeading: "Opening Hours",

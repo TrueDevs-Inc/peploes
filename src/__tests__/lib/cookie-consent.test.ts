@@ -5,7 +5,12 @@ import {
   getCookiePreferences,
   hasAnalyticsConsent,
   saveCookiePreferences,
+  subscribeToConsent,
 } from "@/lib/cookie-consent";
+import {
+  installFakeBroadcastChannel,
+  installFakeBrowser,
+} from "../helpers/browser";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -184,5 +189,130 @@ describe("analytics consent", function analyticsConsentTests() {
     vi.resetModules();
     const freshPage = await import("@/lib/cookie-consent");
     expect(freshPage.hasAnalyticsConsent()).toBe(false);
+  });
+});
+
+describe("consent change notifications", () => {
+  const granted = { analytics: true, performance: true, marketing: true };
+  const denied = { analytics: false, performance: false, marketing: false };
+
+  it("notifies same-tab listeners after a saved choice", () => {
+    installFakeBrowser();
+    const listener = vi.fn();
+    const stop = subscribeToConsent(listener);
+    saveCookiePreferences(granted);
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(hasAnalyticsConsent()).toBe(true);
+    stop();
+  });
+
+  it("notifies after a failed save so withdrawal fails closed", () => {
+    const browser = installFakeBrowser();
+    saveCookiePreferences(granted);
+    browser.grantAnalytics();
+    const seen: boolean[] = [];
+    const stop = subscribeToConsent(() => seen.push(hasAnalyticsConsent()));
+    vi.stubGlobal("window", {
+      ...window,
+      localStorage: {
+        getItem: () => JSON.stringify(granted),
+        setItem: () => {
+          throw new Error("Storage full");
+        },
+      },
+    });
+    expect(saveCookiePreferences(denied)).toBe(false);
+    expect(seen).toEqual([false]);
+    stop();
+  });
+
+  it("resyncs when another tab changes the stored choice", () => {
+    const browser = installFakeBrowser();
+    const listener = vi.fn();
+    const stop = subscribeToConsent(listener);
+    browser.grantAnalytics();
+    browser.fireStorageEvent("peploes.cookie-preferences.v1");
+    browser.fireStorageEvent(null);
+    browser.fireStorageEvent("unrelated-key");
+    expect(listener).toHaveBeenCalledTimes(2);
+    stop();
+  });
+
+  it("stops notifying and detaches the storage listener after unsubscribe", () => {
+    const browser = installFakeBrowser();
+    const listener = vi.fn();
+    const stop = subscribeToConsent(listener);
+    expect(browser.listenerCount()).toBe(1);
+    stop();
+    expect(browser.listenerCount()).toBe(0);
+    saveCookiePreferences(granted);
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  it("keeps notifying other listeners when one throws", () => {
+    installFakeBrowser();
+    const survivor = vi.fn();
+    const stopBad = subscribeToConsent(() => {
+      throw new Error("listener failure");
+    });
+    const stopGood = subscribeToConsent(survivor);
+    saveCookiePreferences(granted);
+    expect(survivor).toHaveBeenCalledTimes(1);
+    stopBad();
+    stopGood();
+  });
+
+  describe("across tabs without storage events", () => {
+    const CHANNEL = COOKIE_PREFERENCES.broadcastChannel;
+
+    it("resyncs when another tab broadcasts a consent change", () => {
+      installFakeBrowser();
+      const bus = installFakeBroadcastChannel();
+      const listener = vi.fn();
+      const stop = subscribeToConsent(listener);
+      bus.otherTab(CHANNEL).postMessage({ source: "other-tab" });
+      expect(listener).toHaveBeenCalledTimes(1);
+      stop();
+    });
+
+    it("broadcasts a saved choice, including one whose write failed", () => {
+      installFakeBrowser({ blockLocalWrites: true });
+      const bus = installFakeBroadcastChannel();
+      const heard = vi.fn();
+      bus.otherTab(CHANNEL).onmessage = heard;
+      expect(saveCookiePreferences(denied)).toBe(false);
+      expect(heard).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not notify its own tab twice for one save", () => {
+      installFakeBrowser();
+      installFakeBroadcastChannel();
+      const listener = vi.fn();
+      const stop = subscribeToConsent(listener);
+      saveCookiePreferences(granted);
+      expect(listener).toHaveBeenCalledTimes(1);
+      stop();
+    });
+
+    it("closes its channel on unsubscribe and leaves none open after a save", () => {
+      installFakeBrowser();
+      const bus = installFakeBroadcastChannel();
+      const stop = subscribeToConsent(() => {});
+      expect(bus.openCount()).toBe(1);
+      stop();
+      expect(bus.openCount()).toBe(0);
+      saveCookiePreferences(granted);
+      expect(bus.openCount()).toBe(0);
+    });
+
+    it("still works where BroadcastChannel is unavailable", () => {
+      installFakeBrowser();
+      vi.stubGlobal("BroadcastChannel", undefined);
+      const listener = vi.fn();
+      const stop = subscribeToConsent(listener);
+      expect(() => saveCookiePreferences(granted)).not.toThrow();
+      expect(listener).toHaveBeenCalledTimes(1);
+      stop();
+    });
   });
 });

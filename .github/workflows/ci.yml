@@ -82,6 +82,11 @@ jobs:
         env:
           NODE_ENV: production
 
+      - name: Build and browser-test analytics delivery
+        run: bun run test:e2e:analytics
+        env:
+          NODE_ENV: production
+
       - name: Build production Studio
         run: bun run --cwd studio build
 

@@ -1,80 +1,99 @@
 import { ANALYTICS } from "@/lib/constants";
 import type { IUTMParameters } from "@/lib/types";
 
+import { isAnalyticsPermitted } from "./permission";
+import { sanitizeCampaignValue } from "./sanitize";
+
 function hasUTMParams(params: IUTMParameters): boolean {
   return Object.keys(params).length > 0;
 }
 
+function pickSafeUTM(source: {
+  get: (key: string) => unknown;
+}): IUTMParameters {
+  const safe: IUTMParameters = {};
+  for (const key of ANALYTICS.UTM_KEYS) {
+    const value = sanitizeCampaignValue(source.get(key));
+    if (value !== undefined) safe[key] = value;
+  }
+  return safe;
+}
+
 export function extractUTMFromURL(url?: string): IUTMParameters {
   if (typeof window === "undefined") return {};
-
-  const urlString = url ?? window.location.href;
-  const urlParams = new URL(urlString).searchParams;
-  const utmParams: IUTMParameters = {};
-
-  for (const key of ANALYTICS.UTM_KEYS) {
-    const value = urlParams.get(key);
-    if (!value) continue;
-    utmParams[key] = value;
+  try {
+    return pickSafeUTM(new URL(url ?? window.location.href).searchParams);
+  } catch {
+    return {};
   }
+}
 
-  return utmParams;
+export function clearStoredUTMParams(): void {
+  try {
+    window.sessionStorage.removeItem(ANALYTICS.UTM_STORAGE_KEY);
+  } catch {
+    // Blocked storage holds nothing to clear.
+  }
 }
 
 export function storeUTMParams(params: IUTMParameters): void {
-  if (typeof window === "undefined") return;
-  if (!hasUTMParams(params)) return;
-
-  const data = { params, timestamp: Date.now() };
-
-  sessionStorage.setItem(ANALYTICS.UTM_STORAGE_KEY, JSON.stringify(data));
+  if (!isAnalyticsPermitted()) return;
+  // Callers may pass raw input, so only sanitized values reach storage.
+  const safe = pickSafeUTM({
+    get: (key) => params[key as keyof IUTMParameters],
+  });
+  if (!hasUTMParams(safe)) return;
+  try {
+    window.sessionStorage.setItem(
+      ANALYTICS.UTM_STORAGE_KEY,
+      JSON.stringify({ params: safe, timestamp: Date.now() }),
+    );
+  } catch {
+    // Attribution is best effort; blocked storage must not break tracking.
+  }
 }
 
 export function getStoredUTMParams(): IUTMParameters {
-  if (typeof window === "undefined") return {};
+  if (!isAnalyticsPermitted()) return {};
 
-  const stored = sessionStorage.getItem(ANALYTICS.UTM_STORAGE_KEY);
+  let stored: string | null;
+  try {
+    stored = window.sessionStorage.getItem(ANALYTICS.UTM_STORAGE_KEY);
+  } catch {
+    return {};
+  }
   if (!stored) return {};
 
-  let data: { params: IUTMParameters; timestamp: number } | null = null;
-
   try {
-    data = JSON.parse(stored) as {
-      params: IUTMParameters;
-      timestamp: number;
-    } | null;
+    const data: unknown = JSON.parse(stored);
+    const { params, timestamp } = data as {
+      params?: Record<string, unknown>;
+      timestamp?: unknown;
+    };
+    const expiryMs = ANALYTICS.UTM_EXPIRY_HOURS * 60 * 60 * 1000;
+    if (
+      typeof timestamp === "number" &&
+      Date.now() - timestamp <= expiryMs &&
+      params !== null &&
+      typeof params === "object"
+    ) {
+      // Storage is writable by anyone on the page, so re-validate every value.
+      return pickSafeUTM({ get: (key) => params[key] });
+    }
   } catch {
-    sessionStorage.removeItem(ANALYTICS.UTM_STORAGE_KEY);
-    return {};
+    // Fall through to clearing the unreadable entry.
   }
-
-  if (!data || typeof data.timestamp !== "number") {
-    sessionStorage.removeItem(ANALYTICS.UTM_STORAGE_KEY);
-    return {};
-  }
-
-  const expiryMs = ANALYTICS.UTM_EXPIRY_HOURS * 60 * 60 * 1000;
-
-  if (Date.now() - data.timestamp > expiryMs) {
-    sessionStorage.removeItem(ANALYTICS.UTM_STORAGE_KEY);
-    return {};
-  }
-
-  return data.params ?? {};
+  clearStoredUTMParams();
+  return {};
 }
 
 export function getCurrentUTMParams(): IUTMParameters {
-  const urlParams = extractUTMFromURL();
+  if (!isAnalyticsPermitted()) return {};
 
+  const urlParams = extractUTMFromURL();
   if (hasUTMParams(urlParams)) {
     storeUTMParams(urlParams);
     return urlParams;
   }
-
   return getStoredUTMParams();
-}
-
-export function initializeUTMTracking(): IUTMParameters {
-  if (typeof window === "undefined") return {};
-  return getCurrentUTMParams();
 }

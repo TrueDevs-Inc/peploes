@@ -2,10 +2,11 @@ import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Fragment } from "react";
-
+import { TrackedAnchor } from "@/components/app/atoms/tracked-link";
 import styles from "@/components/app/compounds/policy-page.module.css";
 import { PolicyContents } from "@/components/app/molecules/policy-contents";
 import { POLICY_HELP } from "@/lib/constants/policies";
+import { GA4Event } from "@/lib/enums";
 import { dmSans, ebGaramond } from "@/lib/fonts";
 import type { IPolicyPageProps } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -113,8 +114,26 @@ export function PolicyPage({ policy }: IPolicyPageProps) {
           <div data-scroll-reveal className={styles.helpDetails}>
             <p>{POLICY_HELP.description}</p>
             <div className={styles.contactActions}>
-              <a href={`tel:${POLICY_HELP.phone}`}>{POLICY_HELP.phoneLabel}</a>
-              <a href={`mailto:${POLICY_HELP.email}`}>{POLICY_HELP.email}</a>
+              <TrackedAnchor
+                href={`tel:${POLICY_HELP.phone}`}
+                interaction={{
+                  event: GA4Event.ContactClick,
+                  placement: "policy_page",
+                  destination: "phone",
+                }}
+              >
+                {POLICY_HELP.phoneLabel}
+              </TrackedAnchor>
+              <TrackedAnchor
+                href={`mailto:${POLICY_HELP.email}`}
+                interaction={{
+                  event: GA4Event.ContactClick,
+                  placement: "policy_page",
+                  destination: "email",
+                }}
+              >
+                {POLICY_HELP.email}
+              </TrackedAnchor>
             </div>
           </div>
         </div>

@@ -39,7 +39,8 @@ export default defineConfig({
   projects: [
     {
       name: "desktop",
-      testIgnore: [unavailableSpec, sandboxSpec],
+      // Needs its own build; see playwright.analytics.config.ts.
+      testIgnore: [unavailableSpec, sandboxSpec, "**/analytics.spec.ts"],
       use: { viewport: { width: 1440, height: 900 } },
     },
     {
@@ -48,6 +49,7 @@ export default defineConfig({
         unavailableSpec,
         sandboxSpec,
         "**/desktop-navigation.spec.ts",
+        "**/analytics.spec.ts",
       ],
       use: {
         viewport: { width: 390, height: 844 },
@@ -61,6 +63,7 @@ export default defineConfig({
         unavailableSpec,
         sandboxSpec,
         "**/desktop-navigation.spec.ts",
+        "**/analytics.spec.ts",
       ],
       use: {
         viewport: { width: 320, height: 740 },

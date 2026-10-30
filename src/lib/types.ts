@@ -2,6 +2,7 @@ import type { Stripe, StripeElements } from "@stripe/stripe-js";
 import type { VariantProps } from "class-variance-authority";
 import type { Result as NeverthrowResult } from "neverthrow";
 import type { Route } from "next";
+import type Link from "next/link";
 import type { ComponentProps, CSSProperties, ReactNode } from "react";
 import type { infer as InferSchema } from "zod";
 import type { z } from "zod/v4";
@@ -18,14 +19,19 @@ import type {
   menuCollectionNavigationSchema,
   menusPageSchema,
 } from "@/lib/cms-menu-schema";
-import type { MENU_SLUGS, ROUTES } from "@/lib/constants";
+import type {
+  ANALYTICS_CONTACT_DESTINATIONS,
+  ANALYTICS_PLACEMENTS,
+  MENU_SLUGS,
+  ROUTES,
+} from "@/lib/constants";
 import type {
   BOOKING_SKIP_REASONS,
   BOOKING_UNSUPPORTED_SETTINGS,
 } from "@/lib/constants/booking";
 import type { buttonVariants } from "@/lib/constants/button";
 import type { cookiePreferencesSchema } from "@/lib/cookie-consent";
-import type { ErrorCode, HttpVerb, LogLevel } from "@/lib/enums";
+import type { ErrorCode, GA4Event, HttpVerb, LogLevel } from "@/lib/enums";
 import type { createResDiaryProvider } from "@/lib/resdiary-provider";
 import type {
   cancelReasonsReplySchema,
@@ -154,6 +160,8 @@ export interface ISeoConfig {
   url: string;
   image?: string;
   imageAlt?: string;
+  imageWidth?: number;
+  imageHeight?: number;
   type?: "website" | "article";
   publishedTime?: string;
   modifiedTime?: string;
@@ -181,6 +189,15 @@ export interface IOrganizationSchemaConfig {
   url: string;
   logoUrl?: string;
   sameAs?: string[];
+}
+
+export interface ILlmsEntry {
+  slug: string;
+  title: string;
+  summary: string;
+  kind: "campaign" | "event" | "menuMoment";
+  date: string;
+  endDate?: string | null;
 }
 
 export interface IJsonLdProps {
@@ -254,14 +271,13 @@ export interface IUTMParameters {
   utm_content?: string;
 }
 
-export interface IEventRecord {
-  signature: string;
-  timestamp: number;
+export interface ISanitizedAnalyticsEvent {
+  name: string;
+  params: Record<string, string>;
 }
 
-export interface IEventSignature {
-  eventName: string;
-  params: Record<string, unknown>;
+export interface IPendingAnalyticsEvent extends ISanitizedAnalyticsEvent {
+  dedupeKey?: string;
 }
 
 export interface IWebVitalsLibMetric {
@@ -848,6 +864,28 @@ export interface ISentryErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
 }
+
+export type TUrlPart = "url" | "path" | "referrer";
+
+export type TAnalyticsPlacement = (typeof ANALYTICS_PLACEMENTS)[number];
+
+/** A live click and the closed identifiers it reports; never a raw destination. */
+export type TTrackedInteraction =
+  | { event: GA4Event.BookingClick; placement: TAnalyticsPlacement }
+  | { event: GA4Event.DirectionsClick; placement: TAnalyticsPlacement }
+  | {
+      event: GA4Event.ContactClick;
+      placement: TAnalyticsPlacement;
+      destination: (typeof ANALYTICS_CONTACT_DESTINATIONS)[number];
+    };
+
+export type TTrackedLinkProps = ComponentProps<typeof Link> & {
+  interaction: TTrackedInteraction;
+};
+
+export type TTrackedAnchorProps = ComponentProps<"a"> & {
+  interaction: TTrackedInteraction;
+};
 
 export interface ITrackEventProps {
   eventName: string;

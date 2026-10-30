@@ -149,6 +149,30 @@ tests only for what the sandbox cannot do on demand: failures, slow or
 out-of-order replies and states it does not have. Report which evidence came
 from the sandbox and which from the fake.
 
+Analytics delivery has its own spec, `e2e/analytics.spec.ts`, because provider
+settings are compiled into the browser bundle. `bun run test:e2e:analytics`
+builds with synthetic provider variables, serves on port 3108 through
+`playwright.analytics.config.ts` and runs only the desktop project. It inherits
+the main server's fake Sanity and ResDiary settings. Its booking
+privacy test completes a simulated reservation on a future available date and
+checks that neither personal details nor booking/purchase events reach analytics.
+The normal configuration ignores that spec; it overwrites `.next`, so rerun `bun run
+test:e2e` afterwards to rebuild without providers. That normal build is a
+live-site build (`NEXT_PUBLIC_VERCEL_ENV=production`) with empty provider IDs,
+so `analytics-unconfigured.spec.ts` exercises the missing-ID gate rather than
+the deployment gate. Provider hosts are intercepted
+with `context.route`, so no request leaves the machine. CI runs it after the
+normal browser tests, reusing the installed Chromium. See the
+[PostHog guide](posthog-guide.md).
+
+Each analytics test layer verifies a different boundary. Unit tests verify the
+rules in isolation: sanitising, allowlists and consent logic. The real-SDK node
+test (`src/__tests__/lib/analytics-posthog-sdk.test.ts`) verifies what posthog-js
+puts in a payload and how it sends it. Playwright verifies the assembled page:
+consent reaching the network, navigation counts, unload delivery and browser
+storage. A rule may appear in more than one layer when each checks its own
+boundary; do not repeat the same assertion at the same boundary.
+
 Test the production build, locate controls by accessible role or label, and give
 each test isolated data. Add coverage for critical journeys such as sign-in,
 checkout, permission enforcement or a destructive workflow as they are built.

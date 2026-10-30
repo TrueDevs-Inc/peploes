@@ -2,7 +2,7 @@ import { ArrowRight } from "lucide-react";
 import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
-
+import { TrackedLink } from "@/components/app/atoms/tracked-link";
 import { SeasonalJoin } from "@/components/app/compounds/seasonal";
 import seasonalStyles from "@/components/app/compounds/seasonal.module.css";
 import styles from "@/components/app/compounds/seasonal-event.module.css";
@@ -10,6 +10,7 @@ import { SeasonalEventRelated } from "@/components/app/compounds/seasonal-event-
 import { SeasonalEventAction } from "@/components/app/molecules/seasonal-event-action";
 import { Button } from "@/components/ui/button";
 import { FOCUS_RING, ROUTES } from "@/lib/constants";
+import { GA4Event } from "@/lib/enums";
 import { dmSans, ebGaramond } from "@/lib/fonts";
 import type { ISeasonalEventProps } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -217,12 +218,18 @@ export function SeasonalEvent({ content, join }: ISeasonalEventProps) {
                   variant="brand-primary"
                   className="h-auto min-h-11 w-full max-w-full gap-2 whitespace-normal rounded-[4px] px-6 py-2.5 text-base leading-[22px] has-[>svg]:px-6 sm:min-h-12 sm:w-auto sm:text-lg sm:leading-[26px] lg:min-w-[249px] lg:px-5 lg:has-[>svg]:px-5"
                 >
-                  <Link href={ROUTES.BOOK_A_TABLE}>
+                  <TrackedLink
+                    href={ROUTES.BOOK_A_TABLE}
+                    interaction={{
+                      event: GA4Event.BookingClick,
+                      placement: "seasonal_event",
+                    }}
+                  >
                     <span className="min-w-0 [overflow-wrap:anywhere]">
                       {invitation.bookingAction}
                     </span>
                     <ArrowRight aria-hidden="true" className="size-4" />
-                  </Link>
+                  </TrackedLink>
                 </Button>
                 <Button
                   asChild

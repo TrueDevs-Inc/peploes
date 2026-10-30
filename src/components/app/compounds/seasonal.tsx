@@ -1,10 +1,11 @@
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-
+import { TrackedLink } from "@/components/app/atoms/tracked-link";
 import styles from "@/components/app/compounds/seasonal.module.css";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/lib/constants";
+import { GA4Event } from "@/lib/enums";
 import { dmSans, ebGaramond } from "@/lib/fonts";
 import { seasonalPath } from "@/lib/seasonal-data";
 import type {
@@ -48,12 +49,18 @@ export function SeasonalJoin({ join }: ISeasonalJoinProps) {
               size="cta"
               className="h-auto min-h-11 w-full whitespace-normal leading-[22px] sm:w-auto sm:min-w-[156px] sm:gap-1 sm:leading-6"
             >
-              <Link href={ROUTES.BOOK_A_TABLE}>
+              <TrackedLink
+                href={ROUTES.BOOK_A_TABLE}
+                interaction={{
+                  event: GA4Event.BookingClick,
+                  placement: "seasonal",
+                }}
+              >
                 <span className="min-w-0 [overflow-wrap:anywhere]">
                   {join.bookingAction}
                 </span>
                 <ArrowRight aria-hidden="true" className="size-4" />
-              </Link>
+              </TrackedLink>
             </Button>
             <Button
               asChild

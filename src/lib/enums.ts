@@ -130,6 +130,10 @@ export enum GA4Event {
   WebVitals = "web_vitals",
   PerformanceAlert = "performance_alert",
   SlowLcp = "slow_lcp",
+  BookingClick = "booking_click",
+  MenuView = "menu_view",
+  ContactClick = "contact_click",
+  DirectionsClick = "directions_click",
 }
 
 export enum WebVitalsMetricName {
