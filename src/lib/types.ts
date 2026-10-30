@@ -1852,6 +1852,7 @@ export interface ITableBookingHeldStepProps {
   onDetailsChange: (details: ITableBookingGuestDetails) => void;
   onBack: () => void;
   onContinue: () => void;
+  onStartAgain: () => void;
 }
 
 export interface ITableBookingHoldTimerProps {

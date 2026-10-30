@@ -178,6 +178,8 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
   }
 
   function startOver() {
+    setPaid(null);
+    removeSessionStorage(PAID_KEY);
     forgetHold();
     editSearch();
   }
@@ -328,6 +330,7 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
               onDetailsChange={setDetails}
               onBack={() => setStep(1)}
               onContinue={sendDetails}
+              onStartAgain={startOver}
             />
           )}
         </>
@@ -442,23 +445,35 @@ function DetailsCheck({ hold, onSettled }: IDetailsCheckProps) {
 function PaymentOutcome({
   check,
   reference,
+  onStartAgain,
 }: {
   check: TBookingStatusCheck;
   reference: string;
+  onStartAgain: () => void;
 }) {
-  if (check.kind === "failed") {
+  const failed = check.kind === "failed";
+  if (!failed && check.kind !== "unknown") {
     return (
-      <p role="alert" className={styles.formError}>
-        {content.payment.notConfirmed(reference)}
+      <p role="status" className={styles.flowDescription}>
+        {content.payment.checking}
       </p>
     );
   }
   return (
-    <p role="status" className={styles.flowDescription}>
-      {check.kind === "unknown"
-        ? content.payment.stillConfirming(reference)
-        : content.payment.checking}
-    </p>
+    <div className={styles.flowNotice}>
+      {failed ? (
+        <p role="alert" className={styles.formError}>
+          {content.payment.notConfirmed(reference)}
+        </p>
+      ) : (
+        <p role="status" className={styles.flowDescription}>
+          {content.payment.stillConfirming(reference)}
+        </p>
+      )}
+      <Button type="button" variant="brand-primary" onClick={onStartAgain}>
+        {content.startAgain}
+      </Button>
+    </div>
   );
 }
 
@@ -661,6 +676,7 @@ function HeldStep({
   onDetailsChange,
   onBack,
   onContinue,
+  onStartAgain,
 }: ITableBookingHeldStepProps) {
   const check = useBookingStatus(paid);
   const { settle } = guest;
@@ -669,8 +685,11 @@ function HeldStep({
   useEffect(() => {
     if (check.kind === "confirmed") {
       onConfirmed({ reference: check.reference, summary: check.summary });
+    } else if (check.kind === "failed") {
+      removeSessionStorage(PAID_KEY);
+      forgetHold();
     }
-  }, [check, onConfirmed]);
+  }, [check, onConfirmed, forgetHold]);
 
   const settleDetails = useCallback(
     (detailsCheck: TBookingStatusCheck) => {
@@ -691,7 +710,13 @@ function HeldStep({
     return <DetailsCheck hold={guest.unsure} onSettled={settleDetails} />;
   }
   if (paid) {
-    return <PaymentOutcome check={check} reference={paid.reference} />;
+    return (
+      <PaymentOutcome
+        check={check}
+        reference={paid.reference}
+        onStartAgain={onStartAgain}
+      />
+    );
   }
   if (payment) {
     return (
@@ -705,7 +730,7 @@ function HeldStep({
   }
   if (!hold.active) {
     return (
-      <div className={styles.holdExpired}>
+      <div className={styles.flowNotice}>
         <p role="alert">{BOOKING_MESSAGES.holdExpired}</p>
         <Button type="button" variant="brand-primary" onClick={onBack}>
           {content.chooseAgain}

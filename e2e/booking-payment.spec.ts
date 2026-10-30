@@ -94,6 +94,71 @@ test("when ResDiary reports the booking failed after payment the page says so wi
   );
 });
 
+test("after a failed booking the guest can start again, and a reload does not bring the failure back", async ({
+  page,
+}) => {
+  const { reservations, reference } = await paidFor(page, "12:00");
+
+  await expect(reservations.getByRole("alert")).toHaveText(
+    `We couldn't confirm booking ${reference}. If your card was charged, please call us on +353 1 676 3144 and quote this reference.`,
+    { timeout: 10_000 },
+  );
+  await page.reload();
+  await expect(
+    reservations.getByRole("button", { name: "Find a Table", exact: true }),
+  ).toBeVisible();
+  await expect(reservations.getByRole("alert")).toHaveCount(0);
+  await expect(
+    reservations.getByRole("button", { name: "Edit date & guests" }),
+  ).toHaveCount(0);
+});
+
+test("the failed booking message offers Start Again, which opens a fresh search", async ({
+  page,
+}) => {
+  const { reservations } = await paidFor(page, "12:00");
+
+  await expect(reservations.getByRole("alert")).toBeVisible({
+    timeout: 10_000,
+  });
+  await reservations
+    .getByRole("button", { name: "Start Again", exact: true })
+    .click();
+  await expect(
+    reservations.getByRole("button", { name: "Find a Table", exact: true }),
+  ).toBeVisible();
+  await expect(reservations.getByRole("alert")).toHaveCount(0);
+});
+
+test("while the booking is still confirming the guest can start again, and a reload stays on the fresh search", async ({
+  page,
+}) => {
+  const { reservations, reference } = await paidFor(page, "18:00");
+
+  await expect(
+    reservations.getByText("Confirming your booking…", { exact: true }),
+  ).toBeVisible();
+  await page.clock.fastForward("01:01");
+  await expect(
+    reservations.getByText(
+      `Hang tight! We're still confirming booking ${reference}.`,
+    ),
+  ).toBeVisible({ timeout: 10_000 });
+  await reservations
+    .getByRole("button", { name: "Start Again", exact: true })
+    .click();
+  await expect(
+    reservations.getByRole("button", { name: "Find a Table", exact: true }),
+  ).toBeVisible();
+  await page.reload();
+  await expect(
+    reservations.getByRole("button", { name: "Find a Table", exact: true }),
+  ).toBeVisible();
+  await expect(
+    reservations.getByText(`Hang tight! We're still confirming booking`),
+  ).toHaveCount(0);
+});
+
 test("a return address from a different payment is cleared and never counts as paid", async ({
   page,
 }) => {

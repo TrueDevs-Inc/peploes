@@ -325,7 +325,8 @@ after ResDiary confirms it.
   Check every 2 seconds.
 - `confirmed`: show the confirmation.
 - `failed` or `expired`: say the booking was not confirmed and that the guest
-  may have been charged, with the phone number.
+  may have been charged, with the phone number. Forget the paid state and the
+  hold in this tab, so a reload opens a fresh search, and offer Start Again.
 - `pending` or `ServiceUnavailable`: keep checking.
 - `NotFound`: the hold can no longer be checked from this tab (its cookie has
   ended), so show the 60-second message at once instead of waiting.
@@ -335,6 +336,8 @@ after ResDiary confirms it.
   ends there, and a confirmation that arrives later still shows. Never say
   the booking failed, and never offer to pay again. This copy does not promise
   an email, because Peploe's live account's emails are not yet verified.
+  Offer Start Again under it. It forgets the paid state in this tab and opens a
+  fresh search. Until the guest presses it, a reload checks `hold-status` again.
 - Make this "payment taken, not yet confirmed" state calm and reassuring, not
   an error. Elhaam's example of the tone is "Hang tight! You'll get a
   confirmation soon if your money is deducted." Follow how AnjomaZone

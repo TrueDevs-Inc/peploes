@@ -754,7 +754,7 @@
   line-height: 20px;
   font-variant-numeric: tabular-nums;
 }
-.holdExpired {
+.flowNotice {
   display: grid;
   justify-items: start;
   gap: 16px;
