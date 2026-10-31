@@ -8,6 +8,7 @@ import {
   freeDates,
   fullDates,
   isOpen,
+  monthLabel,
   openDates,
   shortDayLabel,
   weekdayName,
@@ -207,53 +208,124 @@ test("the calendar stays usable while availability loads and when it fails", asy
   ).toHaveAccessibleName(`Date ${shortDayLabel(usuallyFull)}`);
 });
 
-test("a fully booked default date moves to the first free day", async ({
+test("a fully booked default date moves to the first free day in the next month", async ({
   page,
 }) => {
-  const today = dublinToday();
-  const [firstFree] = freeDates(today, FAKE_RESDIARY.firstDaysFullPartySize);
-  if (!firstFree) throw new Error("The fake ResDiary needs a free day.");
-
-  await page.goto("/book-a-table");
+  const replies = await mockMonthEndCalendar(page);
+  await replies.open();
   const reservations = page.getByRole("region", { name: "Table reservations" });
-  await reservations.getByRole("combobox", { name: "Party size" }).click();
-  await reservations
-    .getByRole("option", {
-      name: `${FAKE_RESDIARY.firstDaysFullPartySize} guests`,
-    })
-    .click();
 
   await expect(
     reservations.getByRole("button", { name: /^Date / }),
-  ).toHaveAccessibleName(`Date ${shortDayLabel(firstFree)}`);
+  ).toHaveAccessibleName(`Date ${shortDayLabel(replies.firstFree)}`);
+  const picker = bookingCalendar(reservations);
+  await picker.open();
+  await expect(picker.calendar.locator("strong")).toHaveText(
+    monthLabel(replies.firstFree),
+  );
+  await expect(picker.day(replies.firstFree)).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await picker.previous.click();
+  const browsedMonth = await picker.calendar.locator("strong").textContent();
+  await picker.close();
+  await picker.open();
+  await expect(picker.calendar.locator("strong")).toHaveText(
+    browsedMonth ?? "",
+  );
+  await picker.next.click();
+  await picker.day(replies.firstFree).click();
+  await expect(picker.calendar).toBeHidden();
+});
+
+test("a full default date waits for next month's availability before moving", async ({
+  page,
+}) => {
+  const replies = await mockMonthEndCalendar(page);
+  replies.pauseNext = true;
+  await replies.open();
+  const reservations = page.getByRole("region", { name: "Table reservations" });
+  const dateField = reservations.getByRole("button", { name: /^Date / });
+
+  await expect.poll(() => replies.pending.length).toBe(1);
+  await expect(reservations.getByText(/^No tables for/)).toBeVisible();
+  await expect(dateField).toHaveAccessibleName(
+    `Date ${shortDayLabel(replies.date)}`,
+  );
+  await replies.release();
+  await expect(dateField).toHaveAccessibleName(
+    `Date ${shortDayLabel(replies.firstFree)}`,
+  );
+});
+
+test("a full default date stays with a note when neither month has a free day", async ({
+  page,
+}) => {
+  const replies = await mockMonthEndCalendar(page);
+  replies.empty = true;
+  await replies.open();
+  const reservations = page.getByRole("region", { name: "Table reservations" });
+
+  await expect.poll(() => replies.answered.length).toBe(2);
+  await expect(
+    reservations.getByRole("button", { name: /^Date / }),
+  ).toHaveAccessibleName(`Date ${shortDayLabel(replies.date)}`);
+  await expect(
+    reservations.getByText(
+      `No tables for ${FAKE_RESDIARY.defaultPartySize} guests on ${shortDayLabel(replies.date)}. Please choose another day.`,
+      { exact: true },
+    ),
+  ).toBeVisible();
 });
 
 test("a date the guest chose stays when it becomes fully booked, with a note", async ({
   page,
 }) => {
-  const today = dublinToday();
-  const chosen = fullDates(today, FAKE_RESDIARY.firstDaysFullPartySize)[1];
-  if (!chosen) throw new Error("The fake ResDiary needs a full day.");
-
-  await page.goto("/book-a-table");
+  const replies = await mockMonthEndCalendar(page);
+  replies.full = false;
+  await replies.open();
   const reservations = page.getByRole("region", { name: "Table reservations" });
-  await chooseDate(reservations, chosen);
-  await reservations.getByRole("combobox", { name: "Party size" }).click();
-  await reservations
-    .getByRole("option", {
-      name: `${FAKE_RESDIARY.firstDaysFullPartySize} guests`,
-    })
-    .click();
+  await expect.poll(() => replies.answered.length).toBe(2);
+  await chooseDate(reservations, replies.date);
+  replies.full = true;
+  await chooseGuests(reservations, FAKE_RESDIARY.firstDaysFullPartySize);
+  await expect.poll(() => replies.answered.length).toBe(4);
 
   await expect(
     reservations.getByText(
-      `No tables for ${FAKE_RESDIARY.firstDaysFullPartySize} guests on ${shortDayLabel(chosen)}. Please choose another day.`,
+      `No tables for ${FAKE_RESDIARY.firstDaysFullPartySize} guests on ${shortDayLabel(replies.date)}. Please choose another day.`,
       { exact: true },
     ),
   ).toBeVisible();
   await expect(
     reservations.getByRole("button", { name: /^Date / }),
-  ).toHaveAccessibleName(`Date ${shortDayLabel(chosen)}`);
+  ).toHaveAccessibleName(`Date ${shortDayLabel(replies.date)}`);
+});
+
+test("a calendar reply during the times step moves the default date only on returning to search", async ({
+  page,
+}) => {
+  const replies = await mockMonthEndCalendar(page);
+  replies.pauseNext = true;
+  await replies.open();
+  const reservations = page.getByRole("region", { name: "Table reservations" });
+  await expect.poll(() => replies.pending.length).toBe(1);
+  await expect(reservations.getByText(/^No tables for/)).toBeVisible();
+  await findTable(reservations);
+  await expect(
+    reservations.getByRole("heading", { name: "Available times", exact: true }),
+  ).toBeVisible();
+  await replies.release();
+  await expect(
+    reservations.getByText(shortDayLabel(replies.date), { exact: false }),
+  ).toBeVisible();
+  await reservations
+    .getByRole("button", { name: "Back to search", exact: true })
+    .click();
+  await expect(
+    reservations.getByRole("button", { name: /^Date / }),
+  ).toHaveAccessibleName(`Date ${shortDayLabel(replies.firstFree)}`);
 });
 
 for (const returnTo of ["picker", "search", "month"]) {
@@ -433,30 +505,34 @@ test("a refresh keeps the guest's chosen date and updates its full-day note", as
   await expect(note).toBeHidden();
 });
 
-test("a refreshed full default date moves to the first free day", async ({
+test("a refreshed full default date moves to the next month and shows its selected day", async ({
   page,
 }) => {
   await page.clock.install();
-  const [date, nextFree] = openDates(dublinToday());
-  if (!(date && nextFree))
-    throw new Error("The fake ResDiary needs two open days.");
-  const replies = await mockCalendar(page, []);
-  await page.goto("/book-a-table");
+  const replies = await mockMonthEndCalendar(page);
+  replies.full = false;
+  await replies.open();
   const reservations = page.getByRole("region", { name: "Table reservations" });
   const picker = bookingCalendar(reservations);
-  await picker.open();
-  await expect(picker.calendar.getByRole("status")).toHaveText("");
+  await expect.poll(() => replies.answered.length).toBe(2);
   await expect(
     reservations.getByRole("button", { name: /^Date / }),
-  ).toHaveAccessibleName(`Date ${shortDayLabel(date)}`);
-  await replies.settle();
-  await picker.close();
-  replies.full = [date];
+  ).toHaveAccessibleName(`Date ${shortDayLabel(replies.date)}`);
+  replies.full = true;
   await page.clock.fastForward("02:01");
   await picker.open();
   await expect(
     reservations.getByRole("button", { name: /^Date / }),
-  ).toHaveAccessibleName(`Date ${shortDayLabel(nextFree)}`);
+  ).toHaveAccessibleName(`Date ${shortDayLabel(replies.firstFree)}`);
+  await picker.close();
+  await picker.open();
+  await expect(picker.calendar.locator("strong")).toHaveText(
+    monthLabel(replies.firstFree),
+  );
+  await expect(picker.day(replies.firstFree)).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
 });
 
 async function mockCalendar(page: Page, full: string[]) {
@@ -521,6 +597,96 @@ async function mockCalendar(page: Page, full: string[]) {
     };
     if (replies.pause) {
       replies.pending.push(send);
+      return;
+    }
+    await send();
+  });
+  return replies;
+}
+
+async function monthEndScenario(page: Page) {
+  const value = await page
+    .getByRole("button", { name: /^Date / })
+    .textContent();
+  if (!value) throw new Error("The booking page needs a default date.");
+  const date = new Date(`${value} GMT`).toISOString().slice(0, 10);
+  const start = new Date(`${date.slice(0, 7)}-01T00:00:00Z`);
+  const nextStart = new Date(
+    Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 1),
+  );
+  const nextMonth = nextStart.toISOString().slice(0, 7);
+  const lastDay = addDays(nextStart.toISOString().slice(0, 10), -1);
+  const gridEnd = addDays(lastDay, (7 - new Date(lastDay).getUTCDay()) % 7);
+  const firstFree = openDates(date).find(
+    (day) =>
+      day.slice(0, 7) === nextMonth &&
+      day > gridEnd &&
+      isOpen(day, addDays(date, -1)),
+  );
+  if (!firstFree)
+    throw new Error(
+      "The fake ResDiary needs a free day beyond the current grid.",
+    );
+  return { date, firstFree, nextMonth };
+}
+
+async function mockMonthEndCalendar(page: Page) {
+  let scenario: ReturnType<typeof monthEndScenario> | undefined;
+  const pending: (() => Promise<void>)[] = [];
+  const answered: string[] = [];
+  const replies = {
+    date: "",
+    firstFree: "",
+    full: true,
+    empty: false,
+    pauseNext: false,
+    pending,
+    answered,
+    async open() {
+      await page.goto("/book-a-table");
+      await expect.poll(() => replies.firstFree).not.toBe("");
+    },
+    async release() {
+      replies.pauseNext = false;
+      await Promise.all(pending.splice(0).map((send) => send()));
+      await page.evaluate(
+        () =>
+          new Promise<void>((resolve) => {
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+          }),
+      );
+    },
+  };
+  await page.route("**/api/bookings/calendar?**", async (route) => {
+    scenario ??= monthEndScenario(page);
+    const { date, firstFree, nextMonth } = await scenario;
+    replies.date = date;
+    replies.firstFree = firstFree;
+    const url = new URL(route.request().url());
+    const from = url.searchParams.get("from") ?? "";
+    const to = url.searchParams.get("to") ?? "";
+    const isNext = addDays(from, 14).slice(0, 7) === nextMonth;
+    const dates = replies.full
+      ? [firstFree].filter(() => isNext && !replies.empty)
+      : [date, firstFree];
+    const send = async () => {
+      const received = page.waitForResponse(url.href);
+      await route.fulfill({
+        json: {
+          ok: true,
+          data: {
+            from,
+            to,
+            partySize: Number(url.searchParams.get("partySize")),
+            openDates: dates.filter((day) => day >= from && day <= to),
+          },
+        },
+      });
+      await (await received).finished();
+      answered.push(url.href);
+    };
+    if (isNext && replies.pauseNext) {
+      pending.push(send);
       return;
     }
     await send();

@@ -4,6 +4,7 @@ import {
   addDays,
   dublinNow,
   dublinToday,
+  firstFreeBookingDate,
   guestsLabel,
   isBookableDay,
   isCalendarDate,
@@ -102,6 +103,104 @@ describe("isBookableDay", function bookableDayTests() {
     expect(isBookableDay("2027-06-01", { ...calendar, lastDate: null })).toBe(
       true,
     );
+  });
+});
+
+describe("firstFreeBookingDate", function firstFreeBookingDateTests() {
+  const calendar = {
+    today: "2026-10-01",
+    lastDate: "2026-12-20",
+    defaultDate: "2026-10-31",
+    closedWeekdays: [1],
+    closedPeriods: [{ from: "2026-11-04", to: "2026-11-06" }],
+  };
+
+  it("finds the first free day in the next month beyond the current grid", function crossesMonthEnd() {
+    expect(
+      firstFreeBookingDate("2026-10-31", calendar, [[], ["2026-11-03"]]),
+    ).toBe("2026-11-03");
+  });
+
+  it("ignores earlier grid days and finds the earliest bookable date across both replies", function ignoresEarlierDays() {
+    expect(
+      firstFreeBookingDate("2026-10-31", calendar, [
+        ["2026-10-30", "2026-11-01"],
+        ["2026-11-03", "2026-10-29"],
+      ]),
+    ).toBe("2026-11-01");
+  });
+
+  it("includes the current date when it is free", function includesCurrentDate() {
+    expect(
+      firstFreeBookingDate("2026-10-31", calendar, [["2026-10-31"], []]),
+    ).toBe("2026-10-31");
+  });
+
+  it("skips closed weekdays and closed periods", function skipsClosedDays() {
+    expect(
+      firstFreeBookingDate("2026-10-31", calendar, [
+        [],
+        ["2026-11-02", "2026-11-04", "2026-11-06", "2026-11-07"],
+      ]),
+    ).toBe("2026-11-07");
+  });
+
+  it("keeps the last bookable date and rejects days beyond it", function respectsLastDate() {
+    const ending = { ...calendar, lastDate: "2026-11-03" };
+    expect(
+      firstFreeBookingDate("2026-10-31", ending, [[], ["2026-11-03"]]),
+    ).toBe("2026-11-03");
+    expect(
+      firstFreeBookingDate("2026-10-31", ending, [[], ["2026-11-07"]]),
+    ).toBeUndefined();
+  });
+
+  it("ignores days before today even if the default date is older", function respectsToday() {
+    expect(
+      firstFreeBookingDate("2026-10-31", { ...calendar, today: "2026-11-03" }, [
+        ["2026-11-01"],
+        ["2026-11-03"],
+      ]),
+    ).toBe("2026-11-03");
+  });
+
+  it("does not follow the next month's grid into a third month", function limitsMonthRange() {
+    expect(
+      firstFreeBookingDate("2026-10-31", { ...calendar, lastDate: null }, [
+        [],
+        ["2026-12-01"],
+      ]),
+    ).toBeUndefined();
+  });
+
+  it("crosses the year end with no last date", function crossesYearEnd() {
+    expect(
+      firstFreeBookingDate("2026-12-31", { ...calendar, lastDate: null }, [
+        [],
+        ["2027-01-02"],
+      ]),
+    ).toBe("2027-01-02");
+  });
+
+  it("has no replacement when neither month has a free day", function noFreeDays() {
+    expect(
+      firstFreeBookingDate("2026-10-31", calendar, [[], []]),
+    ).toBeUndefined();
+  });
+
+  it.each([undefined, "loading", "failed"] as const)(
+    "has no replacement when the current month is empty and the next month is %j",
+    function noReplacement(nextMonth) {
+      expect(
+        firstFreeBookingDate("2026-10-31", calendar, [[], nextMonth]),
+      ).toBeUndefined();
+    },
+  );
+
+  it("uses a current-month free day while next month is loading", function doesNotWaitUnnecessarily() {
+    expect(
+      firstFreeBookingDate("2026-10-30", calendar, [["2026-10-31"], "loading"]),
+    ).toBe("2026-10-31");
   });
 });
 

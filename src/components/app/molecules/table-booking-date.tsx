@@ -25,6 +25,14 @@ export function TableBookingDate({
 }: ITableBookingDateProps) {
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState(() => startOfMonth(parseISO(value)));
+  const selectedMonth = value.slice(0, 7);
+  const [previousSelectedMonth, setPreviousSelectedMonth] =
+    useState(selectedMonth);
+
+  if (selectedMonth !== previousSelectedMonth) {
+    setPreviousSelectedMonth(selectedMonth);
+    setMonth(startOfMonth(parseISO(value)));
+  }
   const trigger = useRef<HTMLButtonElement>(null);
   const firstMonth = startOfMonth(parseISO(calendar.today));
   const lastMonth = calendar.lastDate

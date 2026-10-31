@@ -1,6 +1,6 @@
 "use client";
 
-import { format, parseISO, startOfMonth } from "date-fns";
+import { addMonths, format, parseISO, startOfMonth } from "date-fns";
 import { ArrowLeft, ArrowRight, CalendarDays, Check } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -41,6 +41,7 @@ import {
   BOOKING_RETURN_PARAMS,
 } from "@/lib/constants/booking";
 import { TABLE_BOOKING_CONTENT as content } from "@/lib/constants/table-booking";
+import { firstFreeBookingDate } from "@/lib/dates";
 import type {
   IBookingBankReturn,
   IBookingTime,
@@ -245,9 +246,13 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
     place(choice, (summary) => showHeld(choice, summary));
   }
   const busy = isBusy(hold, guest, paymentBusy, paid);
-  const monthDates = availability.datesFor(startOfMonth(parseISO(date)));
+  const month = startOfMonth(parseISO(date));
+  const monthDates = availability.datesFor(month);
   const dateFull = isDateFull(monthDates, date);
-  const firstFree = Array.isArray(monthDates) ? monthDates[0] : undefined;
+  const firstFree = firstFreeBookingDate(date, findTable.calendar, [
+    monthDates,
+    availability.datesFor(addMonths(month, 1)),
+  ]);
   const moveDate = dateFull && !datePicked && firstFree !== undefined;
 
   useEffect(() => {
@@ -255,8 +260,8 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
   }, [load, date, step]);
 
   useEffect(() => {
-    if (moveDate) setDate(firstFree);
-  }, [moveDate, firstFree]);
+    if (step === 0 && moveDate) setDate(firstFree);
+  }, [step, moveDate, firstFree]);
 
   useEffect(() => {
     if (previousStep.current !== step) {

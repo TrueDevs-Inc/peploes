@@ -1,8 +1,11 @@
 import {
+  addMonths,
   eachDayOfInterval,
   endOfMonth,
   endOfWeek,
+  format,
   formatDistanceToNow,
+  parseISO,
   startOfMonth,
   startOfWeek,
 } from "date-fns";
@@ -19,6 +22,7 @@ import type {
   IFindTableData,
   IResDiaryClosedDates,
   IRestaurantNow,
+  TOpenDates,
 } from "@/lib/types";
 
 export function formatDate(isoDate: string): string {
@@ -131,6 +135,24 @@ export function isBookableDay(
     (calendar.lastDate === null || date <= calendar.lastDate) &&
     !isClosed(date, calendar)
   );
+}
+
+export function firstFreeBookingDate(
+  date: string,
+  calendar: IFindTableData["calendar"],
+  months: (TOpenDates | undefined)[],
+): string | undefined {
+  const lastMonthDay = format(
+    endOfMonth(addMonths(parseISO(date), 1)),
+    "yyyy-MM-dd",
+  );
+  return months
+    .flatMap((days) => (Array.isArray(days) ? days : []))
+    .sort()
+    .find(
+      (day) =>
+        day >= date && day <= lastMonthDay && isBookableDay(day, calendar),
+    );
 }
 
 export function timeLabel(time: string): string {

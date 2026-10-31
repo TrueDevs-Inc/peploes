@@ -33,8 +33,10 @@ the page to them.
   it already has.
 - The date picker opens on `calendar.defaultDate`. A day can be chosen only when
   `isBookableDay` in `src/lib/dates.ts` allows it: from `today` to `lastDate`,
-  and not on a closed weekday or in a closed period. The server checks closed
-  days with the same `isClosed`.
+  and not on a closed weekday or in a closed period. If the selected date moves
+  to another month, the picker shows that month. Browsing with the month arrows
+  keeps the month the guest chose until the selection changes month.
+  The server checks closed days with the same `isClosed`.
 - The month arrows stop at today's month and at the month of `lastDate`. They
   use `aria-disabled`, not `disabled`, so the arrow the guest just pressed
   keeps focus and the calendar stays open.
@@ -56,9 +58,13 @@ the page to them.
   A failed month retries the next time it is needed, without waiting. If no
   reply has succeeded, only the closed-day rules apply. A failed refresh keeps
   the last known days. The times step has the final word.
-- If the selected date turns out full, a date the page chose moves to the first
-  free day in the reply. A date the guest chose stays, with a note such as "No
-  tables for 2 guests on Thu, 22 Oct 2026. Please choose another day."
+- In the search step, a full date the page chose moves to the first free day
+  on or after it in that month or the next. Only bookable days within the
+  booking window count. If this month has no free day and the next is still
+  loading, wait for its reply.
+  If neither month has a free day, keep the date and show the full-day note.
+  A date the guest chose stays, with a note such as "No tables for 2 guests on
+  Thu, 22 Oct 2026. Please choose another day."
 - Availability is fetched a month at a time, not for the whole booking window.
   On the sandbox on 21 Oct 2026, a year took 8 to 10 seconds per party size,
   against 1.3 to 2.3 seconds for a month.
