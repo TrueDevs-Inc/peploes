@@ -1,11 +1,9 @@
 "use client";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import Link from "next/link";
-import { useState } from "react";
+import { useId, useRef, useState } from "react";
 import { z } from "zod";
 import styles from "@/components/app/compounds/table-booking-panel.module.css";
 import { Button } from "@/components/ui/button";
-import { ROUTES } from "@/lib/constants";
 import {
   BOOKING_GUEST_LIMITS,
   BOOKING_MESSAGES,
@@ -80,6 +78,7 @@ function BookingField({
 }
 export function TableBookingDetails({
   details,
+  terms,
   sending,
   serverErrors,
   formError,
@@ -88,6 +87,11 @@ export function TableBookingDetails({
   onContinue,
 }: ITableBookingDetailsProps) {
   const [attempted, setAttempted] = useState(false);
+  const termsDialog = useRef<HTMLDialogElement>(null);
+  const termsButton = useRef<HTMLButtonElement>(null);
+  const termsHeading = useRef<HTMLHeadingElement>(null);
+  const termsId = useId();
+  const paragraphOccurrences = new Map<string, number>();
   const copy = TABLE_BOOKING_CONTENT.details;
   const fullName = details.surname
     ? `${details.firstName} ${details.surname}`
@@ -227,26 +231,75 @@ export function TableBookingDetails({
           />
         </label>
       </div>
-      <label className={styles.terms}>
+      <div className={styles.terms}>
         <input
+          id={`${termsId}-agreement`}
           type="checkbox"
+          aria-labelledby={`${termsId}-label ${termsId}-button`}
           checked={details.terms}
           aria-invalid={!!errors.terms}
           aria-describedby={errors.terms ? "booking-terms-error" : undefined}
           onChange={(event) => update("terms", event.target.checked)}
         />
         <span>
-          By confirming, you agree to{" "}
-          <Link
-            href={ROUTES.BOOKING_CANCELLATION_TERMS}
-            target="_blank"
-            rel="noopener noreferrer"
+          <label htmlFor={`${termsId}-agreement`} id={`${termsId}-label`}>
+            {copy.termsAgreement}
+          </label>{" "}
+          <button
+            id={`${termsId}-button`}
+            ref={termsButton}
+            type="button"
             className={styles.termsName}
+            onClick={() => {
+              termsDialog.current?.showModal();
+              termsHeading.current?.focus();
+            }}
           >
-            Peploe’s Booking &amp; Cancellation Terms.
-          </Link>
+            {copy.termsName}
+          </button>
         </span>
-      </label>
+      </div>
+      <dialog
+        ref={termsDialog}
+        closedby="closerequest"
+        aria-labelledby={`${termsId}-title`}
+        className={`${styles.changeDialog} ${styles.termsDialog}`}
+        onCancel={(event) => {
+          event.preventDefault();
+          event.currentTarget.close();
+        }}
+        onClose={(event) => {
+          if (!event.currentTarget.open) termsButton.current?.focus();
+        }}
+      >
+        <h2
+          ref={termsHeading}
+          id={`${termsId}-title`}
+          className={styles.flowHeading}
+          tabIndex={-1}
+        >
+          {copy.termsHeading}
+        </h2>
+        <section
+          aria-labelledby={`${termsId}-title`}
+          className={styles.termsText}
+        >
+          {terms.map((paragraph) => {
+            const occurrence = (paragraphOccurrences.get(paragraph) ?? 0) + 1;
+            paragraphOccurrences.set(paragraph, occurrence);
+            return <p key={`${paragraph}-${occurrence}`}>{paragraph}</p>;
+          })}
+        </section>
+        <div className={styles.changeActions}>
+          <Button
+            type="button"
+            variant="brand-contact"
+            onClick={() => termsDialog.current?.close()}
+          >
+            {copy.termsClose}
+          </Button>
+        </div>
+      </dialog>
       {errors.terms && (
         <p id="booking-terms-error" className={styles.error}>
           {errors.terms}

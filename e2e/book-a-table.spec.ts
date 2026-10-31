@@ -57,49 +57,105 @@ test("booking brings hidden step controls back into view on forward and back nav
   }
 });
 
-test("booking terms open the policy without changing agreement or leaving the form", async ({
-  page,
-}) => {
-  await page.goto("/book-a-table");
-  const reservations = page.getByRole("region", { name: "Table reservations" });
-  await chooseDate(reservations, laterFreeDate());
-  await reservations
-    .getByRole("button", { name: "Find a Table", exact: true })
-    .click();
-  await reservations
-    .getByRole("button", { name: "6:00 pm", exact: true })
-    .click();
-  await reservations
-    .getByRole("button", { name: "Continue", exact: true })
-    .click();
-  const agreement = reservations.getByRole("checkbox", {
-    name: /By confirming/,
-  });
-  const terms = reservations.getByRole("link", {
-    name: "Peploe’s Booking & Cancellation Terms.",
-    exact: true,
-  });
-  await expect(terms).toHaveAttribute("href", "/booking-cancellation-terms");
+for (const activation of ["click", "Enter", "Space"]) {
+  test(`booking terms open by ${activation} without changing agreement or leaving the form`, async ({
+    page,
+    context,
+  }) => {
+    let popups = 0;
+    page.on("popup", () => {
+      popups += 1;
+    });
+    await page.goto("/book-a-table");
+    const reservations = page.getByRole("region", {
+      name: "Table reservations",
+    });
+    await chooseDate(reservations, laterFreeDate());
+    await reservations
+      .getByRole("button", { name: "Find a Table", exact: true })
+      .click();
+    await reservations
+      .getByRole("button", { name: "6:00 pm", exact: true })
+      .click();
+    await reservations
+      .getByRole("button", { name: "Continue", exact: true })
+      .click();
+    const agreement = reservations.getByRole("checkbox", {
+      name: /By confirming/,
+    });
+    const terms = reservations.getByRole("button", {
+      name: "Peploe’s Booking & Cancellation Terms.",
+      exact: true,
+    });
+    const dialog = page.getByRole("dialog", {
+      name: "Booking & Cancellation Terms",
+      exact: true,
+    });
+    const close = dialog.getByRole("button", { name: "Close", exact: true });
+    const tabs = context.pages().length;
+    await expect(terms).toHaveAttribute("type", "button");
+    await expect(agreement).toHaveAccessibleName(
+      "By confirming, you agree to Peploe’s Booking & Cancellation Terms.",
+    );
+    const agreementLabel = reservations.getByText(
+      "By confirming, you agree to",
+      {
+        exact: true,
+      },
+    );
+    await agreementLabel.click();
+    await expect(agreement).toBeChecked();
+    await expect(dialog).toBeHidden();
+    await agreementLabel.click();
+    await expect(agreement).not.toBeChecked();
+    await expect(dialog).toBeHidden();
 
-  for (const accepted of [false, true]) {
-    await agreement.setChecked(accepted);
-    const opened = page.waitForEvent("popup");
-    if (accepted) {
-      await terms.focus();
-      await terms.press("Enter");
-    } else {
-      await terms.click();
+    for (const accepted of [false, true]) {
+      await agreement.setChecked(accepted);
+      for (const dismissal of ["Close", "Escape"]) {
+        if (activation === "click") {
+          await terms.click();
+        } else {
+          await terms.focus();
+          await terms.press(activation);
+        }
+        await expect(dialog).toBeVisible();
+        const paragraphs = dialog.getByText("Browser test booking terms.", {
+          exact: true,
+        });
+        await expect(paragraphs).toHaveCount(2);
+        await expect(paragraphs.nth(0)).toBeVisible();
+        await expect(paragraphs.nth(1)).toBeVisible();
+        await expect(
+          dialog.getByRole("heading", {
+            name: "Booking & Cancellation Terms",
+            exact: true,
+          }),
+        ).toBeFocused();
+        await expect(agreement).toBeChecked({ checked: accepted });
+        await expect(page.locator("body")).toHaveCSS("overflow", "hidden");
+        if (dismissal === "Close") {
+          await close.click();
+        } else {
+          await page.keyboard.press("Escape");
+        }
+        await expect(dialog).not.toBeVisible();
+        await expect(terms).toBeFocused();
+        await expect(agreement).toBeChecked({ checked: accepted });
+        await expect(page.locator("body")).not.toHaveCSS("overflow", "hidden");
+        await expect(page).toHaveURL("/book-a-table");
+        await expect(
+          reservations.getByRole("button", {
+            name: "Confirm Reservation",
+            exact: true,
+          }),
+        ).toBeVisible();
+        expect(popups).toBe(0);
+        expect(context.pages()).toHaveLength(tabs);
+      }
     }
-    const policy = await opened;
-    await expect(policy).toHaveURL(/\/booking-cancellation-terms$/);
-    await expect(
-      policy.getByRole("heading", { name: "Before you book.", level: 1 }),
-    ).toBeVisible();
-    await expect(page).toHaveURL("/book-a-table");
-    await expect(agreement).toBeChecked({ checked: accepted });
-    await policy.close();
-  }
-});
+  });
+}
 
 test("navbar booking navigation works and closes the mobile drawer", async ({
   page,

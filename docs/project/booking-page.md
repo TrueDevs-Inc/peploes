@@ -114,6 +114,15 @@ the page to them.
 
 ## Sending the details
 
+- The agreement's terms button opens a popup with ResDiary's booking terms as
+  plain text paragraphs, including repeats. The label text toggles the agreement;
+  the terms button only opens the popup. If ResDiary has no terms, it shows the
+  phone and email fallback. Close, Escape and platform close requests dismiss it. Focus returns
+  to the terms button. Opening or closing it keeps the agreement unchanged.
+  Long terms scroll inside the popup; the page behind stays still.
+- The standalone `/booking-cancellation-terms` page is general information.
+  The restaurant keeps it in sync with ResDiary's terms.
+
 - The phone number has a country code picker (default +353 from
   `BOOKING_GUEST_LIMITS.defaultCountryCode`) and a number typed without the
   code. ResDiary stores the two separately.

@@ -1688,6 +1688,7 @@ export type TTableBookingDetailsErrors = Partial<
 >;
 
 export interface ITableBookingDetailsProps {
+  terms: IFindTableData["terms"];
   details: ITableBookingGuestDetails;
   sending: boolean;
   serverErrors: TTableBookingDetailsErrors;
@@ -1865,6 +1866,7 @@ export interface IPaymentFormProps extends ITableBookingPaymentProps {
 }
 
 export interface ITableBookingHeldStepProps {
+  terms: IFindTableData["terms"];
   hold: ITableHold;
   details: ITableBookingGuestDetails;
   guest: IGuestDetailsSending;

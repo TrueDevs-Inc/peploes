@@ -388,6 +388,7 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
             />
           ) : (
             <HeldStep
+              terms={findTable.terms}
               hold={hold}
               details={details}
               guest={guest}
@@ -773,6 +774,7 @@ function BookingTimes({
 }
 
 function HeldStep({
+  terms,
   hold,
   details,
   guest,
@@ -868,6 +870,7 @@ function HeldStep({
         onExpire={guest.sending ? KEEP_HOLD : hold.forgetHold}
       />
       <TableBookingDetails
+        terms={terms}
         details={details}
         sending={guest.sending}
         serverErrors={guest.fieldErrors}

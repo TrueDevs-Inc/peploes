@@ -40,7 +40,8 @@ function reply(method: string, pathname: string): unknown {
         { ServiceId: 2, Name: "Dinner", TimeFrom: "17:30:00" },
       ],
       CurrencyCode: "EUR",
-      TermsAndConditions: "<p>Browser test booking terms.</p>",
+      TermsAndConditions:
+        "<p>Browser test booking terms.</p><p>Browser test booking terms.</p>",
     };
   }
   if (method === "GET" && pathname === `${restaurant}/ClosedDates`) {
