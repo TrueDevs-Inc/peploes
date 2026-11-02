@@ -979,7 +979,6 @@ export interface INavbarContent {
   groupsId: string;
   whatsOnLabel: string;
   visitContactLabel: string;
-  giftVouchersLabel: string;
   bookingLabel: string;
   mobileBookingLabel: string;
 }
@@ -1318,7 +1317,6 @@ export interface IMobileNavigationContent {
   title: string;
   navigationLabel: string;
   items: readonly IMobileNavigationItem[];
-  giftVouchersLabel: string;
   brandPhrase: string;
 }
 

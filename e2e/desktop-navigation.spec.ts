@@ -50,16 +50,13 @@ test("the shared underline changes only after navigation activation", async ({
     name: "Visit & Contact",
     exact: true,
   });
-  const gift = navigation.getByRole("button", {
-    name: "Gift Vouchers",
-    exact: true,
-  });
   const indicator = navigation.locator("[data-navbar-indicator]");
   const groups = navigation.getByRole("link", {
     name: "Private Dining & Events",
     exact: true,
   });
-  for (const control of [menus, groups, visit, gift]) {
+  await expect(navigation.getByText("Gift Vouchers")).toHaveCount(0);
+  for (const control of [menus, groups, visit]) {
     await control.hover();
     await expect(indicator).toHaveCSS("opacity", "0");
     await control.focus();
@@ -73,7 +70,7 @@ test("the shared underline changes only after navigation activation", async ({
   await expect
     .poll(async () => (await indicator.boundingBox())?.x)
     .toBe(selected?.x);
-  for (const control of [groups, visit, gift, menus]) {
+  for (const control of [groups, visit, menus]) {
     await control.hover();
     await expect(indicator).toHaveCSS("opacity", "1");
     expect(await indicator.boundingBox()).toMatchObject({
@@ -86,7 +83,6 @@ test("the shared underline changes only after navigation activation", async ({
       width: selected?.width,
     });
   }
-  await expect(gift).toHaveAttribute("aria-disabled", "true");
   await indicator.evaluate((element) => {
     element.addEventListener("transitionrun", (event) => {
       if (

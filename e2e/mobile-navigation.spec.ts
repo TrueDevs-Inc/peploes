@@ -4,7 +4,7 @@ test.beforeEach(async ({ page, isMobile }) => {
   if (!isMobile) await page.setViewportSize({ width: 768, height: 1024 });
 });
 
-test("mobile menu keeps navigation and vouchers without contact details", async ({
+test("mobile menu keeps navigation without unavailable vouchers or contact details", async ({
   page,
 }) => {
   await page.goto("/");
@@ -21,9 +21,7 @@ test("mobile menu keeps navigation and vouchers without contact details", async 
   await expect(
     menu.getByRole("link", { name: "Visit & Contact" }),
   ).toBeVisible();
-  await expect(
-    menu.getByRole("button", { name: "Gift Vouchers" }),
-  ).toBeInViewport();
+  await expect(menu.getByText("Gift Vouchers")).toHaveCount(0);
   await expect(
     menu.getByText("People make Peploe’s.", { exact: true }),
   ).toBeInViewport();

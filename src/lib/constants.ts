@@ -368,7 +368,6 @@ export const NAVBAR_CONTENT = {
   groupsId: "Private Dining & Events",
   whatsOnLabel: "What’s On",
   visitContactLabel: "Visit & Contact",
-  giftVouchersLabel: "Gift Vouchers",
   bookingLabel: "Book a Table",
   mobileBookingLabel: "Book",
 } as const satisfies INavbarContent;
