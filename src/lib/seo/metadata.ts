@@ -39,6 +39,11 @@ export function buildSeoMetadata(config: ISeoConfig): Metadata {
     ? title
     : `${title}${DEFAULT_SEO.titleSuffix}`;
   const canonical = url.startsWith("http") ? url : `${getSiteUrl()}${url}`;
+  const fallbackImage = image ? undefined : DEFAULT_SEO.socialImage;
+  const socialImage = image ?? DEFAULT_SEO.socialImage.src;
+  const socialImageAlt = imageAlt ?? fallbackImage?.alt;
+  const socialImageWidth = imageWidth ?? fallbackImage?.width;
+  const socialImageHeight = imageHeight ?? fallbackImage?.height;
   const metadata: Metadata = {
     title: fullTitle,
     description,
@@ -50,18 +55,14 @@ export function buildSeoMetadata(config: ISeoConfig): Metadata {
       type,
       siteName: DEFAULT_SEO.siteName,
       locale: DEFAULT_SEO.locale,
-      ...(image
-        ? {
-            images: [
-              {
-                url: image,
-                alt: imageAlt,
-                ...(imageWidth ? { width: imageWidth } : {}),
-                ...(imageHeight ? { height: imageHeight } : {}),
-              },
-            ],
-          }
-        : {}),
+      images: [
+        {
+          url: socialImage,
+          alt: socialImageAlt,
+          ...(socialImageWidth ? { width: socialImageWidth } : {}),
+          ...(socialImageHeight ? { height: socialImageHeight } : {}),
+        },
+      ],
       ...(publishedTime ? { publishedTime } : {}),
       ...(modifiedTime ? { modifiedTime } : {}),
       ...(author ? { authors: [author] } : {}),
@@ -73,7 +74,7 @@ export function buildSeoMetadata(config: ISeoConfig): Metadata {
       ...(DEFAULT_SEO.twitterHandle
         ? { creator: DEFAULT_SEO.twitterHandle }
         : {}),
-      ...(image ? { images: [image] } : {}),
+      images: [socialImage],
     },
     robots: {
       index: !noIndex && isLiveSite(),

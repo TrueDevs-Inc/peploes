@@ -174,4 +174,15 @@ describe("noindex outside the live site", function nonLiveMetadataTests() {
       }).openGraph?.images,
     ).toEqual([{ url: "/a.png", alt: "Alt", width: 10, height: 20 }]);
   });
+
+  it("uses the restaurant image when a page has no social image", function defaultImageTest() {
+    expect(buildSeoMetadata(config).openGraph?.images).toEqual([
+      {
+        url: "/peploes-hero.jpg",
+        alt: "The dining room at Peploe's restaurant in Dublin",
+        width: 2000,
+        height: 1333,
+      },
+    ]);
+  });
 });

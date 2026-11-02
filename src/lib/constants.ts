@@ -73,6 +73,12 @@ export const DEFAULT_SEO = {
   titleSuffix: " | Peploe's",
   twitterHandle: "",
   locale: "en_IE",
+  socialImage: {
+    src: "/peploes-hero.jpg",
+    alt: "The dining room at Peploe's restaurant in Dublin",
+    width: 2000,
+    height: 1333,
+  },
 } as const;
 
 export const RESTAURANT_CONTACT = {
