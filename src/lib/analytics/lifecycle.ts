@@ -1,4 +1,3 @@
-import { subscribeToConsent } from "@/lib/cookie-consent";
 import { trackPageView } from "./client";
 import { activateGA4, deactivateGA4 } from "./ga4";
 import { isAnalyticsPermitted } from "./permission";
@@ -13,7 +12,6 @@ interface INavigation {
 
 let navigation: INavigation | null = null;
 let sequence = 0;
-let stopWatching: (() => void) | null = null;
 
 /** The single page_view owner: one event per navigation, for every provider. */
 function sendCurrentPageView(): void {
@@ -35,17 +33,12 @@ function syncProviders(): void {
   }
   activateGA4();
   void activatePostHog();
-  // A grant mid-visit measures the page the visitor is on from that moment.
   sendCurrentPageView();
 }
 
 export function startAnalytics(): () => void {
-  stopWatching ??= subscribeToConsent(syncProviders);
   syncProviders();
-  return () => {
-    stopWatching?.();
-    stopWatching = null;
-  };
+  return () => undefined;
 }
 
 export function recordNavigation(pathname: string): void {

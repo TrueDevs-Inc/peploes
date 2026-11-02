@@ -123,45 +123,23 @@ describe("seasonal breadcrumb", function seasonalBreadcrumbTests() {
   });
 });
 
-describe("noindex outside the live site", function nonLiveMetadataTests() {
-  afterEach(function resetEnv() {
-    vi.unstubAllEnvs();
-  });
-
+describe("page indexing metadata", () => {
+  afterEach(() => vi.unstubAllEnvs());
   const config = { title: "Page", description: "Page.", url: "/page" };
 
-  it("marks Vercel previews noindex", async function previewTest() {
-    vi.resetModules();
-    vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("VERCEL_ENV", "preview");
-    const { buildSeoMetadata: buildPreview } = await import("@/lib/seo");
-    expect(buildPreview(config).robots).toEqual({
-      index: false,
-      follow: true,
-    });
-  });
-
-  it("marks local development noindex", async function localTest() {
-    vi.resetModules();
-    vi.stubEnv("NODE_ENV", "development");
-    vi.stubEnv("VERCEL_ENV", undefined);
-    const { buildSeoMetadata: buildLocal } = await import("@/lib/seo");
-    expect(buildLocal(config).robots).toEqual({
-      index: false,
-      follow: true,
-    });
-  });
-
-  it("leaves live pages indexable", async function liveTest() {
-    vi.resetModules();
-    vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("VERCEL_ENV", "production");
-    const { buildSeoMetadata: buildLive } = await import("@/lib/seo");
-    expect(buildLive(config).robots).toEqual({
-      index: true,
-      follow: true,
-    });
-  });
+  it.each(["production", "preview", "development", ""])(
+    "uses the page setting regardless of deployment %s",
+    async (deployment) => {
+      vi.resetModules();
+      vi.stubEnv("VERCEL_ENV", deployment);
+      const { buildSeoMetadata: metadata } = await import("@/lib/seo");
+      expect(metadata(config).robots).toEqual({ index: true, follow: true });
+      expect(metadata({ ...config, noIndex: true }).robots).toEqual({
+        index: false,
+        follow: true,
+      });
+    },
+  );
 
   it("declares the real size of a social image", function imageSizeTest() {
     expect(

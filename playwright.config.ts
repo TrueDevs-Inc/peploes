@@ -1,29 +1,33 @@
 import { defineConfig } from "@playwright/test";
 
 import { FAKE_RESDIARY } from "./e2e/booking-fixtures";
+import { E2E_ENVIRONMENT } from "./e2e/environment";
 
 const baseURL = "http://127.0.0.1:3107";
 const resDiaryDownURL = "http://127.0.0.1:3108";
 const unavailableSpec = /booking-unavailable\.spec\.ts/;
 const sandboxSpec = /booking-sandbox\.spec\.ts/;
+const cancellationDisabledSpec = /booking-cancellation-disabled\.spec\.ts/;
+const cancellationDisabledURL = "http://127.0.0.1:3110";
 
 const preloads =
   "bun build e2e/mock-sanity.ts e2e/mock-resdiary.ts --target=node --outdir=.next/e2e --entry-naming='[name].mjs'";
 const startServer = (port: number) =>
   `node --import ./.next/e2e/mock-sanity.mjs --import ./.next/e2e/mock-resdiary.mjs node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port ${port}`;
 
-function serverEnv(resDiaryUrl: string): Record<string, string> {
+function serverEnv(
+  resDiaryUrl: string,
+  allowHoldCancellation = true,
+): Record<string, string> {
   return Object.fromEntries([
-    ["NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN", "pk.e2e-only"],
-    ["SANITY_PROJECT_ID", "testproject"],
-    ["SANITY_DATASET", "development"],
-    ["SANITY_API_VERSION", "2026-10-06"],
+    ...Object.entries(E2E_ENVIRONMENT),
     ["RESDIARY_API_URL", resDiaryUrl],
     ["RESDIARY_MICROSITE_NAME", FAKE_RESDIARY.micrositeName],
     ["RESDIARY_CHANNEL_CODE", "ONLINE"],
     ["RESDIARY_USERNAME", "e2e-user"],
     ["RESDIARY_PASSWORD", "e2e-password"],
     ["BOOKING_HOLD_SECRET", "e2e-only-hold-secret-0123456789abcdef"],
+    ["BOOKING_ALLOW_HOLD_CANCELLATION", String(allowHoldCancellation)],
   ]);
 }
 
@@ -39,8 +43,15 @@ export default defineConfig({
   projects: [
     {
       name: "desktop",
-      // Needs its own build; see playwright.analytics.config.ts.
-      testIgnore: [unavailableSpec, sandboxSpec, "**/analytics.spec.ts"],
+      testIgnore: [
+        unavailableSpec,
+        sandboxSpec,
+        cancellationDisabledSpec,
+        "**/analytics.spec.ts",
+        "**/booking-analytics.spec.ts",
+        "**/sentry.spec.ts",
+        "**/seo.spec.ts",
+      ],
       use: { viewport: { width: 1440, height: 900 } },
     },
     {
@@ -48,8 +59,12 @@ export default defineConfig({
       testIgnore: [
         unavailableSpec,
         sandboxSpec,
+        cancellationDisabledSpec,
         "**/desktop-navigation.spec.ts",
         "**/analytics.spec.ts",
+        "**/booking-analytics.spec.ts",
+        "**/sentry.spec.ts",
+        "**/seo.spec.ts",
       ],
       use: {
         viewport: { width: 390, height: 844 },
@@ -62,13 +77,25 @@ export default defineConfig({
       testIgnore: [
         unavailableSpec,
         sandboxSpec,
+        cancellationDisabledSpec,
         "**/desktop-navigation.spec.ts",
         "**/analytics.spec.ts",
+        "**/booking-analytics.spec.ts",
+        "**/sentry.spec.ts",
+        "**/seo.spec.ts",
       ],
       use: {
         viewport: { width: 320, height: 740 },
         isMobile: true,
         hasTouch: true,
+      },
+    },
+    {
+      name: "hold-cancellation-disabled",
+      testMatch: cancellationDisabledSpec,
+      use: {
+        baseURL: cancellationDisabledURL,
+        viewport: { width: 390, height: 844 },
       },
     },
     {
@@ -81,6 +108,12 @@ export default defineConfig({
     },
   ],
   webServer: [
+    {
+      command: `${preloads} && ${startServer(3110)}`,
+      env: serverEnv(FAKE_RESDIARY.url, false),
+      url: cancellationDisabledURL,
+      reuseExistingServer: false,
+    },
     {
       command: `${preloads} && ${startServer(3107)}`,
       env: serverEnv(FAKE_RESDIARY.url),

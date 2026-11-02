@@ -32,8 +32,14 @@ import {
 } from "@/hooks/use-guest-details";
 import { useOpenDates } from "@/hooks/use-open-dates";
 import { storedHold, useTableHold } from "@/hooks/use-table-hold";
+import {
+  beginBookingSearch,
+  resumeBookingAttempt,
+  trackBooking,
+  trackBookingConfirmed,
+} from "@/lib/analytics/booking";
 import { holdReferenceSchema } from "@/lib/booking-schema";
-import { ROUTES } from "@/lib/constants";
+import { RESTAURANT_CONTACT, ROUTES } from "@/lib/constants";
 import {
   BOOKING_BANK_REFUSED_STATUSES,
   BOOKING_GUEST_LIMITS,
@@ -42,6 +48,7 @@ import {
 } from "@/lib/constants/booking";
 import { TABLE_BOOKING_CONTENT as content } from "@/lib/constants/table-booking";
 import { firstFreeBookingDate } from "@/lib/dates";
+import { GA4Event } from "@/lib/enums";
 import type {
   IBookingBankReturn,
   IBookingTime,
@@ -65,6 +72,17 @@ import type {
   TTableBookingTimesListProps,
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
+
+function resumeBookingAnalytics(saved: ReturnType<typeof savedBooking>) {
+  if (!saved) return;
+  const reference =
+    saved.kind === "held"
+      ? storedHold()?.holdReference
+      : saved.kind === "returning"
+        ? saved.returned.reference
+        : saved.summary.reference;
+  if (reference) resumeBookingAttempt(reference);
+}
 
 export function TableBookingNotice({
   message,
@@ -139,6 +157,7 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
     if (!restoring.current) return;
     restoring.current = false;
     const saved = savedBooking();
+    resumeBookingAnalytics(saved);
     if (saved?.kind === "held") {
       setShowRestoreError(true);
       place(saved.choice, (summary) => showHeld(saved.choice, summary));
@@ -169,6 +188,7 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
   const { forgetHold } = hold;
   const confirmBooking = useCallback(
     (confirmed: ITableBookingConfirmationProps) => {
+      void trackBookingConfirmed(confirmed.reference);
       forgetGuestDetails();
       forgetBankReturn();
       setReturned(null);
@@ -333,6 +353,10 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
               variant="brand-primary"
               className={styles.findTable}
               onClick={() => {
+                const attemptId = beginBookingSearch();
+                trackBooking(GA4Event.BookingSearch, "submitted", {
+                  attemptId,
+                });
                 setShowRestoreError(false);
                 setTime(null);
                 setReturnAccepted(false);
@@ -370,6 +394,7 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
               )}
             </p>
             <TableBookingChange
+              allowHoldCancellation={findTable.allowHoldCancellation}
               busy={busy}
               payment={payment}
               onEdit={editSearch}
@@ -377,6 +402,15 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
               onConfirmed={confirmBooking}
             />
           </div>
+          {payment && !findTable.allowHoldCancellation && (
+            <p id="booking-change-help" className={styles.flowDescription}>
+              To change this table, please call us on{" "}
+              <a href={`tel:${RESTAURANT_CONTACT.phone}`}>
+                {RESTAURANT_CONTACT.phoneLabel}
+              </a>
+              .
+            </p>
+          )}
           {step === 1 ? (
             <BookingTimes
               longDate={longDate}
@@ -386,7 +420,10 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
               holding={hold.pending}
               holdError={hold.error}
               returnAccepted={returnAccepted}
-              onTimeChange={setTime}
+              onTimeChange={(selected) => {
+                setTime(selected);
+                setReturnAccepted(false);
+              }}
               onReturnChange={setReturnAccepted}
               onBack={() => setStep(0)}
               onContinue={holdChosenTime}
@@ -800,6 +837,13 @@ function HeldStep({
   const check = useBookingStatus(paid);
   const { settle } = guest;
   const { forgetHold } = hold;
+  const expireHold = useCallback(() => {
+    if (hold.active)
+      trackBooking(GA4Event.BookingHold, "expired", {
+        reference: hold.active.summary.reference,
+      });
+    forgetHold();
+  }, [hold.active, forgetHold]);
 
   useEffect(() => {
     if (check.kind === "confirmed") {
@@ -872,7 +916,7 @@ function HeldStep({
     <>
       <TableBookingHoldTimer
         endsAt={hold.active.endsAt}
-        onExpire={guest.sending ? KEEP_HOLD : hold.forgetHold}
+        onExpire={guest.sending ? KEEP_HOLD : expireHold}
       />
       <TableBookingDetails
         terms={terms}

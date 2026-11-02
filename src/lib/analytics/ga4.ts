@@ -22,7 +22,9 @@ let configured = false;
 let script: HTMLScriptElement | null = null;
 let timeout: ReturnType<typeof setTimeout> | undefined;
 let pending: IPendingAnalyticsEvent[] = [];
-const history = createEventHistory();
+const history = createEventHistory(
+  `peploes:ga4:${GA_MEASUREMENT_ID}:conversions`,
+);
 
 function isEnabled(): boolean {
   return !!GA_MEASUREMENT_ID && isAnalyticsPermitted();
@@ -37,15 +39,12 @@ function clearPending(): void {
   history.clear();
 }
 
-// The dedupe key is recorded only after gtag accepted the event.
 function dispatch({ name, params, dedupeKey }: IPendingAnalyticsEvent): void {
-  if (dedupeKey && history.isDuplicate(dedupeKey)) return;
-  try {
-    window.gtag?.("event", name, params);
-  } catch {
-    return;
-  }
-  if (dedupeKey) history.record(dedupeKey);
+  history.dispatch(dedupeKey, () => {
+    if (!isEnabled() || typeof window.gtag !== "function") return false;
+    window.gtag("event", name, params);
+    return true;
+  });
 }
 
 export function flushAnalyticsQueue(): void {

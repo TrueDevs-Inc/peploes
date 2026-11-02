@@ -31,19 +31,7 @@ function getCrawlerAccess(allow: boolean) {
   return { allow: ROUTES.HOME };
 }
 
-export function buildRobots(
-  siteUrl: string,
-  isLive: boolean,
-): MetadataRoute.Robots {
-  if (!isLive) {
-    return {
-      rules: {
-        userAgent: "*",
-        allow: ROUTES.HOME,
-      },
-    };
-  }
-
+export function buildRobots(siteUrl: string): MetadataRoute.Robots {
   return {
     rules: [
       {

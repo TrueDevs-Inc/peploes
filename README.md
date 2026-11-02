@@ -10,11 +10,11 @@ Use the Bun version declared in [`package.json`](package.json).
 
 ```bash
 bun install --frozen-lockfile
-test -f .env.local || cp .env.example .env.local
+test -f .env || cp .env.example .env
 bun run dev
 ```
 
-Set the required values in `.env.local` before starting the application.
+Set the required values in `.env` before starting the application.
 Use `http://localhost:3000` for local public URLs and a disposable PostgreSQL
 database for `DATABASE_URL`. Optional integration values can remain empty.
 

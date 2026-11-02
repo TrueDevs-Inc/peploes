@@ -73,18 +73,12 @@ function guestInput(
   };
 }
 
-function unsupportedSetting(
-  rules: IResDiaryRules,
-  liveSite: boolean,
-): TUnsupportedSetting | null {
+function unsupportedSetting(rules: IResDiaryRules): TUnsupportedSetting | null {
   if (rules.membership?.required) {
     return BOOKING_UNSUPPORTED_SETTINGS.membership;
   }
   if (rules.customField?.required) {
     return BOOKING_UNSUPPORTED_SETTINGS.customField;
-  }
-  if (liveSite && rules.stripe && !rules.stripe.live) {
-    return BOOKING_UNSUPPORTED_SETTINGS.stripeTestKey;
   }
   return null;
 }
@@ -92,7 +86,6 @@ function unsupportedSetting(
 function fromOutcome(
   outcome: TResDiaryGuestOutcome,
   hold: THoldToken,
-  liveSite: boolean,
 ): Result<TGuestDetailsView, IBookingError> {
   const summary = holdSummary(hold);
   switch (outcome.kind) {
@@ -100,12 +93,6 @@ function fromOutcome(
       return ok({ kind: "confirmed", reference: outcome.reference, summary });
     case "payment":
     case "card":
-      if (liveSite && !outcome.stripe.publishableKey.startsWith("pk_live_")) {
-        logger.error(LogContext.Api, BOOKING_LOG.formUnsupported, {
-          setting: BOOKING_UNSUPPORTED_SETTINGS.stripeTestKey,
-        });
-        return err(unavailable());
-      }
       return ok({ ...outcome, summary });
     case "table_taken":
       return err({ ...timeGone(), clearHold: true });
@@ -129,7 +116,6 @@ async function afterUnclearReply(
   hold: THoldToken,
   input: IResDiaryGuestInput,
   startedAt: number,
-  liveSite: boolean,
 ): TBookingResult<TGuestDetailsView> {
   const status = await provider.getHoldStatus(hold.holdId, {
     deadlineAt: Date.now() + BOOKING_BUDGET_MS.guestStatus,
@@ -154,7 +140,7 @@ async function afterUnclearReply(
   ) {
     const again = await provider.submitHoldGuest(input, { deadlineAt });
     if (again.isOk()) {
-      return fromOutcome(again.value, hold, liveSite);
+      return fromOutcome(again.value, hold);
     }
     if (again.error.kind !== "outcome_unknown") {
       return err(fromFailure(again.error));
@@ -172,14 +158,13 @@ async function sendDetails(
   guest: IResDiaryGuestInput,
   startedAt: number,
   sendBy: number,
-  liveSite: boolean,
 ): TBookingResult<TGuestDetailsView> {
   const reply = await provider.submitHoldGuest(guest, { deadlineAt: sendBy });
   if (reply.isOk()) {
-    return fromOutcome(reply.value, hold, liveSite);
+    return fromOutcome(reply.value, hold);
   }
   if (reply.error.kind === "outcome_unknown") {
-    return afterUnclearReply(provider, hold, guest, startedAt, liveSite);
+    return afterUnclearReply(provider, hold, guest, startedAt);
   }
   return err(fromFailure(reply.error));
 }
@@ -211,7 +196,7 @@ export async function submitGuestDetails(
   input: unknown,
   holdToken: string | undefined,
 ): TBookingResult<TGuestDetailsResult> {
-  const { provider, secret, liveSite } = context;
+  const { provider, secret } = context;
   const startedAt = Date.now();
   const hold = holdToken ? readHold(holdToken, secret) : null;
   if (!hold) {
@@ -240,20 +225,13 @@ export async function submitGuestDetails(
   if (rules.isErr()) {
     return err(unavailable());
   }
-  const setting = unsupportedSetting(rules.value, liveSite);
+  const setting = unsupportedSetting(rules.value);
   if (setting) {
     logger.error(LogContext.Api, BOOKING_LOG.formUnsupported, { setting });
     return err(unavailable());
   }
 
   const guest = guestInput(hold, details.data);
-  const sent = await sendDetails(
-    provider,
-    hold,
-    guest,
-    startedAt,
-    sendBy,
-    liveSite,
-  );
+  const sent = await sendDetails(provider, hold, guest, startedAt, sendBy);
   return markDetailsSent(sent, hold, secret);
 }

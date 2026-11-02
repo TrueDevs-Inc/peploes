@@ -1,1 +1,1 @@
-export { env, isLiveSite, isProduction } from "./env";
+export { env, isProduction } from "./env";

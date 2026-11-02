@@ -17,7 +17,6 @@ function sendEvent(
   if (!event) return;
   logGA4Event(event.name, event.params);
 
-  // Denied events are dropped here, never queued, so consent cannot replay them.
   if (!isAnalyticsPermitted()) return;
 
   // gtag otherwise fills GA's location from the raw URL, query and hash included.
@@ -57,7 +56,8 @@ export function trackPageView(params?: {
 export function trackCustomEvent(
   eventName: string,
   params: Record<string, unknown>,
+  dedupeKey?: string,
 ): void {
   if (typeof window === "undefined") return;
-  sendEvent(eventName, params);
+  sendEvent(eventName, params, dedupeKey);
 }

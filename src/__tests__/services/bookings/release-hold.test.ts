@@ -8,11 +8,13 @@ import {
   fakeProvider,
   HOLD,
   HOLD_QUERY,
+  HOLD_SECRET,
   service,
   setUpBookingTests,
 } from "@/__tests__/services/bookings/fixtures";
 import { ErrorCode } from "@/lib/enums";
 import type { IResDiaryHoldStatus } from "@/lib/types";
+import { createBookingService } from "@/services/bookings";
 
 vi.mock("@/lib/error-handler", () => ({ logToSentry: vi.fn() }));
 
@@ -35,14 +37,67 @@ function resdiarySays(
   );
 }
 
+function cancellationEnabledService(provider: ReturnType<typeof fakeProvider>) {
+  return createBookingService({
+    provider,
+    holdSecret: HOLD_SECRET,
+    allowHoldCancellation: true,
+  });
+}
+
 describe("releaseHold", function releaseHoldTests() {
+  it("keeps pending holds when automatic cancellation is not enabled", async function releaseDisabled() {
+    const { provider, token } = await held();
+    const booking = createBookingService({ provider, holdSecret: HOLD_SECRET });
+
+    const result = await booking.releaseHold(HOLD_QUERY, token);
+
+    expect(result._unsafeUnwrapErr().code).toBe(ErrorCode.Forbidden);
+    expect(provider.cancelHold).not.toHaveBeenCalled();
+    expect(provider.getCancellationReasons).not.toHaveBeenCalled();
+    expect(
+      (await booking.getFindTableData())._unsafeUnwrap().allowHoldCancellation,
+    ).toBe(false);
+  });
+
+  it("shows an already confirmed booking even with automatic cancellation disabled", async function confirmedWithReleaseDisabled() {
+    const { provider, token } = await held();
+    resdiarySays(provider, "confirmed");
+    const booking = createBookingService({ provider, holdSecret: HOLD_SECRET });
+
+    expect(
+      (await booking.releaseHold(HOLD_QUERY, token))._unsafeUnwrap(),
+    ).toMatchObject({ kind: "confirmed" });
+    expect(provider.cancelHold).not.toHaveBeenCalled();
+  });
+
+  it.each(["failed", "cancelled"] as const)(
+    "recognises an already %s hold when automatic cancellation is disabled",
+    async function endedWithReleaseDisabled(status) {
+      const { provider, token } = await held();
+      resdiarySays(provider, status);
+      const booking = createBookingService({
+        provider,
+        holdSecret: HOLD_SECRET,
+      });
+
+      expect(
+        (await booking.releaseHold(HOLD_QUERY, token))._unsafeUnwrap(),
+      ).toEqual({ kind: "released" });
+      expect(provider.cancelHold).not.toHaveBeenCalled();
+    },
+  );
+
   it("cancels a pending hold on ResDiary with the change-of-plans reason", async function releasesPending() {
     const { provider, token } = await held();
     provider.getCancellationReasons.mockResolvedValue(
       ok([ILLNESS, CHANGE_OF_PLANS]),
     );
 
-    const result = await service(provider).releaseHold(HOLD_QUERY, token);
+    const result = await cancellationEnabledService(provider).releaseHold(
+      HOLD_QUERY,
+      token,
+    );
 
     expect(result._unsafeUnwrap()).toEqual({ kind: "released" });
     expect(provider.cancelHold).toHaveBeenCalledTimes(1);
@@ -57,7 +112,7 @@ describe("releaseHold", function releaseHoldTests() {
     const { provider, token } = await held();
     provider.getCancellationReasons.mockResolvedValue(ok([ILLNESS]));
 
-    await service(provider).releaseHold(HOLD_QUERY, token);
+    await cancellationEnabledService(provider).releaseHold(HOLD_QUERY, token);
 
     expect(provider.cancelHold.mock.calls[0]?.[0]).toMatchObject({
       reasonId: ILLNESS.id,
@@ -68,7 +123,10 @@ describe("releaseHold", function releaseHoldTests() {
     const { provider, token } = await held();
     resdiarySays(provider, "confirmed");
 
-    const result = await service(provider).releaseHold(HOLD_QUERY, token);
+    const result = await cancellationEnabledService(provider).releaseHold(
+      HOLD_QUERY,
+      token,
+    );
 
     expect(result._unsafeUnwrap()).toEqual({
       kind: "confirmed",
@@ -82,7 +140,10 @@ describe("releaseHold", function releaseHoldTests() {
     const { provider, token } = await held();
     provider.cancelHold.mockResolvedValue(ok("confirmed"));
 
-    const result = await service(provider).releaseHold(HOLD_QUERY, token);
+    const result = await cancellationEnabledService(provider).releaseHold(
+      HOLD_QUERY,
+      token,
+    );
 
     expect(result._unsafeUnwrap()).toEqual({
       kind: "confirmed",
@@ -97,7 +158,10 @@ describe("releaseHold", function releaseHoldTests() {
       const { provider, token } = await held();
       resdiarySays(provider, status);
 
-      const result = await service(provider).releaseHold(HOLD_QUERY, token);
+      const result = await cancellationEnabledService(provider).releaseHold(
+        HOLD_QUERY,
+        token,
+      );
 
       expect(result._unsafeUnwrap()).toEqual({ kind: "released" });
       expect(provider.cancelHold).not.toHaveBeenCalled();
@@ -109,9 +173,15 @@ describe("releaseHold", function releaseHoldTests() {
     provider.getHoldStatus.mockResolvedValueOnce(
       err({ kind: "unavailable", operation: "getHoldStatus" }),
     );
-    const unread = await service(provider).releaseHold(HOLD_QUERY, token);
+    const unread = await cancellationEnabledService(provider).releaseHold(
+      HOLD_QUERY,
+      token,
+    );
     resdiarySays(provider, "unknown");
-    const unknown = await service(provider).releaseHold(HOLD_QUERY, token);
+    const unknown = await cancellationEnabledService(provider).releaseHold(
+      HOLD_QUERY,
+      token,
+    );
 
     for (const result of [unread, unknown]) {
       expect(result._unsafeUnwrapErr()).toMatchObject({
@@ -125,7 +195,10 @@ describe("releaseHold", function releaseHoldTests() {
     const { provider, token } = await held();
     provider.getCancellationReasons.mockResolvedValue(ok([]));
 
-    const result = await service(provider).releaseHold(HOLD_QUERY, token);
+    const result = await cancellationEnabledService(provider).releaseHold(
+      HOLD_QUERY,
+      token,
+    );
 
     expect(result._unsafeUnwrapErr()).toMatchObject({
       code: ErrorCode.ServiceUnavailable,
@@ -140,7 +213,10 @@ describe("releaseHold", function releaseHoldTests() {
       err({ kind: "outcome_unknown", operation: "cancelHold" }),
     );
 
-    const result = await service(provider).releaseHold(HOLD_QUERY, token);
+    const result = await cancellationEnabledService(provider).releaseHold(
+      HOLD_QUERY,
+      token,
+    );
 
     expect(result._unsafeUnwrapErr()).toMatchObject({
       code: ErrorCode.ServiceUnavailable,
@@ -151,11 +227,14 @@ describe("releaseHold", function releaseHoldTests() {
   it("refuses another tab's revision and a missing token without asking ResDiary", async function refusesOthers() {
     const { provider, token } = await held();
 
-    const otherTab = await service(provider).releaseHold(
+    const otherTab = await cancellationEnabledService(provider).releaseHold(
       { ...HOLD_QUERY, holdRevision: 2 },
       token,
     );
-    const missing = await service(provider).releaseHold(HOLD_QUERY, undefined);
+    const missing = await cancellationEnabledService(provider).releaseHold(
+      HOLD_QUERY,
+      undefined,
+    );
 
     expect(otherTab._unsafeUnwrapErr().code).toBe(ErrorCode.NotFound);
     expect(missing._unsafeUnwrapErr()).toMatchObject({

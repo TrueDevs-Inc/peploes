@@ -1,3 +1,5 @@
+import type { ITimesData, TBookingResponse } from "@/lib/types";
+
 import {
   dayLabel,
   dublinToday,
@@ -116,6 +118,80 @@ test("a required return time must be accepted, an optional one is shown", async 
     .getByLabel("I understand the table is required back by 9:00 pm")
     .check();
   await expect(next).toBeEnabled();
+  await times.getByRole("button", { name: "6:00 pm", exact: true }).click();
+  await times.getByRole("button", { name: "7:00 pm", exact: true }).click();
+  await expect(
+    reservations.getByLabel(
+      "I understand the table is required back by 9:00 pm",
+    ),
+  ).not.toBeChecked();
+  await expect(next).toBeDisabled();
+});
+
+test("changing between required return deadlines needs a new acceptance", async ({
+  page,
+}) => {
+  await page.route("**/api/bookings/times?**", async (route) => {
+    const response = await route.fetch();
+    const body: TBookingResponse<ITimesData> = await response.json();
+    expect(body.ok).toBe(true);
+    if (body.ok) {
+      const offer = body.data.times.find((slot) => slot.time === "18:00")
+        ?.offers[0];
+      expect(offer?.returnBy).toBeDefined();
+      if (offer?.returnBy) offer.returnBy.required = true;
+    }
+    await route.fulfill({ response, json: body });
+  });
+  const reservations = await openBooking(page);
+  await chooseDate(reservations, laterFreeDate());
+  await findTable(reservations);
+  await reservations
+    .getByRole("button", { name: "6:00 pm", exact: true })
+    .click();
+  await reservations
+    .getByLabel("I understand the table is required back by 8:00 pm")
+    .check();
+  await reservations
+    .getByRole("button", { name: "7:00 pm", exact: true })
+    .click();
+  await expect(
+    reservations.getByLabel(
+      "I understand the table is required back by 9:00 pm",
+    ),
+  ).not.toBeChecked();
+  await expect(
+    reservations.getByRole("button", { name: "Continue", exact: true }),
+  ).toBeDisabled();
+});
+
+test("returning from an optional-return hold requires accepting a new deadline", async ({
+  page,
+}) => {
+  const reservations = await openBooking(page);
+  await chooseDate(reservations, laterFreeDate());
+  await findTable(reservations);
+  await reservations
+    .getByRole("button", { name: "6:00 pm", exact: true })
+    .click();
+  await reservations
+    .getByRole("button", { name: "Continue", exact: true })
+    .click();
+  await expect(reservations.getByRole("timer")).toBeVisible();
+  await reservations
+    .getByRole("button", { name: "Back to times", exact: true })
+    .click();
+  await reservations
+    .getByRole("button", { name: "7:00 pm", exact: true })
+    .click();
+  await expect(
+    reservations.getByLabel(
+      "I understand the table is required back by 9:00 pm",
+    ),
+  ).not.toBeChecked();
+  await expect(
+    reservations.getByRole("button", { name: "Continue", exact: true }),
+  ).toBeDisabled();
 });
 
 test("a slow, older times search never replaces the newer one", async ({

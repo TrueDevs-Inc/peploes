@@ -47,16 +47,11 @@ describes.
 
 ## Robots and sitemap
 
-Outside the live site (`isLiveSite()` false: Vercel previews and local development),
-`robots.txt` allows crawling and every response carries `X-Robots-Tag: noindex`
-(`next.config.ts`) while page metadata is `noindex`. `next.config.ts` cannot
-import `src/lib/env.ts`, so it repeats the `isLiveSite()` rule; change both
-together. A robots.txt block would
-stop crawlers from seeing the noindex signal and does not reliably keep a URL out
-of search; see [Block search indexing](https://developers.google.com/search/docs/crawling-indexing/block-indexing).
-The route is prerendered, so `VERCEL_ENV` must be present at build time, which
-Vercel guarantees per deployment. On the live site (the Vercel production
-deployment, or a production build outside Vercel) the policy has three groups in `AI_CRAWLER_POLICY`:
+Indexing follows each page's `noIndex` metadata setting. There is no global
+staging/production indexing switch or deployment-based `X-Robots-Tag`.
+`robots.txt` uses the same configured crawler policy in every environment,
+with the site URL supplied by the hosting project's environment values.
+The policy has three groups in `AI_CRAWLER_POLICY`:
 
 - Search crawlers can index public pages.
 - Training-only crawlers cannot crawl.
@@ -129,7 +124,7 @@ and the CSP.
 
 - Titles and descriptions match visible content.
 - Canonical URLs point to the public deployment.
-- Preview deployments send `X-Robots-Tag: noindex` and are not blocked in robots.txt.
+- Deployment labels do not change indexing; page-specific `noIndex` remains effective.
 - JSON-LD contains real names, URLs, images, prices, and dates.
 - Sitemap contains canonical public pages only.
 - Search, training, and mixed-use crawler rules match product policy.

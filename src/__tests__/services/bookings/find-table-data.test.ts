@@ -21,6 +21,7 @@ describe("getFindTableData", function findTableDataTests() {
     const result = await service().getFindTableData();
 
     expect(result._unsafeUnwrap()).toEqual({
+      allowHoldCancellation: false,
       partySize: { min: 1, max: 7, default: 2 },
       calendar: {
         today: "2026-10-15",

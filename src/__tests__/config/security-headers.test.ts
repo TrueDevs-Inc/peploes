@@ -45,24 +45,13 @@ describe("security headers", function securityHeaderTests() {
     vi.unstubAllEnvs();
   });
 
-  it("marks every response noindex on preview and local deployments", async function nonLiveNoindexTest() {
-    vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("VERCEL_ENV", "preview");
-    expect((await getGlobalHeaders()).get("X-Robots-Tag")).toBe("noindex");
-
-    vi.stubEnv("NODE_ENV", "development");
-    vi.stubEnv("VERCEL_ENV", "");
-    expect((await getGlobalHeaders()).get("X-Robots-Tag")).toBe("noindex");
-  });
-
-  it("leaves the live site indexable", async function liveIndexableTest() {
-    vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("VERCEL_ENV", "production");
-    expect((await getGlobalHeaders()).has("X-Robots-Tag")).toBe(false);
-
-    vi.stubEnv("VERCEL_ENV", "");
-    expect((await getGlobalHeaders()).has("X-Robots-Tag")).toBe(false);
-  });
+  it.each(["production", "preview", "development", ""])(
+    "does not add an indexing override for deployment %s",
+    async (deployment) => {
+      vi.stubEnv("VERCEL_ENV", deployment);
+      expect((await getGlobalHeaders()).has("X-Robots-Tag")).toBe(false);
+    },
+  );
 
   it("allows configured Mapbox across documents for client navigation", async function mapboxPolicyTest() {
     vi.stubEnv("NODE_ENV", "production");

@@ -242,7 +242,7 @@ the repository and `bun install --cwd studio` once. Log into Studio with your
 own Sanity account. Access is controlled by Sanity project membership.
 
 The website uses `SANITY_PROJECT_ID`, `SANITY_DATASET` and
-`SANITY_API_VERSION` in the root `.env.local`; copy the names from
+`SANITY_API_VERSION` in the root `.env`; copy the names from
 `.env.example`. Studio uses `SANITY_STUDIO_PROJECT_ID` and
 `SANITY_STUDIO_DATASET`; its defaults point to the development project above.
 Keep the API version pinned to `2026-10-06`. Studio auto-updates are disabled so

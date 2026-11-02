@@ -2,7 +2,7 @@ import "server-only";
 
 import { err } from "neverthrow";
 
-import { env, isLiveSite } from "@/lib/env";
+import { env } from "@/lib/env";
 import { resdiary } from "@/lib/resdiary-provider";
 import type {
   IBookingError,
@@ -31,7 +31,8 @@ export function createBookingService(deps: IBookingServiceDeps = {}) {
     deps.holdSecret === undefined
       ? (env.BOOKING_HOLD_SECRET ?? null)
       : deps.holdSecret;
-  const liveSite = deps.liveSite ?? isLiveSite();
+  const allowHoldCancellation =
+    deps.allowHoldCancellation ?? env.BOOKING_ALLOW_HOLD_CANCELLATION;
 
   async function guarded<T>(
     operation: TBookingOperation,
@@ -51,7 +52,9 @@ export function createBookingService(deps: IBookingServiceDeps = {}) {
 
   return {
     getFindTableData: () =>
-      guarded("getFindTableData", () => findTableData(provider)),
+      guarded("getFindTableData", () =>
+        findTableData(provider, allowHoldCancellation),
+      ),
     getCalendarDays: (input: unknown) =>
       guarded("getCalendarDays", () => findCalendarDays(provider, input)),
     getTimes: (input: unknown) =>
@@ -73,13 +76,12 @@ export function createBookingService(deps: IBookingServiceDeps = {}) {
       ),
     releaseHold: (query: unknown, holdToken?: string) =>
       guarded("releaseHold", (secret) =>
-        releaseHold(provider, secret, query, holdToken),
+        releaseHold(provider, secret, query, holdToken, allowHoldCancellation),
       ),
     submitGuestDetails: (input: unknown, holdToken?: string) =>
       guarded(
         "submitGuestDetails",
-        (secret) =>
-          submitGuestDetails({ provider, secret, liveSite }, input, holdToken),
+        (secret) => submitGuestDetails({ provider, secret }, input, holdToken),
         stillConfirming,
       ),
   };

@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 
 import { fetcher } from "@/helpers/api";
+import { trackBooking } from "@/lib/analytics/booking";
 import { BOOKING_API, BOOKING_STATUS_CHECK } from "@/lib/constants/booking";
-import { ErrorCode, HttpVerb } from "@/lib/enums";
+import { ErrorCode, GA4Event, HttpVerb } from "@/lib/enums";
 import type {
   IHoldStatusResult,
   IHoldSummary,
@@ -17,7 +18,7 @@ const CHECKING: TBookingStatusCheck = { kind: "checking" };
 function nextCheck(
   reply: TBookingResponse<IHoldStatusResult> | null,
   pendingFrom: number | undefined,
-): TBookingStatusCheck | null {
+): Exclude<TBookingStatusCheck, { kind: "checking" }> | null {
   if (reply?.ok === false && reply.error.code === ErrorCode.NotFound) {
     return { kind: "unknown", notFound: true };
   }
@@ -53,6 +54,8 @@ export function useBookingStatus(
 
   useEffect(() => {
     if (!hold) return;
+    const reference = hold.reference;
+    trackBooking(GA4Event.BookingRecovery, "started", { reference });
     let active = true;
     let gaveUp = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -62,6 +65,7 @@ export function useBookingStatus(
     });
     setAnswer({ hold, check: CHECKING });
     const deadline = setTimeout(() => {
+      trackBooking(GA4Event.BookingRecovery, "unknown", { reference });
       gaveUp = true;
       clearTimeout(timer);
       setAnswer({ hold, check: { kind: "unknown" } });
@@ -75,6 +79,7 @@ export function useBookingStatus(
       if (!active) return;
       const next = nextCheck(reply.data, pendingFrom);
       if (next) {
+        trackBooking(GA4Event.BookingRecovery, next.kind, { reference });
         clearTimeout(deadline);
         setAnswer({ hold, check: next });
       } else if (!gaveUp) {
