@@ -18,18 +18,20 @@ import {
 import styles from "@/components/app/compounds/table-booking-panel.module.css";
 import { Button } from "@/components/ui/button";
 import { fetcher } from "@/helpers/api";
+import { trackBooking } from "@/lib/analytics/booking";
 import {
   BOOKING_API,
   BOOKING_BUDGET_MS,
   BOOKING_RETURN_PARAMS,
 } from "@/lib/constants/booking";
 import { TABLE_BOOKING_CONTENT } from "@/lib/constants/table-booking";
-import { ErrorCode, HttpVerb } from "@/lib/enums";
+import { ErrorCode, GA4Event, HttpVerb } from "@/lib/enums";
 import type {
   IHoldStatusResult,
   IPaymentFormProps,
   IStripeReady,
   ITableBookingPaymentProps,
+  TBookingAnalyticsResult,
   TBookingResponse,
   TPaymentStep,
 } from "@/lib/types";
@@ -37,6 +39,18 @@ import type {
 const copy = TABLE_BOOKING_CONTENT.payment;
 const PAID_STATUSES = new Set(["succeeded", "processing", "requires_capture"]);
 const CARD_PROBLEMS = new Set(["card_error", "validation_error"]);
+
+function trackPayment(
+  step: TPaymentStep,
+  result: TBookingAnalyticsResult,
+  errorCode?: "STRIPE" | "NETWORK" | "STORAGE",
+) {
+  trackBooking(GA4Event.BookingPayment, result, {
+    reference: step.summary.reference,
+    paymentKind: step.kind === "payment" ? "deposit" : "guarantee",
+    errorCode,
+  });
+}
 
 function formatAmount(amount: number, currency: string): string {
   return new Intl.NumberFormat("en-IE", {
@@ -68,8 +82,21 @@ async function paymentMayHaveSucceeded(
   errorType: string,
 ) {
   if (CARD_PROBLEMS.has(errorType)) return false;
-  const intent = await intentOf(stripe, step).catch(() => null);
+  const intent = await checkedIntent(stripe, step);
   return !intent || PAID_STATUSES.has(intent.status);
+}
+
+async function checkedIntent(stripe: Stripe, step: TPaymentStep) {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<null>((resolve) => {
+    timer = setTimeout(() => resolve(null), BOOKING_BUDGET_MS.stripeCheck);
+  });
+  const result = await Promise.race([
+    intentOf(stripe, step).catch(() => null),
+    deadline,
+  ]);
+  clearTimeout(timer);
+  return result;
 }
 
 async function prepare(
@@ -131,7 +158,9 @@ export function TableBookingPayment({
   onStartAgain,
   onConfirmed,
 }: ITableBookingPaymentProps) {
-  const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    if (storageBlocked) trackPayment(step, "load_failed", "STORAGE");
+  }, [step, storageBlocked]);
   if (storageBlocked) {
     return (
       <div className={styles.payment}>
@@ -149,15 +178,14 @@ export function TableBookingPayment({
   }
   return (
     <PaymentForm
-      key={attempt}
       step={step}
-      initialError={attempt === 0 ? initialError : null}
+      initialError={initialError}
       onPaid={onPaid}
       onExpired={onExpired}
       onStartAgain={onStartAgain}
       onConfirmed={onConfirmed}
       onBusyChange={onBusyChange}
-      onRetry={() => setAttempt((count) => count + 1)}
+      onRetry={() => window.location.reload()}
     />
   );
 }
@@ -186,6 +214,9 @@ function PaymentForm({
         return true;
       }
       if (result?.status === "failed" || result?.status === "expired") {
+        trackBooking(GA4Event.BookingHold, result.status, {
+          reference: step.summary.reference,
+        });
         onExpired();
         return true;
       }
@@ -196,7 +227,7 @@ function PaymentForm({
       }
       return false;
     },
-    [onConfirmed, onExpired],
+    [onConfirmed, onExpired, step.summary.reference],
   );
 
   const busy = paying || !(ready || loadFailed || cantCheck);
@@ -209,17 +240,25 @@ function PaymentForm({
   useEffect(() => {
     let active = true;
     let element: StripePaymentElement | undefined;
+    const timer = setTimeout(failedToLoad, BOOKING_BUDGET_MS.stripeLoad);
+    function failedToLoad() {
+      if (!active) return;
+      active = false;
+      clearTimeout(timer);
+      element?.destroy();
+      element = undefined;
+      trackPayment(step, "load_failed", "STRIPE");
+      setError(copy.loadFailed);
+      setLoadFailed(true);
+    }
     function mount(prepared: IStripeReady) {
       element = prepared.elements.create("payment");
       element.on("ready", () => {
-        if (active) setReady(prepared);
-      });
-      element.on("loaderror", () => {
-        element = undefined;
         if (!active) return;
-        setError(copy.loadFailed);
-        setLoadFailed(true);
+        clearTimeout(timer);
+        setReady(prepared);
       });
+      element.on("loaderror", failedToLoad);
       if (mountPoint.current) element.mount(mountPoint.current);
     }
 
@@ -227,22 +266,27 @@ function PaymentForm({
       const prepared = await prepare(step).catch(() => null);
       if (!active) return;
       if (prepared === "paid") {
+        trackPayment(step, "accepted");
+        clearTimeout(timer);
         onPaid();
         return;
       }
       const hold = await paymentHoldStatus(step);
       if (!active) return;
-      if (endForHold(hold)) return;
+      if (endForHold(hold)) {
+        clearTimeout(timer);
+        return;
+      }
       if (!prepared) {
-        setError(copy.loadFailed);
-        setLoadFailed(true);
+        failedToLoad();
         return;
       }
       mount(prepared);
     }
-    void load();
+    void load().catch(failedToLoad);
     return () => {
       active = false;
+      clearTimeout(timer);
       element?.destroy();
     };
   }, [step, onPaid, endForHold]);
@@ -250,7 +294,7 @@ function PaymentForm({
   async function endBeforePay(stripe: Stripe) {
     const hold = await paymentHoldStatus(step);
     if (hold?.status === "uncheckable") {
-      const intent = await intentOf(stripe, step).catch(() => null);
+      const intent = await checkedIntent(stripe, step);
       if (intent && PAID_STATUSES.has(intent.status)) {
         onPaid();
         return true;
@@ -264,6 +308,7 @@ function PaymentForm({
     setPaying(true);
     setError(null);
     if (await endBeforePay(ready.stripe)) return;
+    trackPayment(step, "started");
     const returnUrl = new URL(
       window.location.origin + window.location.pathname,
     );
@@ -281,18 +326,26 @@ function PaymentForm({
       // biome-ignore lint/style/useNamingConvention: Stripe's API field name.
       confirmParams: { return_url: returnUrl.href },
     };
-    const result =
-      step.kind === "payment"
-        ? await ready.stripe.confirmPayment(options)
-        : await ready.stripe.confirmSetup(options);
+    const result = await (step.kind === "payment"
+      ? ready.stripe.confirmPayment(options)
+      : ready.stripe.confirmSetup(options)
+    ).catch(() => null);
+    if (!result) {
+      trackPayment(step, "unknown", "NETWORK");
+      onPaid();
+      return;
+    }
     if (!result.error) {
+      trackPayment(step, "accepted");
       onPaid();
       return;
     }
     if (await paymentMayHaveSucceeded(ready.stripe, step, result.error.type)) {
+      trackPayment(step, "unknown", "STRIPE");
       onPaid();
       return;
     }
+    trackPayment(step, "declined", "STRIPE");
     setError(result.error.message ?? copy.failed);
     setPaying(false);
   }

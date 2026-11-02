@@ -197,7 +197,7 @@ function guestDetails(body: string): Response {
       Status: "PaymentRequired",
       PaymentAmount: 20,
       FormattedPaymentAmount: "€20.00",
-      StripePublishableKey: "pk_live_e2e_stub_only",
+      StripePublishableKey: "pk_test_e2e_stub_only",
       StripeAccountId: "acct_e2e",
       PaymentIntentSecret: "pi_e2e_secret_stub_only",
     });

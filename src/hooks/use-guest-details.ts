@@ -8,9 +8,10 @@ import {
   removeSessionStorage,
   setSessionStorage,
 } from "@/helpers/storage";
+import { trackBooking } from "@/lib/analytics/booking";
 import { BOOKING_BUDGET_MS } from "@/lib/constants/booking";
 import { TABLE_BOOKING_CONTENT } from "@/lib/constants/table-booking";
-import { ErrorCode } from "@/lib/enums";
+import { ErrorCode, GA4Event } from "@/lib/enums";
 import { tryCatch } from "@/lib/errors";
 import type {
   IActiveHold,
@@ -90,6 +91,9 @@ export function useGuestDetails(): IGuestDetailsSending {
       onReply: (reply: TGuestDetailsView) => void,
     ) => {
       const hold = active.summary;
+      trackBooking(GA4Event.BookingDetails, "submitted", {
+        reference: hold.reference,
+      });
       setSessionStorage(DETAILS_KEY, {
         hold: active,
         startedAt: Date.now(),
@@ -113,15 +117,26 @@ export function useGuestDetails(): IGuestDetailsSending {
           }),
         );
         if (reply?.ok) {
+          trackBooking(GA4Event.BookingDetails, "succeeded", {
+            reference: hold.reference,
+          });
           onReply(reply.data);
           forgetGuestDetails();
           return;
         }
         if (!reply || reply.error.code === ErrorCode.OutcomeUnknown) {
+          trackBooking(GA4Event.BookingDetails, "unknown", {
+            reference: hold.reference,
+            errorCode: reply?.error.code ?? "NETWORK",
+          });
           setUnsure(hold);
           return;
         }
         forgetGuestDetails();
+        trackBooking(GA4Event.BookingDetails, "failed", {
+          reference: hold.reference,
+          errorCode: reply.error.code,
+        });
         const errors = fieldErrorsOf(reply.error);
         setFieldErrors(errors);
         if (Object.keys(errors).length === 0) setFormError(reply.error.message);

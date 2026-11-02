@@ -50,6 +50,7 @@ function firstOpenDate(
 
 export async function findTableData(
   provider: TBookingProvider,
+  allowHoldCancellation: boolean,
 ): TBookingResult<IFindTableData> {
   const today = dublinToday();
   const window = await loadWindow(
@@ -82,6 +83,7 @@ export async function findTableData(
   };
   const terms = htmlToParagraphs(rules.termsHtml);
   return ok({
+    allowHoldCancellation,
     partySize: {
       min,
       max,

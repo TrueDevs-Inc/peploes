@@ -116,6 +116,9 @@ test("if the details never reach us, the page checks the hold and asks the guest
   await page.unroute("**/book-a-table");
   await confirm.click();
   await expect(booked).toBeVisible({ timeout: 10_000 });
+  await expect(
+    reservations.locator("p", { hasText: "Booking reference" }),
+  ).toBeVisible();
 });
 
 test("if the reply is lost after the booking landed, the page shows the confirmation from one press", async ({

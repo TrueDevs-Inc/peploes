@@ -1,7 +1,7 @@
 // biome-ignore-all lint/style/useNamingConvention: ResDiary's API uses PascalCase field names.
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { addDays, dublinToday } from "./booking-fixtures";
-import { bookingCalendar, chooseDate } from "./booking-page";
+import { bookingCalendar, chooseDate, chooseGuests } from "./booking-page";
 
 const DAY_LABEL = /^[A-Z][a-z]+day, \d{1,2} [A-Z][a-z]+ \d{4}$/;
 
@@ -59,6 +59,11 @@ async function resDiary(
     },
     ...(body && { body: JSON.stringify(body) }),
   });
+  if (!reply.ok) {
+    throw new Error(
+      `Sandbox ${method} ${path.split("?")[0]} returned HTTP ${reply.status}`,
+    );
+  }
   const text = await reply.text();
   return text ? JSON.parse(text) : null;
 }
@@ -97,11 +102,20 @@ async function cancelSandboxBooking(reference: string, email: string) {
   )) as { Id: number }[];
   const [reason] = reasons;
   if (!reason) throw new Error("The sandbox has no cancellation reason.");
-  await resDiary(
-    "POST",
-    `Booking/${encodeURIComponent(reference)}/Cancel?${new URLSearchParams({ cancellationReasonId: String(reason.Id) })}`,
-  );
-  return cleanupStatus(reference, email);
+  let status = "";
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    await resDiary(
+      "POST",
+      `Booking/${encodeURIComponent(reference)}/Cancel?${new URLSearchParams({ cancellationReasonId: String(reason.Id) })}`,
+    );
+    for (const delay of [500, 1500]) {
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      status = await cleanupStatus(reference, email);
+      if (status === "Cancelled" || status === "TableHoldExpired")
+        return status;
+    }
+  }
+  return status;
 }
 
 async function cleanupStatus(reference: string, email: string) {
@@ -410,15 +424,22 @@ test("Continue holds the table on ResDiary, moves it, keeps it on reload and let
   expect(await stored()).toBeNull();
 });
 
-const TEST_EMAIL = "talha@truedevs.tech";
+const TEST_EMAIL =
+  process.env.BOOKING_SANDBOX_TEST_EMAIL ?? "booking-test@example.com";
 
-async function holdTime(page: Page, date: string, time: string) {
+async function holdTime(page: Page, date: string, time: string, partySize = 2) {
   await page.goto("/book-a-table");
   const reservations = page.getByRole("region", { name: "Table reservations" });
+  await chooseGuests(reservations, partySize);
   await chooseDate(reservations, date);
   await reservations
     .getByRole("button", { name: "Find a Table", exact: true })
     .click();
+  await expect(
+    reservations
+      .getByRole("group", { name: "Available times", exact: true })
+      .getByRole("button", { name: clockLabel(time), exact: true }),
+  ).toBeVisible({ timeout: 20_000 });
   await reservations
     .getByRole("group", { name: "Available times", exact: true })
     .getByRole("button", { name: clockLabel(time), exact: true })
@@ -622,7 +643,7 @@ test("a deposit is paid with Stripe on ResDiary's key and ResDiary confirms the 
           exact: true,
         },
       ),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 20_000 });
     await expect(
       reservations.getByRole("button", { name: `Pay ${amount} and Reserve` }),
     ).toBeEnabled({ timeout: 20_000 });
@@ -674,6 +695,103 @@ test("a deposit is paid with Stripe on ResDiary's key and ResDiary confirms the 
     await cleanUp(held);
   }
 });
+
+for (const scenario of ["standard", "declined", "3ds"] as const) {
+  test(`a ${scenario} card guarantee saves a card without a deposit and ResDiary confirms`, async ({
+    page,
+  }) => {
+    test.setTimeout(240_000);
+    const partySize = 7;
+    const tomorrow = addDays(dublinToday(), 1);
+    const [date] = [
+      ...(await sandboxOpenDates(tomorrow, addDays(tomorrow, 13), partySize)),
+    ].sort();
+    if (!date) throw new Error("No sandbox date has a table for seven guests.");
+    const slot = (await sandboxTimes(date, partySize)).find(
+      (candidate) => candidate.fee === 0 && !candidate.required,
+    );
+    if (!slot) throw new Error("No no-deposit sandbox time for seven guests.");
+    const reservations = await holdTime(page, date, slot.time, partySize);
+    const held = await heldReference(page);
+    const paymentConfirmations: string[] = [];
+    page.on("request", (request) => {
+      if (
+        request.method() === "POST" &&
+        /api\.stripe\.com\/v1\/payment_intents\/[^/]+\/confirm/.test(
+          request.url(),
+        )
+      ) {
+        paymentConfirmations.push(request.url());
+      }
+    });
+    try {
+      await fillDetails(reservations, `Guarantee ${scenario} Test`);
+      const intentReply = page.waitForResponse(
+        (response) =>
+          /api\.stripe\.com\/v1\/setup_intents\/seti_[^/?]+\?/.test(
+            response.url(),
+          ) && response.request().method() === "GET",
+      );
+      await reservations
+        .getByRole("button", { name: "Confirm Reservation", exact: true })
+        .click();
+      const setupResponse = await intentReply;
+      const setup: { livemode: boolean } = await setupResponse.json();
+      expect(setup.livemode).toBe(false);
+      expect(new URL(setupResponse.url()).searchParams.get("key")).toMatch(
+        /^pk_test_/,
+      );
+      const save = reservations.getByRole("button", {
+        name: "Save Card and Reserve",
+        exact: true,
+      });
+      await expect(save).toBeEnabled({ timeout: 30_000 });
+      await expect(
+        reservations.getByRole("button", { name: /^Pay / }),
+      ).toHaveCount(0);
+      if (scenario === "standard") {
+        await page.reload();
+        await expect(save).toBeEnabled({ timeout: 30_000 });
+      }
+      if (scenario === "declined") {
+        await enterCard(reservations, "4000 0000 0000 0002");
+        await save.click();
+        await expect(reservations.getByRole("alert")).toContainText(
+          /declined/i,
+          { timeout: 30_000 },
+        );
+        await expect(save).toBeEnabled();
+      }
+      await enterCard(
+        reservations,
+        scenario === "3ds" ? "4000 0027 6000 3184" : "4242 4242 4242 4242",
+      );
+      await save.click();
+      if (scenario === "3ds") await completeTestChallenge(page);
+      expect(await confirmedReference(reservations)).toBe(held);
+      const booking = await sandboxBooking(held, TEST_EMAIL);
+      expect(booking.BookingStatus).toBe("Booked");
+      expect(booking.DepositPaidAmount ?? 0).toBe(0);
+      expect(paymentConfirmations).toEqual([]);
+      const stripeAccount = await setupResponse
+        .request()
+        .headerValue("stripe-account");
+      const finalSetup = await page.request.get(setupResponse.url(), {
+        headers: stripeAccount ? { "stripe-account": stripeAccount } : {},
+      });
+      expect(finalSetup.ok()).toBe(true);
+      expect(await finalSetup.json()).toMatchObject({
+        status: "succeeded",
+        livemode: false,
+      });
+      await reservations.screenshot({
+        path: test.info().outputPath(`guarantee-${scenario}-confirmed.png`),
+      });
+    } finally {
+      await cleanUp(held);
+    }
+  });
+}
 
 async function depositStep(page: Page, surname: string) {
   const tomorrow = addDays(dublinToday(), 1);
@@ -745,6 +863,9 @@ async function confirmedReference(reservations: Locator) {
       exact: true,
     }),
   ).toBeVisible({ timeout: 90_000 });
+  await expect(
+    reservations.locator("p", { hasText: "Booking reference" }),
+  ).toBeVisible();
   return (
     (await reservations
       .locator("p", { hasText: "Booking reference" })

@@ -601,7 +601,7 @@ export type TUnsupportedSetting =
 export interface IBookingServiceDeps {
   provider?: TBookingProvider;
   holdSecret?: string | null;
-  liveSite?: boolean;
+  allowHoldCancellation?: boolean;
 }
 
 export type TBookingErrorCode =
@@ -648,6 +648,7 @@ export interface IBookingVisit {
 }
 
 export interface IFindTableData {
+  allowHoldCancellation: boolean;
   partySize: { min: number; max: number; default: number };
   calendar: {
     today: string;
@@ -701,7 +702,6 @@ export interface ICurrentOffer {
 export interface IBookingGuestContext {
   provider: TBookingProvider;
   secret: string;
-  liveSite: boolean;
 }
 
 export interface IBookingTime {
@@ -1824,6 +1824,7 @@ export interface IStripeReady {
 }
 
 export interface ITableBookingChangeProps {
+  allowHoldCancellation: boolean;
   busy: boolean;
   payment: TPaymentStep | null;
   onEdit: () => void;
@@ -1956,4 +1957,33 @@ export interface ISeasonalEventProps {
 }
 export interface ISeasonalRouteProps {
   params: Promise<{ slug: string }>;
+}
+
+export type TBookingAnalyticsEvent =
+  | GA4Event.BookingSearch
+  | GA4Event.BookingAvailability
+  | GA4Event.BookingHold
+  | GA4Event.BookingDetails
+  | GA4Event.BookingPayment
+  | GA4Event.BookingConfirmed
+  | GA4Event.BookingRecovery;
+export type TBookingAnalyticsResult =
+  | "submitted"
+  | "available"
+  | "empty"
+  | "succeeded"
+  | "failed"
+  | "unknown"
+  | "started"
+  | "accepted"
+  | "declined"
+  | "load_failed"
+  | "confirmed"
+  | "pending"
+  | "expired";
+export interface IBookingAnalyticsContext {
+  attemptId?: string;
+  reference?: string;
+  errorCode?: ErrorCode | "NETWORK" | "STRIPE" | "STORAGE";
+  paymentKind?: "deposit" | "guarantee" | "none";
 }

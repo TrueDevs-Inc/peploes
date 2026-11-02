@@ -166,12 +166,8 @@ the page to them.
 
 ## Paying a deposit or saving a card
 
-- On the live site, the server keeps the Setup-based Stripe check and also
-  requires the publishable key in each `payment` or `card` reply to start with
-  `pk_live_`, even when Setup has no Stripe settings. Otherwise it logs
-  `formUnsupported` with `stripeTestKey` and returns the usual unavailable
-  error. The hold is not cancelled; its cookie is marked `detailsSent`, so a
-  later change of time cannot move it.
+- Payment mode follows the connected ResDiary account and the Stripe keys it
+  returns. The app does not reject test keys based on deployment labels.
 - The Stripe step uses only what ResDiary sends: `loadStripe(publishableKey,
   { stripeAccount: accountId })` and the `clientSecret`. Stripe.js is imported
   from `@stripe/stripe-js/pure`, so it loads only at this step, not for every
@@ -199,7 +195,9 @@ the page to them.
 - If Stripe's script fails to load (a dropped connection or a blocking browser
   extension), the step says "We couldn't load the secure payment form. Check
   your connection and try again, or call us on …" and shows a "Try Again"
-  button, which loads Stripe again. The same happens when Stripe's script
+  button, which reloads the page and restores the saved payment step before
+  loading Stripe again. A component remount cannot reset Stripe's cached pending
+  script promise. The same happens when Stripe's script
   loads but its card form doesn't (Stripe's `loaderror`). The message
   replaces "Loading secure payment…" and the space kept for the card form, so
   the step shows one message under its heading.
@@ -353,6 +351,22 @@ without asking ResDiary, even if a client keeps sending it.
 
 ## Releasing a hold
 
+Automatic release is disabled by default (`BOOKING_ALLOW_HOLD_CANCELLATION=false`).
+The generic cancellation endpoint cannot restrict its write to a still-pending
+hold: another tab could pay between a status read and cancellation. While it is
+disabled, the payment step disables Edit and gives the restaurant's phone number.
+Date and time changes before sending guest details still move the existing hold.
+The server may read and return a confirmed or already-ended hold, but never sends
+cancellation for a pending one.
+
+Enable this flag only after ResDiary supplies and certifies a cancellation
+operation or equivalent coordination that cannot cancel a concurrently confirmed
+or paid booking. A pre-cancellation status read alone is not that guarantee.
+The fake browser harness opts in explicitly to exercise the retained cancellation
+flow. Keep real staging and production disabled until that vendor condition is met.
+
+The following release flow applies only when automatic release is enabled.
+
 The `releaseHold` server action cancels the page's own hold on ResDiary, so a
 guest who changes their mind frees the table at once instead of blocking it
 until it lapses. It takes the page's `holdReference` and `holdRevision` and
@@ -457,9 +471,76 @@ Not yet verified:
   doesn't mention the deposit.
 - **A confirmation that takes longer than 60 seconds.** The slowest seen was
   about 5 seconds.
-- **A card guarantee's status check.** The page asks Stripe for the
-  SetupIntent's status the same way, but the sandbox has no card-guarantee
-  time to test it on.
+- **The live card-guarantee policy and gateway.** The test-account guarantee
+  journey is now verified below. The live diary's equivalent configuration and
+  approved live-account acceptance remain separate release checks.
+
+### Hosted payment verification on 2 November 2026
+
+The reviewed preview was updated to deployment
+`dpl_6oAt3T8i8BbSt3d9W2uWbWq8MT4r`, release
+`peploes-staging-preview-2026-11-02-227359b-r4`, at
+`https://peploes-fork.vercel.app/`. Its production application files
+include the reload-based Stripe retry and visible desktop booking reference.
+The latter removes an existing desktop-only hide rule; the reference remains
+the one ResDiary confirmed. Changes remain uncommitted, based on
+PR #75 head `227359bc428dc5860bbf9c1996732a1b77ec7748`.
+
+The previous preview passed actual sandbox deposit payment, 3-D Secure,
+decline/retry, reload before payment, reload after payment and a lost Stripe
+reply. The initial six-case run had five passes and one provider-details
+uncertainty before reaching the card form. The app offered its documented safe
+Confirm retry. That declined-card case passed unchanged on a focused rerun.
+Its abandoned synthetic hold was cancelled and verified as Cancelled.
+
+The test diary `3899`, labelled Peploes Test, had a card requirement for parties
+larger than eight, outside the website's seven-guest limit. Its existing Credit
+Card rule `1928` was changed to parties larger than six for staging acceptance.
+All other card-rule switches were preserved. Stripe's Use Live Stripe Settings
+remained unchecked. Read-only API checks confirm two guests do not require a
+card and seven do. No live diary setting, production credential or website
+party-size limit was changed. To undo this test setup, edit Payment & Card
+Settings, Credit Card, and restore its threshold from six to eight. Keep six
+through Gina's seven-person guarantee test; do not copy it as a live policy.
+
+On the updated preview, all three real guarantee scenarios passed across runs:
+save/reload/confirm, declined card followed by another card, and 3-D Secure.
+Each asserts a test-mode SetupIntent, no deposit-payment confirmation request,
+SetupIntent `succeeded`, ResDiary Booked status and zero deposit paid. Each
+known test reference was cancelled and verified as Cancelled. The initial
+standard run encountered a five-second create-hold timeout; another initial
+retry click did not submit a second request. Both focused reruns passed without
+changing production code or increasing provider deadlines. These failures are
+retained in the verification record; passing reruns do not prove provider
+availability or a zero-failure rate.
+
+After another times-search timeout on the Washington deployment, the next
+preview was placed in Dublin with Vercel's `--regions dub1` option. Request
+headers distinguish the connecting edge from execution: `bom1::iad1` before,
+`bom1::dub1` afterwards. The log's Mumbai label alone was not evidence that
+functions executed there. Three subsequent availability reads returned 200
+in 772–866 ms. Dublin deployment `dpl_BGqZTQKLwxzb3hvZ7MNaL7vQzLy4`
+passed all four provider-backed scenarios together, without retries: deposit,
+standard guarantee with reload, declined guarantee with retry, and 3-D Secure
+guarantee. The final deployment above then passed deposit and standard guarantee
+again, including a visible confirmation reference. Known test references were
+cancelled and verified as Cancelled. This small sample supports using Dublin for
+staging; it does not establish a general latency guarantee.
+
+The final source passes `bun run ci`: 1,013 unit tests, lint, application/Studio
+types and builds, and both high-severity audits. A visibility regression failed
+before removing the desktop hide rule. The stalled-script recovery regression
+also failed before the reload fix. Hosted tests with simulated Stripe faults
+passed script, intent-read and element stalls; their assertions retain staging's
+disabled cancellation policy. No dependency or booking service was added.
+
+For Gina, choose 3 November 2026, two guests at 7:15 pm for the €20 deposit,
+or seven guests at a morning or lunch time with no deposit for the card
+guarantee. Availability can change. Two guests at a no-deposit time exercise
+the reservation without a card. Use Stripe's documented test Visa
+`4242 4242 4242 4242`, future expiry such as `12/34`, and CVC `123` only while
+the test account and test gateway are configured. No real card is needed.
+Actual email delivery and live ResDiary/gateway mapping remain release checks.
 
 ### Resolving an unknown outcome
 

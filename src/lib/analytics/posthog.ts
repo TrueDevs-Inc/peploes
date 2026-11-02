@@ -34,7 +34,9 @@ const GA4_NAMES_BY_POSTHOG_NAME = new Map<string, string>(
   ]),
 );
 
-const history = createEventHistory();
+const history = createEventHistory(
+  `peploes:posthog:${env.NEXT_PUBLIC_POSTHOG_KEY}:conversions`,
+);
 let sdk: PostHog | null = null;
 let loading = false;
 let withdrawal: AbortController | null = null;
@@ -121,19 +123,14 @@ function toCaptureProperties(
 }
 
 function dispatch({ name, params, dedupeKey }: IPendingAnalyticsEvent): void {
-  if (!sdk || (dedupeKey && history.isDuplicate(dedupeKey))) return;
-  try {
-    // Beacons are off, so a batched event is lost if the page unloads first
-    // (a reload or a same-tab external link). Send each one as a keepalive fetch.
-    const captured = sdk.capture(
-      toPostHogName(name),
-      toCaptureProperties(name, params),
-      { send_instantly: true },
+  history.dispatch(dedupeKey, () => {
+    if (!sdk || !isEnabled()) return false;
+    return Boolean(
+      sdk.capture(toPostHogName(name), toCaptureProperties(name, params), {
+        send_instantly: true,
+      }),
     );
-    if (captured && dedupeKey) history.record(dedupeKey);
-  } catch {
-    // Analytics never throws into the page.
-  }
+  });
 }
 
 function flush(): void {

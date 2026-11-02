@@ -21,7 +21,9 @@ export const env = createEnv({
       .default("development"),
     PORT: z.coerce.number().default(3000),
 
-    SENTRY_DSN: z.string().url().optional(),
+    SENTRY_RELEASE: z.string().min(1).max(200).optional(),
+    SENTRY_ENVIRONMENT: z.string().min(1).max(64).optional(),
+    SENTRY_DSN: z.url().optional(),
     SENTRY_AUTH_TOKEN: z.string().optional(),
     SENTRY_ORG: z.string().optional(),
     SENTRY_PROJECT: z.string().optional(),
@@ -40,13 +42,16 @@ export const env = createEnv({
     RESDIARY_USERNAME: z.string().min(1).optional(),
     RESDIARY_PASSWORD: z.string().min(1).optional(),
     BOOKING_HOLD_SECRET: z.string().min(32).optional(),
+    BOOKING_ALLOW_HOLD_CANCELLATION: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((value) => value === "true"),
     UPSTASH_REDIS_REST_URL: z
-      .string()
+
       .url()
       .refine((value) => value.startsWith("https://"), "Must use https")
       .optional(),
     UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
-    VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
   },
 
   clientPrefix: "NEXT_PUBLIC_",
@@ -61,13 +66,13 @@ export const env = createEnv({
     NEXT_PUBLIC_API_BASE_URL: z.string().url().default("http://localhost:3000"),
     NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
     NEXT_PUBLIC_SENTRY_ENVIRONMENT: z
-      .enum(["production", "preview", "development"])
+      .string()
+      .min(1)
+      .max(64)
       .default("development"),
+    NEXT_PUBLIC_SENTRY_RELEASE: z.string().optional(),
     NEXT_PUBLIC_GA_MEASUREMENT_ID: z.string().optional(),
     NEXT_PUBLIC_GTM_ID: z.string().optional(),
-    NEXT_PUBLIC_VERCEL_ENV: z
-      .enum(["production", "preview", "development"])
-      .optional(),
     NEXT_PUBLIC_GA_ENDPOINT: z
       .string()
       .url()
@@ -85,10 +90,10 @@ export const env = createEnv({
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
+    NEXT_PUBLIC_SENTRY_RELEASE: process.env.NEXT_PUBLIC_SENTRY_RELEASE,
     NEXT_PUBLIC_SENTRY_ENVIRONMENT: process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT,
     NEXT_PUBLIC_GA_MEASUREMENT_ID: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID,
     NEXT_PUBLIC_GTM_ID: process.env.NEXT_PUBLIC_GTM_ID,
-    NEXT_PUBLIC_VERCEL_ENV: process.env.NEXT_PUBLIC_VERCEL_ENV,
     NEXT_PUBLIC_GA_ENDPOINT: process.env.NEXT_PUBLIC_GA_ENDPOINT,
     NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN:
       process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN,
@@ -101,18 +106,5 @@ export const env = createEnv({
 });
 
 export function isProduction(): boolean {
-  const nodeEnv = env.NODE_ENV ?? process.env.NODE_ENV ?? "development";
-  return nodeEnv === "production";
-}
-
-export function isLiveSite(): boolean {
-  return env.VERCEL_ENV ? env.VERCEL_ENV === "production" : isProduction();
-}
-
-// Browser-safe twin of isLiveSite. It fails closed: a production build with no
-// explicit signal (a preview, `next start`) must not collect, so collection
-// needs NEXT_PUBLIC_VERCEL_ENV=production. next.config.ts fills it from
-// Vercel's build-time VERCEL_ENV unless the variable is set explicitly.
-export function isLiveSiteClient(): boolean {
-  return env.NEXT_PUBLIC_VERCEL_ENV === "production";
+  return process.env.NODE_ENV === "production";
 }

@@ -134,6 +134,7 @@ function ChangeDialog({
 }
 
 export function TableBookingChange({
+  allowHoldCancellation,
   busy,
   payment,
   onEdit,
@@ -167,6 +168,7 @@ export function TableBookingChange({
   useEffect(() => {
     const saved = getSessionStorage<ISavedRelease>(RELEASE_KEY);
     if (
+      allowHoldCancellation &&
       payment &&
       saved?.reference === payment.summary.reference &&
       saved.revision === payment.summary.revision
@@ -177,7 +179,7 @@ export function TableBookingChange({
       });
       setAsking(true);
     }
-  }, [payment]);
+  }, [payment, allowHoldCancellation]);
 
   useEffect(() => {
     if (!uncertain) return;
@@ -193,7 +195,7 @@ export function TableBookingChange({
   }, [check, uncertain, settleRelease]);
 
   function releaseAndChange() {
-    if (!payment) return;
+    if (!payment || !allowHoldCancellation) return;
     const { summary } = payment;
     const startedAt = Date.now();
     setStillHeld(false);
@@ -220,14 +222,17 @@ export function TableBookingChange({
         type="button"
         className={styles.editAction}
         aria-label="Edit date & guests"
-        disabled={busy}
+        disabled={busy || (payment !== null && !allowHoldCancellation)}
+        aria-describedby={
+          payment && !allowHoldCancellation ? "booking-change-help" : undefined
+        }
         onClick={payment ? () => setAsking(true) : onEdit}
       >
         <Pencil aria-hidden="true" />
         <span className={styles.desktopOnly}>Edit date &amp; guests</span>
         <span className={styles.mobileOnly}>Edit</span>
       </button>
-      {asking && payment && (
+      {asking && payment && allowHoldCancellation && (
         <ChangeDialog
           summary={payment.summary}
           releasing={releaser.releasing}

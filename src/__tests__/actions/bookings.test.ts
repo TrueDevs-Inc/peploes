@@ -295,8 +295,9 @@ describe("the holdTable action", function holdTableActionTests() {
 });
 
 describe("the submitGuestDetails action", function guestDetailsActionTests() {
-  async function held() {
+  async function held(allowCancellation = true) {
     const edgesSetUp = setUp();
+    vi.stubEnv("BOOKING_ALLOW_HOLD_CANCELLATION", String(allowCancellation));
     vi.resetModules();
     const actions = await import("@/actions/bookings");
     await actions.holdTable(DINNER);
@@ -469,13 +470,27 @@ describe("two tabs", function twoTabTests() {
 });
 
 describe("the releaseHold action", function releaseHoldActionTests() {
-  async function held() {
+  async function held(allowCancellation = true) {
     const edgesSetUp = setUp();
+    vi.stubEnv("BOOKING_ALLOW_HOLD_CANCELLATION", String(allowCancellation));
     vi.resetModules();
     const actions = await import("@/actions/bookings");
     await actions.holdTable(DINNER);
     return { ...edgesSetUp, actions };
   }
+
+  it("keeps the hold cookie and cancels nothing when automatic release is disabled", async function releaseDisabled() {
+    const { provider, cookies, actions } = await held(false);
+
+    const response = await actions.releaseHold(HOLD_QUERY);
+
+    expect(response).toMatchObject({
+      ok: false,
+      error: { code: ErrorCode.Forbidden },
+    });
+    expect(provider.cancelHold).not.toHaveBeenCalled();
+    expect(cookies.has(COOKIE)).toBe(true);
+  });
 
   it("cancels the hold on ResDiary and forgets its cookie", async function releases() {
     const { provider, cookies, actions } = await held();

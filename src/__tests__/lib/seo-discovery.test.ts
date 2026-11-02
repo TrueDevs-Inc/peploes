@@ -11,7 +11,7 @@ import {
 
 describe("public discovery", function publicDiscoveryTests() {
   it("separates search, training, and mixed-use crawlers", function crawlerPolicyTest() {
-    expect(buildRobots("https://example.com/", true)).toEqual({
+    expect(buildRobots("https://example.com/")).toEqual({
       rules: [
         {
           userAgent: ["OAI-SearchBot", "PerplexityBot", "Claude-SearchBot"],
@@ -31,15 +31,6 @@ describe("public discovery", function publicDiscoveryTests() {
         },
       ],
       sitemap: "https://example.com/sitemap.xml",
-    });
-  });
-
-  it("allows crawling outside the live site because noindex is the control", function nonLivePolicyTest() {
-    expect(buildRobots("https://example.com", false)).toEqual({
-      rules: {
-        userAgent: "*",
-        allow: "/",
-      },
     });
   });
 

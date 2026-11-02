@@ -4,8 +4,10 @@ import { err, ok } from "neverthrow";
 
 import { holdReferenceSchema } from "@/lib/booking-schema";
 import { readHold } from "@/lib/booking-token";
+import { RESTAURANT_CONTACT } from "@/lib/constants";
 import { BOOKING_BUDGET_MS, BOOKING_LOG } from "@/lib/constants/booking";
-import { LogContext } from "@/lib/enums";
+import { ErrorCode, LogContext } from "@/lib/enums";
+import { createError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 import type {
   IResDiaryCancelReason,
@@ -33,6 +35,7 @@ export async function releaseHold(
   secret: string,
   query: unknown,
   holdToken: string | undefined,
+  allowHoldCancellation: boolean,
 ): TBookingResult<TReleasedHold> {
   const hold = holdToken ? readHold(holdToken, secret) : null;
   if (!hold) {
@@ -63,15 +66,22 @@ export async function releaseHold(
   if (state !== "pending") {
     return err(unavailable());
   }
+  if (!allowHoldCancellation) {
+    return err(
+      createError(
+        ErrorCode.Forbidden,
+        `To change this table, please call us on ${RESTAURANT_CONTACT.phoneLabel}.`,
+      ),
+    );
+  }
 
   const reasons = await provider.getCancellationReasons(options);
-  const reason = reasons.isOk() ? releaseReason(reasons.value) : null;
+  if (reasons.isErr()) return err(unavailable());
+  const reason = releaseReason(reasons.value);
   if (!reason) {
-    if (reasons.isOk()) {
-      logger.error(LogContext.Api, BOOKING_LOG.noCancelReason, {
-        reference: hold.reference,
-      });
-    }
+    logger.error(LogContext.Api, BOOKING_LOG.noCancelReason, {
+      reference: hold.reference,
+    });
     return err(unavailable());
   }
   const cancelled = await provider.cancelHold(

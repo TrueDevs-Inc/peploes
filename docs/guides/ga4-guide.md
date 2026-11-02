@@ -1,156 +1,135 @@
-# GA4 and analytics
+# GA4 and booking analytics
 
-The analytics modules provide event dispatch, UTM persistence, duplicate
-suppression, server-side Measurement Protocol calls, and Web Vitals events.
-The root layout mounts `Analytics`, which owns page views, loads GA4 and
-PostHog after consent and reacts to consent changes. The Web Vitals hook is not
-mounted.
+The root `Analytics` component starts configured GA4 and PostHog and owns one
+page view per navigation. Both providers receive the same allowlisted events.
 
-## Files
+## Collection policy
 
-- `src/lib/analytics/client.ts` sanitises events and routes them to each provider.
-- `src/lib/analytics/server.ts` sends Measurement Protocol events.
-- `src/lib/analytics/utm.ts` stores safe UTM parameters in `sessionStorage`.
-- `src/lib/analytics/sanitize.ts` applies the event and property allowlist.
-- `src/lib/analytics/permission.ts` combines consent with the live-site check.
-- `src/lib/analytics/deduplication.ts` suppresses a repeated dedupe key.
-- `src/lib/analytics/lifecycle.ts` is the single page_view owner and aligns
-  both providers with consent.
-- `src/lib/analytics/ga4.ts` queues and dispatches to `window.gtag`, loads
-  `gtag.js` (Consent Mode defaults denied, `send_page_view: false`), rechecks consent after load and clears `_ga*`
-  cookies on withdrawal.
-- `src/lib/analytics/posthog.ts` imports `posthog-js` after consent, rechecks
-  consent after the import, scrubs events in `before_send`, and opts out,
-  resets and clears `ph_*` storage on withdrawal. posthog-js cannot discard its
-  batch or retry queues, so each instance gets an abort signal through
-  `fetch_options` (beacons disabled) that withdrawal fires; the next grant
-  starts a new instance. `before_send` is an allowlist, not a filter.
-- `src/components/app/atoms/analytics.tsx` mounts the lifecycle;
-  `tracked-link.tsx` reports booking, contact and directions clicks.
-- `src/lib/analytics/web-vitals.ts` maps Web Vitals to GA4 events.
-- `src/lib/analytics/debug.ts` prints development diagnostics.
-- `src/lib/cookie-consent.ts` decides whether browser tracking is allowed.
-- `src/components/app/atoms/track-event.tsx` tracks an event after mount.
+For Release v1.0 Salman explicitly requires required and optional analytics
+regardless of the consent placeholder. Cookie Preferences saves selections but
+does not enable, disable or reset analytics. Public cookie and policy wording
+was restored to the branch baseline; changes to client-facing policy copy need
+separate approval. Published CMS policy text still needs client verification
+under #81. Do not reintroduce preference gating in an
+individual event function.
 
-## Configuration
+Browser and server collection require `NODE_ENV=production` and configured
+provider credentials. There is no separate enable flag. Deployment labels do
+not select accounts or control collection. `next dev` does not report;
+optimized builds in both Vercel projects do.
+No configured provider means no provider traffic. Keep separate staging and
+production GA4 properties and PostHog projects. Public settings are compiled
+into the browser bundle and require a rebuild.
 
 ```dotenv
 NEXT_PUBLIC_GA_MEASUREMENT_ID=
-NEXT_PUBLIC_GTM_ID=
-NEXT_PUBLIC_VERCEL_ENV=
 NEXT_PUBLIC_POSTHOG_KEY=
-NEXT_PUBLIC_POSTHOG_HOST=
-NEXT_PUBLIC_GA_ENDPOINT=https://www.google-analytics.com/mp/collect
-GA_API_SECRET=
+NEXT_PUBLIC_POSTHOG_HOST=https://eu.i.posthog.com
 ```
 
-Client tracking needs a measurement ID, analytics consent and a live-site
-deployment: `NEXT_PUBLIC_VERCEL_ENV` must equal `production`. Unset or any
-other value means no collection, even in a production build, so previews and
-local `next start` stay off. `next.config.ts` inlines Vercel's build-time
-`VERCEL_ENV` into it, so no system-variable exposure setting is needed; set it
-explicitly for QA builds or another host. Events wait in a bounded in-memory queue until `gtag` exists; the
-GA4 loader flushes the queue once loaded. Server
-tracking also needs `GA_API_SECRET`. Keep the secret on the server.
+Use the approved project's actual region host. Use the approved staging property from the ignored environment settings; do not
+substitute the production measurement ID.
+`GA_API_SECRET` is only for the separate server Measurement Protocol helper;
+the browser funnel does not need it.
 
-PostHog starts only when both its key and region host are set. The CSP permits
-Google and PostHog browser origins only for configured providers; PostHog uses
-`https://*.posthog.com` (its recommendation) or the exact origin of a non-PostHog
-host. GA4 needs Enhanced Measurement "Page changes based on browser history
-events" turned off in the property; code cannot verify that setting.
+## Event ownership
 
-## Consent comes first
+`src/lib/analytics/client.ts` sanitises and dispatches. `lifecycle.ts` owns page
+views. `ga4.ts` loads gtag.js, grants analytics storage and keeps advertising
+storage denied. `posthog.ts` owns its SDK. `utm.ts` stores safe campaign values.
+`constants.ts` owns the event/property catalog and `sanitize.ts` rejects unknown
+names, unsafe identifiers and unapproved fields.
 
-`hasAnalyticsConsent()` reads the visitor's Analytics choice from the footer's
-Cookie Preferences modal. Missing, malformed or inaccessible browser storage
-denies tracking. Changing a switch saves that category immediately; Accept All
-and Reject non-essential save all categories and close the modal. No analytics
-or marketing provider scripts are loaded by the preferences UI.
-`subscribeToConsent()` reports every save in this tab, including failed ones,
-and `storage` events from other tabs. Withdrawal clears the pending queue,
-dedupe history and stored UTM values; denied events are dropped, never queued
-or replayed. A failed save that only sets the denial cookie is not visible to
-other tabs as an event, but each dispatch re-reads consent first.
-If saving fails, a necessary denial cookie blocks older permissions across
-reloads and tabs. A successful save clears it. If the browser blocks both
-storage mechanisms, only the current page can retain the failed withdrawal.
+| Event | Owner/result |
+| --- | --- |
+| `page_view` | Lifecycle; PostHog receives `$pageview` |
+| `booking_click` | Tracked links, closed placement |
+| `menu_view` | Menu selection, closed menu slug |
+| `contact_click` | Tracked contact links, closed placement/destination |
+| `directions_click` | Tracked directions links, closed placement |
+| `booking_search` | User submits Find a Table |
+| `booking_availability` | Current times request yields available, empty or failed |
+| `booking_hold` | Hold succeeds, fails, is uncertain or expires |
+| `booking_details` | Details submitted, accepted, failed or uncertain |
+| `booking_payment` | Stripe starts, accepts, declines, is uncertain or fails to load |
+| `booking_recovery` | Status recovery starts and reaches confirmed, pending, failed or unknown |
+| `booking_confirmed` | The page receives a ResDiary-confirmed reservation |
 
-Consent requirements depend on the product, region, and data collected. Record
-that policy outside the analytics helper instead of hardcoding legal assumptions
-into event functions.
+Payment acceptance is not a reservation conversion. Neither a redirect status
+nor a successful Stripe reply can produce `booking_confirmed` by itself.
 
-## Client events
+`src/lib/analytics/booking.ts` assigns a random UUID per search and associates
+holds locally with that attempt. It sends only `attempt_id`, closed `result`
+and `error_code` values, plus `payment_kind` on payment events. Booking
+references stay in local correlation storage and never enter provider payloads.
+A bounded local hold map supports reload and bank-return recovery; each provider records confirmation deduplication only after accepting the event.
+Browser Web Locks serialise that acceptance across tabs where supported.
+In-memory correlation keeps collection working when storage is blocked.
 
-`sanitizeAnalyticsEvent()` drops any event or property that is not in
-`ANALYTICS_EVENT_PARAMS`. Identifiers (placement, menu, destination) must come
-from a closed list. Locations are origin plus path, referrers origin only, and
-UTM values must be short alphanumeric text with no email or phone-like content.
+Deduplication is best effort when storage or Web Locks are unavailable. Client
+analytics cannot prove delivery after a blocked network or closed browser.
+Operational reconciliation of uncertain outcomes remains #83. No additional
+server booking conversion is emitted, avoiding two conversion owners.
 
-| Event | PostHog name | Properties |
-| --- | --- | --- |
-| `page_view` | `$pageview` | `page_location`, `page_path`, `page_referrer` |
-| `booking_click` | same | `placement` |
-| `menu_view` | same | `menu` (a menu slug) |
-| `contact_click` | same | `placement`, `destination` (`phone` or `email`) |
-| `directions_click` | same | `placement` |
+## Payload restrictions
 
-Every other event also carries a path-only `page_location` taken when it is
-queued, because gtag.js would otherwise attach the raw browser URL. Never send
-`tel:`, `mailto:` or map URLs. No enquiry, subscription or booking
-completion event exists: the enquiry and newsletter controls are inert and the
-booking page is a design preview, so none of them may report success.
+Locations contain origin and path, referrers origin only. Never send raw guest
+fields, booking references, card data, API tokens, error messages or bank-return
+URLs. UTM values must pass the existing short campaign-value sanitizer. PostHog
+also scrubs SDK properties. Missing or malformed attempt IDs drop funnel events.
 
-`trackPageView` accepts a `dedupeKey` naming one navigation. Keys are recorded
-only after `gtag` accepts the event, and there is no time window, so quick
-revisits with new keys are all sent.
+Analytics must not delay or prevent a reservation. Missing providers, blocked
+scripts and inaccessible browser storage leave the booking journey usable.
 
-## Server events
+## Provider setup and verification
 
-Use server events when the server is the source of truth, such as a confirmed
-purchase. Pass a durable client ID when attribution across client and server
-matters. The helper returns `false` when it is unconfigured or GA rejects the
-request.
+Disable GA4 Enhanced Measurement history-based page changes because the app owns
+page views. Review other automatic measurements so raw query strings and
+fragments do not bypass the application sanitizer. Configure event-scoped custom
+dimensions for `attempt_id`, `result`, `error_code` and `payment_kind` as needed;
+inspect individual attempts rather than using the high-cardinality attempt ID
+as a headline aggregate. Mark only `booking_confirmed` as the reservation key
+event. Build the main funnel from search, availability, hold, details and
+confirmation, then segment payment/recovery branches by their result.
 
-Do not send both client and server versions of the same conversion without a
-documented deduplication key.
+`bun run test:e2e:reporting` tests analytics, SEO, the booking funnel and Sentry
+in one production build with synthetic provider settings and intercepted transports.
+The real PostHog SDK is used;
+gtag.js is replaced by a recording stub. These prove application behavior, not
+receipt in a real property. Record observed PostHog events, GA4 DebugView,
+deployed CSP and actual account settings for the deployed candidate in #79.
 
-## Web Vitals
+Web Vitals are not mounted and their event names remain outside the allowlist.
+No enquiry or newsletter success event is emitted before those backends exist.
 
-`useWebVitals()` is not supported by the current event allowlist: its
-`web_vitals` events are not in `ANALYTICS_EVENT_PARAMS`, so
-`sanitizeAnalyticsEvent()` drops them. Do not mount it until the events are
-added to the allowlist with their properties.
+## Staging destinations recorded on 2026-11-02
 
-## Property settings
+The approved PostHog destination is [EU project 229786](https://eu.posthog.com/project/229786/home).
+A separate [Peploes staging GA4 property 561886658](https://analytics.google.com/analytics/web/#/a399443706p561886658/admin)
+was created under the existing development account. Its web stream 16251959830
+uses the known staging preview URL as metadata; update that URL if #82 selects a
+new deployment. Enhanced Measurement is off so the application owns measurement.
+`booking_confirmed` is registered as a key event, once per event, with no default
+monetary value. No reservation purchase or fabricated revenue is emitted.
 
-Turn off Enhanced Measurement "Page changes based on browser history events":
-the app sends every `page_view` itself and a second owner would double count.
-Also review the other Enhanced Measurement events (scrolls, outbound clicks,
-file downloads): gtag.js reads the browser URL for them, so a visit with a query
-string or fragment can reach GA on those events even though our own events are
-sanitised. Disable the ones you do not need. Code cannot verify property
-settings.
+The original checkout's supplied GA4 ID belongs to `samsu-td` and its Sentry DSN
+to `prs-td`. Those projects were left unchanged. Peploe's ignored `.env`
+contains the separate staging ingestion values. Its server GA API secret is
+blank because the browser funnel does not need it and the previous secret belongs
+to another stream. Never copy that old secret into this property's configuration.
 
-One page view per navigation, and no query string or fragment in production
-GA4 data, therefore depend on these property settings (history-based page
-changes off, other Enhanced Measurement events reviewed). The browser suite uses
-a `gtag.js` stub, so real gtag traffic is unverified.
-
-## Verification
-
-Run `bun run test:e2e:analytics` for browser delivery (see
-[PostHog guide](posthog-guide.md) for the shared harness). It builds with
-`NEXT_PUBLIC_VERCEL_ENV=production` and a synthetic `G-TEST000000`, replaces
-`gtag.js` with a stub that consumes `dataLayer` like the real script and sends
-`g/collect` hits, and records those hits. It covers no traffic or storage before
-a choice and after rejection, one `page_view` per navigation (history moves and
-revisits included), withdrawal before, during and after load, re-consent, reload,
-a second tab, blocked storage, a blocked script, query/hash/email stripping,
-interaction payloads and the booking preview never reporting a booking.
-
-That proves our calls and consent handling, not receipt. Still to do by hand:
-
-- GA4 DebugView with a real test property (live receipt is otherwise unverified).
-- The Enhanced Measurement settings above.
-- Use the Measurement Protocol validation endpoint while developing server payloads.
-- Confirm that no personal or secret value appears in network payloads.
+On the final uncommitted candidate based on `227359bc428dc5860bbf9c1996732a1b77ec7748`,
+a local production build ran with `VERCEL_ENV=preview` and real staging ingestion
+settings. ResDiary and Stripe were simulated; no restaurant reservation or charge
+was created. GA4 Realtime showed booking availability, hold, details, payment,
+recovery and one confirmed key event. The second synthetic attempt was
+`88496466-5fc1-43f3-b439-8238a03f8435`. PostHog ingestion returned HTTP 200.
+Event-scoped GA4 dimensions `result`, `error_code` and `payment_kind` are registered.
+This is local provider verification. The later hosted candidate
+`dpl_3CJfahiCdq8Ehwaq1vfaqWVYXGoC` also delivered the no-deposit reservation
+journey to this property. Realtime showed availability, details and
+`booking_confirmed`, including one confirmed key event. The matching PostHog
+receipt and provider cleanup are documented in the
+[hosted handoff](testing-guide.md#hosted-staging-handoff-on-2026-11-02).
+Payment and recovery receipts above used simulated local provider flows;
+hosted payment completion and production destinations remain release checks.

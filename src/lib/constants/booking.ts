@@ -14,6 +14,8 @@ export const BOOKING_BUDGET_MS = {
   guestResendMin: 3000,
   guestTotal: 15_000,
   release: 12_000,
+  stripeLoad: 15_000,
+  stripeCheck: 5000,
 } as const;
 
 export const BOOKING_LOST_REPLY_STATUSES: ReadonlySet<number> = new Set([
@@ -146,7 +148,6 @@ export const BOOKING_SKIP_REASONS = {
 export const BOOKING_UNSUPPORTED_SETTINGS = {
   membership: "membershipId",
   customField: "customField",
-  stripeTestKey: "stripeTestKey",
 } as const;
 
 export const BOOKING_HOLD_LIMITS = {

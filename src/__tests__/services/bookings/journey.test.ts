@@ -331,6 +331,7 @@ describe("a guest books a table", function journeyTests() {
     );
 
     expect(page).toEqual({
+      allowHoldCancellation: false,
       partySize: { min: 1, max: 7, default: 2 },
       calendar: {
         today: "2026-10-15",

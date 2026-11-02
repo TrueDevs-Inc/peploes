@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { Metadata } from "next";
-import { env, isLiveSite } from "@/lib/config";
+import { env } from "@/lib/config";
 import {
   DEFAULT_SEO,
   RESTAURANT_ADDRESS,
@@ -76,7 +76,7 @@ export function buildSeoMetadata(config: ISeoConfig): Metadata {
       ...(image ? { images: [image] } : {}),
     },
     robots: {
-      index: !noIndex && isLiveSite(),
+      index: !noIndex,
       follow: !noFollow,
     },
   };

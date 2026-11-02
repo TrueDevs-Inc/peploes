@@ -1,5 +1,5 @@
 import { GA4Event } from "@/lib/enums";
-import { env } from "@/lib/env";
+import { env, isProduction } from "@/lib/env";
 import type { IMeasurementEventPayload, IPurchaseParams } from "@/lib/types";
 
 const GA_MEASUREMENT_ID = env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
@@ -9,7 +9,7 @@ const GA_ENDPOINT =
 const DEFAULT_ENGAGEMENT_TIME_MS = 100;
 
 function isConfigured(): boolean {
-  return !!GA_MEASUREMENT_ID && !!GA_API_SECRET;
+  return isProduction() && !!GA_MEASUREMENT_ID && !!GA_API_SECRET;
 }
 
 function generateClientId(): string {

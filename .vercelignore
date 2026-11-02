@@ -1,0 +1,14 @@
+.env*
+.git
+.next
+node_modules
+studio/node_modules
+studio/dist
+studio/.sanity
+test-results
+sandbox-test-results
+playwright-report
+coverage
+*.tsbuildinfo
+docs/reports
+docs/api
