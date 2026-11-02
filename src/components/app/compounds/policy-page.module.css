@@ -433,6 +433,11 @@
     line-height: 38px;
   }
 
+  .policySection h2 {
+    font-size: 28px;
+    line-height: 34px;
+  }
+
   .helpContainer {
     grid-template-columns: 433px minmax(0, 1fr);
     gap: 40px;
@@ -464,7 +469,6 @@
   }
 
   .contactActions a {
-    padding-inline: 16px;
     min-height: 44px;
   }
 
