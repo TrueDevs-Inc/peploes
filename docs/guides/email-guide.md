@@ -31,14 +31,20 @@ approved From identity. Both paths require `EMAIL_FROM_ADDRESS`,
 The enquiry action requires `UPSTASH_REDIS_REST_URL`,
 `UPSTASH_REDIS_REST_TOKEN`, and `EMAIL_RATE_LIMIT_SECRET`. It fails closed when
 the limit cannot be checked. The current limit is three submissions per visitor
-per hour. The rate key is an HMAC of the visitor address; it is not logged.
+per hour. IPv6 temporary addresses within one /64 share the same quota, using
+the booking limiter's network normalization. The rate key is an HMAC and is not logged.
 
-Outside `VERCEL_ENV=production`, sending requires
-`EMAIL_STAGING_ALLOWLIST`, a comma-separated list of approved addresses. The
+`EMAIL_STAGING_ALLOWLIST` is a comma-separated list of approved addresses.
+When configured, it restricts sending even if Vercel labels the staging
+project's main deployment `production`. Outside `VERCEL_ENV=production`, an
+allowlist is required. Leave it unset only in the client's live deployment. The
 final send boundary checks To, CC, BCC, and Reply-To, and adds `[STAGING]` to
 the subject. Set the staging restaurant destination and test guest address to
 approved inboxes. Staging suppresses a guest Reply-To and uses the configured
 Reply-To instead. `NODE_ENV=production` alone never grants live sending.
+Missing delivery configuration, failed database claims, and unavailable or
+timed-out rate-limit checks emit sanitized Sentry errors. An exhausted visitor
+quota is an expected refusal and does not emit an error event.
 
 ## Delivery records and recovery
 
@@ -73,4 +79,5 @@ opaque delivery ID, and provider ID in the issue. Do not put private headers,
 guest messages, addresses, or credentials in tracker comments or diagnostics.
 
 `/email-preview` renders the production templates with synthetic data outside
-the live deployment. Gina signs off final copy and restaurant routing.
+the live deployment, including a Vercel production-labelled staging project
+with a configured allowlist. Gina signs off final copy and restaurant routing.

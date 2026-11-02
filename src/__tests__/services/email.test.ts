@@ -1,4 +1,4 @@
-import { ok, ResultAsync } from "neverthrow";
+import { err, ok, ResultAsync } from "neverthrow";
 import { describe, expect, it, vi } from "vitest";
 
 import type {
@@ -7,6 +7,9 @@ import type {
 } from "@/dal/email-deliveries";
 import { selectEmailProvider } from "@/lib/email-provider";
 import { renderEnquiryAdmin } from "@/lib/email-templates";
+import { ErrorCode } from "@/lib/enums";
+import { logToSentry } from "@/lib/error-handler";
+import { createError } from "@/lib/errors";
 import type {
   IEmailDelivery,
   IEmailMessage,
@@ -14,6 +17,8 @@ import type {
   TEmailProviderOutcome,
 } from "@/lib/types";
 import { createEmailDeliveryService } from "@/services/email";
+
+vi.mock("@/lib/error-handler", () => ({ logToSentry: vi.fn() }));
 
 const MESSAGE: IEmailMessage = {
   notificationId: "00000000-0000-4000-8000-000000000001",
@@ -25,7 +30,14 @@ const MESSAGE: IEmailMessage = {
   text: "Enquiry",
 };
 
-function fixture(flag: string | undefined = "true", live = true) {
+function fixture(
+  flag: string | undefined = "true",
+  live = true,
+  stagingAllowlist: string | undefined = live
+    ? undefined
+    : "restaurant@example.test,reply@example.test",
+  claimFails = false,
+) {
   const records = new Map<string, IEmailDelivery>();
   const smtp = vi.fn<
     (message: IEmailTransportMessage) => Promise<TEmailProviderOutcome>
@@ -34,6 +46,10 @@ function fixture(flag: string | undefined = "true", live = true) {
     (message: IEmailTransportMessage) => Promise<TEmailProviderOutcome>
   >(async () => ({ status: "accepted", providerId: "resend-1" }));
   const claim: typeof claimEmailDelivery = (input) => {
+    if (claimFails)
+      return ResultAsync.fromSafePromise(Promise.resolve()).andThen(() =>
+        err(createError(ErrorCode.DatabaseError, "private database detail")),
+      );
     const current = records.get(input.id);
     if (current) {
       if (
@@ -77,7 +93,7 @@ function fixture(flag: string | undefined = "true", live = true) {
     smtp,
     resend,
     providerFlag: flag,
-    stagingAllowlist: "restaurant@example.test,reply@example.test",
+    stagingAllowlist,
     live,
     identity: () =>
       ok({
@@ -103,6 +119,10 @@ describe("transactional email delivery", () => {
     expect(result.isErr()).toBe(true);
     expect(smtp).not.toHaveBeenCalled();
     expect(resend).not.toHaveBeenCalled();
+    expect(logToSentry).toHaveBeenCalledWith(
+      new Error("Email configuration invalid"),
+      expect.any(Object),
+    );
   });
 
   it.each([
@@ -156,6 +176,22 @@ describe("transactional email delivery", () => {
     expect(smtp).not.toHaveBeenCalled();
   });
 
+  it("reports a failed delivery claim without exposing database details or sending mail", async () => {
+    const { send, smtp, resend } = fixture("true", true, undefined, true);
+    expect((await send(MESSAGE)).isErr()).toBe(true);
+    expect(logToSentry).toHaveBeenCalledWith(
+      new Error("Email delivery claim failed"),
+      expect.objectContaining({
+        tags: expect.objectContaining({ template: "enquiry-admin" }),
+      }),
+    );
+    expect(JSON.stringify(vi.mocked(logToSentry).mock.calls)).not.toContain(
+      "private database detail",
+    );
+    expect(smtp).not.toHaveBeenCalled();
+    expect(resend).not.toHaveBeenCalled();
+  });
+
   it("returns an accepted result without replaying a retry", async () => {
     const { send, smtp, resend } = fixture();
     await send(MESSAGE);
@@ -195,6 +231,26 @@ describe("transactional email delivery", () => {
       expect(resend).not.toHaveBeenCalled();
     },
   );
+
+  it("enforces the configured allowlist on a Vercel production deployment", async () => {
+    const { send, smtp, resend } = fixture(
+      "true",
+      true,
+      "restaurant@example.test,reply@example.test",
+    );
+    expect(
+      (await send({ ...MESSAGE, to: ["unapproved@example.test"] })).isErr(),
+    ).toBe(true);
+    expect(smtp).not.toHaveBeenCalled();
+    expect(resend).not.toHaveBeenCalled();
+    expect(
+      (await send({ ...MESSAGE, replyTo: "guest@example.test" })).isOk(),
+    ).toBe(true);
+    expect(smtp.mock.calls[0]?.[0]).toMatchObject({
+      replyTo: "reply@example.test",
+      subject: "[STAGING] New enquiry",
+    });
+  });
 
   it("uses the approved Reply-To for staging", async () => {
     const { send, smtp } = fixture("true", false);

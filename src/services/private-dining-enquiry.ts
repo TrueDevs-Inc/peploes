@@ -1,5 +1,6 @@
 import "server-only";
 
+import { PRIVATE_DINING_FORM } from "@/lib/constants/private-dining";
 import { renderEnquiryAdmin, renderEnquiryGuest } from "@/lib/email-templates";
 import { allowEnquiry } from "@/lib/enquiry-rate-limit";
 import { privateDiningEnquirySchema } from "@/lib/enquiry-schema";
@@ -10,10 +11,7 @@ import { logger } from "@/lib/logger";
 import type { IEnquiryActionState } from "@/lib/types";
 import { sendEmail } from "@/services/email";
 
-const successMessage =
-  "Your enquiry has reached our team. They will be in touch.";
-const unknownMessage =
-  "We could not confirm delivery. Please contact our team before sending this again.";
+const configurationMissing = "Enquiry email configuration missing";
 
 export async function deliverPrivateDiningEnquiry(
   rawInput: unknown,
@@ -21,26 +19,29 @@ export async function deliverPrivateDiningEnquiry(
 ): Promise<IEnquiryActionState> {
   const parsed = privateDiningEnquirySchema.safeParse(rawInput);
   if (!parsed.success) {
-    return { status: "error", message: "Please check the form and try again." };
+    return { status: "error", message: PRIVATE_DINING_FORM.feedback.invalid };
   }
   if (parsed.data.website) {
-    return { status: "error", message: "We could not send your enquiry." };
+    return { status: "error", message: PRIVATE_DINING_FORM.feedback.blocked };
   }
   const restaurant = env.EMAIL_RESTAURANT_TO;
   const contact = env.EMAIL_REPLY_TO;
   if (!restaurant || !contact) {
-    logger.error(LogContext.Api, "Enquiry email configuration missing");
+    logger.error(LogContext.Api, configurationMissing);
+    logToSentry(new Error(configurationMissing), {
+      module: AppModule.Api,
+      stage: Stage.ServiceCall,
+      tags: { template: "enquiry-admin" },
+    });
     return {
       status: "error",
-      message:
-        "Online enquiries are unavailable. Please contact our team directly.",
+      message: PRIVATE_DINING_FORM.feedback.unavailable,
     };
   }
   if (!(await allowEnquiry(forwardedFor))) {
     return {
       status: "error",
-      message:
-        "We could not send your enquiry right now. Please contact our team directly.",
+      message: PRIVATE_DINING_FORM.feedback.limited,
     };
   }
   const enquiry = parsed.data;
@@ -57,15 +58,14 @@ export async function deliverPrivateDiningEnquiry(
       stage: Stage.ServiceCall,
       tags: { template: "enquiry-admin" },
     });
-    return { status: "unknown", message: unknownMessage };
+    return { status: "unknown", message: PRIVATE_DINING_FORM.feedback.unknown };
   }
   if (admin.isErr()) {
     return admin.error.code === ErrorCode.OutcomeUnknown
-      ? { status: "unknown", message: unknownMessage }
+      ? { status: "unknown", message: PRIVATE_DINING_FORM.feedback.unknown }
       : {
           status: "error",
-          message:
-            "We could not send your enquiry. Your details are still in the form; please try again or contact our team.",
+          message: PRIVATE_DINING_FORM.feedback.failed,
         };
   }
   try {
@@ -75,7 +75,7 @@ export async function deliverPrivateDiningEnquiry(
     if (guest.isOk()) {
       return {
         status: "success",
-        message: successMessage,
+        message: PRIVATE_DINING_FORM.feedback.success,
         guestAcknowledgement: "accepted",
       };
     }
@@ -97,7 +97,7 @@ export async function deliverPrivateDiningEnquiry(
   }
   return {
     status: "success",
-    message: successMessage,
+    message: PRIVATE_DINING_FORM.feedback.success,
     guestAcknowledgement: "failed",
   };
 }

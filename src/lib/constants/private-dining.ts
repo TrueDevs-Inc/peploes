@@ -139,8 +139,20 @@ export const PRIVATE_DINING_FORM = {
     afterPolicy: " for enquiries.",
   },
   submit: "Send Enquiry",
-  unavailable:
-    "Online enquiries are not available yet. Please call or email our team.",
+  pending: "Sending…",
+  feedback: {
+    success: "Your enquiry has reached our team. They will be in touch.",
+    unknown:
+      "We could not confirm delivery. Please contact our team before sending this again.",
+    invalid: "Please check the form and try again.",
+    blocked: "We could not send your enquiry.",
+    unavailable:
+      "Online enquiries are unavailable. Please contact our team directly.",
+    limited:
+      "We could not send your enquiry right now. Please contact our team directly.",
+    failed:
+      "We could not send your enquiry. Your details are still in the form; please try again or contact our team.",
+  },
   emailAction: "Email Reception",
 };
 

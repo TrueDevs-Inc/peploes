@@ -52,8 +52,7 @@ export function PrivateDiningEnquiryFields({
       } catch {
         setState({
           status: "unknown",
-          message:
-            "We could not confirm delivery. Please contact our team before sending this again.",
+          message: PRIVATE_DINING_FORM.feedback.unknown,
         });
       } finally {
         submittingRef.current = false;
@@ -196,7 +195,7 @@ export function PrivateDiningEnquiryFields({
         disabled={pending || !notificationId || state.status === "unknown"}
         className={styles.sendButton}
       >
-        {pending ? "Sending…" : PRIVATE_DINING_FORM.submit}
+        {pending ? PRIVATE_DINING_FORM.pending : PRIVATE_DINING_FORM.submit}
         <ArrowRight aria-hidden="true" className="size-4" />
       </Button>
       <p className={styles.enquiryFeedback} role="status" aria-live="polite">

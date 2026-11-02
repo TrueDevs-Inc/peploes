@@ -15,7 +15,8 @@ const syntheticEnquiry = {
 } as const;
 
 export default function EmailPreviewPage() {
-  if (env.VERCEL_ENV === "production") notFound();
+  if (env.VERCEL_ENV === "production" && !env.EMAIL_STAGING_ALLOWLIST)
+    notFound();
 
   const templates = [
     renderEnquiryAdmin(
