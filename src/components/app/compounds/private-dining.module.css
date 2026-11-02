@@ -456,6 +456,23 @@
   display: grid;
   gap: 12px;
 }
+.enquiryFields input.enquiryHidden {
+  display: none;
+}
+.enquiryFields input.enquiryHoneypot {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.enquiryFeedback {
+  min-height: 22px;
+  margin: 0;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 22px;
+}
 .enquiryFields input:not([type="checkbox"]),
 .enquiryFields select,
 .enquiryFields textarea {

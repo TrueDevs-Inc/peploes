@@ -12,7 +12,7 @@ for (const path of [
     await page.goto(path);
     const form = page.locator("#enquire").getByRole("form");
     const fields = form.locator(
-      'input:not([type="checkbox"]), select, textarea',
+      'input:not([type="checkbox"]):not([type="hidden"]):not([name="website"]), select, textarea',
     );
     await page.keyboard.press("Tab");
     for (const field of await fields.all()) {
@@ -64,7 +64,7 @@ for (const path of [
     }
     await expect(
       form.getByRole("button", { name: "Send Enquiry" }),
-    ).toBeDisabled();
+    ).toBeEnabled();
     await page.emulateMedia({ forcedColors: "active" });
     await form.getByLabel("Email address").focus();
     await expect(form.getByLabel("Email address")).toHaveCSS(
@@ -144,3 +144,81 @@ for (const path of [
     }
   });
 }
+
+test("private dining enquiry keeps guest input when delivery is unavailable", async ({
+  page,
+}) => {
+  await page.goto("/private-dining");
+  const form = page.locator("#enquire").getByRole("form");
+  await form.getByLabel("Occasion type").selectOption("Wedding");
+  await form.getByLabel("Preferred date").fill("2027-06-18");
+  await form.getByLabel("Number of guests").selectOption("12");
+  await form.getByLabel("Your name").fill("Example Guest");
+  await form.getByLabel("Email address").fill("guest@example.test");
+  await form
+    .getByLabel("Tell us about your gathering")
+    .fill("A family celebration.");
+  await form.getByRole("button", { name: "Send Enquiry" }).click();
+  await expect(form.getByRole("status")).toContainText(
+    "Online enquiries are unavailable",
+  );
+  await expect(form.getByLabel("Your name")).toHaveValue("Example Guest");
+  await expect(form.getByLabel("Email address")).toHaveValue(
+    "guest@example.test",
+  );
+  const previousId = await form.locator('[name="notificationId"]').inputValue();
+  await form.getByLabel("Your name").fill("Revised Guest");
+  await expect(form.getByLabel("Your name")).toHaveValue("Revised Guest");
+  expect(await form.locator('[name="notificationId"]').inputValue()).not.toBe(
+    previousId,
+  );
+});
+
+test("private dining enquiry does not submit an invalid form", async ({
+  page,
+}) => {
+  await page.goto("/private-dining");
+  const form = page.locator("#enquire").getByRole("form");
+  await form.getByRole("button", { name: "Send Enquiry" }).click();
+  expect(
+    await form
+      .getByLabel("Preferred date")
+      .evaluate((element) => element.matches(":invalid")),
+  ).toBe(true);
+  await expect(form.getByRole("status")).toBeEmpty();
+});
+
+test("private dining enquiry blocks retry when the action response is lost", async ({
+  page,
+}) => {
+  await page.route("**/private-dining", async (route) => {
+    if (route.request().method() === "POST") {
+      await route.abort("failed");
+      return;
+    }
+    await route.continue();
+  });
+  await page.goto("/private-dining");
+  const form = page.locator("#enquire").getByRole("form");
+  await form.getByLabel("Occasion type").selectOption("Wedding");
+  await form.getByLabel("Preferred date").fill("2027-06-18");
+  await form.getByLabel("Number of guests").selectOption("12");
+  await form.getByLabel("Your name").fill("Example Guest");
+  await form.getByLabel("Email address").fill("guest@example.test");
+  await form
+    .getByLabel("Tell us about your gathering")
+    .fill("A family celebration.");
+  const notificationId = await form
+    .locator('[name="notificationId"]')
+    .inputValue();
+  await form.getByRole("button", { name: "Send Enquiry" }).click();
+  await expect(form.getByRole("status")).toContainText(
+    "could not confirm delivery",
+  );
+  await expect(
+    form.getByRole("button", { name: "Send Enquiry" }),
+  ).toBeDisabled();
+  expect(await form.locator('[name="notificationId"]').inputValue()).toBe(
+    notificationId,
+  );
+});

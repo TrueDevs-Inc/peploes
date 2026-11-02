@@ -96,7 +96,14 @@ checked without opening external services.
 ```bash
 bunx playwright install chromium
 bun run test:e2e
+bun run test:e2e:email
 ```
+
+The email browser command builds a separate production-mode test artifact with
+an in-memory delivery-record adapter, an allowed rate-limit response, and an intercepted Resend endpoint. It
+uses synthetic `.test` addresses and exercises the real form, server action,
+enquiry service, and mail service. The database integration test owns durable
+claim behavior; the browser fixture does not prove PostgreSQL or inbox receipt.
 
 The command builds the production application, then starts and stops its own
 server at `http://127.0.0.1:3107`. Keep that port free; the suite refuses to reuse

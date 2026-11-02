@@ -87,6 +87,11 @@ jobs:
         env:
           NODE_ENV: production
 
+      - name: Browser-test transactional enquiry delivery with intercepted providers
+        run: bun run test:e2e:email
+        env:
+          NODE_ENV: production
+
       - name: Build production Studio
         run: bun run --cwd studio build
 

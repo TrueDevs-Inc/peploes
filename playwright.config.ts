@@ -2,6 +2,8 @@ import { defineConfig } from "@playwright/test";
 import { E2E_SANITY_WEBHOOK_SECRET } from "./e2e/sanity-webhook";
 
 const baseURL = "http://127.0.0.1:3107";
+const emailTestIgnore =
+  process.env.EMAIL_E2E_BUILD === "1" ? [] : ["**/enquiry-delivery.spec.ts"];
 
 export default defineConfig({
   testDir: "./e2e",
@@ -16,12 +18,16 @@ export default defineConfig({
     {
       name: "desktop",
       // Needs its own build; see playwright.analytics.config.ts.
-      testIgnore: "**/analytics.spec.ts",
+      testIgnore: ["**/analytics.spec.ts", ...emailTestIgnore],
       use: { viewport: { width: 1440, height: 900 } },
     },
     {
       name: "phone",
-      testIgnore: ["**/desktop-navigation.spec.ts", "**/analytics.spec.ts"],
+      testIgnore: [
+        "**/desktop-navigation.spec.ts",
+        "**/analytics.spec.ts",
+        ...emailTestIgnore,
+      ],
       use: {
         viewport: { width: 390, height: 844 },
         isMobile: true,
@@ -30,7 +36,11 @@ export default defineConfig({
     },
     {
       name: "small-phone",
-      testIgnore: ["**/desktop-navigation.spec.ts", "**/analytics.spec.ts"],
+      testIgnore: [
+        "**/desktop-navigation.spec.ts",
+        "**/analytics.spec.ts",
+        ...emailTestIgnore,
+      ],
       use: {
         viewport: { width: 320, height: 740 },
         isMobile: true,
@@ -39,8 +49,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command:
-      "bun build e2e/mock-sanity.ts --target=node --outfile=.next/e2e/mock-sanity.mjs && node --import ./.next/e2e/mock-sanity.mjs node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3107",
+    command: `${process.env.EMAIL_E2E_BUILD === "1" ? "bun run build && " : ""}bun build e2e/mock-sanity.ts --target=node --outfile=.next/e2e/mock-sanity.mjs && node --import ./.next/e2e/mock-sanity.mjs node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3107`,
     env: Object.fromEntries([
       ["NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN", "pk.e2e-only"],
       ["SANITY_PROJECT_ID", "testproject"],

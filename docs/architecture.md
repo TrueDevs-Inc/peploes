@@ -81,6 +81,9 @@ Action.
 
 ## External libraries
 
+The transactional email integration and its operational configuration are
+documented in [the email guide](guides/email-guide.md).
+
 When an external integration brings SDK configuration, transport objects or
 exception conventions into domain code, put those details in a concrete
 server-only `<domain>-provider.ts` in `src/lib/`. It may wire the library's

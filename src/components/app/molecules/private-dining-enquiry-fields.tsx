@@ -2,22 +2,94 @@
 
 import { ArrowRight, Calendar, ChevronDown } from "lucide-react";
 import Link from "next/link";
+import {
+  type FormEvent,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 
+import { submitPrivateDiningEnquiry } from "@/actions/private-dining-enquiry";
 import styles from "@/components/app/compounds/private-dining.module.css";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/lib/constants";
 import { PRIVATE_DINING_FORM } from "@/lib/constants/private-dining";
-import type { IPrivateDiningEnquiryProps } from "@/lib/types";
+import type {
+  IEnquiryActionState,
+  IPrivateDiningEnquiryProps,
+} from "@/lib/types";
 
 export function PrivateDiningEnquiryFields({
   content,
 }: IPrivateDiningEnquiryProps) {
+  const [notificationId, setNotificationId] = useState("");
+  const formRef = useRef<HTMLFormElement>(null);
+  const submittingRef = useRef(false);
+  const [state, setState] = useState<IEnquiryActionState>({
+    status: "idle",
+    message: "",
+  });
+  const [pending, startTransition] = useTransition();
+
+  useEffect(() => {
+    setNotificationId(crypto.randomUUID());
+  }, []);
+
+  function submit(event: FormEvent<HTMLFormElement>): void {
+    event.preventDefault();
+    if (pending || submittingRef.current) return;
+    submittingRef.current = true;
+    const data = new FormData(event.currentTarget);
+    startTransition(async () => {
+      try {
+        const result = await submitPrivateDiningEnquiry(data);
+        setState(result);
+        if (result.status === "success") {
+          formRef.current?.reset();
+          setNotificationId(crypto.randomUUID());
+        }
+      } catch {
+        setState({
+          status: "unknown",
+          message:
+            "We could not confirm delivery. Please contact our team before sending this again.",
+        });
+      } finally {
+        submittingRef.current = false;
+      }
+    });
+  }
+
+  function revise(): void {
+    if (state.status === "error") {
+      setNotificationId(crypto.randomUUID());
+      setState({ status: "idle", message: "" });
+    }
+  }
+
   return (
     <form
+      ref={formRef}
       className={styles.enquiryFields}
       aria-label={content.formEyebrow ?? content.eyebrow}
-      onSubmit={(event) => event.preventDefault()}
+      onSubmit={submit}
+      onChange={revise}
     >
+      <input
+        type="hidden"
+        name="notificationId"
+        value={notificationId}
+        className={styles.enquiryHidden}
+      />
+      <input
+        type="text"
+        name="website"
+        autoComplete="off"
+        tabIndex={-1}
+        aria-hidden="true"
+        className={styles.enquiryHoneypot}
+      />
       {content.occasions && (
         <div className={styles.selectField}>
           <select
@@ -120,16 +192,14 @@ export function PrivateDiningEnquiryFields({
       <Button
         type="submit"
         variant="brand-primary"
-        disabled
-        aria-describedby="enquiry-unavailable"
-        title={PRIVATE_DINING_FORM.unavailable}
+        disabled={pending || !notificationId || state.status === "unknown"}
         className={styles.sendButton}
       >
-        {PRIVATE_DINING_FORM.submit}
+        {pending ? "Sending…" : PRIVATE_DINING_FORM.submit}
         <ArrowRight aria-hidden="true" className="size-4" />
       </Button>
-      <p id="enquiry-unavailable" className="sr-only">
-        {PRIVATE_DINING_FORM.unavailable}
+      <p className={styles.enquiryFeedback} role="status" aria-live="polite">
+        {state.message}
       </p>
     </form>
   );
