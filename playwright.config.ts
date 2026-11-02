@@ -1,12 +1,14 @@
 import { defineConfig } from "@playwright/test";
-
 import { FAKE_RESDIARY } from "./e2e/booking-fixtures";
 import { E2E_ENVIRONMENT } from "./e2e/environment";
+import { E2E_SANITY_WEBHOOK_SECRET } from "./e2e/sanity-webhook";
 
 const baseURL = "http://127.0.0.1:3107";
 const resDiaryDownURL = "http://127.0.0.1:3108";
 const unavailableSpec = /booking-unavailable\.spec\.ts/;
 const sandboxSpec = /booking-sandbox\.spec\.ts/;
+const emailTestIgnore =
+  process.env.EMAIL_E2E_BUILD === "1" ? [] : ["**/enquiry-delivery.spec.ts"];
 
 const preloads =
   "bun build e2e/mock-sanity.ts e2e/mock-resdiary.ts --target=node --outdir=.next/e2e --entry-naming='[name].mjs'";
@@ -22,6 +24,7 @@ function serverEnv(resDiaryUrl: string): Record<string, string> {
     ["RESDIARY_USERNAME", "e2e-user"],
     ["RESDIARY_PASSWORD", "e2e-password"],
     ["BOOKING_HOLD_SECRET", "e2e-only-hold-secret-0123456789abcdef"],
+    ["SANITY_WEBHOOK_SECRET", E2E_SANITY_WEBHOOK_SECRET],
   ]);
 }
 
@@ -32,6 +35,7 @@ export default defineConfig({
   use: {
     baseURL,
     browserName: "chromium",
+    launchOptions: { args: ["--font-render-hinting=none"] },
     trace: "retain-on-failure",
   },
   projects: [
@@ -44,6 +48,7 @@ export default defineConfig({
         "**/booking-analytics.spec.ts",
         "**/sentry.spec.ts",
         "**/seo.spec.ts",
+        ...emailTestIgnore,
       ],
       use: { viewport: { width: 1440, height: 900 } },
     },
@@ -57,6 +62,7 @@ export default defineConfig({
         "**/booking-analytics.spec.ts",
         "**/sentry.spec.ts",
         "**/seo.spec.ts",
+        ...emailTestIgnore,
       ],
       use: {
         viewport: { width: 390, height: 844 },
@@ -74,6 +80,7 @@ export default defineConfig({
         "**/booking-analytics.spec.ts",
         "**/sentry.spec.ts",
         "**/seo.spec.ts",
+        ...emailTestIgnore,
       ],
       use: {
         viewport: { width: 320, height: 740 },

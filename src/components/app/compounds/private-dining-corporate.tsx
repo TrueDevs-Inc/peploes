@@ -23,7 +23,13 @@ export function PrivateDiningCorporate() {
   return (
     <div className={styles.corporatePage}>
       <PrivateDiningHero hero={CORPORATE_EVENTS.hero} variant="corporate" />
-      <section className={cn(styles.paleSection, styles.corporateOccasions)}>
+      <section
+        className={cn(
+          "section-divider-subtle",
+          styles.paleSection,
+          styles.corporateOccasions,
+        )}
+      >
         <div className="site-container">
           <PrivateDiningHeading {...CORPORATE_OCCASIONS} />
           <ul className={styles.corporateOccasionList}>
@@ -37,7 +43,7 @@ export function PrivateDiningCorporate() {
         </div>
       </section>
       <PrivateDiningImageSection
-        className={styles.exclusiveHire}
+        className={cn("lg:section-divider-subtle", styles.exclusiveHire)}
         heading={CORPORATE_HIRE}
         image={CORPORATE_HIRE.image}
       >
@@ -100,9 +106,12 @@ export function PrivateDiningCorporate() {
       />
       <PrivateDiningFeatureSection
         content={CORPORATE_LOCATION}
-        className={styles.location}
+        className={cn("section-divider-subtle", styles.location)}
       />
-      <PrivateDiningEnquiry content={CORPORATE_EVENTS.enquiry} />
+      <PrivateDiningEnquiry
+        content={CORPORATE_EVENTS.enquiry}
+        className="section-divider-subtle"
+      />
       <PrivateDiningClosing
         content={CORPORATE_EVENTS.closing}
         className={styles.corporateClosing}

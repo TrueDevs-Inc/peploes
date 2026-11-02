@@ -3,6 +3,17 @@ import type { NextConfig } from "next";
 import { HTML_LIMITED_BOT_UA_RE } from "next/dist/shared/lib/router/utils/html-bots";
 import { HTML_LIMITED_AI_FETCHERS } from "./src/lib/constants/crawlers";
 
+const emailBrowserFixture = process.env.EMAIL_E2E_BUILD === "1";
+
+if (
+  emailBrowserFixture &&
+  (process.env.VERCEL_ENV === "production" ||
+    process.env.SANITY_PROJECT_ID !== "testproject" ||
+    process.env.SANITY_DATASET !== "development")
+) {
+  throw new Error("Email browser fixtures require the isolated test project.");
+}
+
 const STRIPE_SOURCES = {
   script: ["https://js.stripe.com", "https://*.js.stripe.com"],
   frame: [
@@ -31,6 +42,16 @@ function getPostHogSource(): string | undefined {
 }
 
 const nextConfig: NextConfig = {
+  ...(emailBrowserFixture
+    ? {
+        turbopack: {
+          resolveAlias: {
+            "@/dal/email-deliveries": "./e2e/fake-email-deliveries.ts",
+            "@/lib/enquiry-rate-limit": "./e2e/allow-enquiry.ts",
+          },
+        },
+      }
+    : {}),
   env: Object.fromEntries([
     [
       "NEXT_PUBLIC_SENTRY_RELEASE",

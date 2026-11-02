@@ -96,6 +96,7 @@ checked without opening external services.
 ```bash
 bunx playwright install chromium
 bun run test:e2e
+bun run test:e2e:email
 ```
 
 The command builds the production application, then starts and stops two
@@ -105,6 +106,13 @@ the suite refuses to reuse an existing server. Pull-request CI installs Chromium
 and its system dependencies before running the same command. Failure traces stay
 in ignored `test-results/`.
 
+The email browser command builds a separate production-mode test artifact with
+an in-memory delivery-record adapter, an allowed rate-limit response, and an
+intercepted Resend endpoint. It uses synthetic `.test` addresses and exercises
+the real form, server action, enquiry service, and mail service. The database
+integration test owns durable claim behavior; the browser fixture does not
+prove PostgreSQL or inbox receipt.
+
 Browser suites use synthetic reporting settings or blank provider credentials
 to avoid sending test events to configured accounts. Payment key acceptance
 and page indexing do not depend on deployment labels. SEO checks run alongside
@@ -113,6 +121,9 @@ the analytics suite.
 The build and test server use a fake Sanity project. The test-only
 `e2e/mock-sanity.ts` preload supplies menu documents from the local design
 catalogs; it rejects unexpected CMS queries and never reads a live dataset.
+The test server has a synthetic webhook secret; specs that change published
+fixture state call `announceSanityPublish` from `e2e/sanity-webhook.ts` to expire
+the cached CMS content.
 Menu journeys import `test` from `e2e/menu-test.ts` so their synthetic CMS image
 URLs reach local photographs through the real Next image optimizer. These
 fixtures are not imported by the application or used as production fallbacks.

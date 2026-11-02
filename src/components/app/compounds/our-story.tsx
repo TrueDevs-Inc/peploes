@@ -56,7 +56,7 @@ function StoryTimeline() {
 
   return (
     <section
-      className="bg-[linear-gradient(rgb(46_42_40/10%),transparent_62.47px)] py-12 lg:py-20"
+      className="section-divider-subtle bg-[linear-gradient(rgb(46_42_40/10%),transparent_62.47px)] py-12 lg:py-20"
       aria-labelledby="story-philosophy"
     >
       <div className="site-container grid items-center gap-10 lg:min-h-[297px] lg:grid-cols-[525fr_671fr] lg:gap-[60px] xl:gap-[100px] min-[90rem]:grid-cols-[525px_minmax(0,1fr)]">
@@ -103,7 +103,7 @@ function StoryBuilding() {
 
   return (
     <section
-      className="bg-[color-mix(in_srgb,var(--peploe-burgundy)_6%,var(--warm-cream))]"
+      className="section-divider-subtle bg-[color-mix(in_srgb,var(--peploe-burgundy)_6%,var(--warm-cream))]"
       aria-labelledby="story-building"
     >
       <div className="site-container grid items-center gap-8 py-12 sm:grid-cols-[minmax(0,1fr)_170px] lg:min-h-[600px] lg:grid-cols-[525fr_23fr_518fr_57fr_173fr] lg:gap-0 lg:py-0">
@@ -169,7 +169,10 @@ function StoryFounder() {
   const { founder } = OUR_STORY_CONTENT;
 
   return (
-    <section className="relative" aria-labelledby="story-founder">
+    <section
+      className="lg:section-divider-subtle relative"
+      aria-labelledby="story-founder"
+    >
       {/* Figma leaves this portrait empty until the approved photo is supplied. */}
       <div
         className="h-60 bg-[#686565] lg:absolute lg:inset-y-0 lg:left-0 lg:h-auto lg:w-[52%] xl:w-[calc(100%_-_var(--story-gutter)_-_490px_-_68px)]"
@@ -298,7 +301,10 @@ function StoryNextChapter() {
   const { nextChapter } = OUR_STORY_CONTENT;
 
   return (
-    <section className="relative" aria-labelledby="story-next-chapter">
+    <section
+      className="lg:section-divider-subtle relative"
+      aria-labelledby="story-next-chapter"
+    >
       {/* Match the unfilled Gina portrait in the approved frame. */}
       <div
         className="h-60 bg-[#686565] lg:absolute lg:inset-y-0 lg:left-0 lg:h-auto lg:w-[52%] xl:w-[calc(100%_-_var(--story-gutter)_-_527px_-_16px)]"

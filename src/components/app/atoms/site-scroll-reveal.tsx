@@ -31,7 +31,11 @@ function PageScrollReveal() {
       elements.clear();
     };
     const registerElement = (element: HTMLElement) => {
-      if (elements.has(element) || element.parentElement?.closest(targets))
+      if (
+        elements.has(element) ||
+        element.parentElement?.closest(targets) ||
+        element.getClientRects().length === 0
+      )
         return;
       elements.add(element);
       const bounds = element.getBoundingClientRect();

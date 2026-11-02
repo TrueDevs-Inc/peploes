@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PR 64: AI feedback assessment</title>
+<style>
+:root{color-scheme:dark;--bg:#17191c;--fg:#eeeae3;--muted:#b8bdc6;--link:#a8ceff;--line:#626976}
+[data-theme="light"]{color-scheme:light;--bg:#faf9f6;--fg:#22252a;--muted:#505965;--link:#17579c;--line:#747d88}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:18px/1.65 system-ui,sans-serif}
+main{max-width:68ch;margin:auto;padding:2rem 1rem 4rem;overflow-wrap:anywhere}h1,h2{line-height:1.25}h1{font-size:2rem}h2{font-size:1.35rem;margin-top:2rem}
+a{color:var(--link)}button{font:inherit;min-height:44px;padding:.5rem .8rem;border:1px solid var(--line);border-radius:5px;background:var(--bg);color:var(--fg);cursor:pointer}
+a:focus-visible,button:focus-visible{outline:3px solid var(--link);outline-offset:4px}.meta{color:var(--muted)}code{font-size:.9em}
+@media print{:root,[data-theme="light"]{--bg:white;--fg:black;--muted:#333;--link:black}button{display:none}body{font-size:11pt}a[href^="https"]::after{content:" (" attr(href) ")"}}
+</style></head>
+<body><main>
+<button id="theme" type="button">Switch to light theme</button>
+<h1>PR #64: AI feedback assessment</h1>
+<p class="meta">29 October 2026 · Head 24cb176 · Base fork / 4c346e0</p>
+<p>Neither AI finding establishes a critical correctness or security defect. The report theme is a low-priority usability improvement. Menu prefetch is a real resource-versus-latency tradeoff; blindly applying the suggested change can restore the delay the PR addresses.</p>
+<h2>Reviewers and scope</h2>
+<p><strong>cubic-dev-ai[bot]</strong> submitted two unresolved inline P2 comments and one summary. No human feedback was returned. <strong>vercel[bot]</strong> separately reported that the private organization repository cannot deploy on its current Hobby plan. That is deployment/account feedback, not an AI code finding; the user's separate Vercel-connected fork workflow is outside this check.</p>
+<p>The review was written against 1894989. Its source tree exactly matches 24cb176 after the history cleanup, so the comments remain applicable. This is feedback investigation, not a full independent approval of the entire PR.</p>
+<h2>1. Report theme: valid observation, P3 non-blocking</h2>
+<p><a href="https://github.com/TrueDevs-Inc/peploes/pull/64#discussion_r4407667138">Original comment</a>. <a href="issue-56-review.html">The report</a> fixes <code>data-theme="dark"</code> and defines a light palette but exposes no switch. Light printing exists separately. The site does not route or import this report.</p>
+<p>The repository HTML guide requires a designed light alternative and describes controls when present. The installed readable-html-dossier skill explicitly permits omitting visible toggles unless interactive switching is required. A mandatory keyboard toggle is therefore not established by the cited policy. A native button with visible focus would be a small optional improvement, not a customer-site blocker.</p>
+<h2>2. Menu prefetch: valid cost, incomplete recommendation</h2>
+<p><a href="https://github.com/TrueDevs-Inc/peploes/pull/64#discussion_r4407667143">Original comment</a>. <a href="../../src/components/app/molecules/menu-navigation.tsx">MenuNavigation</a> lines 166 and 204 use full prefetch. The installed Next 16.4.2 Link guide says <code>true</code> fully prefetches dynamic routes; default <code>null</code> only prefetches to a loading boundary.</p>
+<p><a href="../../src/lib/menu-content.ts">Menu loaders</a> use <code>connection()</code> and per-render React memoization. <a href="../../src/lib/sanity-provider.ts">The CMS provider</a> disables CDN and uses <code>cache: "no-store"</code>. Prefetch can therefore create additional server work and CMS reads for destinations a visitor never opens. Request counts, quota impact and real latency were not measured in this review.</p>
+<p>The claim that all seven menu variants immediately prefetch is overstated: the default catalog has five direct links plus two collection buttons. Child links mount only after a collection opens. Viewport eligibility also limits mobile prefetch.</p>
+<p><a href="https://github.com/TrueDevs-Inc/peploes/issues/54">Issue #54</a> explicitly reports delayed menu switching. <a href="../../e2e/menu-prefetch.spec.ts">The new regression</a> warms Dinner and Group Set Lunch, then delays subsequent RSC responses by three seconds while requiring the selected content within one second. Returning to automatic partial prefetch risks restoring this delay.</p>
+<p><strong>Recommendation:</strong> retain the deliberate prefetch behavior unless measurements justify a change. Measure production request/CMS load; then consider intent-based full prefetch or caching with an agreed freshness/invalidation policy. This is a P2 performance follow-up, not a demonstrated pre-merge defect.</p>
+<h2>Local CI evidence</h2>
+<p id="ci-result">Local bun run ci at 24cb176: formatting/lint passed; application and Studio type checks passed; all 771 unit tests in 44 files passed; production application and Studio builds passed. The command exited 1 at the root high-severity audit: four advisories in undici@7.30.0 and one in zod@3.25.76. The downstream Studio audit did not run. These dependency versions and lockfiles are unchanged by PR #64; the same audit failure was observed before the branch history rewrite. Under the quality guide this is an actual incomplete shipping gate, higher priority than either AI comment.</p>
+<p>The local <code>bun run ci</code> command does not include browser or database integration tests. Those were not run in this assessment. Database migration commands were not authorized. No live traffic or CMS request load measurements were performed.</p>
+<h2>Decision and limits</h2>
+<p>Prioritize actual CI failures over the optional report toggle. Do not accept the prefetch suggestion without preserving the menu-speed requirement. If repository protection requires conversations resolved, that administrative requirement is separate from technical severity. No source fixes, replies, resolutions, commits, pushes or merge operations were performed for this assessment.</p>
+<h2>Sources</h2>
+<ul><li><a href="https://github.com/TrueDevs-Inc/peploes/pull/64">PR #64</a></li><li><a href="../guides/html-report-guide.md">HTML report guide</a></li><li><a href="../guides/performance-guide.md">Performance guide</a></li><li><a href="../guides/quality-guide.md">Quality guide</a></li><li><a href="https://nextjs.org/docs/app/api-reference/components/link#prefetch">Official Next Link documentation</a> (installed 16.4.2 guide used for version-specific assessment)</li></ul>
+</main><script>
+const button=document.getElementById('theme');button.addEventListener('click',()=>{const light=document.documentElement.dataset.theme==='light';document.documentElement.dataset.theme=light?'dark':'light';button.textContent=light?'Switch to light theme':'Switch to dark theme';});
+</script></body></html>

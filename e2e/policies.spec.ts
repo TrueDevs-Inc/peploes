@@ -315,7 +315,7 @@ test("footer legal links open the requested policies", async ({
       if (isMobile) {
         await expect(page.locator("[data-footer-container]")).toHaveCSS(
           "padding-top",
-          "56px",
+          "32px",
         );
       }
     }

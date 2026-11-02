@@ -31,6 +31,11 @@ test("every public page uses the homepage footer layout and content", async ({
   await page.evaluate(() => document.fonts.ready);
   const footer = page.getByRole("contentinfo");
   await expect(footer).toHaveCount(1);
+  await expect(footer).toHaveCSS("border-top-width", "0px");
+  await expect(page.getByRole("banner")).toHaveCSS(
+    "box-shadow",
+    /rgb\(217, 209, 198\) 0px -1px 0px 0px inset/,
+  );
   const appearance = await footerAppearance(footer);
   const content = await footer.textContent();
 

@@ -1,18 +1,67 @@
 import { expect, test } from "@playwright/test";
 
+test("private dining message area shows three lines without scrolling", async ({
+  page,
+  isMobile,
+}) => {
+  await page.goto("/private-dining");
+  const message = page.locator('#enquire textarea[name="message"]');
+  await message.fill(
+    "A corporate dinner\nFor twelve guests\nPlease share availability",
+  );
+  await expect(message).toHaveCSS("height", isMobile ? "190px" : "90px");
+  const dimensions = await message.evaluate((element) => ({
+    height: element.clientHeight,
+    contentHeight: element.scrollHeight,
+  }));
+  expect(dimensions.contentHeight).toBeLessThanOrEqual(dimensions.height);
+  await expect(message).toHaveCSS("resize", "vertical");
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+});
+
 for (const path of [
   "/private-dining",
   "/private-dining/groups-celebrations",
   "/private-dining/corporate-events",
   "/private-dining/weddings",
 ]) {
+  test(`${path} date picker opens from the entire input`, async ({ page }) => {
+    await page.goto(path);
+    const date = page.locator("#enquire").getByLabel("Preferred date");
+    await date.scrollIntoViewIfNeeded();
+    const width = await date.evaluate((element) => element.clientWidth);
+    for (const x of [16, width / 2, width - 16]) {
+      await date.click({ position: { x, y: 16 } });
+      await expect(
+        page.locator('#enquire input[type="date"]:open'),
+      ).toBeVisible();
+      await page.keyboard.press("Escape");
+    }
+    await date.fill("2026-12-01");
+    await expect(date).toHaveValue("2026-12-01");
+    await date.click({ position: { x: 16, y: 16 } });
+    await expect(
+      page.locator('#enquire input[type="date"]:open'),
+    ).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(date).toHaveValue("2026-12-01");
+    await date.click({ position: { x: width / 2, y: 16 } });
+    await page.keyboard.press("ArrowRight");
+    await page.keyboard.press("Enter");
+    await expect(date).toHaveValue("2026-12-02");
+  });
+
   test(`${path} enquiry controls share rounded styling and subtle focus`, async ({
     page,
   }) => {
     await page.goto(path);
     const form = page.locator("#enquire").getByRole("form");
     const fields = form.locator(
-      'input:not([type="checkbox"]), select, textarea',
+      'input:not([type="checkbox"]):not([type="hidden"]):not([name="website"]), select, textarea',
     );
     await page.keyboard.press("Tab");
     for (const field of await fields.all()) {
@@ -64,7 +113,7 @@ for (const path of [
     }
     await expect(
       form.getByRole("button", { name: "Send Enquiry" }),
-    ).toBeDisabled();
+    ).toBeEnabled();
     await page.emulateMedia({ forcedColors: "active" });
     await form.getByLabel("Email address").focus();
     await expect(form.getByLabel("Email address")).toHaveCSS(
@@ -102,6 +151,14 @@ for (const path of [
       await expect(select.locator('option[value=""]')).toBeHidden();
       const firstOption = select.locator("option:not(:disabled)").first();
       await expect(firstOption).toBeVisible();
+      await expect(firstOption).toHaveCSS("border-top-width", "0px");
+      const secondOption = select.locator("option:not(:disabled)").nth(1);
+      await expect(secondOption).toHaveCSS("border-top-width", "1px");
+      await expect(secondOption).toHaveCSS("border-top-style", "solid");
+      await expect(secondOption).toHaveCSS(
+        "border-top-color",
+        "rgb(217, 209, 198)",
+      );
       const restingBackground = await firstOption.evaluate(
         (element) => getComputedStyle(element).backgroundColor,
       );
@@ -144,3 +201,81 @@ for (const path of [
     }
   });
 }
+
+test("private dining enquiry keeps guest input when delivery is unavailable", async ({
+  page,
+}) => {
+  await page.goto("/private-dining");
+  const form = page.locator("#enquire").getByRole("form");
+  await form.getByLabel("Occasion type").selectOption("Wedding");
+  await form.getByLabel("Preferred date").fill("2027-06-18");
+  await form.getByLabel("Number of guests").selectOption("12");
+  await form.getByLabel("Your name").fill("Example Guest");
+  await form.getByLabel("Email address").fill("guest@example.test");
+  await form
+    .getByLabel("Tell us about your gathering")
+    .fill("A family celebration.");
+  await form.getByRole("button", { name: "Send Enquiry" }).click();
+  await expect(form.getByRole("status")).toContainText(
+    "Online enquiries are unavailable",
+  );
+  await expect(form.getByLabel("Your name")).toHaveValue("Example Guest");
+  await expect(form.getByLabel("Email address")).toHaveValue(
+    "guest@example.test",
+  );
+  const previousId = await form.locator('[name="notificationId"]').inputValue();
+  await form.getByLabel("Your name").fill("Revised Guest");
+  await expect(form.getByLabel("Your name")).toHaveValue("Revised Guest");
+  expect(await form.locator('[name="notificationId"]').inputValue()).not.toBe(
+    previousId,
+  );
+});
+
+test("private dining enquiry does not submit an invalid form", async ({
+  page,
+}) => {
+  await page.goto("/private-dining");
+  const form = page.locator("#enquire").getByRole("form");
+  await form.getByRole("button", { name: "Send Enquiry" }).click();
+  expect(
+    await form
+      .getByLabel("Preferred date")
+      .evaluate((element) => element.matches(":invalid")),
+  ).toBe(true);
+  await expect(form.getByRole("status")).toBeEmpty();
+});
+
+test("private dining enquiry blocks retry when the action response is lost", async ({
+  page,
+}) => {
+  await page.route("**/private-dining", async (route) => {
+    if (route.request().method() === "POST") {
+      await route.abort("failed");
+      return;
+    }
+    await route.continue();
+  });
+  await page.goto("/private-dining");
+  const form = page.locator("#enquire").getByRole("form");
+  await form.getByLabel("Occasion type").selectOption("Wedding");
+  await form.getByLabel("Preferred date").fill("2027-06-18");
+  await form.getByLabel("Number of guests").selectOption("12");
+  await form.getByLabel("Your name").fill("Example Guest");
+  await form.getByLabel("Email address").fill("guest@example.test");
+  await form
+    .getByLabel("Tell us about your gathering")
+    .fill("A family celebration.");
+  const notificationId = await form
+    .locator('[name="notificationId"]')
+    .inputValue();
+  await form.getByRole("button", { name: "Send Enquiry" }).click();
+  await expect(form.getByRole("status")).toContainText(
+    "could not confirm delivery",
+  );
+  await expect(
+    form.getByRole("button", { name: "Send Enquiry" }),
+  ).toBeDisabled();
+  expect(await form.locator('[name="notificationId"]').inputValue()).toBe(
+    notificationId,
+  );
+});

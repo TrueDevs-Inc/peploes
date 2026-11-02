@@ -82,7 +82,7 @@ sitemap, `llms.txt` and structured data until an editor publishes them.
 pages (home, What's On, Our Story, Visit & Contact), the seven menus and the four
 private dining pages, each with the description from its own page metadata, then
 published What's On entries labelled by kind with their dates, then the sitemap
-and robots links. The CMS client fetches with no-store, so the route stays dynamic and sets a one-hour CDN `Cache-Control` header. If the CMS fails it serves the
+and robots links. The route handler renders per request, reads the cached CMS entries, and sets a one-hour CDN `Cache-Control` header. If the CMS fails it serves the
 static sections with `no-store`, so the fallback is not cached. `/book-a-table` is left out while it is `noindex`. The root layout points agents to it with `rel="describedby"`.
 
 Add a public page to `llms.txt` only when the URL exists and its description

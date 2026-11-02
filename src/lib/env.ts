@@ -13,6 +13,7 @@ export const env = createEnv({
     SANITY_PROJECT_ID: z.string().regex(/^[a-z0-9]+$/),
     SANITY_DATASET: z.string().regex(/^[a-z0-9][a-z0-9_-]*$/),
     SANITY_API_VERSION: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    SANITY_WEBHOOK_SECRET: z.string().min(32).optional(),
 
     DATABASE_URL: z.string().url(),
     DATABASE_POOL_SIZE: z.coerce.number().default(10),
@@ -48,6 +49,24 @@ export const env = createEnv({
       .refine((value) => value.startsWith("https://"), "Must use https")
       .optional(),
     UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
+    VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
+
+    PREFER_SMTP: z.string().optional(),
+    EMAIL_SMTP_HOST: z.string().min(1).optional(),
+    EMAIL_SMTP_PORT: z.coerce.number().int().min(1).max(65535).optional(),
+    EMAIL_SMTP_AUTH_METHOD: z.enum(["app-password", "oauth2"]).optional(),
+    EMAIL_SMTP_USERNAME: z.string().email().optional(),
+    EMAIL_SMTP_PASSWORD: z.string().min(1).optional(),
+    EMAIL_SMTP_OAUTH_CLIENT_ID: z.string().min(1).optional(),
+    EMAIL_SMTP_OAUTH_CLIENT_SECRET: z.string().min(1).optional(),
+    EMAIL_SMTP_OAUTH_REFRESH_TOKEN: z.string().min(1).optional(),
+    EMAIL_RESEND_API_KEY: z.string().min(1).optional(),
+    EMAIL_FROM_ADDRESS: z.string().email().optional(),
+    EMAIL_FROM_NAME: z.string().min(1).optional(),
+    EMAIL_REPLY_TO: z.string().email().optional(),
+    EMAIL_RESTAURANT_TO: z.string().email().optional(),
+    EMAIL_STAGING_ALLOWLIST: z.string().optional(),
+    EMAIL_RATE_LIMIT_SECRET: z.string().min(32).optional(),
   },
 
   clientPrefix: "NEXT_PUBLIC_",

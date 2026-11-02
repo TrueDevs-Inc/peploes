@@ -16,6 +16,13 @@ test("cookie preferences stay modal while fading closed through each dismissal",
   for (const dismissal of ["close", "escape", "outside", "accept", "reject"]) {
     await trigger.click();
     await expect(dialog).toHaveCSS("opacity", "1");
+    await dialog.evaluate((element) => {
+      element.addEventListener("transitionrun", (event) => {
+        if (event.target !== element || element.dataset.closing !== "true")
+          return;
+        for (const animation of element.getAnimations()) animation.pause();
+      });
+    });
     if (dismissal === "escape") await page.keyboard.press("Escape");
     else if (dismissal === "outside") await page.mouse.click(4, 4);
     else
@@ -35,6 +42,9 @@ test("cookie preferences stay modal while fading closed through each dismissal",
     expect(await page.evaluate(() => document.body.style.overflow)).toBe(
       "hidden",
     );
+    await dialog.evaluate((element) => {
+      for (const animation of element.getAnimations()) animation.finish();
+    });
     await expect(dialog).not.toBeVisible();
     await expect(trigger).toBeFocused();
     await expect

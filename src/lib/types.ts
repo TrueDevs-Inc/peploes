@@ -101,6 +101,84 @@ export interface IAppError {
   context?: Record<string, unknown>;
 }
 
+export type TEmailProvider = "smtp" | "resend";
+export type TEmailDeliveryStatus =
+  | "pending"
+  | "accepted"
+  | "rejected"
+  | "unknown";
+
+export interface IEmailMessage {
+  readonly notificationId: string;
+  readonly template: string;
+  readonly version: number;
+  readonly to: readonly string[];
+  readonly cc?: readonly string[];
+  readonly bcc?: readonly string[];
+  readonly replyTo?: string;
+  readonly subject: string;
+  readonly html: string;
+  readonly text: string;
+}
+
+export interface IEmailDelivery {
+  readonly id: string;
+  readonly payloadHash: string;
+  readonly template: string;
+  readonly provider: TEmailProvider;
+  readonly status: TEmailDeliveryStatus;
+  readonly providerId: string | null;
+}
+
+export type TEmailProviderOutcome =
+  | { readonly status: "accepted"; readonly providerId: string }
+  | {
+      readonly status: "unknown";
+      readonly reason: TEmailFailureReason;
+      readonly providerId?: string;
+    }
+  | {
+      readonly status: "rejected";
+      readonly reason: TEmailFailureReason;
+    };
+
+export type TEmailFailureReason =
+  | "invalid_provider_flag"
+  | "missing_email_identity"
+  | "missing_smtp_configuration"
+  | "missing_smtp_credentials"
+  | "missing_smtp_oauth_credentials"
+  | "missing_smtp_auth_method"
+  | "smtp_sender_mismatch"
+  | "smtp_authentication"
+  | "smtp_before_data"
+  | "smtp_explicit_rejection"
+  | "smtp_all_rejected"
+  | "partial_smtp_acceptance"
+  | "smtp_outcome_unknown"
+  | "missing_resend_configuration"
+  | "resend_rejected"
+  | "resend_outcome_unknown"
+  | "resend_response_invalid";
+
+export interface IEmailTransportMessage {
+  readonly id: string;
+  readonly from: string;
+  readonly to: readonly string[];
+  readonly cc: readonly string[];
+  readonly bcc: readonly string[];
+  readonly replyTo?: string;
+  readonly subject: string;
+  readonly html: string;
+  readonly text: string;
+}
+
+export interface IEnquiryActionState {
+  readonly status: "idle" | "success" | "error" | "unknown";
+  readonly message: string;
+  readonly guestAcknowledgement?: "accepted" | "failed";
+}
+
 // ─── Action Framework ────────────────────────────────────────────────────
 
 export interface IActionDefinition<
@@ -966,6 +1044,8 @@ export interface INavbarBrandProps {
 
 export interface INavbarBookingButtonProps {
   onNavigate?: () => void;
+  className?: string;
+  label?: string;
 }
 
 export interface INavbarContent {
@@ -977,7 +1057,6 @@ export interface INavbarContent {
   groupsId: string;
   whatsOnLabel: string;
   visitContactLabel: string;
-  giftVouchersLabel: string;
   bookingLabel: string;
   mobileBookingLabel: string;
 }
@@ -1316,7 +1395,7 @@ export interface IMobileNavigationContent {
   title: string;
   navigationLabel: string;
   items: readonly IMobileNavigationItem[];
-  giftVouchersLabel: string;
+  bookingLabel: string;
   brandPhrase: string;
 }
 

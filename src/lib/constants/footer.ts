@@ -24,7 +24,6 @@ export const FOOTER_CONTENT: IFooterContent = {
       label: "Visit & Contact",
       href: ROUTES.VISIT_CONTACT,
     },
-    { label: "Gift Vouchers" },
   ],
   newsletter: {
     heading: "A Letter from Gina",
@@ -99,7 +98,6 @@ export const MOBILE_FOOTER_CONTENT = {
       heading: "Peploe's",
       links: [
         { label: "People & Produce" },
-        { label: "Gift Vouchers" },
         { label: "Contact", href: ROUTES.VISIT_CONTACT },
       ],
     },

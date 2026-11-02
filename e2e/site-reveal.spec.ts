@@ -149,15 +149,60 @@ for (const path of [
   });
 }
 
+test("hidden streamed content waits for layout before reveal registration", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/menus?menu=dinner");
+  await expect(
+    page.locator("main [data-scroll-reveal-state]").first(),
+  ).toBeAttached();
+  await page.evaluate(() => {
+    const boundary = document.createElement("div");
+    boundary.hidden = true;
+    boundary.id = "stream-boundary";
+    const content = document.createElement("div");
+    content.id = "streamed-hidden-copy";
+    content.dataset.scrollReveal = "";
+    content.textContent = "Streamed content";
+    content.style.marginTop = "10000px";
+    boundary.append(content);
+    document.body.append(boundary);
+    return new Promise(requestAnimationFrame);
+  });
+  const streamed = page.locator("#streamed-hidden-copy");
+  await expect(streamed).not.toHaveAttribute("data-scroll-reveal-state", /.+/);
+  await page.evaluate(() => {
+    const content = document.getElementById("streamed-hidden-copy");
+    if (content) document.querySelector("main")?.append(content);
+    document.getElementById("stream-boundary")?.remove();
+  });
+  await expect(streamed).toHaveAttribute("data-scroll-reveal-state", "pending");
+  await expect(streamed).toHaveCSS("opacity", "0");
+  await streamed.scrollIntoViewIfNeeded();
+  await expect(streamed).toHaveAttribute("data-scroll-reveal-state", "visible");
+  await expect(streamed).toHaveCSS("opacity", "1");
+});
 test("client navigation and streamed content retain reveal behavior", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/menus?menu=lunch");
-  await page.getByRole("link", { name: "Dinner", exact: true }).first().click();
+  const navigation = page.getByRole("navigation", { name: "Restaurant menus" });
+  await expect
+    .poll(async () =>
+      navigation
+        .locator("[data-menu-indicator]")
+        .evaluate((element) => element.getBoundingClientRect().width),
+    )
+    .toBeGreaterThan(0);
+  await navigation.getByRole("link", { name: "Dinner", exact: true }).click();
   await expect(page).toHaveURL("/menus?menu=dinner");
+  const content = page.locator("[data-menu-content]");
+  await expect(content).toHaveAttribute("data-menu", "dinner");
+  await expect(content).toHaveAttribute("data-phase", "idle");
   await expect(
-    page.locator('main [data-scroll-reveal-state="pending"]').first(),
+    content.locator('[data-scroll-reveal-state="pending"]').first(),
   ).toBeAttached();
   await page.evaluate(() => {
     const content = document.createElement("div");

@@ -44,6 +44,6 @@ export const MOBILE_NAVIGATION_CONTENT = {
       href: ROUTES.VISIT_CONTACT,
     },
   ],
-  giftVouchersLabel: "Gift Vouchers",
+  bookingLabel: "Book A Table",
   brandPhrase: "People make Peploe’s.",
 } as const satisfies IMobileNavigationContent;

@@ -15,7 +15,7 @@ export function MobileNavigationTrigger({
   return (
     <div
       className={cn(
-        "flex items-center",
+        "flex items-center transition-shadow duration-200 motion-reduce:transition-none",
         isExpanded && "shadow-[inset_0_-1px_0_var(--peploe-burgundy)]",
       )}
     >

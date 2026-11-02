@@ -108,7 +108,7 @@ export function MenuNavigation({
       }}
       className={cn(
         className,
-        "sticky top-[72px] z-30 bg-warm-cream pt-4 text-[#221a17] shadow-[inset_0_-1px_0_var(--soft-stone)] before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-2 before:bg-[linear-gradient(180deg,rgba(46,42,40,0.1),transparent)] xl:top-[76px]",
+        "sticky top-[72px] z-30 bg-warm-cream pt-4 text-[#221a17] shadow-[inset_0_calc(-1*var(--section-border-width))_0_var(--section-border)] before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-2 before:bg-[linear-gradient(180deg,rgba(46,42,40,0.1),transparent)] xl:top-[76px]",
         "xl:pt-2",
       )}
     >
@@ -121,7 +121,7 @@ export function MenuNavigation({
         <ul
           className={cn(
             styles.tabs,
-            "mx-2 flex min-h-12 bg-[#fbf8f2] shadow-[inset_0_-1px_0_var(--soft-stone)] xl:site-container xl:min-w-max",
+            "mx-2 flex min-h-12 bg-[#fbf8f2] shadow-[inset_0_calc(-1*var(--section-border-width))_0_var(--section-border)] xl:site-container xl:min-w-max",
           )}
         >
           {items.map((item) => {
@@ -163,6 +163,7 @@ export function MenuNavigation({
                 ) : item.href ? (
                   <Link
                     href={item.href}
+                    prefetch={true}
                     scroll={false}
                     aria-current={currentPage}
                     data-menu-path={item.href}
@@ -200,6 +201,7 @@ export function MenuNavigation({
               <li key={item.href}>
                 <Link
                   href={item.href}
+                  prefetch={true}
                   onClick={() => setOpenHref(null)}
                   className={cn(
                     FOCUS_RING,

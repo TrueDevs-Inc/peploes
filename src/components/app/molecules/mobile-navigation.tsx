@@ -124,7 +124,6 @@ export function MobileNavigation({
           <div className="flex h-[72px] items-center justify-between gap-2 px-4 shadow-[inset_0_-1px_0_var(--soft-stone)]">
             <NavbarBrand onClick={closeMenu} />
             <div className="flex shrink-0 items-center gap-3">
-              <NavbarBookingButton onNavigate={closeMenu} />
               <div ref={closeButtonRef}>
                 <CloseButton
                   onClick={closeMenu}
@@ -167,7 +166,7 @@ export function MobileNavigation({
                             aria-hidden={!isExpanded}
                             inert={!isExpanded}
                             className={cn(
-                              "grid transition-[grid-template-rows,visibility] duration-200 motion-reduce:transition-none",
+                              "grid transition-[grid-template-rows,visibility,margin] duration-200 motion-reduce:transition-none",
                               isExpanded
                                 ? "visible mt-1 grid-rows-[1fr]"
                                 : "invisible grid-rows-[0fr]",
@@ -207,14 +206,11 @@ export function MobileNavigation({
                 )}
               </ul>
             </nav>
-            <Button
-              type="button"
-              variant="brand-contact"
-              aria-disabled="true"
-              className="h-12 w-full rounded-[4px] border-peploe-burgundy px-6 py-[13px] text-base leading-[22px] font-medium"
-            >
-              {MOBILE_NAVIGATION_CONTENT.giftVouchersLabel}
-            </Button>
+            <NavbarBookingButton
+              onNavigate={closeMenu}
+              className="h-12 w-full leading-[22px]"
+              label={MOBILE_NAVIGATION_CONTENT.bookingLabel}
+            />
             <p
               className={cn(
                 brandPhraseClassName,

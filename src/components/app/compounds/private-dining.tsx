@@ -74,13 +74,18 @@ export function PrivateDining() {
           ))}
         </ul>
       </section>
-      <section className={styles.benefits} aria-label="Gathering at Peploe’s">
+      <section
+        className={cn("section-divider-subtle", styles.benefits)}
+        aria-label="Gathering at Peploe’s"
+      >
         <PrivateDiningFeatures
           items={PRIVATE_DINING_BENEFITS}
           className="site-container"
         />
       </section>
-      <section className={styles.overviewMenus}>
+      <section
+        className={cn("lg:section-divider-subtle", styles.overviewMenus)}
+      >
         <div className={styles.overviewMenuImage}>
           <Image
             src={PRIVATE_DINING_MENUS.image.src}
@@ -116,7 +121,11 @@ export function PrivateDining() {
           />
         </div>
       </section>
-      <PrivateDiningEnquiry content={PRIVATE_DINING.enquiry} compact />
+      <PrivateDiningEnquiry
+        content={PRIVATE_DINING.enquiry}
+        compact
+        className="section-divider-subtle"
+      />
       <PrivateDiningClosing
         content={PRIVATE_DINING.closing}
         imageSizes="(min-width: 1024px) 100vw, 153.85vw"

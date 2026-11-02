@@ -109,9 +109,13 @@ test("the Seasonal menu remains a separate destination from What's On", async ({
     await menu.getByRole("link", { name: "Seasonal", exact: true }).click();
     await expect(menu).not.toBeVisible();
   } else {
-    await navigation
-      .getByRole("link", { name: "Menus", exact: true })
-      .press("ArrowDown");
+    await expect(navigation.locator("[data-navbar-indicator]")).toHaveAttribute(
+      "data-ready",
+      "true",
+    );
+    const menus = navigation.getByRole("link", { name: "Menus", exact: true });
+    await menus.press("ArrowDown");
+    await expect(menus).toHaveAttribute("aria-expanded", "true");
     await navigation
       .getByRole("link", { name: "Seasonal", exact: true })
       .click();

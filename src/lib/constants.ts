@@ -73,6 +73,12 @@ export const DEFAULT_SEO = {
   titleSuffix: " | Peploe's",
   twitterHandle: "",
   locale: "en_IE",
+  socialImage: {
+    src: "/peploes-hero.jpg",
+    alt: "The dining room at Peploe's restaurant in Dublin",
+    width: 2000,
+    height: 1333,
+  },
 } as const;
 
 export const RESTAURANT_CONTACT = {
@@ -368,7 +374,6 @@ export const NAVBAR_CONTENT = {
   groupsId: "Private Dining & Events",
   whatsOnLabel: "What’s On",
   visitContactLabel: "Visit & Contact",
-  giftVouchersLabel: "Gift Vouchers",
   bookingLabel: "Book a Table",
   mobileBookingLabel: "Book",
 } as const satisfies INavbarContent;
@@ -405,6 +410,8 @@ export const MOBILE_HOME_CONTENT = {
   ginaEyebrow: "From the cellar",
   ginaHeading: "Wine things just happen.",
 } as const;
+
+export const SANITY_CONTENT_CACHE_TAG = "sanity-content";
 
 export const MENU_DOCUMENT_TYPES = {
   lunch: "restaurantMenu",

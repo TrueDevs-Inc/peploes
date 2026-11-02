@@ -8,6 +8,13 @@
       "when": 1788133902681,
       "tag": "0000_real_toxin",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793610367705,
+      "tag": "0001_cool_xavin",
+      "breakpoints": true
     }
   ]
 }

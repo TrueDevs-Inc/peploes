@@ -115,9 +115,32 @@ heading and entries remain editable content in the rendering contract.
 ## Sanity connection
 
 All seven routes read published Sanity content on the server. Studio is the editing
-screen; the website reads its saved content through the Sanity API. Publishing in
-Studio and refreshing the website shows the change. Draft edits do not appear.
-There is no browser token and no write token in the website.
+screen; the website reads its saved content through the Sanity API. Draft edits do
+not appear. There is no browser token and no write token in the website.
+
+The website caches Sanity responses under one tag. A publish, change or deletion
+in Studio calls the signed webhook at `/api/webhooks/sanity`. It waits three
+seconds for Sanity's read API to catch up, as Sanity's own Next.js helper does,
+then expires that tag, so the next page view reads the new content. Without a working webhook the
+cache still expires after five minutes. A failed Sanity request is not cached.
+The `/seasonal/<slug>` existence check in `src/proxy.ts` is not cached, because
+Next does not cache `fetch` in Proxy. It returns 404 as soon as an entry is
+unpublished. If the webhook is not working, a newly published entry can show the
+not-found page for up to five minutes.
+
+Each website environment needs its own webhook in Sanity (Manage, API,
+Webhooks):
+
+- URL: `https://<site>/api/webhooks/sanity`
+- Dataset: the dataset in that environment's `SANITY_DATASET`
+- Trigger on: create, update and delete; leave the filter empty and drafts off
+- Projection: `{_id, _type}`
+- HTTP method: POST
+- Secret: the same value as that environment's `SANITY_WEBHOOK_SECRET`, at least
+  32 random characters
+
+Until the secret is set the route answers 503 and editors wait up to five
+minutes. A request with a missing or wrong signature gets 401 and changes nothing.
 
 The following preview content remains pending restaurant approval:
 
@@ -148,8 +171,17 @@ desktop frame and a full-content-width, 214px-high mobile frame; both focal poin
 are preview image data. New presentation fields from `dev` are not all exposed
 by the current Studio schemas and projections; default rendering still applies.
 
-The active development project is `3ggctsor`, dataset `development`. Production
-is separate and is not used by this setup.
+The active project is `w789ottu` (Peploes, in the TrueDevs Sanity organization),
+dataset `development`. Its `production` dataset stays empty until the restaurant
+approves content. The earlier project `3ggctsor` is outside the organization and
+no longer used; its published development content was copied on 2 November 2026.
+Images were copied from the public CDN, which serves converted files, so WebP
+originals are stored as PNG or JPEG at the same dimensions.
+
+The development Studio is `https://peploes-dev.sanity.studio`, application ID
+`jhr5xqsq76c5ddm6dryvws85`, deployed from `studio` with
+`SANITY_STUDIO_PROJECT_ID=w789ottu SANITY_STUDIO_DATASET=development bunx sanity deploy --url peploes-dev`.
+Deploy a production Studio under its own hostname; do not reuse this application ID.
 
 | Studio content type | Menu URL name | Website path |
 | --- | --- | --- |
@@ -260,7 +292,9 @@ the installed version is the version tested and built.
    optional price empty when it should not appear. Zero means an actual zero price.
 4. Drag entries to change their order. Empty dish sections are hidden. Notes and
    allergen information are optional. Uploaded images require a useful description.
-5. Click **Publish**, then refresh the matching website page.
+5. Click **Publish**, then refresh the matching website page. If the change is
+   missing, check the webhook's delivery log in Sanity; the page updates within
+   five minutes either way.
 
 Image fit, image scale, desktop photo scale and image ordering are hidden and
 read-only in Studio. Their saved values remain in the schema to preserve the
@@ -343,7 +377,10 @@ spacing and explicit price decimal formatting are also preserved.
 
 ### Code and checks
 
-- `src/lib/sanity-provider.ts` reads the published perspective with `no-store`.
+- `src/lib/sanity-provider.ts` reads the published perspective into the Next
+  data cache, tagged `sanity-content` with a five-minute limit, and verifies the
+  publish webhook signature.
+- `src/app/api/webhooks/sanity/route.ts` expires the tag after a signed publish.
 - `src/services/restaurant-menus.ts` validates external data and returns typed
   results. Duplicate URL names and invalid content are rejected.
 - `src/lib/menu-content.ts` shares each request between page, metadata and layout.

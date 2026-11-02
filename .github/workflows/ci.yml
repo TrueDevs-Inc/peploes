@@ -25,7 +25,7 @@ jobs:
   verify:
     name: Verify
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
 
     services:
       postgres:
@@ -84,6 +84,11 @@ jobs:
 
       - name: Build and browser-test reporting and SEO
         run: bun run test:e2e:reporting
+        env:
+          NODE_ENV: production
+
+      - name: Browser-test transactional enquiry delivery with intercepted providers
+        run: bun run test:e2e:email
         env:
           NODE_ENV: production
 

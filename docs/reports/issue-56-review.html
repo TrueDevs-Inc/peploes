@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Issue 56: hero shading review</title>
+    <style>
+      :root { color-scheme: dark; --bg: #17191c; --text: #eeeae3; --muted: #b8bdc6; --link: #a8ceff; }
+      [data-theme="light"] { color-scheme: light; --bg: #faf9f6; --text: #22252a; --muted: #505965; --link: #17579c; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--bg); color: var(--text); font: 18px/1.7 system-ui, sans-serif; }
+      main { max-width: 65ch; margin: auto; padding: 2rem 1rem 4rem; overflow-wrap: anywhere; }
+      h1, h2 { line-height: 1.25; letter-spacing: -.02em; }
+      h1 { font-size: clamp(1.7rem, 5vw, 2.4rem); }
+      h2 { margin-top: 2rem; font-size: 1.35rem; }
+      a { color: var(--link); text-underline-offset: .2em; }
+      a:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
+      code { font: .9em/1.6 ui-monospace, Consolas, monospace; }
+      .meta { color: var(--muted); }
+      @media print { :root { --bg: white; --text: black; --muted: #333; --link: black; } body { font-size: 11pt; } main { padding: 0; } a[href]::after { content: " (" attr(href) ")"; font-size: .85em; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Hero shading across screen sizes</h1>
+      <p class="meta">28 October 2026 · Issue 56 · Uncommitted changes against d82932c</p>
+      <p>The homepage fix is implemented. Standards and spec reviews found no confirmed defects. The shipping gate remains blocked by five high-severity advisories in existing dependencies.</p>
+      <h2>Cause and correction</h2>
+      <p>The homepage CSS replaced the desktop overlay with separate warm phone and burgundy tablet gradients. A production browser check reproduced those different rendered values before the fix.</p>
+      <p>The hero now shares the desktop colours, opacity stops and two gradient layers at every width. Below 1024px, the fade runs vertically behind the full-width copy; desktop retains its original angle. Image crops, layout and actions are unchanged by this fix.</p>
+      <h2>Standards review</h2>
+      <p>Zero confirmed findings. One CSS module owns the gradient, existing colour tokens remain shared, and no interface, dependency or data boundary changes. Unrelated staged and concurrent changes were excluded from this review.</p>
+      <h2>Spec review</h2>
+      <p>Zero confirmed findings. The shared palette addresses issue 56's request for the mobile hero to have the same shade as desktop. The regression checks layers, colours and stops at 320, 390, 639, 640, 768, 1023 and 1024px against 1440px, ignoring direction only.</p>
+      <h2>Verification</h2>
+      <ul>
+        <li>Passed: formatting, lint, application and Studio type checks.</li>
+        <li>Passed: all 771 unit tests in 44 files.</li>
+        <li>Passed: production application and Studio builds.</li>
+        <li>Passed: local rendered inspection at 320, 390, 768 and 1440px, including text readability and horizontal overflow.</li>
+        <li>Passed: the focused shading regression in all three browser projects against both development and production applications (three tests per run).</li>
+        <li id="browser-result">Failed: the broad production browser run on isolated port 3116 found four failures in the captured baseline's private-dining date-picker tests. The run was stopped after these unrelated failures; the remaining tests were not completed. The focused production shading run passed before stopping the owned server.</li>
+        <li>Failed: <code>bun run ci</code> stopped at the root dependency audit: four high advisories in <code>undici@7.30.0</code> and one in <code>zod@3.25.76</code>. Manifests and lockfiles are unchanged by this task. The downstream Studio audit did not run.</li>
+      </ul>
+      <h2>Limits and handoff</h2>
+      <p>The issue attachment was inaccessible, so the reporter's exact screenshot could not be compared. Visual inspection used the local application; it is not an accessibility certification. The change covers the homepage hero only.</p>
+      <p>The broad browser run first exceeded its 60-second server startup limit. Its retry used a 180-second startup allowance in a validation-only configuration; test assertions and test timeouts were unchanged. The <code>unslop</code> skill was unavailable, so repository prose rules were followed.</p>
+      <p>Changes remain uncommitted on the user-selected <code>fix/ali/navbar-footer-borders</code> branch. Verification ran in <code>D:/JavaScript/peploes-issue-56-check</code> from a captured working-tree snapshot because another session owns port 3107. Later unrelated edits are outside this evidence.</p>
+      <h2>Evidence and sources</h2>
+      <ul>
+        <li><a href="https://github.com/TrueDevs-Inc/peploes/issues/56">Issue 56</a></li>
+        <li><a href="../../src/components/app/compounds/hero.module.css">Hero CSS</a> and <a href="../../e2e/homepage-navigation.spec.ts">browser regression</a></li>
+        <li><a href="../project/brief.md">Project brief</a>, <a href="../architecture.md">architecture</a> and <a href="../guides/quality-guide.md">quality gate</a></li>
+        <li><a href="https://github.com/advisories/GHSA-xjj6-f33q-929c">Undici denial of service</a>, <a href="https://github.com/advisories/GHSA-4w7w-5xrc-9h26">redirect disclosure</a>, <a href="https://github.com/advisories/GHSA-2m5v-pch6-74hx">TLS validation</a> and <a href="https://github.com/advisories/GHSA-qrxm-fqhp-jwvm">TLS renegotiation</a></li>
+        <li><a href="https://github.com/advisories/GHSA-mrhx-c7xc-m3w5">Zod memory exhaustion</a></li>
+      </ul>
+    </main>
+  </body>
+</html>

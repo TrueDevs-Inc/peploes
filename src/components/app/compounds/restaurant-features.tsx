@@ -10,7 +10,7 @@ export function RestaurantFeatures() {
       aria-label={RESTAURANT_FEATURES_CONTENT.sectionLabel}
       className={cn(
         dmSans.className,
-        "bg-warm-cream text-center text-ink shadow-[inset_0_1px_0_var(--soft-stone)]",
+        "section-divider bg-warm-cream text-center text-ink",
       )}
     >
       <ul className="site-container grid grid-cols-1 gap-8 pt-[38px] pb-11 sm:grid-cols-2 sm:gap-10 sm:py-12 xl:grid-cols-4">

@@ -1,13 +1,26 @@
 import "server-only";
 
 import { createClient } from "@sanity/client";
-import { ResultAsync } from "neverthrow";
+import { isValidSignature, SIGNATURE_HEADER_NAME } from "@sanity/webhook";
+import { errAsync, ResultAsync } from "neverthrow";
 
-import { MENU_DOCUMENT_TYPES } from "@/lib/constants";
-import { ErrorCode } from "@/lib/enums";
+import { MENU_DOCUMENT_TYPES, SANITY_CONTENT_CACHE_TAG } from "@/lib/constants";
+import { ErrorCode, LogContext } from "@/lib/enums";
 import { env } from "@/lib/env";
 import { createError } from "@/lib/errors";
+import { logger } from "@/lib/logger";
 import type { IError, TMenuSlug } from "@/lib/types";
+
+const CONTENT_REVALIDATE_SECONDS = 300;
+const CONTENT_LAKE_SETTLE_MS = 3000;
+
+const client = createClient({
+  projectId: env.SANITY_PROJECT_ID,
+  dataset: env.SANITY_DATASET,
+  apiVersion: env.SANITY_API_VERSION,
+  perspective: "published",
+  useCdn: false,
+});
 
 const MENU_PROJECTION = `{
   ...,
@@ -96,12 +109,56 @@ async function fetchContent(
   query: string,
   params: Record<string, string>,
 ): Promise<unknown> {
-  const client = createClient({
-    projectId: env.SANITY_PROJECT_ID,
-    dataset: env.SANITY_DATASET,
-    apiVersion: env.SANITY_API_VERSION,
-    perspective: "published",
-    useCdn: false,
+  return await client.fetch<unknown>(query, params, {
+    next: {
+      tags: [SANITY_CONTENT_CACHE_TAG],
+      revalidate: CONTENT_REVALIDATE_SECONDS,
+    },
   });
-  return await client.fetch<unknown>(query, params, { cache: "no-store" });
+}
+
+export function verifyPublishWebhook(
+  request: Request,
+): ResultAsync<void, IError> {
+  const secret = env.SANITY_WEBHOOK_SECRET;
+  if (!secret) {
+    logger.warn(LogContext.Api, "Sanity publish webhook has no secret");
+    return errAsync(
+      createError(
+        ErrorCode.ServiceUnavailable,
+        "Content updates are not configured.",
+      ),
+    );
+  }
+  const signature = request.headers.get(SIGNATURE_HEADER_NAME);
+  if (!signature) return errAsync(rejectedWebhook());
+  return ResultAsync.fromPromise(
+    request.text().then((body) => isValidSignature(body, signature, secret)),
+    (cause) => {
+      logger.error(LogContext.Api, "Sanity publish webhook check failed", {
+        operation: "verifyPublishWebhook",
+        reason: cause instanceof Error ? cause.message : String(cause),
+      });
+      return createError(
+        ErrorCode.InternalError,
+        "Unable to verify the content update.",
+        cause,
+      );
+    },
+  ).andThen((valid) =>
+    valid
+      ? ResultAsync.fromSafePromise(waitForContentLakeReads())
+      : errAsync(rejectedWebhook()),
+  );
+}
+
+function waitForContentLakeReads(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, CONTENT_LAKE_SETTLE_MS));
+}
+
+function rejectedWebhook(): IError {
+  return createError(
+    ErrorCode.Unauthorized,
+    "Invalid content update signature.",
+  );
 }

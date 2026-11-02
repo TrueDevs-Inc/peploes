@@ -3,6 +3,15 @@
   font-weight: 400;
 }
 
+:where(.menu) + .gallery,
+:where(.menu, .gallery) + .related {
+  border-top: var(--section-border-width) solid var(--section-border);
+}
+
+:where(.hero, .details) + :is(.menu, .gallery, .related) {
+  box-shadow: inset 0 var(--section-border-subtle-width) 0 var(--section-border);
+}
+
 .page .eyebrow {
   color: var(--peploe-burgundy);
   font-family: inherit;
@@ -516,10 +525,6 @@
 
   .menu {
     padding-block: 66px 28px;
-  }
-
-  .menuContent {
-    max-width: 1296px;
   }
 
   .menu h2 {
