@@ -647,7 +647,6 @@ describe("submitGuestDetails", function submitGuestDetailsTests() {
           kind,
           stripe: STRIPE_STEP,
         });
-        expect(provider.cancelHold).not.toHaveBeenCalled();
         expect(errorLogs()).not.toContain(BOOKING_LOG.formUnsupported);
         expect(logged()).not.toContain(STRIPE_STEP.clientSecret);
       },

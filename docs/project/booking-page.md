@@ -189,7 +189,7 @@ the page to them.
 - The page writes the payment step to session storage and reads it back before
   showing the card form. If it cannot save the step, it shows the heading and
   amount but takes no payment. It asks the guest to allow site data, try a
-  normal browser window or call the restaurant. Edit and the release dialog
+  normal browser window or call the restaurant. Edit and the change dialog
   still work. Other booking steps are not blocked by storage failures.
 - The pay button turns on only when Stripe's form reports it is ready.
 - If Stripe's script fails to load (a dropped connection or a blocking browser
@@ -205,38 +205,18 @@ the page to them.
   sending the details to ResDiary again. A
   declined card shows Stripe's message and the guest can try again. 3-D Secure
   opens Stripe's own check.
-- "Edit date & guests" on this step asks first, in a "Change your booking?"
-  dialog: "We'll release your table for 7:30 pm on Sat, 7 Nov 2026 so you can
-  choose another time. You haven't been charged." Focus starts on "Keep My
-  Table", which (like Escape) closes the dialog and leaves the payment step as
-  it was. "Release and Change" calls `releaseHold` (see "Releasing a hold"),
-  then drops the payment step, its saved copy and the hold, and goes back to
-  date and guests with the guest's details kept. If ResDiary says the booking
-  is confirmed, including during the release, the page shows the confirmation
-  instead. If the release fails or gets no answer, the page keeps the hold and
-  saved payment step and checks ResDiary every two seconds. The dialog says
-  "Checking whether your table was released…" and blocks further payment,
-  release and back actions. Native dismissal is disabled while releasing or
-  checking, including repeated Escape presses and platform close requests.
-  If a browser still closes the dialog, the page reopens it while the outcome
-  remains unresolved. A delayed close event after the dialog reopens does not
-  dismiss it. A confirmed booking shows its confirmation; a
-  failed or expired hold returns to date and guests. After 60 seconds without
-  an answer, the dialog shows the reference and phone number and asks the guest
-  to call before booking or paying again. Check Again restarts the status
-  checks without sending another cancellation, and Start Again leaves the
-  dialog for a new search. From 15 seconds after the release started (the
-  server's 12-second budget plus a margin), a pending hold means nothing was
-  cancelled, because ResDiary marks a cancelled hold Failed at once: the
-  dialog says "We couldn't release your table, so it's still held for you",
-  Keep My Table works again, and Release and Change can be tried again. If the
-  hold can no longer be checked from this tab (`NotFound`, for example once
-  its cookie has expired), the dialog shows the reference and phone number at
-  once. The tab saves the hold reference, revision and start time under
-  `peploes:booking-release` before requesting release, so a reload resumes
-  checking. Only a known release clears the payment step and
-  starts a new search. The next Continue then makes a new hold, and Confirm
-  Reservation brings a payment step for the new time.
+- "Edit date & guests" opens the native "Change your booking?" dialog.
+  Focus starts on "Keep My Table"; it, Escape and close requests leave the
+  payment step alone. "Choose Another Time" makes one read-only
+  `GET /api/bookings/hold-status` check, with the payment step's five-second
+  timeout. Both buttons and dismissal are disabled while it waits; a browser
+  close reopens the dialog, and a delayed close event cannot dismiss it.
+  A confirmed booking shows its reference and summary through the usual
+  confirmation path. Every other result, including no answer, closes the
+  dialog and calls `startOver`: forget the payment step, paid state, bank
+  return and hold in this tab, then open date and guests with the guest's
+  details kept. A reload stays on search, and the next Continue makes a new
+  hold. The dialog asks the guest not to finish the old payment in another tab.
 - Before showing the card form, ask Stripe for the PaymentIntent's or
   SetupIntent's status first. If it is `succeeded`, `processing` or
   `requires_capture`, go straight to the paid check and never show Pay again.
@@ -349,56 +329,16 @@ The hold cookie lasts until the hold ends plus 15 minutes, so the payment check
 still works after the timer reaches zero. The server refuses an older cookie
 without asking ResDiary, even if a client keeps sending it.
 
-## Releasing a hold
+## Changing a booking at payment
 
-Automatic release is disabled by default (`BOOKING_ALLOW_HOLD_CANCELLATION=false`).
-The generic cancellation endpoint cannot restrict its write to a still-pending
-hold: another tab could pay between a status read and cancellation. While it is
-disabled, the payment step disables Edit and gives the restaurant's phone number.
-Date and time changes before sending guest details still move the existing hold.
-The server may read and return a confirmed or already-ended hold, but never sends
-cancellation for a pending one.
-
-Enable this flag only after ResDiary supplies and certifies a cancellation
-operation or equivalent coordination that cannot cancel a concurrently confirmed
-or paid booking. A pre-cancellation status read alone is not that guarantee.
-The fake browser harness opts in explicitly to exercise the retained cancellation
-flow. Keep real staging and production disabled until that vendor condition is met.
-
-The following release flow applies only when automatic release is enabled.
-
-The `releaseHold` server action cancels the page's own hold on ResDiary, so a
-guest who changes their mind frees the table at once instead of blocking it
-until it lapses. It takes the page's `holdReference` and `holdRevision` and
-needs the signed hold cookie, like the other booking actions.
-
-1. It asks ResDiary for the hold's status first. If the booking is already
-   confirmed (paid in another tab, for example), it cancels nothing and sends
-   the confirmation instead. A hold ResDiary has already ended counts as released.
-2. Otherwise it sends ResDiary's `Booking/{reference}/Cancel` with a
-   cancellation reason. Reasons come from ResDiary's `CancellationReasons`
-   (cached for 5 minutes): only those a guest may give online that apply to
-   standard bookings, never a no-show or a reason that blocks the guest. It
-   picks the first one whose name mentions a change ("Change of plans" on the
-   sandbox), or else the first allowed one.
-3. It reads the hold back and counts it released only when ResDiary reports it
-   ended. If ResDiary confirms the booking during this check, the provider
-   returns `confirmed`, the service returns the booking's confirmation and no
-   further cancellation is sent. A 204 that leaves the hold pending gets one
-   more cancel. If the status can't be read, the cancel isn't applied, or no
-   reason can be used, it answers `ServiceUnavailable` and keeps the cookie;
-   the page checks the existing hold instead of assuming it was released.
-
-When released or confirmed, the action deletes the hold cookie.
-
-On the sandbox on 28 Oct 2026, a hold waiting for its deposit (B9JFHNM9) was
-released in 2.4 seconds and read back as Failed; a hold without guest details
-(BLLZRPQR) was released too.
-
-Before launch, check two things on Peploe's live ResDiary account. A released
-hold shows in the diary as a cancelled booking with the guest's name. And if
-the account sends cancellation emails (the sandbox doesn't), the guest would
-get one for a table they never booked.
+The site never cancels a booking at the payment stage: Change leaves the old
+hold to lapse, so a payment completed elsewhere can still confirm a real
+booking. One read-only status check shows the booking if it is already
+confirmed; otherwise the guest starts a fresh search. On 2 November 2026,
+sandbox bookings B7LZ77KZ (pay then cancel while status still read pending)
+and B6K6T93C (cancel then pay) both stayed Cancelled with €20 paid, showing
+that ResDiary's Cancel neither waits for nor voids its Stripe payment, which
+the site cannot cancel.
 
 ## After payment
 

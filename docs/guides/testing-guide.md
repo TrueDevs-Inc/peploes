@@ -98,10 +98,9 @@ bunx playwright install chromium
 bun run test:e2e
 ```
 
-The command builds the production application, then starts and stops three
+The command builds the production application, then starts and stops two
 servers from that build: `http://127.0.0.1:3107` for most journeys and
-`http://127.0.0.1:3108` for the `resdiary-down` project, and
-`http://127.0.0.1:3110` for disabled-cancellation checks. Keep these ports free;
+`http://127.0.0.1:3108` for the `resdiary-down` project. Keep these ports free;
 the suite refuses to reuse an existing server. Pull-request CI installs Chromium
 and its system dependencies before running the same command. Failure traces stay
 in ignored `test-results/`.
@@ -283,7 +282,7 @@ Configuration locations are distinct:
 - A historical hosting transfer file, now archived outside this checkout,
   recorded the values applied to `peploes-fork` Preview only. It uses the public Sanity development dataset,
   separate staging reporting projects, ResDiary sandbox credentials and a separate
-  booking hold secret. Hold cancellation remains disabled by default.
+  booking hold secret.
 - Hosted SQL is deliberately an unused loopback placeholder. Public booking uses
   ResDiary; database-backed features are not configured by this preview setup.
   No unverified normal-checkout database was copied to hosting.

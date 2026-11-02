@@ -42,10 +42,6 @@ export const env = createEnv({
     RESDIARY_USERNAME: z.string().min(1).optional(),
     RESDIARY_PASSWORD: z.string().min(1).optional(),
     BOOKING_HOLD_SECRET: z.string().min(32).optional(),
-    BOOKING_ALLOW_HOLD_CANCELLATION: z
-      .enum(["true", "false"])
-      .default("false")
-      .transform((value) => value === "true"),
     UPSTASH_REDIS_REST_URL: z
 
       .url()

@@ -1193,7 +1193,7 @@ test("if Stripe's reply to Pay is lost after the charge, the page confirms the b
   }
 });
 
-test("Edit on the deposit step asks first, releases the old table on ResDiary, and the new time gets its own deposit and booking", async ({
+test("Edit on the deposit step leaves the old hold pending, and the new time gets its own deposit and booking", async ({
   page,
 }) => {
   test.setTimeout(300_000);
@@ -1230,7 +1230,7 @@ test("Edit on the deposit step asks first, releases the old table on ResDiary, a
     const dialog = page.getByRole("dialog", { name: "Change your booking?" });
     await edit.click();
     await expect(dialog).toContainText(
-      `We'll release your table for ${clockLabel(first.time)}`,
+      `We'll let go of your table for ${clockLabel(first.time)}`,
     );
     await dialog
       .getByRole("button", { name: "Keep My Table", exact: true })
@@ -1244,7 +1244,7 @@ test("Edit on the deposit step asks first, releases the old table on ResDiary, a
     ).toBeVisible();
     await edit.click();
     await dialog
-      .getByRole("button", { name: "Release and Change", exact: true })
+      .getByRole("button", { name: "Choose Another Time", exact: true })
       .click();
     const findTable = reservations.getByRole("button", {
       name: "Find a Table",
@@ -1252,7 +1252,7 @@ test("Edit on the deposit step asks first, releases the old table on ResDiary, a
     });
     await expect(findTable).toBeVisible({ timeout: 20_000 });
     expect((await sandboxBooking(firstHold, TEST_EMAIL)).BookingStatus).toBe(
-      "Cancelled",
+      "TableHold",
     );
     await findTable.click();
     await reservations

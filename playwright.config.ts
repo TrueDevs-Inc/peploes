@@ -7,18 +7,13 @@ const baseURL = "http://127.0.0.1:3107";
 const resDiaryDownURL = "http://127.0.0.1:3108";
 const unavailableSpec = /booking-unavailable\.spec\.ts/;
 const sandboxSpec = /booking-sandbox\.spec\.ts/;
-const cancellationDisabledSpec = /booking-cancellation-disabled\.spec\.ts/;
-const cancellationDisabledURL = "http://127.0.0.1:3110";
 
 const preloads =
   "bun build e2e/mock-sanity.ts e2e/mock-resdiary.ts --target=node --outdir=.next/e2e --entry-naming='[name].mjs'";
 const startServer = (port: number) =>
   `node --import ./.next/e2e/mock-sanity.mjs --import ./.next/e2e/mock-resdiary.mjs node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port ${port}`;
 
-function serverEnv(
-  resDiaryUrl: string,
-  allowHoldCancellation = true,
-): Record<string, string> {
+function serverEnv(resDiaryUrl: string): Record<string, string> {
   return Object.fromEntries([
     ...Object.entries(E2E_ENVIRONMENT),
     ["RESDIARY_API_URL", resDiaryUrl],
@@ -27,7 +22,6 @@ function serverEnv(
     ["RESDIARY_USERNAME", "e2e-user"],
     ["RESDIARY_PASSWORD", "e2e-password"],
     ["BOOKING_HOLD_SECRET", "e2e-only-hold-secret-0123456789abcdef"],
-    ["BOOKING_ALLOW_HOLD_CANCELLATION", String(allowHoldCancellation)],
   ]);
 }
 
@@ -46,7 +40,6 @@ export default defineConfig({
       testIgnore: [
         unavailableSpec,
         sandboxSpec,
-        cancellationDisabledSpec,
         "**/analytics.spec.ts",
         "**/booking-analytics.spec.ts",
         "**/sentry.spec.ts",
@@ -59,7 +52,6 @@ export default defineConfig({
       testIgnore: [
         unavailableSpec,
         sandboxSpec,
-        cancellationDisabledSpec,
         "**/desktop-navigation.spec.ts",
         "**/analytics.spec.ts",
         "**/booking-analytics.spec.ts",
@@ -77,7 +69,6 @@ export default defineConfig({
       testIgnore: [
         unavailableSpec,
         sandboxSpec,
-        cancellationDisabledSpec,
         "**/desktop-navigation.spec.ts",
         "**/analytics.spec.ts",
         "**/booking-analytics.spec.ts",
@@ -91,14 +82,6 @@ export default defineConfig({
       },
     },
     {
-      name: "hold-cancellation-disabled",
-      testMatch: cancellationDisabledSpec,
-      use: {
-        baseURL: cancellationDisabledURL,
-        viewport: { width: 390, height: 844 },
-      },
-    },
-    {
       name: "resdiary-down",
       testMatch: unavailableSpec,
       use: {
@@ -108,12 +91,6 @@ export default defineConfig({
     },
   ],
   webServer: [
-    {
-      command: `${preloads} && ${startServer(3110)}`,
-      env: serverEnv(FAKE_RESDIARY.url, false),
-      url: cancellationDisabledURL,
-      reuseExistingServer: false,
-    },
     {
       command: `${preloads} && ${startServer(3107)}`,
       env: serverEnv(FAKE_RESDIARY.url),

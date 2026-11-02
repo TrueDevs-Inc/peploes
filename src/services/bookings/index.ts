@@ -22,7 +22,6 @@ import { findTableData } from "@/services/bookings/find-table-data";
 import { submitGuestDetails } from "@/services/bookings/guest-details";
 import { holdStatus } from "@/services/bookings/hold-status";
 import { holdTable } from "@/services/bookings/hold-table";
-import { releaseHold } from "@/services/bookings/release-hold";
 import { findTimes } from "@/services/bookings/times";
 
 export function createBookingService(deps: IBookingServiceDeps = {}) {
@@ -31,8 +30,6 @@ export function createBookingService(deps: IBookingServiceDeps = {}) {
     deps.holdSecret === undefined
       ? (env.BOOKING_HOLD_SECRET ?? null)
       : deps.holdSecret;
-  const allowHoldCancellation =
-    deps.allowHoldCancellation ?? env.BOOKING_ALLOW_HOLD_CANCELLATION;
 
   async function guarded<T>(
     operation: TBookingOperation,
@@ -52,9 +49,7 @@ export function createBookingService(deps: IBookingServiceDeps = {}) {
 
   return {
     getFindTableData: () =>
-      guarded("getFindTableData", () =>
-        findTableData(provider, allowHoldCancellation),
-      ),
+      guarded("getFindTableData", () => findTableData(provider)),
     getCalendarDays: (input: unknown) =>
       guarded("getCalendarDays", () => findCalendarDays(provider, input)),
     getTimes: (input: unknown) =>
@@ -73,10 +68,6 @@ export function createBookingService(deps: IBookingServiceDeps = {}) {
     getHoldStatus: (query: unknown, holdToken?: string) =>
       guarded("getHoldStatus", (secret) =>
         holdStatus(provider, secret, query, holdToken),
-      ),
-    releaseHold: (query: unknown, holdToken?: string) =>
-      guarded("releaseHold", (secret) =>
-        releaseHold(provider, secret, query, holdToken, allowHoldCancellation),
       ),
     submitGuestDetails: (input: unknown, holdToken?: string) =>
       guarded(

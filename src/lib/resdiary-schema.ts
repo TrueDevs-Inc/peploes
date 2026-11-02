@@ -150,19 +150,6 @@ export const holdStatusReplySchema = z.object({
   Booking: z.object({ Reference: z.string().nullish() }).nullish(),
 });
 
-export const cancelReplySchema = z.unknown();
-
-export const cancelReasonsReplySchema = z.array(
-  z.object({
-    Id: z.number().int(),
-    Description: z.string(),
-    DisplayOnline: z.boolean().nullish(),
-    ApplyToStandardBookings: z.boolean().nullish(),
-    IsNoShow: z.boolean().nullish(),
-    DoesBlock: z.boolean().nullish(),
-  }),
-);
-
 export function signInBody(config: IResDiaryConfig) {
   return { Username: config.username, Password: config.password };
 }

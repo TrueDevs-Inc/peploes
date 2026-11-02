@@ -1,72 +1,58 @@
 "use client";
 
 import { Pencil } from "lucide-react";
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import styles from "@/components/app/compounds/table-booking-panel.module.css";
 import { Button } from "@/components/ui/button";
-import {
-  getSessionStorage,
-  removeSessionStorage,
-  setSessionStorage,
-} from "@/helpers/storage";
-import { useBookingStatus } from "@/hooks/use-booking-status";
-import { useReleaseHold } from "@/hooks/use-release-hold";
-import { BOOKING_BUDGET_MS } from "@/lib/constants/booking";
+import { fetcher } from "@/helpers/api";
+import { BOOKING_API, BOOKING_BUDGET_MS } from "@/lib/constants/booking";
 import { TABLE_BOOKING_CONTENT } from "@/lib/constants/table-booking";
+import { HttpVerb } from "@/lib/enums";
 import type {
+  IHoldStatusResult,
   IHoldSummary,
-  ITableBookingChangeDialogProps,
   ITableBookingChangeProps,
-  TReleasedHold,
+  TBookingResponse,
 } from "@/lib/types";
 
 const copy = TABLE_BOOKING_CONTENT.changeBooking;
-const RELEASE_KEY = "peploes:booking-release";
-const RELEASE_MARGIN_MS = 3000;
-const RELEASE_SETTLED_MS = BOOKING_BUDGET_MS.release + RELEASE_MARGIN_MS;
 
-interface ISavedRelease {
-  reference: string;
-  revision: number;
-  startedAt?: number;
+interface IChangeDialogProps {
+  summary: IHoldSummary;
+  checking: boolean;
+  onKeep: () => void;
+  onChoose: () => void;
 }
 
-interface IUncertainRelease {
-  hold: IHoldSummary;
-  pendingFrom: number;
-}
-
-function dialogText(
-  check: ITableBookingChangeDialogProps["check"],
-  stillHeld: boolean,
-  summary: IHoldSummary,
-): string {
-  if (check?.kind === "unknown") return copy.unknown(summary.reference);
-  if (check) return copy.checking;
-  if (stillHeld) return copy.stillHeld;
-  return copy.text(summary.timeLabel, summary.dateLabel);
+async function checkHold(summary: IHoldSummary) {
+  const query = new URLSearchParams({
+    holdReference: summary.reference,
+    holdRevision: String(summary.revision),
+  });
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<null>((resolve) => {
+    timer = setTimeout(() => resolve(null), BOOKING_BUDGET_MS.holdCheck);
+  });
+  const reply = await Promise.race([
+    fetcher<never, TBookingResponse<IHoldStatusResult>>({
+      url: `${BOOKING_API.holdStatus}?${query}`,
+      method: HttpVerb.Get,
+    }).then((response) => response.data),
+    timeout,
+  ]);
+  clearTimeout(timer);
+  return reply?.ok ? reply.data : null;
 }
 
 function ChangeDialog({
   summary,
-  releasing,
-  check,
-  stillHeld,
+  checking,
   onKeep,
-  onRelease,
-  onCheckAgain,
-  onStartAgain,
-}: ITableBookingChangeDialogProps) {
+  onChoose,
+}: IChangeDialogProps) {
   const dialog = useRef<HTMLDialogElement>(null);
   const id = useId();
-  const dismissLocked = releasing || check !== null;
-  const waiting = releasing || (check !== null && check.kind !== "unknown");
-  let actionLabel: string = copy.release;
-  if (releasing) actionLabel = copy.releasing;
-  else if (check?.kind === "unknown")
-    actionLabel = TABLE_BOOKING_CONTENT.checkAgain;
-  else if (check) actionLabel = copy.checkingAction;
 
   useEffect(() => {
     const element = dialog.current;
@@ -77,18 +63,18 @@ function ChangeDialog({
   return (
     <dialog
       ref={dialog}
-      closedby={dismissLocked ? "none" : "closerequest"}
+      closedby={checking ? "none" : "closerequest"}
       aria-labelledby={`${id}-title`}
       aria-describedby={`${id}-text`}
       className={styles.changeDialog}
       onCancel={(event) => {
         event.preventDefault();
-        if (!dismissLocked) onKeep();
+        if (!checking) onKeep();
       }}
       onClose={(event) => {
         const element = event.currentTarget;
         if (!element.isConnected || element.open) return;
-        if (dismissLocked) {
+        if (checking) {
           element.showModal();
         } else {
           onKeep();
@@ -100,33 +86,28 @@ function ChangeDialog({
       </h2>
       <p
         id={`${id}-text`}
-        role={check || stillHeld ? "status" : undefined}
+        role={checking ? "status" : undefined}
         className={styles.flowDescription}
       >
-        {dialogText(check, stillHeld, summary)}
+        {copy.text(summary.timeLabel, summary.dateLabel)}
       </p>
       <div className={styles.changeActions}>
         <Button
           type="button"
           variant="brand-contact"
           autoFocus
-          disabled={dismissLocked}
+          disabled={checking}
           onClick={onKeep}
         >
           {copy.keep}
         </Button>
-        {check?.kind === "unknown" && (
-          <Button type="button" variant="brand-contact" onClick={onStartAgain}>
-            {TABLE_BOOKING_CONTENT.startAgain}
-          </Button>
-        )}
         <Button
           type="button"
           variant="brand-primary"
-          disabled={waiting}
-          onClick={check ? onCheckAgain : onRelease}
+          disabled={checking}
+          onClick={onChoose}
         >
-          {actionLabel}
+          {checking ? copy.checking : copy.choose}
         </Button>
       </div>
     </dialog>
@@ -134,86 +115,29 @@ function ChangeDialog({
 }
 
 export function TableBookingChange({
-  allowHoldCancellation,
   busy,
   payment,
   onEdit,
-  onReleased,
+  onStartOver,
   onConfirmed,
 }: ITableBookingChangeProps) {
   const [asking, setAsking] = useState(false);
-  const [uncertain, setUncertain] = useState<IUncertainRelease | null>(null);
-  const [stillHeld, setStillHeld] = useState(false);
-  const releaser = useReleaseHold();
-  const check = useBookingStatus(
-    uncertain?.hold ?? null,
-    uncertain?.pendingFrom,
-  );
+  const [checking, setChecking] = useState(false);
+  const checkingHold = useRef(false);
 
-  const settleRelease = useCallback(
-    (reply: TReleasedHold) => {
-      removeSessionStorage(RELEASE_KEY);
-      setUncertain(null);
-      setStillHeld(false);
-      setAsking(false);
-      if (reply.kind === "confirmed") {
-        onConfirmed({ reference: reply.reference, summary: reply.summary });
-      } else if (reply.kind === "released") {
-        onReleased();
-      }
-    },
-    [onConfirmed, onReleased],
-  );
-
-  useEffect(() => {
-    const saved = getSessionStorage<ISavedRelease>(RELEASE_KEY);
-    if (
-      allowHoldCancellation &&
-      payment &&
-      saved?.reference === payment.summary.reference &&
-      saved.revision === payment.summary.revision
-    ) {
-      setUncertain({
-        hold: payment.summary,
-        pendingFrom: (saved.startedAt ?? Date.now()) + RELEASE_SETTLED_MS,
-      });
-      setAsking(true);
+  async function chooseAnotherTime() {
+    if (!payment || checkingHold.current) return;
+    checkingHold.current = true;
+    setChecking(true);
+    const result = await checkHold(payment.summary);
+    setAsking(false);
+    setChecking(false);
+    checkingHold.current = false;
+    if (result?.status === "confirmed") {
+      onConfirmed({ reference: result.reference, summary: result.summary });
+    } else {
+      onStartOver();
     }
-  }, [payment, allowHoldCancellation]);
-
-  useEffect(() => {
-    if (!uncertain) return;
-    if (check.kind === "confirmed") {
-      settleRelease(check);
-    } else if (check.kind === "failed") {
-      settleRelease({ kind: "released" });
-    } else if (check.kind === "pending") {
-      removeSessionStorage(RELEASE_KEY);
-      setUncertain(null);
-      setStillHeld(true);
-    }
-  }, [check, uncertain, settleRelease]);
-
-  function releaseAndChange() {
-    if (!payment || !allowHoldCancellation) return;
-    const { summary } = payment;
-    const startedAt = Date.now();
-    setStillHeld(false);
-    setSessionStorage(RELEASE_KEY, {
-      reference: summary.reference,
-      revision: summary.revision,
-      startedAt,
-    } satisfies ISavedRelease);
-    releaser.release(payment.summary, (reply) => {
-      if (reply) {
-        settleRelease(reply);
-      } else {
-        setUncertain({
-          hold: { ...summary },
-          pendingFrom: startedAt + RELEASE_SETTLED_MS,
-        });
-      }
-    });
   }
 
   return (
@@ -222,38 +146,19 @@ export function TableBookingChange({
         type="button"
         className={styles.editAction}
         aria-label="Edit date & guests"
-        disabled={busy || (payment !== null && !allowHoldCancellation)}
-        aria-describedby={
-          payment && !allowHoldCancellation ? "booking-change-help" : undefined
-        }
+        disabled={busy || checking}
         onClick={payment ? () => setAsking(true) : onEdit}
       >
         <Pencil aria-hidden="true" />
         <span className={styles.desktopOnly}>Edit date &amp; guests</span>
         <span className={styles.mobileOnly}>Edit</span>
       </button>
-      {asking && payment && allowHoldCancellation && (
+      {asking && payment && (
         <ChangeDialog
           summary={payment.summary}
-          releasing={releaser.releasing}
-          check={uncertain ? check : null}
-          stillHeld={stillHeld}
-          onKeep={() => {
-            setStillHeld(false);
-            setAsking(false);
-          }}
-          onRelease={releaseAndChange}
-          onCheckAgain={() => {
-            if (uncertain) {
-              setUncertain({ ...uncertain, hold: { ...uncertain.hold } });
-            }
-          }}
-          onStartAgain={() => {
-            removeSessionStorage(RELEASE_KEY);
-            setUncertain(null);
-            setAsking(false);
-            onReleased();
-          }}
+          checking={checking}
+          onKeep={() => setAsking(false)}
+          onChoose={chooseAnotherTime}
         />
       )}
     </>

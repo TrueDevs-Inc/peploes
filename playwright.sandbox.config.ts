@@ -32,7 +32,6 @@ export default defineConfig({
     env: Object.fromEntries([
       ...Object.entries(E2E_ENVIRONMENT),
       ["BOOKING_HOLD_SECRET", randomBytes(32).toString("hex")],
-      ["BOOKING_ALLOW_HOLD_CANCELLATION", "true"],
     ]),
     url: baseURL,
     reuseExistingServer: false,

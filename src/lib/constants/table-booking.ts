@@ -15,16 +15,10 @@ export const TABLE_BOOKING_CONTENT = {
   changeBooking: {
     heading: "Change your booking?",
     text: (time: string, date: string) =>
-      `We'll release your table for ${time} on ${date} so you can choose another time. You haven't been charged.`,
+      `We'll let go of your table for ${time} on ${date} so you can choose another time. It's released automatically in a few minutes, and you haven't been charged. Please don't finish its payment in another tab.`,
     keep: "Keep My Table",
-    release: "Release and Change",
-    releasing: "Releasing…",
-    checking: "Checking whether your table was released…",
-    checkingAction: "Checking…",
-    stillHeld:
-      "We couldn't release your table, so it's still held for you. You can keep it or try again.",
-    unknown: (reference: string) =>
-      `We couldn't confirm whether booking ${reference} was released. Please call us on ${RESTAURANT_CONTACT.phoneLabel} before booking or paying again.`,
+    choose: "Choose Another Time",
+    checking: "Checking…",
   },
   steps: [
     { number: "01", mobileNumber: "1", label: "Find a table" },

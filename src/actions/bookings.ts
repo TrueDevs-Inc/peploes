@@ -21,7 +21,6 @@ import type {
   TGuestDetailsResult,
   TGuestDetailsView,
   THeldTable,
-  TReleasedHold,
 } from "@/lib/types";
 import { bookings } from "@/services/bookings";
 
@@ -109,25 +108,4 @@ export async function submitGuestDetails(
   details: unknown,
 ): Promise<TBookingResponse<TGuestDetailsView>> {
   return toBookingResponse(await submitGuestDetailsAction(details));
-}
-
-const releaseHoldAction = createPublicAction<TReleasedHold, TBookingErrorCode>({
-  handler: async ({ input }) => {
-    const cookieStore = await cookies();
-    const holdReference = pageHoldReference(input);
-    const result = await bookings.releaseHold(
-      input,
-      readHoldToken(cookieStore, holdReference),
-    );
-    if (result.isOk() || result.error.clearHold) {
-      forgetHoldToken(cookieStore, holdReference);
-    }
-    return result;
-  },
-});
-
-export async function releaseHold(
-  hold: unknown,
-): Promise<TBookingResponse<TReleasedHold>> {
-  return toBookingResponse(await releaseHoldAction(hold));
 }

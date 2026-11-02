@@ -298,7 +298,7 @@ test("reloading while details are still sending waits for the send budget before
       JSON.parse(sessionStorage.getItem("peploes:booking-details") ?? "{}")
         .startedAt,
   );
-  await page.clock.fastForward("00:04");
+  await page.clock.fastForward("00:06");
   await page.unroute("**/book-a-table");
   await page.unroute("**/api/bookings/hold-status?**");
   await page.clock.resume();
@@ -315,7 +315,7 @@ test("reloading while details are still sending waits for the send budget before
     reservations.getByText(RESEND_NOTE, { exact: true }),
   ).toHaveCount(0);
   await expect(confirm).toHaveCount(0);
-  await page.clock.fastForward("00:04");
+  await page.clock.fastForward("00:06");
   await expect(reservations.getByRole("alert")).toHaveText(RESEND_NOTE);
   await expect(reservations.getByRole("timer")).toBeVisible();
   expect(
@@ -608,209 +608,12 @@ function changeDialog(page: Page) {
   return {
     dialog,
     keep: dialog.getByRole("button", { name: "Keep My Table", exact: true }),
-    release: dialog.getByRole("button", {
-      name: "Release and Change",
+    choose: dialog.getByRole("button", {
+      name: "Choose Another Time",
       exact: true,
     }),
   };
 }
-
-test("repeated Escape and platform close requests cannot dismiss the dialog while release is pending", async ({
-  page,
-}) => {
-  const reservations = await openBooking(page);
-  await page.route("https://js.stripe.com/**", (route) => route.abort());
-  await page.route("**/api/bookings/hold-status?**", (route) =>
-    route.fulfill({ json: { ok: true, data: { status: "pending" } } }),
-  );
-  await savedPaymentStep(page, "E2E99999", 1);
-  await page.reload();
-  await page.route("**/book-a-table", (route) => {
-    if (route.request().method() !== "POST") return route.fallback();
-  });
-  await reservations
-    .getByRole("button", { name: "Edit date & guests" })
-    .click();
-  const { dialog, release, keep } = changeDialog(page);
-  await release.click();
-  await expect(
-    dialog.getByRole("button", { name: "Releasing…", exact: true }),
-  ).toBeDisabled();
-  await expect(keep).toBeDisabled();
-
-  await page.keyboard.press("Escape");
-  await page.keyboard.press("Escape");
-  await expect(dialog).toBeVisible();
-  await dialog.evaluate((element: HTMLDialogElement) => element.requestClose());
-  await expect(dialog).toBeVisible();
-  await dialog.evaluate((element) => element.removeAttribute("closedby"));
-  await page.keyboard.press("Escape");
-  await page.keyboard.press("Escape");
-  await expect(dialog).toBeVisible();
-  await dialog.evaluate(
-    (element: HTMLDialogElement) =>
-      new Promise<void>((resolve) => {
-        element.addEventListener("close", () => queueMicrotask(resolve), {
-          once: true,
-        });
-        element.close();
-      }),
-  );
-  await expect(dialog).toBeVisible();
-  await expect(keep).toBeDisabled();
-  expect(
-    await page.evaluate(() =>
-      sessionStorage.getItem("peploes:booking-payment"),
-    ),
-  ).not.toBeNull();
-});
-
-test("when the release reply is lost, the page checks the booking and preserves it across reload", async ({
-  page,
-  isMobile,
-}) => {
-  const { reservations, booked } = await heldWithDetails(page, isMobile);
-  const held = await page.evaluate(() =>
-    JSON.parse(sessionStorage.getItem("peploes:booking-hold") ?? "{}"),
-  );
-  await page.route("https://js.stripe.com/**", (route) => route.abort());
-  await savedPaymentStep(page, held.holdReference, held.holdRevision);
-  await page.reload();
-  const saved = await page.evaluate(() =>
-    JSON.parse(sessionStorage.getItem("peploes:booking-payment") ?? "{}"),
-  );
-  let status = "pending";
-  await page.route("**/api/bookings/hold-status?**", (route) =>
-    route.fulfill({
-      json: {
-        ok: true,
-        data: {
-          status,
-          reference: held.holdReference,
-          summary: saved.summary,
-          clearHold: status !== "pending",
-        },
-      },
-    }),
-  );
-  await dropPosts(page, false);
-  await reservations
-    .getByRole("button", { name: "Edit date & guests" })
-    .click();
-  const { dialog, release, keep } = changeDialog(page);
-  await release.click();
-
-  await expect(dialog.getByRole("status")).toHaveText(
-    "Checking whether your table was released…",
-  );
-  await expect(
-    dialog.getByRole("button", { name: "Checking…", exact: true }),
-  ).toBeDisabled();
-  expect(
-    await dialog.evaluate(
-      (element) => element.scrollWidth - element.clientWidth,
-    ),
-  ).toBeLessThanOrEqual(1);
-  await expect(keep).toBeDisabled();
-  await expect(
-    reservations.getByRole("button", { name: "Find a Table", exact: true }),
-  ).toHaveCount(0);
-  await page.keyboard.press("Escape");
-  await page.keyboard.press("Escape");
-  await expect(dialog).toBeVisible();
-
-  await page.reload();
-  await expect(dialog.getByRole("status")).toHaveText(
-    "Checking whether your table was released…",
-  );
-  expect(
-    await page.evaluate(() =>
-      sessionStorage.getItem("peploes:booking-payment"),
-    ),
-  ).not.toBeNull();
-  status = "confirmed";
-
-  await expect(booked).toBeVisible({ timeout: 10_000 });
-  await expect(dialog).toHaveCount(0);
-  expect(
-    await page.evaluate(() =>
-      sessionStorage.getItem("peploes:booking-release"),
-    ),
-  ).toBeNull();
-});
-
-test("an uncertain release offers status checks without another cancellation, then returns to search only when the hold ends", async ({
-  page,
-  isMobile,
-}) => {
-  await page.clock.install();
-  const { reservations } = await heldWithDetails(page, isMobile);
-  const held = await page.evaluate(() =>
-    JSON.parse(sessionStorage.getItem("peploes:booking-hold") ?? "{}"),
-  );
-  await page.route("https://js.stripe.com/**", (route) => route.abort());
-  await savedPaymentStep(page, held.holdReference, held.holdRevision);
-  await page.reload();
-  let ended = false;
-  await page.route("**/api/bookings/hold-status?**", (route) =>
-    ended
-      ? route.fulfill({
-          json: {
-            ok: true,
-            data: { status: "failed", reference: held.holdReference },
-          },
-        })
-      : route.fulfill({
-          status: 503,
-          json: {
-            ok: false,
-            error: {
-              code: "SERVICE_UNAVAILABLE",
-              message: "Online booking isn't available right now.",
-            },
-          },
-        }),
-  );
-  let releaseRequests = 0;
-  page.on("request", (request) => {
-    if (
-      request.method() === "POST" &&
-      new URL(request.url()).pathname === "/book-a-table"
-    ) {
-      releaseRequests += 1;
-    }
-  });
-  await dropPosts(page, false);
-  await reservations
-    .getByRole("button", { name: "Edit date & guests" })
-    .click();
-  const { dialog, release, keep } = changeDialog(page);
-  await release.click();
-  await expect(dialog.getByRole("status")).toHaveText(
-    "Checking whether your table was released…",
-  );
-  await page.clock.fastForward("01:01");
-  await expect(dialog.getByRole("status")).toHaveText(
-    `We couldn't confirm whether booking ${held.holdReference} was released. Please call us on +353 1 676 3144 before booking or paying again.`,
-  );
-  await expect(keep).toBeDisabled();
-  await page.keyboard.press("Escape");
-  await expect(dialog).toBeVisible();
-  ended = true;
-  await dialog
-    .getByRole("button", { name: "Check Again", exact: true })
-    .click();
-
-  await expect(
-    reservations.getByRole("button", { name: "Find a Table", exact: true }),
-  ).toBeVisible();
-  expect(releaseRequests).toBe(1);
-  expect(
-    await page.evaluate(() =>
-      sessionStorage.getItem("peploes:booking-payment"),
-    ),
-  ).toBeNull();
-});
 
 test("Edit on the payment step asks first, and Keep My Table leaves the payment alone", async ({
   page,
@@ -828,13 +631,13 @@ test("Edit on the payment step asks first, and Keep My Table leaves the payment 
     exact: true,
   });
   await expect(payment).toBeVisible();
-  const { dialog, keep, release } = changeDialog(page);
+  const { dialog, keep } = changeDialog(page);
 
   await reservations
     .getByRole("button", { name: "Edit date & guests" })
     .click();
   await expect(dialog).toContainText(
-    "We'll release your table for 6:00 pm on Sat, 7 Nov 2026 so you can choose another time. You haven't been charged.",
+    "We'll let go of your table for 6:00 pm on Sat, 7 Nov 2026 so you can choose another time. It's released automatically in a few minutes, and you haven't been charged. Please don't finish its payment in another tab.",
   );
   await expect(keep).toBeFocused();
   await dialog.evaluate(
@@ -863,24 +666,21 @@ test("Edit on the payment step asks first, and Keep My Table leaves the payment 
   await reservations
     .getByRole("button", { name: "Edit date & guests" })
     .click();
-  await release.click();
-  await expect(
-    reservations.getByRole("button", { name: "Find a Table", exact: true }),
-  ).toBeVisible({ timeout: 10_000 });
+  await dialog.evaluate((element: HTMLDialogElement) => element.requestClose());
+  await expect(dialog).toBeHidden();
+  await expect(payment).toBeVisible();
   expect(
     await page.evaluate(() =>
       sessionStorage.getItem("peploes:booking-payment"),
     ),
-  ).toBeNull();
+  ).not.toBeNull();
 });
 
-test("a booking confirmed during release shows confirmation instead of a new search", async ({
+test("Choose Another Time checks once without a write, forgets the payment on reload, and makes a new hold on Continue", async ({
   page,
   isMobile,
 }) => {
-  const { reservations, booked } = await heldWithDetails(page, isMobile, {
-    time: "7:00 pm",
-  });
+  const { reservations } = await heldWithDetails(page, isMobile);
   const held = await page.evaluate(() =>
     JSON.parse(sessionStorage.getItem("peploes:booking-hold") ?? "{}"),
   );
@@ -890,15 +690,122 @@ test("a booking confirmed during release shows confirmation instead of a new sea
   await reservations
     .getByRole("button", { name: "Edit date & guests" })
     .click();
-  await changeDialog(page).release.click();
-
-  await expect(booked).toBeVisible({ timeout: 10_000 });
+  let checks = 0;
+  let writes = 0;
+  page.on("request", (request) => {
+    if (new URL(request.url()).pathname === "/api/bookings/hold-status") {
+      expect(request.method()).toBe("GET");
+      checks += 1;
+    }
+    if (request.method() === "POST") writes += 1;
+  });
+  await changeDialog(page).choose.click();
+  const search = reservations.getByRole("button", {
+    name: "Find a Table",
+    exact: true,
+  });
+  await expect(search).toBeVisible();
+  expect(checks).toBe(1);
+  expect(writes).toBe(0);
+  expect(
+    await page.evaluate(() => [
+      sessionStorage.getItem("peploes:booking-hold"),
+      sessionStorage.getItem("peploes:booking-payment"),
+      sessionStorage.getItem("peploes:booking-paid"),
+    ]),
+  ).toEqual([null, null, null]);
+  await page.reload();
+  await expect(search).toBeVisible();
   await expect(
-    reservations.getByRole("button", { name: "Find a Table", exact: true }),
+    reservations.getByRole("heading", {
+      name: "Secure your table",
+      exact: true,
+    }),
   ).toHaveCount(0);
+  await chooseDate(reservations, laterFreeDate());
+  await search.click();
+  await reservations
+    .getByRole("button", { name: "6:00 pm", exact: true })
+    .click();
+  await reservations
+    .getByRole("button", { name: "Continue", exact: true })
+    .click();
+  await expect(reservations.getByRole("timer")).toBeVisible();
+  expect(
+    await page.evaluate(
+      () =>
+        JSON.parse(sessionStorage.getItem("peploes:booking-hold") ?? "{}")
+          .holdReference,
+    ),
+  ).not.toBe(held.holdReference);
 });
 
-test("if the old table was already booked, Release and Change shows the booking instead of cancelling it", async ({
+for (const outcome of [
+  "no answer",
+  "NotFound",
+  "failed",
+  "expired",
+  "unavailable",
+]) {
+  test(`Choose Another Time starts a fresh search when the status check gives ${outcome}`, async ({
+    page,
+  }) => {
+    await page.clock.install();
+    const reservations = await openBooking(page);
+    await page.route("https://js.stripe.com/**", (route) => route.abort());
+    await savedPaymentStep(page, "E2E99999", 1);
+    await page.reload();
+    await reservations
+      .getByRole("button", { name: "Edit date & guests" })
+      .click();
+    let checks = 0;
+    await page.route("**/api/bookings/hold-status?**", (route) => {
+      checks += 1;
+      if (outcome === "no answer") return;
+      if (outcome === "NotFound" || outcome === "unavailable") {
+        return route.fulfill({
+          status: outcome === "NotFound" ? 404 : 503,
+          json: {
+            ok: false,
+            error: {
+              code:
+                outcome === "NotFound" ? "NOT_FOUND" : "SERVICE_UNAVAILABLE",
+              message: "Unavailable",
+            },
+          },
+        });
+      }
+      return route.fulfill({ json: { ok: true, data: { status: outcome } } });
+    });
+    const { dialog, choose, keep } = changeDialog(page);
+    await choose.click();
+    if (outcome === "no answer") {
+      await expect(keep).toBeDisabled();
+      await expect(
+        dialog.getByRole("button", { name: "Checking…", exact: true }),
+      ).toBeDisabled();
+      await page.keyboard.press("Escape");
+      await dialog.evaluate((element: HTMLDialogElement) =>
+        element.requestClose(),
+      );
+      await expect(dialog).toBeVisible();
+      await dialog.evaluate((element: HTMLDialogElement) => element.close());
+      await expect(dialog).toBeVisible();
+      await page.clock.fastForward("00:06");
+    }
+    await expect(
+      reservations.getByRole("button", { name: "Find a Table", exact: true }),
+    ).toBeVisible();
+    await expect(dialog).toBeHidden();
+    expect(checks).toBe(1);
+    await page.reload();
+    await expect(
+      reservations.getByRole("button", { name: "Find a Table", exact: true }),
+    ).toBeVisible();
+  });
+}
+
+test("if the old table was already booked, Choose Another Time shows its confirmation and reference", async ({
   page,
   isMobile,
 }) => {
@@ -935,7 +842,8 @@ test("if the old table was already booked, Release and Change shows the booking 
   await reservations
     .getByRole("button", { name: "Edit date & guests" })
     .click();
-  await changeDialog(page).release.click();
+  await page.unroute("**/api/bookings/hold-status?**");
+  await changeDialog(page).choose.click();
 
   await expect(booked).toBeVisible({ timeout: 10_000 });
   await expect(
@@ -1005,91 +913,6 @@ test("while the payment form is still loading, the guest can't edit the search",
   await expect(
     reservations.getByRole("button", { name: "Edit date & guests" }),
   ).toBeDisabled();
-});
-
-test("if a release cancelled nothing, the guest is told the table is still held and can keep it", async ({
-  page,
-  isMobile,
-}) => {
-  await page.clock.install();
-  const { reservations } = await heldWithDetails(page, isMobile);
-  const held = await page.evaluate(() =>
-    JSON.parse(sessionStorage.getItem("peploes:booking-hold") ?? "{}"),
-  );
-  await page.route("https://js.stripe.com/**", (route) => route.abort());
-  await savedPaymentStep(page, held.holdReference, held.holdRevision);
-  await page.reload();
-  await dropPosts(page, false);
-  await reservations
-    .getByRole("button", { name: "Edit date & guests" })
-    .click();
-  const { dialog, release, keep } = changeDialog(page);
-  await release.click();
-  await expect(dialog.getByRole("status")).toHaveText(
-    "Checking whether your table was released…",
-  );
-  await expect(keep).toBeDisabled();
-
-  const stillHeld =
-    "We couldn't release your table, so it's still held for you. You can keep it or try again.";
-  await page.clock.fastForward("00:16");
-  await expect(dialog.getByRole("status")).toHaveText(stillHeld);
-  await expect(keep).toBeEnabled();
-
-  await release.click();
-  await expect(dialog.getByRole("status")).toHaveText(
-    "Checking whether your table was released…",
-  );
-  await page.clock.fastForward("00:16");
-  await expect(dialog.getByRole("status")).toHaveText(stillHeld);
-  await keep.click();
-  await expect(dialog).toBeHidden();
-  await expect(
-    reservations.getByRole("heading", {
-      name: "Secure your table",
-      exact: true,
-    }),
-  ).toBeVisible();
-  expect(
-    await page.evaluate(() =>
-      sessionStorage.getItem("peploes:booking-release"),
-    ),
-  ).toBeNull();
-});
-
-test("if the hold can no longer be checked, the release dialog says so and lets the guest start again", async ({
-  page,
-}) => {
-  const reservations = await openBooking(page);
-  await page.route("https://js.stripe.com/**", (route) => route.abort());
-  await page.route("**/api/bookings/hold-status?**", (route) =>
-    route.fulfill({ json: { ok: true, data: { status: "pending" } } }),
-  );
-  await savedPaymentStep(page, "E2E99999", 1);
-  await page.reload();
-  await reservations
-    .getByRole("button", { name: "Edit date & guests" })
-    .click();
-  const { dialog, release } = changeDialog(page);
-  await page.unroute("**/api/bookings/hold-status?**");
-  await release.click();
-
-  await expect(dialog.getByRole("status")).toHaveText(
-    "We couldn't confirm whether booking E2E99999 was released. Please call us on +353 1 676 3144 before booking or paying again.",
-    { timeout: 10_000 },
-  );
-  await dialog
-    .getByRole("button", { name: "Start Again", exact: true })
-    .click();
-  await expect(
-    reservations.getByRole("button", { name: "Find a Table", exact: true }),
-  ).toBeVisible();
-  expect(
-    await page.evaluate(() => [
-      sessionStorage.getItem("peploes:booking-release"),
-      sessionStorage.getItem("peploes:booking-payment"),
-    ]),
-  ).toEqual([null, null]);
 });
 
 test("if the hold time runs out while the details are sending and the reply is lost, the page still checks the booking", async ({
@@ -1790,7 +1613,7 @@ for (const answer of ["unanswered", "unavailable"]) {
 }
 
 for (const failure of ["throws", "drops"]) {
-  test(`when booking storage ${failure} writes, payment is blocked and Edit still asks to release`, async ({
+  test(`when booking storage ${failure} writes, payment is blocked and Edit still asks before changing the booking`, async ({
     page,
     isMobile,
   }) => {

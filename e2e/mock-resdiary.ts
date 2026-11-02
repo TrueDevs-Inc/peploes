@@ -54,28 +54,6 @@ function reply(method: string, pathname: string): unknown {
       ],
     };
   }
-  if (method === "GET" && pathname === `${restaurant}/CancellationReasons`) {
-    return [
-      {
-        Id: 26952,
-        Description: "Change of plans",
-        DisplayOnline: true,
-        ApplyToStandardBookings: true,
-        IsNoShow: false,
-        DoesBlock: false,
-      },
-    ];
-  }
-  if (method === "POST" && pathname.endsWith("/Cancel")) {
-    const reference = pathname.split("/").at(-2) ?? "";
-    const holdId = Number(reference.replace(/^E2E/, ""));
-    if (holds.get(holdId)?.time === FAKE_RESDIARY.confirmedOnCancelTime) {
-      booked.add(holdId);
-    } else {
-      cancelled.add(holdId);
-    }
-    return null;
-  }
   throw new Error(`Unexpected ResDiary request in browser tests: ${pathname}`);
 }
 
@@ -167,10 +145,8 @@ async function availableDates(body: string): Promise<Response> {
 }
 
 const booked = new Set<number>();
-const cancelled = new Set<number>();
 
 function holdState(holdId: number): string {
-  if (cancelled.has(holdId)) return "Cancelled";
   if (holds.get(holdId)?.time === FAKE_RESDIARY.failingStatusTime) {
     return "Failed";
   }

@@ -42,7 +42,6 @@ export const FAKE_RESDIARY = {
   slowHoldTime: "12:30",
   failingHoldTime: "20:00",
   failingStatusTime: "12:00",
-  confirmedOnCancelTime: "19:00",
   depositTime: "18:30",
   lostReplyEmail: "lost-reply@example.com",
 } as const;

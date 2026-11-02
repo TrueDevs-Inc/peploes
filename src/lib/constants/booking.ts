@@ -13,7 +13,6 @@ export const BOOKING_BUDGET_MS = {
   guestStatus: 3000,
   guestResendMin: 3000,
   guestTotal: 15_000,
-  release: 12_000,
   stripeLoad: 15_000,
   stripeCheck: 5000,
 } as const;
@@ -102,8 +101,6 @@ export const BOOKING_LOG = {
   serviceStartMissing:
     "ResDiary sent a service without a start time, so its times after midnight cannot be placed",
   everyWeekdayClosed: "ResDiary closes every weekday",
-  noCancelReason:
-    "ResDiary has no cancellation reason the site may use to release a hold",
   unexpected: "Booking failed unexpectedly",
   rangeUnchecked: "ResDiary left part of a date range unchecked",
   skippedTimes: "Booking skipped times ResDiary sent",

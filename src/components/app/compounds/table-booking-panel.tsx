@@ -39,7 +39,7 @@ import {
   trackBookingConfirmed,
 } from "@/lib/analytics/booking";
 import { holdReferenceSchema } from "@/lib/booking-schema";
-import { RESTAURANT_CONTACT, ROUTES } from "@/lib/constants";
+import { ROUTES } from "@/lib/constants";
 import {
   BOOKING_BANK_REFUSED_STATUSES,
   BOOKING_GUEST_LIMITS,
@@ -394,23 +394,13 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
               )}
             </p>
             <TableBookingChange
-              allowHoldCancellation={findTable.allowHoldCancellation}
               busy={busy}
               payment={payment}
               onEdit={editSearch}
-              onReleased={startOver}
+              onStartOver={startOver}
               onConfirmed={confirmBooking}
             />
           </div>
-          {payment && !findTable.allowHoldCancellation && (
-            <p id="booking-change-help" className={styles.flowDescription}>
-              To change this table, please call us on{" "}
-              <a href={`tel:${RESTAURANT_CONTACT.phone}`}>
-                {RESTAURANT_CONTACT.phoneLabel}
-              </a>
-              .
-            </p>
-          )}
           {step === 1 ? (
             <BookingTimes
               longDate={longDate}

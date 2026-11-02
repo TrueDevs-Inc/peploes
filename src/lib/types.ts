@@ -34,7 +34,6 @@ import type { cookiePreferencesSchema } from "@/lib/cookie-consent";
 import type { ErrorCode, GA4Event, HttpVerb, LogLevel } from "@/lib/enums";
 import type { createResDiaryProvider } from "@/lib/resdiary-provider";
 import type {
-  cancelReasonsReplySchema,
   closedDatesReplySchema,
   dateRangeReplySchema,
   guestReplySchema,
@@ -356,9 +355,7 @@ export type TResDiaryOperation =
   | "changeHold"
   | "submitHoldGuest"
   | "getHoldStatus"
-  | "getClosedDates"
-  | "getCancellationReasons"
-  | "cancelHold";
+  | "getClosedDates";
 
 interface IResDiaryFailureBase {
   operation: TResDiaryOperation;
@@ -496,19 +493,6 @@ export interface IResDiaryHoldStatus {
   reference: string | null;
 }
 
-export interface IResDiaryCancelReason {
-  id: number;
-  label: string;
-}
-
-export interface IResDiaryCancelHoldInput {
-  holdId: number;
-  reference: string;
-  reasonId: number;
-}
-
-export type TResDiaryCancelOutcome = "released" | "confirmed";
-
 export interface IResDiaryClosedDates {
   closedWeekdays: number[];
   closedPeriods: IDatePeriod[];
@@ -559,10 +543,6 @@ export type TResDiaryClosedDatesReply = z.infer<typeof closedDatesReplySchema>;
 export type TResDiaryHoldReply = z.infer<typeof holdReplySchema>;
 export type TResDiaryGuestReply = z.infer<typeof guestReplySchema>;
 export type TResDiaryHoldStatusReply = z.infer<typeof holdStatusReplySchema>;
-export type TResDiaryCancelReasonsReply = z.infer<
-  typeof cancelReasonsReplySchema
->;
-
 export type TBookingProvider = Pick<
   TResDiaryProvider,
   | "getRules"
@@ -573,8 +553,6 @@ export type TBookingProvider = Pick<
   | "changeHold"
   | "submitHoldGuest"
   | "getHoldStatus"
-  | "getCancellationReasons"
-  | "cancelHold"
 >;
 
 export type TBookingOperation =
@@ -583,8 +561,7 @@ export type TBookingOperation =
   | "getTimes"
   | "holdTable"
   | "submitGuestDetails"
-  | "getHoldStatus"
-  | "releaseHold";
+  | "getHoldStatus";
 
 export type TBookingSkipReason =
   (typeof BOOKING_SKIP_REASONS)[keyof typeof BOOKING_SKIP_REASONS];
@@ -601,7 +578,6 @@ export type TUnsupportedSetting =
 export interface IBookingServiceDeps {
   provider?: TBookingProvider;
   holdSecret?: string | null;
-  allowHoldCancellation?: boolean;
 }
 
 export type TBookingErrorCode =
@@ -648,7 +624,6 @@ export interface IBookingVisit {
 }
 
 export interface IFindTableData {
-  allowHoldCancellation: boolean;
   partySize: { min: number; max: number; default: number };
   calendar: {
     today: string;
@@ -779,10 +754,6 @@ export interface IHoldStatusResult {
   summary: IHoldSummary;
   clearHold: boolean;
 }
-
-export type TReleasedHold =
-  | { kind: "released" }
-  | { kind: "confirmed"; reference: string; summary: IHoldSummary };
 
 export interface IHoldCookieOptions {
   httpOnly: boolean;
@@ -1824,31 +1795,11 @@ export interface IStripeReady {
 }
 
 export interface ITableBookingChangeProps {
-  allowHoldCancellation: boolean;
   busy: boolean;
   payment: TPaymentStep | null;
   onEdit: () => void;
-  onReleased: () => void;
+  onStartOver: () => void;
   onConfirmed: (booked: ITableBookingConfirmationProps) => void;
-}
-
-export interface ITableBookingChangeDialogProps {
-  summary: IHoldSummary;
-  releasing: boolean;
-  check: TBookingStatusCheck | null;
-  stillHeld: boolean;
-  onKeep: () => void;
-  onRelease: () => void;
-  onCheckAgain: () => void;
-  onStartAgain: () => void;
-}
-
-export interface IReleaseHold {
-  releasing: boolean;
-  release: (
-    hold: IHoldSummary,
-    onReply: (reply: TReleasedHold | null) => void,
-  ) => void;
 }
 
 export interface ITableBookingPaymentProps {
