@@ -2037,6 +2037,62 @@ test("a return with unrelated saved state shows the recovered hold's summary", a
   }
 });
 
+for (const flow of ["Pay", "a matching same-tab bank return"]) {
+  test(`${flow} keeps the paid check after reload when the paid-marker write fails`, async ({
+    page,
+    isMobile,
+  }) => {
+    const { reservations, step } = await depositStep(page, isMobile);
+    await page.evaluate(() => {
+      const save = Storage.prototype.setItem;
+      Storage.prototype.setItem = function (key, value) {
+        if (this === sessionStorage && key === "peploes:booking-paid")
+          throw new Error("Storage blocked");
+        save.call(this, key, value);
+      };
+    });
+    await page.addInitScript(() => {
+      Reflect.set(window, "stripeIntentStatus", "succeeded");
+      const save = Storage.prototype.setItem;
+      Storage.prototype.setItem = function (key, value) {
+        if (this === sessionStorage && key === "peploes:booking-paid")
+          throw new Error("Storage blocked");
+        save.call(this, key, value);
+      };
+    });
+    if (flow === "Pay") {
+      await reservations
+        .getByRole("button", { name: "Pay €20.00 and Reserve", exact: true })
+        .click();
+    } else {
+      await page.goto(returnedUrl(step, "succeeded"));
+    }
+    await expect(
+      reservations.getByText("Confirming your booking…", { exact: true }),
+    ).toBeVisible();
+    await expect(page).toHaveURL("/book-a-table");
+    if (flow === "Pay") {
+      expect(
+        await page.evaluate(() => Reflect.get(window, "stripeConfirmations")),
+      ).toBe(1);
+    }
+    await page.reload();
+    await expect(
+      reservations.getByText("Confirming your booking…", { exact: true }),
+    ).toBeVisible();
+    await expect(reservations).toContainText(step.summary.timeLabel);
+    await expect(
+      reservations.getByRole("button", { name: "Find a Table", exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      reservations.getByLabel("Email address", { exact: false }),
+    ).toHaveCount(0);
+    expect(
+      await page.evaluate(() => Reflect.get(window, "stripeConfirmations")),
+    ).toBe(0);
+  });
+}
+
 test("a recovered paid booking survives another reload when session writes fail", async ({
   page,
   isMobile,

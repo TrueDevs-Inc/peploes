@@ -396,8 +396,10 @@ after ResDiary confirms it.
   confirmation soon if your money is deducted." Follow how AnjomaZone
   handles the same case.
 - Store in `sessionStorage` that Stripe accepted a payment for this
-  `holdReference`. After a reload or a return from Stripe, check `hold-status`
-  again before showing anything else. If it answers `NotFound` after a payment
+  `holdReference`. Remove the saved payment step only after saving the paid
+  marker succeeds, so a failed write leaves the payment step available for
+  recovery. After a reload or a return from Stripe, check `hold-status` again
+  before showing anything else. If it answers `NotFound` after a payment
   was accepted (the hold cookie ends 15 minutes after the hold), show
   `stillConfirming` with the reference, not "choose a time again".
 

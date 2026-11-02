@@ -180,8 +180,7 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
       if (saved.kind === "refused") setPaymentError(content.payment.bankFailed);
       return;
     }
-    setSessionStorage(PAID_KEY, saved.summary);
-    removeSessionStorage(PAYMENT_KEY);
+    savePaid(saved.summary);
     setPaid(saved.summary);
   }, [place, resume, restoreDetails, showHeld]);
 
@@ -219,8 +218,7 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
   const resumePaid = useCallback(
     (summary: IHoldSummary) => {
       forgetGuestDetails();
-      if (setSessionStorage(PAID_KEY, summary)) forgetBankReturn();
-      removeSessionStorage(PAYMENT_KEY);
+      if (savePaid(summary)) forgetBankReturn();
       showHeld(choiceFor(summary), summary);
       setReturned(null);
       setPaid(summary);
@@ -582,6 +580,12 @@ function choiceFor(summary: IHoldSummary): IHoldChoice {
     time: summary.time,
     partySize: summary.partySize,
   };
+}
+
+function savePaid(summary: IHoldSummary): boolean {
+  if (!setSessionStorage(PAID_KEY, summary)) return false;
+  removeSessionStorage(PAYMENT_KEY);
+  return true;
 }
 
 function forgetBankReturn() {
