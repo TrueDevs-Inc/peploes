@@ -86,6 +86,8 @@ the page to them.
   If ResDiary marks that return time as required, the guest must tick "I
   understand the table is required back by 8:15 pm" before continuing. On the
   sandbox, dinner times from 7:15 pm are required.
+- Picking another time clears the return-deadline tick. Find a Table and
+  making another booking also clear it.
 
 ## Holding a table
 

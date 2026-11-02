@@ -1,6 +1,123 @@
+import type { ITimesData, TBookingResponse } from "../src/lib/types";
+
 import { dayLabel, dublinToday, openDates } from "./booking-fixtures";
-import { chooseDate, laterFreeDate } from "./booking-page";
+import {
+  chooseDate,
+  findTable,
+  laterFreeDate,
+  openBooking,
+} from "./booking-page";
 import { expect, test } from "./menu-test";
+
+test("accepting another time's required deadline replaces the previous acceptance", async ({
+  page,
+}) => {
+  await page.route("**/api/bookings/times?**", async (route) => {
+    const response = await route.fetch();
+    const reply: TBookingResponse<ITimesData> = await response.json();
+    if (!reply.ok) throw new Error("Expected available booking times");
+    await route.fulfill({
+      response,
+      json: {
+        ...reply,
+        data: {
+          ...reply.data,
+          times: reply.data.times
+            .filter((slot) => ["18:00", "19:00"].includes(slot.time))
+            .map((slot) => ({
+              ...slot,
+              offers: slot.offers.map((offer) => ({
+                ...offer,
+                returnBy: offer.returnBy && {
+                  ...offer.returnBy,
+                  required: true,
+                },
+              })),
+            })),
+        },
+      },
+    });
+  });
+  const reservations = await openBooking(page);
+  await chooseDate(reservations, laterFreeDate());
+  await findTable(reservations);
+  const first = reservations.getByRole("button", {
+    name: "7:00 pm",
+    exact: true,
+  });
+  const second = reservations.getByRole("button", {
+    name: "6:00 pm",
+    exact: true,
+  });
+  const firstDeadline = reservations.getByRole("checkbox", {
+    name: "I understand the table is required back by 9:00 pm",
+    exact: true,
+  });
+  const secondDeadline = reservations.getByRole("checkbox", {
+    name: "I understand the table is required back by 8:00 pm",
+    exact: true,
+  });
+  const continueButton = reservations.getByRole("button", {
+    name: "Continue",
+    exact: true,
+  });
+
+  await first.click();
+  await expect(firstDeadline).not.toBeChecked();
+  await expect(continueButton).toBeDisabled();
+  await firstDeadline.check();
+  await expect(continueButton).toBeEnabled();
+  await second.click();
+  await expect(secondDeadline).not.toBeChecked();
+  await expect(continueButton).toBeDisabled();
+  await secondDeadline.check();
+  await expect(continueButton).toBeEnabled();
+  await first.click();
+  await expect(firstDeadline).not.toBeChecked();
+  await expect(continueButton).toBeDisabled();
+});
+
+for (const restored of [false, true]) {
+  test(`a ${restored ? "restored" : "new"} optional-deadline hold does not accept another time's required deadline`, async ({
+    page,
+  }) => {
+    const reservations = await openBooking(page);
+    await chooseDate(reservations, laterFreeDate());
+    await findTable(reservations);
+    await reservations
+      .getByRole("button", { name: "6:00 pm", exact: true })
+      .click();
+    await expect(
+      reservations.getByText("Table until 8:00 pm", { exact: true }),
+    ).toBeVisible();
+    await reservations
+      .getByRole("button", { name: "Continue", exact: true })
+      .click();
+    await expect(reservations.getByRole("timer")).toBeVisible();
+    if (restored) {
+      await page.reload();
+      await expect(reservations.getByRole("timer")).toBeVisible();
+    }
+    await reservations
+      .getByRole("button", { name: "Back to times", exact: true })
+      .click();
+    await reservations
+      .getByRole("button", { name: "7:00 pm", exact: true })
+      .click();
+    const deadline = reservations.getByRole("checkbox", {
+      name: "I understand the table is required back by 9:00 pm",
+      exact: true,
+    });
+    const continueButton = reservations.getByRole("button", {
+      name: "Continue",
+      exact: true,
+    });
+    await expect(deadline).not.toBeChecked();
+    await expect(continueButton).toBeDisabled();
+    await deadline.check();
+    await expect(continueButton).toBeEnabled();
+  });
+}
 
 test("desktop booking keeps the panel in place when opening available times", async ({
   page,
@@ -344,6 +461,11 @@ test("booking preview preserves selections on back navigation and resets time wh
   await expect(
     reservations.getByRole("button", { name: "7:00 pm", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    reservations.getByLabel(
+      "I understand the table is required back by 9:00 pm",
+    ),
+  ).toBeChecked();
   await reservations
     .getByRole("button", { name: "Edit date & guests", exact: true })
     .click();
@@ -353,6 +475,14 @@ test("booking preview preserves selections on back navigation and resets time wh
   await reservations
     .getByRole("button", { name: "Find a Table", exact: true })
     .click();
+  await reservations
+    .getByRole("button", { name: "7:00 pm", exact: true })
+    .click();
+  await expect(
+    reservations.getByLabel(
+      "I understand the table is required back by 9:00 pm",
+    ),
+  ).not.toBeChecked();
   await expect(
     reservations.getByRole("button", { name: "Continue", exact: true }),
   ).toBeDisabled();
