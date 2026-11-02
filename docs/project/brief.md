@@ -702,7 +702,7 @@ readable, but new cards use explicit URLs.
 For an initial example, from `studio` run
 `bun run seed:events:preview` to preview, then
 `bun run seed:events:development` to create it. This command is restricted to
-`3ggctsor/development`, creates only missing settings and one labelled test
+`w789ottu/development`, creates only missing settings and one labelled test
 event, and never replaces existing documents. The example is not a real event.
 No production content is copied automatically.
 The package commands use a Node launcher to set `PEPLOES_SEED_APPLY` explicitly: preview commands force

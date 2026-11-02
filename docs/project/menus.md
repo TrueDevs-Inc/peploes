@@ -148,8 +148,17 @@ desktop frame and a full-content-width, 214px-high mobile frame; both focal poin
 are preview image data. New presentation fields from `dev` are not all exposed
 by the current Studio schemas and projections; default rendering still applies.
 
-The active development project is `3ggctsor`, dataset `development`. Production
-is separate and is not used by this setup.
+The active project is `w789ottu` (Peploes, in the TrueDevs Sanity organization),
+dataset `development`. Its `production` dataset stays empty until the restaurant
+approves content. The earlier project `3ggctsor` is outside the organization and
+no longer used; its published development content was copied on 2 November 2026.
+Images were copied from the public CDN, which serves converted files, so WebP
+originals are stored as PNG or JPEG at the same dimensions.
+
+The development Studio is `https://peploes-dev.sanity.studio`, application ID
+`jhr5xqsq76c5ddm6dryvws85`, deployed from `studio` with
+`SANITY_STUDIO_PROJECT_ID=w789ottu SANITY_STUDIO_DATASET=development bunx sanity deploy --url peploes-dev`.
+Deploy a production Studio under its own hostname; do not reuse this application ID.
 
 | Studio content type | Menu URL name | Website path |
 | --- | --- | --- |
