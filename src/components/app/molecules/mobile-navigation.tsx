@@ -167,7 +167,7 @@ export function MobileNavigation({
                             aria-hidden={!isExpanded}
                             inert={!isExpanded}
                             className={cn(
-                              "grid transition-[grid-template-rows,visibility] duration-200 motion-reduce:transition-none",
+                              "grid transition-[grid-template-rows,visibility,margin] duration-200 motion-reduce:transition-none",
                               isExpanded
                                 ? "visible mt-1 grid-rows-[1fr]"
                                 : "invisible grid-rows-[0fr]",
