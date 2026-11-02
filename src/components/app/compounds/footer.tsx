@@ -23,7 +23,7 @@ export function Footer() {
     <footer className={cn(dmSans.className, "bg-warm-cream text-ink")}>
       <div
         data-footer-container
-        className="site-container-inset pt-14 pb-10 xl:pt-20"
+        className="site-container-inset pt-8 pb-10 xl:pt-20"
       >
         <div
           data-footer-columns
