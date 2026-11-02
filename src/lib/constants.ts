@@ -11,6 +11,7 @@ import type {
 export const HTTP_STATUS = {
   OK: 200,
   CREATED: 201,
+  ACCEPTED: 202,
   NO_CONTENT: 204,
   BAD_REQUEST: 400,
   UNAUTHORIZED: 401,
@@ -547,4 +548,14 @@ export const CARD_DESCRIPTION_MAX_WORDS = 12;
 export const SEASONAL_GALLERY_LIMITS = {
   MIN_IMAGES: 3,
   MAX_IMAGES: 5,
+} as const;
+
+export const NEWSLETTER_LIMITS = {
+  emailMaxLength: 254,
+  rateLimitSecretMinLength: 32,
+  requestsPerWindow: 3,
+  window: "1 h",
+  rateLimitTimeoutMs: 2_000,
+  providerTimeoutMs: 10_000,
+  redisPrefix: "peploes-newsletter",
 } as const;
