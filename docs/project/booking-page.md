@@ -201,6 +201,12 @@ the page to them.
   loads but its card form doesn't (Stripe's `loaderror`). The message
   replaces "Loading secure payment…" and the space kept for the card form, so
   the step shows one message under its heading.
+- Loading has one 15-second deadline, from starting Stripe until the card form
+  is ready. This includes the intent and hold checks. If it runs out, show the
+  same loading error and Try Again. Edit works again. Keep the payment step and
+  hold. Ignore late replies and events, and destroy any card form from that
+  attempt. Try Again reloads the page and restores the saved payment step
+  with a fresh deadline.
 - A reload on this step brings the card form back from the saved step without
   sending the details to ResDiary again. A
   declined card shows Stripe's message and the guest can try again. 3-D Secure

@@ -1109,19 +1109,91 @@ test("when Stripe can't load, the payment step says so once, under the heading, 
   expect(
     (alertBox?.y ?? 0) - ((headingBox?.y ?? 0) + (headingBox?.height ?? 0)),
   ).toBeLessThan(80);
+  const reloaded = page.waitForEvent("domcontentloaded");
   const rechecked = page.waitForRequest("**/api/bookings/hold-status?**");
   await reservations
     .getByRole("button", { name: "Try Again", exact: true })
     .click();
+  await reloaded;
   await rechecked;
   await expect(alert).toHaveText(
     "We couldn't load the secure payment form. Check your connection and try again, or call us on +353 1 676 3144.",
   );
 });
 
+test("the payment deadline includes the hold check and ignores its late failed reply", async ({
+  page,
+}) => {
+  await page.clock.install();
+  await stubStripe(page, "requires_payment_method", "intent");
+  const reservations = await openBooking(page);
+  let answerHold = async () => {};
+  await page.route("**/api/bookings/hold-status?**", (route) => {
+    answerHold = () =>
+      route.fulfill({ json: { ok: true, data: { status: "failed" } } });
+  });
+  await savedPaymentStep(page, "E2E99999", 1);
+  const saved = await page.evaluate(() =>
+    sessionStorage.getItem("peploes:booking-payment"),
+  );
+  await page.reload();
+  await expect
+    .poll(() => page.evaluate(() => Reflect.get(window, "stripeRetrievals")))
+    .toBe(1);
+  await page.clock.fastForward(12_000);
+  const checking = page.waitForRequest("**/api/bookings/hold-status?**");
+  await page.evaluate(() => Reflect.get(window, "stripeResolveIntent")());
+  await checking;
+  await page.clock.fastForward(1000);
+  await expect(
+    reservations.getByRole("button", { name: /^Pay/ }),
+  ).toBeDisabled();
+  await expect(
+    reservations.getByRole("button", { name: "Edit date & guests" }),
+  ).toBeDisabled();
+  await page.clock.fastForward(3000);
+  const retry = reservations.getByRole("button", {
+    name: "Try Again",
+    exact: true,
+  });
+  await expect(retry).toBeVisible();
+  const answered = page.waitForResponse("**/api/bookings/hold-status?**");
+  await answerHold();
+  await (await answered).finished();
+  await page.clock.runFor(50);
+  await expect(retry).toBeVisible();
+  await expect(reservations.getByRole("alert")).toHaveText(
+    "We couldn't load the secure payment form. Check your connection and try again, or call us on +353 1 676 3144.",
+  );
+  expect(
+    await page.evaluate(() =>
+      sessionStorage.getItem("peploes:booking-payment"),
+    ),
+  ).toBe(saved);
+  expect(await page.evaluate(() => Reflect.get(window, "stripeMounts"))).toBe(
+    0,
+  );
+  await page.unroute("**/api/bookings/hold-status?**");
+  await page.route("**/api/bookings/hold-status?**", (route) =>
+    route.fulfill({ json: { ok: true, data: { status: "pending" } } }),
+  );
+  await stubStripe(page);
+  const reloaded = page.waitForEvent("domcontentloaded");
+  await retry.click();
+  await reloaded;
+  await expect(
+    reservations.getByRole("button", {
+      name: "Pay €20.00 and Reserve",
+      exact: true,
+    }),
+  ).toBeEnabled();
+  await expect(reservations.getByRole("alert")).toHaveCount(0);
+});
+
 test("while the payment form is still loading, the guest can't edit the search", async ({
   page,
 }) => {
+  await page.clock.install();
   await page.route("https://js.stripe.com/**", () => undefined);
   const reservations = await openBooking(page);
   await page.route("**/api/bookings/hold-status?**", (route) =>
@@ -1133,9 +1205,38 @@ test("while the payment form is still loading, the guest can't edit the search",
   await expect(
     reservations.getByText("Loading secure payment…", { exact: true }),
   ).toBeVisible();
+  await page.clock.fastForward(14_000);
+  await expect(
+    reservations.getByText("Loading secure payment…", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    reservations.getByRole("button", { name: /^Pay/ }),
+  ).toBeDisabled();
   await expect(
     reservations.getByRole("button", { name: "Edit date & guests" }),
   ).toBeDisabled();
+  await expect(reservations.getByRole("alert")).toHaveCount(0);
+  await page.clock.fastForward(2000);
+  const retry = reservations.getByRole("button", {
+    name: "Try Again",
+    exact: true,
+  });
+  await expect(retry).toBeVisible();
+  await expect(
+    reservations.getByRole("button", { name: "Edit date & guests" }),
+  ).toBeEnabled();
+  await page.unroute("https://js.stripe.com/**");
+  await stubStripe(page);
+  const reloaded = page.waitForEvent("domcontentloaded");
+  await retry.click();
+  await reloaded;
+  await expect(
+    reservations.getByRole("button", {
+      name: "Pay €20.00 and Reserve",
+      exact: true,
+    }),
+  ).toBeEnabled();
+  await expect(reservations.getByRole("alert")).toHaveCount(0);
 });
 
 test("if the hold time runs out while the details are sending and the reply is lost, the page still checks the booking", async ({
