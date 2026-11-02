@@ -96,9 +96,14 @@ export function PaymentOutcome({
   }
   if (check.kind !== "failed") {
     return (
-      <p role="status" className={styles.flowDescription}>
-        {content.payment.checking}
-      </p>
+      <>
+        <p role="status" className={styles.flowDescription}>
+          {content.payment.checking}
+        </p>
+        <p className={styles.flowDescription}>
+          {content.confirmation.referenceLabel}: <strong>{reference}</strong>
+        </p>
+      </>
     );
   }
   return (

@@ -101,6 +101,8 @@ export const TABLE_BOOKING_CONTENT = {
     tryAgain: "Try Again",
     failed:
       "Your card wasn't accepted. Please check the details or try another card.",
+    confirmFailed: (reference: string) =>
+      `Something went wrong with the payment for booking ${reference}. You haven't been charged. Please try again, or call us on ${RESTAURANT_CONTACT.phoneLabel}.`,
     bankFailed:
       "Your bank didn't approve the payment. Please try again or use another card.",
     bankFailedWithoutStep: (reference: string) =>

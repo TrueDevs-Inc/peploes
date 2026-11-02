@@ -15,10 +15,10 @@ async function stubStripe(
   await page.route("https://js.stripe.com/**", (route) =>
     route.fulfill({
       contentType: "application/javascript",
-      body: `window.Stripe = () => ({
-        retrievePaymentIntent: () => Promise.resolve({ paymentIntent: {status:'requires_payment_method',amount:2000,currency:'eur'} }),
+      body: `window.stripeConfirmationCalled = false; window.Stripe = () => ({
+        retrievePaymentIntent: () => ${outcome === "unknown" ? "window.stripeConfirmationCalled ? Promise.reject(new Error('Connection lost')) : " : ""}Promise.resolve({ paymentIntent: {status:'requires_payment_method',amount:2000,currency:'eur'} }),
         elements: () => ({ create: () => { let ready, failed; return { on:(event,handler)=>{if(event==='ready')ready=handler;if(event==='loaderror')failed=handler;}, mount: target=>{target.textContent='Card details'; ${outcome === "load_failed" ? "failed();" : "ready();"}}, destroy:()=>{} }; } }),
-        confirmPayment: () => ${outcome === "unknown" ? "Promise.reject(new Error('Connection lost'))" : outcome === "declined" ? "Promise.resolve({error:{type:'card_error',message:'Synthetic decline'}})" : "Promise.resolve({paymentIntent:{status:'succeeded'}})"}
+        confirmPayment: () => { window.stripeConfirmationCalled = true; return ${outcome === "unknown" ? "Promise.reject(new Error('Connection lost'))" : outcome === "declined" ? "Promise.resolve({error:{type:'card_error',message:'Synthetic decline'}})" : "Promise.resolve({paymentIntent:{status:'succeeded'}})"}; }
       }); window.Stripe.version='endive';`,
     }),
   );

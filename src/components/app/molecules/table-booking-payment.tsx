@@ -303,12 +303,7 @@ function PaymentForm({
     return endForHold(hold);
   }
 
-  async function pay() {
-    if (!ready || paying) return;
-    setPaying(true);
-    setError(null);
-    if (await endBeforePay(ready.stripe)) return;
-    trackPayment(step, "started");
+  async function confirmWithStripe(prepared: IStripeReady) {
     const returnUrl = new URL(
       window.location.origin + window.location.pathname,
     );
@@ -321,32 +316,50 @@ function PaymentForm({
       String(step.summary.revision),
     );
     const options = {
-      elements: ready.elements,
+      elements: prepared.elements,
       redirect: "if_required" as const,
       // biome-ignore lint/style/useNamingConvention: Stripe's API field name.
       confirmParams: { return_url: returnUrl.href },
     };
-    const result = await (step.kind === "payment"
-      ? ready.stripe.confirmPayment(options)
-      : ready.stripe.confirmSetup(options)
-    ).catch(() => null);
-    if (!result) {
-      trackPayment(step, "unknown", "NETWORK");
-      onPaid();
-      return;
+    try {
+      return step.kind === "payment"
+        ? await prepared.stripe.confirmPayment(options)
+        : await prepared.stripe.confirmSetup(options);
+    } catch {
+      return {
+        error: {
+          type: "api_error" as const,
+          message: copy.confirmFailed(step.summary.reference),
+        },
+      };
     }
-    if (!result.error) {
-      trackPayment(step, "accepted");
-      onPaid();
-      return;
+  }
+
+  async function pay() {
+    if (!ready || paying) return;
+    setPaying(true);
+    setError(null);
+    try {
+      if (await endBeforePay(ready.stripe)) return;
+      trackPayment(step, "started");
+      const result = await confirmWithStripe(ready);
+      if (!result.error) {
+        trackPayment(step, "accepted");
+        onPaid();
+        return;
+      }
+      if (
+        await paymentMayHaveSucceeded(ready.stripe, step, result.error.type)
+      ) {
+        trackPayment(step, "unknown", "STRIPE");
+        onPaid();
+        return;
+      }
+      trackPayment(step, "declined", "STRIPE");
+      setError(result.error.message ?? copy.failed);
+    } catch {
+      setError(copy.confirmFailed(step.summary.reference));
     }
-    if (await paymentMayHaveSucceeded(ready.stripe, step, result.error.type)) {
-      trackPayment(step, "unknown", "STRIPE");
-      onPaid();
-      return;
-    }
-    trackPayment(step, "declined", "STRIPE");
-    setError(result.error.message ?? copy.failed);
     setPaying(false);
   }
 

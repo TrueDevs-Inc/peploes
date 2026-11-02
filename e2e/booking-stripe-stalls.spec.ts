@@ -50,7 +50,7 @@ async function paymentStep(page: Page, kind: "payment" | "card" = "payment") {
 
 async function stripeStub(
   page: Page,
-  stall: "intent" | "element" | "confirm" | "card-success" | "card-rejected",
+  stall: "intent" | "element" | "confirm" | "card-success",
 ) {
   await page.route("https://js.stripe.com/**", (route) =>
     route.fulfill({
@@ -74,7 +74,7 @@ async function stripeStub(
         };
       } }),
       confirmPayment: () => { window.stripeCalls.push('confirmPayment'); return Promise.reject(new Error('Connection lost')); },
-      confirmSetup: () => { window.stripeCalls.push('confirmSetup'); return ${stall === "card-rejected" ? "Promise.reject(new Error('Connection lost'))" : "Promise.resolve({ setupIntent: { status: 'succeeded' } })"}; }
+      confirmSetup: () => { window.stripeCalls.push('confirmSetup'); return Promise.resolve({ setupIntent: { status: 'succeeded' } }); }
     }); window.Stripe.version = 'endive';`,
     }),
   );
@@ -123,45 +123,24 @@ for (const stalled of ["script", "intent", "element"] as const) {
   });
 }
 
-test("a rejected Stripe confirmation checks the reservation instead of offering another payment", async ({
+test("a successful card-guarantee confirmation uses SetupIntent and checks ResDiary without requesting payment", async ({
   page,
 }) => {
-  await stripeStub(page, "confirm");
-  const reservations = await paymentStep(page);
+  await stripeStub(page, "card-success");
+  const reservations = await paymentStep(page, "card");
   await reservations
-    .getByRole("button", { name: "Pay €20.00 and Reserve", exact: true })
+    .getByRole("button", { name: "Save Card and Reserve", exact: true })
     .click();
   await expect(
     reservations.getByText("Confirming your booking…", { exact: true }),
   ).toBeVisible();
-  await expect(reservations.getByRole("button", { name: /^Pay / })).toHaveCount(
-    0,
+  await expect(
+    reservations.getByRole("button", {
+      name: "Save Card and Reserve",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  expect(await page.evaluate(() => Reflect.get(window, "stripeCalls"))).toEqual(
+    ["setupIntent", "confirmSetup"],
   );
 });
-
-for (const outcome of ["success", "rejected"] as const) {
-  test(`a ${outcome} card-guarantee confirmation uses SetupIntent and checks ResDiary without requesting payment`, async ({
-    page,
-  }) => {
-    await stripeStub(
-      page,
-      outcome === "success" ? "card-success" : "card-rejected",
-    );
-    const reservations = await paymentStep(page, "card");
-    await reservations
-      .getByRole("button", { name: "Save Card and Reserve", exact: true })
-      .click();
-    await expect(
-      reservations.getByText("Confirming your booking…", { exact: true }),
-    ).toBeVisible();
-    await expect(
-      reservations.getByRole("button", {
-        name: "Save Card and Reserve",
-        exact: true,
-      }),
-    ).toHaveCount(0);
-    expect(
-      await page.evaluate(() => Reflect.get(window, "stripeCalls")),
-    ).toEqual(["setupIntent", "confirmSetup"]);
-  });
-}

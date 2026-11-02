@@ -470,19 +470,27 @@ test("if the details never reach us and ResDiary says the hold failed, the guest
   ).toBeVisible();
 });
 
-function savedPaymentStep(page: Page, reference: string, revision: number) {
+function savedPaymentStep(
+  page: Page,
+  reference: string,
+  revision: number,
+  kind: TPaymentStep["kind"] = "payment",
+) {
   return page.evaluate(
-    ({ date, reference, revision }) => {
+    ({ date, reference, revision, kind }) => {
       sessionStorage.setItem(
         "peploes:booking-payment",
         JSON.stringify({
-          kind: "payment",
+          kind,
           amountCents: 2000,
           amountText: "€20.00",
           stripe: {
             publishableKey: "pk_test_e2e",
             accountId: "acct_e2e",
-            clientSecret: "pi_saved_secret_saved",
+            clientSecret:
+              kind === "payment"
+                ? "pi_saved_secret_saved"
+                : "seti_saved_secret_saved",
           },
           summary: {
             reference,
@@ -503,7 +511,7 @@ function savedPaymentStep(page: Page, reference: string, revision: number) {
         }),
       );
     },
-    { date: laterFreeDate(), reference, revision },
+    { date: laterFreeDate(), reference, revision, kind },
   );
 }
 
@@ -547,34 +555,249 @@ test("a saved payment wins over the details check and confirmation clears the ol
   ).toBeVisible();
 });
 
-async function stubStripe(page: Page, status = "requires_payment_method") {
-  await page.route("https://js.stripe.com/**", (route) =>
-    route.fulfill({
-      contentType: "application/javascript",
-      body: `
+async function stubStripe(
+  page: Page,
+  status = "requires_payment_method",
+  stall: "intent" | "element" | null = null,
+  rejectConfirm = false,
+) {
+  const body = `
     window.stripeConfirmations = 0;
     window.stripeMounts = 0;
     window.stripeRetrievals = 0;
+    window.stripeDestroys = 0;
+    window.stripeStall = ${JSON.stringify(stall)};
+    window.stripeRejectConfirm = ${JSON.stringify(rejectConfirm)};
+    const retrieveIntent = async (kind) => {
+      window.stripeRetrievals += 1;
+      if (window.stripeRetrievalFails) throw new Error("Stripe is unreachable");
+      const result = () => ({ [kind]: { status: window.stripeIntentStatus ?? ${JSON.stringify(status)}, amount: 2000, currency: "eur" } });
+      if (window.stripeStall === "intent") {
+        return new Promise((resolve) => { window.stripeResolveIntent = () => resolve(result()); });
+      }
+      return result();
+    };
+    const confirm = async (options, method) => {
+      window.stripeConfirmations += 1;
+      window.stripeConfirmMethod = method;
+      window.stripeReturnUrl = options.confirmParams.return_url;
+      if (window.stripeRejectConfirm) throw new Error("Stripe confirmation failed");
+      return {};
+    };
     window.Stripe = () => ({
-      retrievePaymentIntent: async () => {
-        window.stripeRetrievals += 1;
-        return { paymentIntent: { status: window.stripeIntentStatus ?? ${JSON.stringify(status)}, amount: 2000, currency: "eur" } };
-      },
+      retrievePaymentIntent: () => retrieveIntent("paymentIntent"),
+      retrieveSetupIntent: () => retrieveIntent("setupIntent"),
       elements: () => ({ create: () => {
         let ready;
+        let mounted;
         return {
-          on: (event, handler) => { if (event === "ready") ready = handler; },
-          mount: (target) => { window.stripeMounts += 1; target.textContent = "Card details"; ready(); },
-          destroy: () => {}
+          on: (event, handler) => {
+            if (event === "ready") { ready = handler; window.stripeLateReady ??= handler; }
+            if (event === "loaderror") window.stripeLateLoadError ??= handler;
+          },
+          mount: (target) => {
+            window.stripeMounts += 1;
+            mounted = target;
+            if (window.stripeStall === "element") return;
+            target.textContent = "Card details";
+            ready();
+          },
+          destroy: () => { window.stripeDestroys += 1; mounted?.replaceChildren(); }
         };
       } }),
-      confirmPayment: async (options) => { window.stripeConfirmations += 1; window.stripeReturnUrl = options.confirmParams.return_url; return {}; }
+      confirmPayment: (options) => confirm(options, "confirmPayment"),
+      confirmSetup: (options) => confirm(options, "confirmSetup")
     });
     window.Stripe.version = "endive";
-  `,
-    }),
+  `;
+  await page.route("https://js.stripe.com/**", (route) =>
+    route.fulfill({ contentType: "application/javascript", body }),
   );
+  return body;
 }
+
+for (const kind of ["payment", "card"] as const) {
+  test(`${kind} Pay recovers from a rejected hold check without confirming Stripe`, async ({
+    page,
+  }) => {
+    const reservations = await openBooking(page);
+    await stubStripe(page);
+    let failCheck = false;
+    await page.route("**/api/bookings/hold-status?**", (route) =>
+      route.fulfill({
+        json: failCheck
+          ? { ok: false, error: null }
+          : { ok: true, data: { status: "pending" } },
+      }),
+    );
+    await savedPaymentStep(page, "E2E99999", 1, kind);
+    await page.reload();
+    const pay = reservations.getByRole("button", {
+      name:
+        kind === "payment" ? "Pay €20.00 and Reserve" : "Save Card and Reserve",
+      exact: true,
+    });
+    await expect(pay).toBeEnabled();
+    failCheck = true;
+    await pay.click();
+    await expect(reservations.getByRole("alert")).toHaveText(
+      "Something went wrong with the payment for booking E2E99999. You haven't been charged. Please try again, or call us on +353 1 676 3144.",
+    );
+    await expect(pay).toBeEnabled();
+    await expect(
+      reservations.getByRole("button", { name: "Edit date & guests" }),
+    ).toBeEnabled();
+    await expect(
+      reservations.getByRole("button", {
+        name: "Processing Payment…",
+        exact: true,
+      }),
+    ).toHaveCount(0);
+    expect(
+      await page.evaluate(() => Reflect.get(window, "stripeConfirmations")),
+    ).toBe(0);
+    failCheck = false;
+    await pay.click();
+    await expect(
+      reservations.getByText("Confirming your booking…", { exact: true }),
+    ).toBeVisible();
+    expect(
+      await page.evaluate(() => Reflect.get(window, "stripeConfirmations")),
+    ).toBe(1);
+  });
+  for (const status of [
+    "succeeded",
+    "processing",
+    "requires_capture",
+    "requires_payment_method",
+    "requires_confirmation",
+    "unreachable",
+  ]) {
+    test(`${kind} confirmation rejects and Stripe reports ${status}: leaves Processing Payment safely`, async ({
+      page,
+    }) => {
+      const reservations = await openBooking(page);
+      await stubStripe(page, "requires_payment_method", null, true);
+      await page.route("**/api/bookings/hold-status?**", (route) =>
+        route.fulfill({ json: { ok: true, data: { status: "pending" } } }),
+      );
+      await savedPaymentStep(page, "E2E99999", 1, kind);
+      await page.reload();
+      const pay = reservations.getByRole("button", {
+        name:
+          kind === "payment"
+            ? "Pay €20.00 and Reserve"
+            : "Save Card and Reserve",
+        exact: true,
+      });
+      await expect(pay).toBeEnabled();
+      await page.clock.install();
+      await page.evaluate((status) => {
+        Reflect.set(window, "stripeIntentStatus", status);
+        Reflect.set(window, "stripeRetrievalFails", status === "unreachable");
+      }, status);
+      await pay.click();
+      const notPaid =
+        status === "requires_payment_method" ||
+        status === "requires_confirmation";
+      if (notPaid) {
+        await expect(reservations.getByRole("alert")).toHaveText(
+          "Something went wrong with the payment for booking E2E99999. You haven't been charged. Please try again, or call us on +353 1 676 3144.",
+        );
+        await expect(pay).toBeEnabled();
+        await expect(
+          reservations.getByRole("button", { name: "Edit date & guests" }),
+        ).toBeEnabled();
+        expect(
+          await page.evaluate(() => Reflect.get(window, "stripeConfirmations")),
+        ).toBe(1);
+        await page.evaluate(() =>
+          Reflect.set(window, "stripeRejectConfirm", false),
+        );
+        await pay.click();
+      }
+      await expect(
+        reservations.getByText("Confirming your booking…", { exact: true }),
+      ).toBeVisible();
+      await expect(
+        reservations.getByText("E2E99999", { exact: true }),
+      ).toBeVisible();
+      await expect(
+        reservations.getByText("You haven't been charged.", { exact: false }),
+      ).toHaveCount(0);
+      await expect(pay).toHaveCount(0);
+      await expect(
+        reservations.getByRole("button", {
+          name: "Processing Payment…",
+          exact: true,
+        }),
+      ).toHaveCount(0);
+      expect(
+        await page.evaluate(() => Reflect.get(window, "stripeConfirmations")),
+      ).toBe(notPaid ? 2 : 1);
+      expect(
+        await page.evaluate(() => Reflect.get(window, "stripeConfirmMethod")),
+      ).toBe(kind === "payment" ? "confirmPayment" : "confirmSetup");
+      await page.clock.fastForward(60_000);
+      await expect(
+        reservations.getByText(
+          "Hang tight! We're still confirming booking E2E99999.",
+          {
+            exact: false,
+          },
+        ),
+      ).toBeVisible();
+      await expect(pay).toHaveCount(0);
+    });
+  }
+}
+
+test("a rejected Stripe confirmation with an unanswered intent read enters the paid check after five seconds", async ({
+  page,
+}) => {
+  const reservations = await openBooking(page);
+  await stubStripe(page, "requires_payment_method", null, true);
+  await page.route("**/api/bookings/hold-status?**", (route) =>
+    route.fulfill({ json: { ok: true, data: { status: "pending" } } }),
+  );
+  await savedPaymentStep(page, "E2E99999", 1);
+  await page.reload();
+  const pay = reservations.getByRole("button", {
+    name: "Pay €20.00 and Reserve",
+    exact: true,
+  });
+  await expect(pay).toBeEnabled();
+  await page.clock.install();
+  await page.evaluate(() => Reflect.set(window, "stripeStall", "intent"));
+  await pay.click();
+  await expect
+    .poll(() => page.evaluate(() => Reflect.get(window, "stripeRetrievals")))
+    .toBe(2);
+  await page.clock.fastForward(4000);
+  await expect(
+    reservations.getByRole("button", {
+      name: "Processing Payment…",
+      exact: true,
+    }),
+  ).toBeDisabled();
+  await expect(
+    reservations.getByText("Confirming your booking…", { exact: true }),
+  ).toHaveCount(0);
+  await page.clock.fastForward(1000);
+  await expect(
+    reservations.getByText("Confirming your booking…", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    reservations.getByText("E2E99999", { exact: true }),
+  ).toBeVisible();
+  await expect(pay).toHaveCount(0);
+  await expect(
+    reservations.getByRole("button", { name: "Processing Payment…" }),
+  ).toHaveCount(0);
+  expect(
+    await page.evaluate(() => Reflect.get(window, "stripeConfirmations")),
+  ).toBe(1);
+});
 
 test("the card form loads after following Book from the home page and booking a deposit time", async ({
   page,

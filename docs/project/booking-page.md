@@ -230,7 +230,8 @@ the page to them.
   show the Stripe loading error or mount the card form as usual. Check ResDiary again
   on Pay. If it answers `NotFound`, ask Stripe again first. A paid intent goes
   to the paid check. Otherwise show the same message without confirming
-  payment. Pending, unavailable or unanswered checks allow payment to continue.
+  payment. This Stripe check also has a five-second limit. Pending,
+  unavailable or unanswered hold checks allow payment to continue.
   Use ResDiary's answer rather than the clock. On 30 October 2026, sandbox hold BDAZR3NZ stayed
   Pending past expiry. It accepted its €20 deposit 116 seconds after expiry and
   confirmed seven seconds later.
@@ -240,6 +241,15 @@ the page to them.
   paid: it shows Stripe's message and Pay works again. Stripe unreachable: it
   checks ResDiary, which ends in the 60-second "Hang tight" message if nothing
   was taken.
+- If either Stripe confirm call throws, ask Stripe for the intent again.
+  `succeeded`, `processing` or `requires_capture` goes to the paid check.
+  The intent read has a five-second limit; an unanswered or unreadable intent
+  goes to the paid check too. Show the reference while checking.
+  Never offer Pay again in these cases.
+  If Stripe says it was not paid, show the payment error with the reference
+  and phone number. Only this result says "You haven't been charged".
+  Pay and Edit work again, and Pay can retry. A failure before the confirm
+  call shows the same message and unlocks both controls without calling confirm.
 - When the Stripe step appears, the tab saves it in `sessionStorage` under
   `peploes:booking-payment`. Stripe's return URL is `/book-a-table` with only
   `holdReference` and `holdRevision` from the hold summary. Neither grants
