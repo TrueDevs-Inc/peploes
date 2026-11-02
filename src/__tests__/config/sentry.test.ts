@@ -10,7 +10,13 @@ const runtimeCheck = `
     ...options,
     integrations: [],
     transport: () => ({
-      send() { deliveries++; return Promise.resolve({ statusCode: 200 }); },
+      send(envelope) {
+        if (envelope[1].some(([header, payload]) =>
+          header.type === "event" &&
+          JSON.stringify(payload).includes("Synthetic deployment gate check")
+        )) deliveries++;
+        return Promise.resolve({ statusCode: 200 });
+      },
       flush: () => Promise.resolve(true),
     }),
   });
