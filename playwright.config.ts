@@ -1,4 +1,5 @@
 import { defineConfig } from "@playwright/test";
+import { E2E_SANITY_WEBHOOK_SECRET } from "./e2e/sanity-webhook";
 
 const baseURL = "http://127.0.0.1:3107";
 
@@ -45,6 +46,7 @@ export default defineConfig({
       ["SANITY_PROJECT_ID", "testproject"],
       ["SANITY_DATASET", "development"],
       ["SANITY_API_VERSION", "2026-10-06"],
+      ["SANITY_WEBHOOK_SECRET", E2E_SANITY_WEBHOOK_SECRET],
     ]),
     url: baseURL,
     reuseExistingServer: false,

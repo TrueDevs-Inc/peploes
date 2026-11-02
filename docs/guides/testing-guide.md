@@ -106,6 +106,9 @@ before running the same command. Failure traces stay in ignored `test-results/`.
 The build and test server use a fake Sanity project. The test-only
 `e2e/mock-sanity.ts` preload supplies menu documents from the local design
 catalogs; it rejects unexpected CMS queries and never reads a live dataset.
+The test server has a synthetic webhook secret; specs that change published
+fixture state call `announceSanityPublish` from `e2e/sanity-webhook.ts` to expire
+the cached CMS content.
 Menu journeys import `test` from `e2e/menu-test.ts` so their synthetic CMS image
 URLs reach local photographs through the real Next image optimizer. These
 fixtures are not imported by the application or used as production fallbacks.

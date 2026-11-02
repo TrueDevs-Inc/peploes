@@ -406,6 +406,8 @@ export const MOBILE_HOME_CONTENT = {
   ginaHeading: "Wine things just happen.",
 } as const;
 
+export const SANITY_CONTENT_CACHE_TAG = "sanity-content";
+
 export const MENU_DOCUMENT_TYPES = {
   lunch: "restaurantMenu",
   dinner: "restaurantMenu",

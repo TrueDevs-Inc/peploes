@@ -1,5 +1,6 @@
 import { rm, writeFile } from "node:fs/promises";
 import { expect, test } from "./menu-test";
+import { announceSanityPublish } from "./sanity-webhook";
 
 test("mobile hero fills the first screen before the entrance photograph", async ({
   page,
@@ -41,6 +42,7 @@ test("mobile hero fills the first screen before the entrance photograph", async 
 
 test("homepage event actions follow published availability without a rebuild", async ({
   page,
+  request,
 }) => {
   const statePath = ".next/e2e/published-seasonal-slugs.json";
   const card = page.getByRole("article").filter({
@@ -50,8 +52,17 @@ test("homepage event actions follow published availability without a rebuild", a
     }),
   });
   try {
+    await announceSanityPublish(request);
+    await page.goto("/");
+    await writeFile(statePath, JSON.stringify([]));
+    await page.goto("/");
+    await expect(
+      card.getByRole("link", { name: "Lobster Week Returns", exact: true }),
+    ).toHaveAttribute("href", "/seasonal/lobster-season");
+
     for (const published of [[], ["lobster-season"], []]) {
       await writeFile(statePath, JSON.stringify(published));
+      await announceSanityPublish(request);
       await page.goto("/");
       await expect(card.getByRole("link")).toHaveCount(2);
       for (const link of await card.getByRole("link").all()) {
@@ -74,6 +85,7 @@ test("homepage event actions follow published availability without a rebuild", a
     }
   } finally {
     await rm(statePath, { force: true });
+    await announceSanityPublish(request);
   }
 });
 
