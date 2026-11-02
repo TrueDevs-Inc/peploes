@@ -2,7 +2,7 @@ import "server-only";
 
 import { createClient } from "@sanity/client";
 import { isValidSignature, SIGNATURE_HEADER_NAME } from "@sanity/webhook";
-import { errAsync, okAsync, ResultAsync } from "neverthrow";
+import { errAsync, ResultAsync } from "neverthrow";
 
 import { MENU_DOCUMENT_TYPES, SANITY_CONTENT_CACHE_TAG } from "@/lib/constants";
 import { ErrorCode, LogContext } from "@/lib/enums";
@@ -12,6 +12,7 @@ import { logger } from "@/lib/logger";
 import type { IError, TMenuSlug } from "@/lib/types";
 
 const CONTENT_REVALIDATE_SECONDS = 300;
+const CONTENT_LAKE_SETTLE_MS = 3000;
 
 const client = createClient({
   projectId: env.SANITY_PROJECT_ID,
@@ -145,8 +146,14 @@ export function verifyPublishWebhook(
       );
     },
   ).andThen((valid) =>
-    valid ? okAsync(undefined) : errAsync(rejectedWebhook()),
+    valid
+      ? ResultAsync.fromSafePromise(waitForContentLakeReads())
+      : errAsync(rejectedWebhook()),
   );
+}
+
+function waitForContentLakeReads(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, CONTENT_LAKE_SETTLE_MS));
 }
 
 function rejectedWebhook(): IError {

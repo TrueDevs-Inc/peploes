@@ -31,6 +31,12 @@ function webhookRequest(body: string, signature?: string): Request {
   });
 }
 
+async function settleRealIo(): Promise<void> {
+  for (let turn = 0; turn < 20; turn++) {
+    await new Promise((resolve) => setImmediate(resolve));
+  }
+}
+
 async function sign(body: string, secret: string): Promise<string> {
   return await encodeSignatureHeader(body, Date.now(), secret);
 }
@@ -41,18 +47,28 @@ beforeEach(function resetEdges() {
 });
 
 describe("Sanity publish webhook", function sanityWebhookTests() {
-  it("expires cached CMS content for a signed publish", async function signedTest() {
-    const response = await POST(
-      webhookRequest(
-        PUBLISHED,
-        await sign(PUBLISHED, "webhook-secret-for-tests"),
-      ),
+  it("expires cached CMS content once Sanity's read API has caught up", async function signedTest() {
+    const request = webhookRequest(
+      PUBLISHED,
+      await sign(PUBLISHED, "webhook-secret-for-tests"),
     );
+    vi.useFakeTimers({ toFake: ["setTimeout"] });
+    try {
+      const pending = POST(request);
+      await settleRealIo();
+      await vi.advanceTimersByTimeAsync(2999);
+      expect(edges.revalidateTag).not.toHaveBeenCalled();
 
-    expect(response.status).toBe(200);
-    expect(edges.revalidateTag).toHaveBeenCalledWith(SANITY_CONTENT_CACHE_TAG, {
-      expire: 0,
-    });
+      await vi.advanceTimersByTimeAsync(1);
+      const response = await pending;
+      expect(response.status).toBe(200);
+      expect(edges.revalidateTag).toHaveBeenCalledWith(
+        SANITY_CONTENT_CACHE_TAG,
+        { expire: 0 },
+      );
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("rejects a request signed with another secret", async function wrongSecretTest() {

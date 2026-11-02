@@ -119,8 +119,9 @@ screen; the website reads its saved content through the Sanity API. Draft edits 
 not appear. There is no browser token and no write token in the website.
 
 The website caches Sanity responses under one tag. A publish, change or deletion
-in Studio calls the signed webhook at `/api/webhooks/sanity`, which expires that
-tag, so the next page view reads the new content. Without a working webhook the
+in Studio calls the signed webhook at `/api/webhooks/sanity`. It waits three
+seconds for Sanity's read API to catch up, as Sanity's own Next.js helper does,
+then expires that tag, so the next page view reads the new content. Without a working webhook the
 cache still expires after five minutes. A failed Sanity request is not cached.
 The `/seasonal/<slug>` existence check in `src/proxy.ts` is not cached, because
 Next does not cache `fetch` in Proxy. It returns 404 as soon as an entry is
