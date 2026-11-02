@@ -25,6 +25,8 @@ function serverEnv(resDiaryUrl: string): Record<string, string> {
     ["RESDIARY_PASSWORD", "e2e-password"],
     ["BOOKING_HOLD_SECRET", "e2e-only-hold-secret-0123456789abcdef"],
     ["SANITY_WEBHOOK_SECRET", E2E_SANITY_WEBHOOK_SECRET],
+    ["KLAVIYO_PRIVATE_KEY", ""],
+    ["KLAVIYO_LIST_ID_NEWSLETTER", ""],
   ]);
 }
 

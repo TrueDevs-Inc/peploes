@@ -55,17 +55,17 @@ test("newsletter shows errors for empty and invalid emails and recovers after ed
 
   await email.fill("ali@example.com");
   await subscribe.click();
-  await expect(email).toHaveAttribute("aria-invalid", "false");
-  await expect(newsletter.getByRole("alert")).toHaveCount(0);
-  await expect(newsletter.getByRole("status")).toHaveText(
-    "Newsletter signup is not available yet. Your email has not been sent or saved.",
+  await expect(newsletter.getByRole("alert")).toHaveText(
+    "Newsletter signup is temporarily unavailable. Please try again later.",
   );
+  await expect(newsletter.getByRole("status")).toHaveCount(0);
+  await expect(subscribe).toBeEnabled();
   await expect(page).toHaveURL("/");
   await email.fill("another@example.com");
-  await expect(newsletter.getByRole("status")).toHaveCount(0);
+  await expect(newsletter.getByRole("alert")).toHaveCount(0);
   await email.press("Enter");
-  await expect(newsletter.getByRole("status")).toContainText(
-    "not been sent or saved",
+  await expect(newsletter.getByRole("alert")).toContainText(
+    "temporarily unavailable",
   );
 });
 

@@ -1,12 +1,14 @@
 "use client";
 
 import { ArrowRight } from "lucide-react";
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { submitNewsletter } from "@/actions/newsletter";
 import styles from "@/components/app/molecules/newsletter-signup.module.css";
 import { Button } from "@/components/ui/button";
 import { FOOTER_CONTENT } from "@/lib/constants/footer";
 
 export function NewsletterSignup() {
+  const [pending, startTransition] = useTransition();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -34,8 +36,18 @@ export function NewsletterSignup() {
       autoComplete="off"
       onSubmit={(event) => {
         event.preventDefault();
+        if (pending || submitted) return;
         setDismissed(true);
-        setSubmitted(true);
+        setError("");
+        startTransition(async () => {
+          try {
+            const result = await submitNewsletter({ email });
+            setSubmitted(result.accepted);
+            if (!result.accepted) setError(result.message);
+          } catch {
+            setError(FOOTER_CONTENT.newsletter.unknownError);
+          }
+        });
       }}
     >
       <div
@@ -46,11 +58,11 @@ export function NewsletterSignup() {
           {FOOTER_CONTENT.newsletter.emailLabel}
         </label>
         <div className={styles.field}>
-          {/* No name prevents the preview email being sent before hydration. */}
           <input
             id="footer-newsletter-email"
             type="email"
             required
+            disabled={pending || submitted}
             pattern=".+@.+\..+"
             autoComplete="off"
             autoCapitalize="none"
@@ -110,10 +122,13 @@ export function NewsletterSignup() {
         </div>
         <Button
           type="submit"
+          disabled={pending || submitted}
           variant="brand-primary"
           className="h-11 gap-2 rounded-[4px] bg-peploe-burgundy px-5 text-base leading-[22px] font-medium text-warm-cream shadow-none has-[>svg]:px-5 xl:leading-6"
         >
-          {FOOTER_CONTENT.newsletter.submitLabel}
+          {pending
+            ? FOOTER_CONTENT.newsletter.pendingLabel
+            : FOOTER_CONTENT.newsletter.submitLabel}
           <ArrowRight aria-hidden="true" className="size-4" />
         </Button>
       </div>

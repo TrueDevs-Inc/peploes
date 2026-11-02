@@ -31,8 +31,15 @@ export const FOOTER_CONTENT: IFooterContent = {
       "Seasonal notes from St Stephen's Green — food, wine, people and what's happening at Peploe's.",
     emailLabel: "Your email address",
     submitLabel: "Subscribe",
-    status:
-      "Newsletter signup is not available yet. Your email has not been sent or saved.",
+    pendingLabel: "Sending…",
+    unknownError:
+      "We could not confirm your signup request. Please check your inbox before trying again.",
+    status: "Thanks for signing up.",
+    unavailableError:
+      "Newsletter signup is temporarily unavailable. Please try again later.",
+    rateLimitError: "Too many signup requests. Please try again later.",
+    deliveryError:
+      "We could not send your signup request. Please try again later.",
     requiredError: "Please enter your email address.",
     invalidError: "Please enter a valid email address, such as name@gmail.com.",
     completionHint: "Press Tab to complete your email, or Escape to dismiss.",
