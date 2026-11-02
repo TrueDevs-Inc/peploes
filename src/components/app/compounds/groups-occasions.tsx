@@ -16,7 +16,7 @@ export function GroupsOccasions() {
       aria-labelledby="groups-occasions-heading"
       className={cn(dmSans.className, "scroll-mt-20 bg-warm-cream text-ink")}
     >
-      <div className="relative isolate flex min-h-[560px] items-end bg-ink text-warm-cream sm:block sm:min-h-0">
+      <div className="relative isolate flex min-h-[560px] items-end bg-ink text-warm-cream sm:block sm:min-h-0 lg:flex lg:min-h-[600px] lg:items-center">
         <Image
           src={GROUPS_OCCASIONS_CONTENT.image.src}
           alt={GROUPS_OCCASIONS_CONTENT.image.alt}
@@ -29,7 +29,7 @@ export function GroupsOccasions() {
           className={cn(styles.overlay, "absolute inset-0")}
         />
 
-        <div className="site-container relative pt-[185px] pb-10 sm:pt-20 sm:pb-12">
+        <div className="site-container relative pt-[185px] pb-10 sm:pt-20 sm:pb-12 lg:py-12">
           <div
             data-scroll-reveal
             className="flex max-w-[720px] flex-col items-start gap-4 sm:gap-7"
@@ -72,7 +72,7 @@ export function GroupsOccasions() {
       </div>
 
       <div className="site-container">
-        <ul className="grid items-center gap-10 pt-8 pb-12 sm:gap-8 sm:pt-12 sm:pb-20 xl:w-[calc(100%+59px)] xl:max-w-[1355px] xl:grid-cols-3 xl:items-stretch xl:gap-7">
+        <ul className="grid items-center gap-10 py-8 sm:gap-8 sm:py-12 xl:w-[calc(100%+59px)] xl:max-w-[1355px] xl:grid-cols-3 xl:items-stretch xl:gap-7">
           {GROUPS_OCCASIONS_CONTENT.occasions.map((occasion) => (
             <li key={occasion.title} className={styles.card} data-image-card>
               <Link
