@@ -17,9 +17,9 @@ const eventSlug = "development-test-event";
 
 async function main() {
   const config = client.config();
-  if (config.projectId !== "3ggctsor" || config.dataset !== "development") {
+  if (config.projectId !== "w789ottu" || config.dataset !== "development") {
     process.stderr.write(
-      "This command only supports 3ggctsor/development. No content was changed.\n",
+      "This command only supports w789ottu/development. No content was changed.\n",
     );
     process.exitCode = 1;
     return;
@@ -29,7 +29,7 @@ async function main() {
     { eventId, slug: eventSlug },
   );
   process.stdout.write(
-    "Target: 3ggctsor/development. Create missing page settings and one labelled test event. Existing documents are preserved.\n",
+    "Target: w789ottu/development. Create missing page settings and one labelled test event. Existing documents are preserved.\n",
   );
   if (process.env.PEPLOES_SEED_APPLY !== "1") {
     process.stdout.write(
