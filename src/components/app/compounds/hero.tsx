@@ -24,7 +24,7 @@ export function Hero() {
       aria-labelledby="hero-heading"
       className={cn(dmSans.className, styles.hero, "isolate text-warm-cream")}
     >
-      <div className="relative flex min-h-[calc(100dvh-72px)] items-end bg-ink py-8 sm:min-h-[720px] sm:items-center sm:py-20 lg:min-h-[780px] lg:py-[72px]">
+      <div className="relative flex min-h-[calc(100svh-72px)] items-end bg-ink py-8 sm:min-h-[720px] sm:items-center sm:py-20 lg:min-h-[780px] lg:py-[72px]">
         <Image
           src={HERO_CONTENT.backgroundImage.src}
           alt={HERO_CONTENT.backgroundImage.alt}
