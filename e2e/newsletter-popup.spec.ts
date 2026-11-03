@@ -68,6 +68,7 @@ test("blocked storage remains usable and another open dialog prevents stacking",
   await page.keyboard.press("Escape");
   await passWine(page);
   await expect(popup).not.toBeVisible();
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
   await page.reload();
   await page.evaluate(() => {
     const other = document.createElement("dialog");
@@ -75,6 +76,9 @@ test("blocked storage remains usable and another open dialog prevents stacking",
     document.body.append(other);
     other.showModal();
   });
+  await expect(
+    page.locator("dialog").filter({ hasText: "Other task" }),
+  ).toBeVisible();
   await passWine(page);
   await expect(popup).not.toBeVisible();
 });
