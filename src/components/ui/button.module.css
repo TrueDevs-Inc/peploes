@@ -1,0 +1,27 @@
+.content {
+  display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
+  flex-direction: inherit;
+  align-items: inherit;
+  justify-content: inherit;
+  gap: inherit;
+  text-decoration: inherit;
+  text-underline-offset: inherit;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  @media not (any-pointer: coarse) {
+    .textAction:not(:disabled) {
+      pointer-events: var(--text-action-pointer-events, none);
+    }
+
+    .boxedAction:not(:disabled) {
+      pointer-events: var(--text-action-pointer-events, auto);
+    }
+
+    .textAction:not(:disabled) > .content {
+      pointer-events: var(--text-action-content-pointer-events, auto);
+    }
+  }
+}

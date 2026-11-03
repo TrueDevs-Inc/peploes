@@ -4,6 +4,8 @@ import { describe, expect, it, vi } from "vitest";
 import { MenuBooking } from "@/components/app/compounds/menu-booking";
 import type { IMenuBooking } from "@/lib/types";
 
+vi.mock("@/components/ui/button.module.css", () => ({ default: {} }));
+
 vi.mock("@/lib/fonts", () => ({
   dmSans: { className: "" },
   ebGaramond: { className: "" },

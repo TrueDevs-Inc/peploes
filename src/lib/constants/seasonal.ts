@@ -99,8 +99,8 @@ export const SEASONAL_CONTENT = {
     description:
       "During the warmer months, enjoy drinks on Peploe’s terrace\noverlooking St Stephen’s Green. A relaxed spot to meet before dinner\nor simply watch the city go by.",
     image: {
-      src: "/peploes-seasonal-terrace.png",
-      alt: "A table with red chairs on Peploe’s terrace beside the stone entrance",
+      src: "/peploes-events-terrace.webp",
+      alt: "Tables and red chairs on Peploe’s terrace beside the stone entrance",
     },
   },
   join: {

@@ -1,0 +1,394 @@
+.page {
+  color: var(--ink);
+  background: var(--warm-cream);
+}
+
+.page :is(h1, h2) {
+  font-family: var(--font-eb-garamond), serif;
+  font-weight: 400;
+}
+
+.page :is(a, button):focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}
+
+.cover {
+  object-fit: cover;
+}
+
+.hero,
+.closing {
+  position: relative;
+  overflow: hidden;
+  color: var(--warm-cream);
+  background: rgb(var(--overlay-warm-ink-rgb));
+}
+
+.hero::after,
+.closing::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hero::after {
+  background: linear-gradient(
+    90deg,
+    rgb(var(--overlay-warm-ink-rgb) / 95%) 15%,
+    rgb(var(--overlay-warm-ink-rgb) / 80%) 40%,
+    rgb(var(--overlay-warm-ink-rgb) / 15%) 100%
+  );
+}
+
+.heroImage {
+  position: absolute;
+  inset: 0;
+}
+
+.heroCopy {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 613px;
+  padding-block: 48px;
+}
+
+.heroEyebrow {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+}
+
+.heroCopy h1 {
+  font-size: 48px;
+  line-height: 1.02;
+  letter-spacing: 0;
+}
+
+.standfirst {
+  color: var(--soft-stone);
+  font-family: var(--font-eb-garamond), serif;
+  font-size: 28px;
+  line-height: 34px;
+}
+
+.description {
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.featured {
+  padding-block: 48px;
+  background: color-mix(in srgb, var(--peploe-burgundy) 6%, var(--warm-cream));
+}
+
+.featuredLabel {
+  margin-bottom: 28px;
+  color: var(--peploe-burgundy);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.featuredStory {
+  display: grid;
+  gap: 24px;
+}
+
+.featuredImage {
+  position: relative;
+  display: block;
+  min-height: 240px;
+  overflow: hidden;
+  background: var(--soft-stone);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .featuredImage > .cover {
+    transition: transform var(--duration-base) ease-out;
+  }
+
+  .featuredImage:focus-visible > .cover {
+    transform: scale(1.05);
+  }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .featuredImage:hover > .cover {
+    transform: scale(1.05);
+  }
+}
+
+.featuredCopy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.metadata {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 12px;
+  color: var(--peploe-burgundy);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 17px;
+  letter-spacing: 1.05px;
+  text-transform: uppercase;
+}
+
+.metadata a:hover,
+.featuredCopy h2 a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.featuredCopy h2 {
+  font-size: 36px;
+  line-height: 40px;
+  overflow-wrap: anywhere;
+}
+
+.featuredDescription {
+  color: var(--text-secondary);
+  font-size: 16px;
+  line-height: 25px;
+}
+
+.action {
+  justify-content: flex-start;
+  max-width: 100%;
+  height: auto;
+  min-height: 44px;
+  padding: 8px 0;
+  border-radius: 0;
+  font-size: 16px;
+  line-height: 24px;
+  white-space: normal;
+  text-align: left;
+}
+
+.closingImage {
+  position: absolute;
+  inset: 0;
+}
+
+.closing::after {
+  background: linear-gradient(
+    270deg,
+    rgb(9 8 6),
+    rgb(9 8 6 / 60%) 53%,
+    rgb(9 8 6 / 0%) 73%
+  );
+}
+
+.closingCopy {
+  position: relative;
+  z-index: 1;
+  max-width: 740px;
+  margin-left: auto;
+  padding-block: 48px;
+  font-size: 36px;
+  line-height: 1.04;
+}
+
+@media (40rem <= width < 80rem) {
+  .closing::after {
+    background-color: rgb(9 8 6 / 50%);
+  }
+}
+
+@media (width < 40rem) {
+  .heroCopy {
+    gap: 14px;
+    min-height: 520px;
+    padding-block: 72px 48px;
+  }
+
+  .heroEyebrow {
+    font-size: 11px;
+    letter-spacing: 1.35px;
+  }
+
+  .heroCopy h1 {
+    line-height: 52px;
+    letter-spacing: 0;
+  }
+
+  .description {
+    font-size: 15px;
+  }
+
+  .hero::after {
+    background: linear-gradient(
+      180deg,
+      rgb(15 11 10 / 82%),
+      rgb(15 11 10 / 46%) 66%,
+      rgb(15 11 10 / 18%)
+    );
+  }
+
+  .standfirst {
+    color: var(--warm-cream);
+    font-size: 24px;
+    line-height: 31px;
+  }
+
+  .featuredLabel {
+    margin-bottom: 18px;
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 1.35px;
+  }
+
+  .featuredStory,
+  .featuredCopy {
+    gap: 18px;
+  }
+
+  .metadata {
+    font-size: 10px;
+    line-height: 16px;
+    letter-spacing: 0.7px;
+  }
+
+  .featuredCopy h2 {
+    font-size: 34px;
+    line-height: 39px;
+  }
+
+  .featuredDescription {
+    font-size: 15px;
+    line-height: 24px;
+  }
+
+  .featuredImage {
+    min-height: 0;
+    height: 232px;
+  }
+
+  .closing::after {
+    background: rgb(var(--hero-overlay-dark-rgb));
+  }
+
+  .closingImage {
+    display: none;
+  }
+
+  .closingCopy {
+    padding-block: 44px 40px;
+    font-size: 26px;
+    line-height: 32px;
+    text-align: center;
+  }
+}
+
+@media (width < 40rem), (pointer: coarse) {
+  .metadata a {
+    display: inline-flex;
+    min-height: 44px;
+    margin-block: -13.5px;
+    align-items: center;
+  }
+
+  .featuredCopy h2 a {
+    display: block;
+    min-height: 44px;
+    margin-block: -2px;
+    padding-block: 2px;
+  }
+}
+
+@media (width < 40rem) {
+  .metadata a {
+    margin-block: -14px;
+  }
+}
+
+@media (width >= 64rem) {
+  .heroImage {
+    inset-inline: 26.8314% 0;
+    inset-block: auto;
+    top: 49.954%;
+    aspect-ratio: 1053.53 / 1250.41;
+    translate: 0 -49.954%;
+  }
+
+  .heroImage img {
+    /* Preserve the image fill authored in Figma's 1440 × 389px hero. */
+    object-fit: fill;
+  }
+
+  .hero::after {
+    background: linear-gradient(
+      90deg,
+      rgb(var(--overlay-warm-ink-rgb)) 29.701%,
+      rgb(var(--overlay-warm-ink-rgb) / 80%) 48.568%,
+      rgb(var(--overlay-warm-ink-rgb) / 18.0392%) 76.727%,
+      rgb(var(--overlay-warm-ink-rgb) / 0%) 98.368%
+    );
+  }
+
+  .heroCopy {
+    min-height: 389px;
+    padding-block: 64px 48px;
+  }
+
+  .heroCopy h1 {
+    font-size: 72px;
+    line-height: 73px;
+  }
+
+  .standfirst {
+    font-size: 31px;
+    line-height: 39px;
+  }
+
+  .description {
+    font-size: 18px;
+    line-height: 25px;
+  }
+
+  .featured {
+    padding-block: 54px;
+  }
+
+  .featuredStory {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 64px;
+  }
+
+  .featuredImage {
+    min-height: 263px;
+  }
+
+  .featuredCopy h2 {
+    font-size: 46px;
+    line-height: 52px;
+  }
+
+  .closingCopy {
+    font-size: 44px;
+  }
+
+  .closingImage {
+    /* Figma crops a 260px photo frame inside the shorter text-led banner. */
+    inset-inline: 0.03% -0.03%;
+    min-height: 260px;
+  }
+
+  .closingImage img {
+    object-position: center 87.304%;
+  }
+}

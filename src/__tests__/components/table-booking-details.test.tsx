@@ -7,6 +7,7 @@ import type { ITableBookingDetailsProps } from "@/lib/types";
 vi.mock("@/components/app/compounds/table-booking-panel.module.css", () => ({
   default: {},
 }));
+vi.mock("@/components/ui/button.module.css", () => ({ default: {} }));
 
 const props: ITableBookingDetailsProps = {
   details: {

@@ -46,10 +46,7 @@ export function SeasonalEvent({ content, join }: ISeasonalEventProps) {
       </section>
 
       {details && details.length > 0 && (
-        <section
-          className={cn("section-divider-subtle", styles.details)}
-          aria-label="Event information"
-        >
+        <section className={styles.details} aria-label="Event information">
           <dl className={cn("site-container", styles.detailsList)}>
             {details.map((detail) => (
               <div

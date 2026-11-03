@@ -92,10 +92,7 @@ function VisitHero() {
 function VisitContactInformation() {
   return (
     <section
-      className={cn(
-        "section-divider-subtle section-divider-subtle-bottom",
-        styles.contact,
-      )}
+      className={styles.contact}
       id="opening-hours"
       aria-label="Opening hours, address and contact"
     >

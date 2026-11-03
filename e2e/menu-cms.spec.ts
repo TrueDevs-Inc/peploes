@@ -1,5 +1,55 @@
 import { expect, test } from "./menu-test";
 
+for (const menu of [
+  "lunch",
+  "dinner",
+  "pre-theatre",
+  "group-set-menu",
+  "seasonal",
+]) {
+  test(`${menu} allergens stay vertically centered on desktop and remain expandable`, async ({
+    page,
+    viewport,
+  }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto(`/menus?menu=${menu}`);
+    const information = page.locator("details").filter({
+      has: page.getByText("Allergen Information", { exact: true }),
+    });
+    const description = information.locator("p");
+    await expect(description).toBeVisible();
+    for (const open of [true, false]) {
+      if (!open) await information.locator("summary").click();
+      await expect(information).toHaveJSProperty("open", open);
+      if ((viewport?.width ?? 1440) >= 1280) {
+        await expect
+          .poll(() =>
+            information.evaluate((element) => {
+              const panel = element.closest(".site-container");
+              const summary = element.querySelector("summary");
+              const last = element.hasAttribute("open")
+                ? element.querySelector("p")
+                : summary;
+              if (!panel || !summary || !last) {
+                throw new Error("The menu allergen panel is incomplete.");
+              }
+              const bounds = panel.getBoundingClientRect();
+              const top = summary.getBoundingClientRect().top - bounds.top;
+              const bottom =
+                bounds.bottom - last.getBoundingClientRect().bottom;
+              return Math.abs(top - bottom);
+            }),
+          )
+          .toBeLessThanOrEqual(1);
+      }
+    }
+    await expect(description).toBeHidden();
+    await information.locator("summary").focus();
+    await page.keyboard.press("Enter");
+    await expect(description).toBeVisible();
+  });
+}
+
 test("switching from deep Wine content keeps menu navigation visible", async ({
   page,
 }) => {
@@ -337,6 +387,188 @@ test("old menu links redirect and query defaults keep matching metadata", async 
   }
 });
 
+for (const [index, slug, title] of [
+  [0, "group-set-menu", "Group Set Menu"],
+  [1, "seasonal", "Seasonal Menus"],
+] as const) {
+  test(`${slug} dropdown renders only the selected menu below the introduction`, async ({
+    page,
+  }) => {
+    await page.goto("/menus?menu=wine");
+    await expect(page.locator("[data-menu-content]")).toBeVisible();
+    const navigation = page.getByRole("navigation", {
+      name: "Restaurant menus",
+    });
+    const trigger = navigation.getByRole("button").nth(index);
+    await trigger.click();
+    await navigation.locator("#menu-subnavigation a").first().click();
+    await expect(page.locator("[data-menu-content]")).toHaveAttribute(
+      "data-menu",
+      slug,
+    );
+    await expect(page.locator("[data-menu-content]")).toHaveAttribute(
+      "data-phase",
+      "idle",
+    );
+    const introduction = page.getByRole("heading", {
+      level: 1,
+      name: title,
+      exact: true,
+    });
+    const firstId =
+      slug === "group-set-menu" ? "group-set-lunch" : "set-christmas-lunch";
+    async function expectIntroduction() {
+      await expect(page).toHaveURL(`/menus?menu=${slug}#${slug}-introduction`);
+      await expect(navigation.locator("#menu-subnavigation")).toHaveCount(0);
+      // The transition's hash scroll starts after the content becomes idle.
+      await page.evaluate(
+        () =>
+          new Promise<void>((resolve) => {
+            let previous = scrollY;
+            let stillFrames = 0;
+            function sample() {
+              stillFrames = scrollY === previous ? stillFrames + 1 : 0;
+              previous = scrollY;
+              if (stillFrames === 10) resolve();
+              else requestAnimationFrame(sample);
+            }
+            requestAnimationFrame(sample);
+          }),
+      );
+      await expect(introduction).toBeInViewport();
+      await expect
+        .poll(async () => {
+          const heading = await introduction.boundingBox();
+          const tabs = await navigation.boundingBox();
+          return Boolean(heading && tabs && heading.y >= tabs.y + tabs.height);
+        })
+        .toBe(true);
+    }
+    await expectIntroduction();
+    await expect(page.locator(`#${firstId}-title`)).toHaveCount(1);
+
+    await trigger.click();
+    const laterItem = navigation.locator("#menu-subnavigation a").last();
+    const laterId =
+      slug === "group-set-menu" ? "group-set-dinner" : "set-christmas-dinner";
+    const laterSection = page.locator(`#${laterId}`);
+    await expect(page.locator(`#${laterId}-title`)).toHaveCount(0);
+    await laterItem.click();
+    await expect(page).toHaveURL(`/menus?menu=${slug}#${laterId}`);
+    await expect(laterSection).toBeInViewport();
+    await expect(introduction).toBeInViewport();
+    await expect(page.locator(`#${laterId}-title`)).toHaveCount(1);
+    await expect(page.locator(`#${firstId}-title`)).toHaveCount(0);
+    await navigation.getByRole("link", { name: "Wine", exact: true }).click();
+    await expect(page.locator("[data-menu-content]")).toHaveAttribute(
+      "data-menu",
+      "wine",
+    );
+    await page.goBack();
+    await expect(page).toHaveURL(`/menus?menu=${slug}#${laterId}`);
+    await expect(page.locator("[data-menu-content]")).toHaveAttribute(
+      "data-menu",
+      slug,
+    );
+    await expect(page.locator(`#${laterId}-title`)).toHaveCount(1);
+    await trigger.click();
+    await navigation.locator("#menu-subnavigation a").first().click();
+    await expectIntroduction();
+    await expect(page.locator(`#${firstId}-title`)).toHaveCount(1);
+    await expect(page.locator(`#${laterId}-title`)).toHaveCount(0);
+
+    await page.goBack();
+    await expect(page).toHaveURL(`/menus?menu=${slug}#${laterId}`);
+    await expect(laterSection).toBeInViewport();
+    await page.goForward();
+    await expectIntroduction();
+
+    for (const reducedMotion of ["no-preference", "reduce"] as const) {
+      await page.emulateMedia({ reducedMotion });
+      await page
+        .getByRole("navigation", { name: `${title} sections` })
+        .evaluate((element) => element.scrollIntoView({ behavior: "instant" }));
+      await expect(introduction).not.toBeInViewport();
+      await trigger.click();
+      await navigation.locator("#menu-subnavigation a").first().click();
+      await expectIntroduction();
+    }
+  });
+
+  test(`${slug} bottom card switches menus and retains the selection through refresh and history`, async ({
+    page,
+  }) => {
+    const firstId =
+      slug === "group-set-menu" ? "group-set-lunch" : "set-christmas-lunch";
+    const laterId =
+      slug === "group-set-menu" ? "group-set-dinner" : "set-christmas-dinner";
+    await page.goto(`/menus?menu=${slug}#${laterId}`);
+    const origin = await page.evaluate(() => performance.timeOrigin);
+    const cards = page.getByRole("navigation", { name: `${title} sections` });
+    const selected = page.locator(
+      `section[aria-labelledby="${laterId}-title"]`,
+    );
+    await expect(selected).toBeVisible();
+    await expect(page.locator(`#${firstId}-title`)).toHaveCount(0);
+    await expect(cards.getByRole("link")).toHaveCount(1);
+    const card = cards.getByRole("link");
+    await expect(card).toHaveAttribute("href", `#${firstId}`);
+    await card.scrollIntoViewIfNeeded();
+    const contentBounds = await selected.boundingBox();
+    const cardBounds = await card.boundingBox();
+    expect(contentBounds).not.toBeNull();
+    expect(cardBounds).not.toBeNull();
+    if (contentBounds && cardBounds) {
+      expect(cardBounds.y).toBeGreaterThanOrEqual(
+        contentBounds.y + contentBounds.height,
+      );
+    }
+
+    await card.focus();
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(`/menus?menu=${slug}#${firstId}`);
+    await expect(page.locator(`#${firstId}-title`)).toHaveCount(1);
+    await expect(page.locator(`#${firstId}-title`)).toBeFocused();
+    await expect(page.locator(`#${laterId}-title`)).toHaveCount(0);
+    await expect(cards.getByRole("link")).toHaveAttribute(
+      "href",
+      `#${laterId}`,
+    );
+    await expect(
+      page.getByRole("heading", { level: 1, name: title }),
+    ).toBeInViewport();
+    expect(await page.evaluate(() => performance.timeOrigin)).toBe(origin);
+
+    await page.reload();
+    await expect(page.locator(`#${firstId}-title`)).toHaveCount(1);
+    await expect(page.locator(`#${laterId}-title`)).toHaveCount(0);
+    await page.goBack();
+    await expect(page).toHaveURL(`/menus?menu=${slug}#${laterId}`);
+    await expect(page.locator(`#${laterId}-title`)).toHaveCount(1);
+    await expect(page.locator(`#${firstId}-title`)).toHaveCount(0);
+    await page.goForward();
+    await expect(page.locator(`#${firstId}-title`)).toHaveCount(1);
+    await expect(page.locator(`#${laterId}-title`)).toHaveCount(0);
+  });
+
+  test(`${slug} course anchors select their owning menu on direct load and refresh`, async ({
+    page,
+  }) => {
+    const firstId =
+      slug === "group-set-menu" ? "group-set-lunch" : "set-christmas-lunch";
+    const laterId =
+      slug === "group-set-menu" ? "group-set-dinner" : "set-christmas-dinner";
+    await page.goto(`/menus?menu=${slug}#${laterId}-starters`);
+    await expect(page.locator(`#${laterId}-title`)).toHaveCount(1);
+    await expect(page.locator(`#${firstId}-title`)).toHaveCount(0);
+    await expect(page.locator(`#${laterId}-starters`)).toBeInViewport();
+    await page.reload();
+    await expect(page.locator(`#${laterId}-title`)).toHaveCount(1);
+    await expect(page.locator(`#${firstId}-title`)).toHaveCount(0);
+    await expect(page.locator(`#${laterId}-starters`)).toBeInViewport();
+  });
+}
+
 test("collection selections retain their section anchor after switching", async ({
   page,
 }) => {
@@ -544,11 +776,11 @@ test("identically labeled collections open their own links and restore focus on 
 
   const destinations = [
     [
-      "/menus?menu=group-set-menu#group-set-lunch",
+      "/menus?menu=group-set-menu#group-set-menu-introduction",
       "/menus?menu=group-set-menu#group-set-dinner",
     ],
     [
-      "/menus?menu=seasonal#set-christmas-lunch",
+      "/menus?menu=seasonal#seasonal-introduction",
       "/menus?menu=seasonal#set-christmas-dinner",
     ],
   ];

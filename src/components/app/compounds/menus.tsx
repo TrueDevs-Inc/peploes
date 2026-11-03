@@ -84,6 +84,7 @@ export function Menus() {
                   asChild={Boolean(href)}
                   type={href ? undefined : "button"}
                   variant="brand-nav"
+                  hoverArea="content"
                   aria-disabled={href ? undefined : true}
                   className={cn(
                     ebGaramond.className,

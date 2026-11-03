@@ -4,6 +4,8 @@ import { describe, expect, it, vi } from "vitest";
 import { SetMenuCollection } from "@/components/app/compounds/set-menu-collection";
 import type { ISetMenuCollection } from "@/lib/types";
 
+vi.mock("@/components/ui/button.module.css", () => ({ default: {} }));
+
 vi.mock("@/lib/fonts", () => ({
   dmSans: { className: "" },
   ebGaramond: { className: "" },
@@ -74,3 +76,36 @@ describe("set menu inclusions", () => {
     expect(html).not.toContain("Sourdough");
   });
 });
+
+it.each(["group-set-menu", "seasonal"] as const)(
+  "%s renders only the first menu and places the alternative card after it",
+  (slug) => {
+    const html = renderToStaticMarkup(
+      <SetMenuCollection
+        menu={{
+          ...menu,
+          slug,
+          menus: [
+            ...menu.menus,
+            {
+              _key: "group-dinner",
+              title: "Group dinner",
+              price: 85,
+              summary: "For groups of ten",
+              inclusions: [],
+              courses: [],
+            },
+          ],
+        }}
+      />,
+    );
+
+    expect(html).toContain('aria-labelledby="group-lunch-title"');
+    expect(html).not.toContain('aria-labelledby="group-dinner-title"');
+    expect(html).not.toContain('href="#group-lunch"');
+    expect(html).toContain('href="#group-dinner"');
+    expect(html.indexOf('aria-label="Group menus sections"')).toBeGreaterThan(
+      html.indexOf("</section>"),
+    );
+  },
+);

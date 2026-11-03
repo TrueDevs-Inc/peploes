@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 
+import { PRIVATE_DINING_FORM } from "@/lib/constants/private-dining";
 import { LogContext } from "@/lib/enums";
 import { logger } from "@/lib/logger";
 import type { IEnquiryActionState } from "@/lib/types";
@@ -32,8 +33,7 @@ export async function submitPrivateDiningEnquiry(
     logger.error(LogContext.Api, "Enquiry action failed unexpectedly");
     return {
       status: "unknown",
-      message:
-        "We could not confirm delivery. Please contact our team before sending this again.",
+      message: PRIVATE_DINING_FORM.feedback.unknown,
     };
   }
 }

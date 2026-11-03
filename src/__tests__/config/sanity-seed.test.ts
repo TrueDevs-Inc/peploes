@@ -53,6 +53,8 @@ describe("Sanity seed command safeguards", () => {
     ["seed:development", "seed-menus.ts", "1"],
     ["seed:events:preview", "seed-seasonal.ts", "0"],
     ["seed:events:development", "seed-seasonal.ts", "1"],
+    ["seed:journal:preview", "seed-journal.ts", "0"],
+    ["seed:journal:development", "seed-journal.ts", "1"],
   ])(
     "%s passes the correct script and overrides inherited write mode",
     (command, script, expected) => {

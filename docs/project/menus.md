@@ -14,10 +14,19 @@ for the selected menu. If optimization fails, retry the same validated CMS image
 directly without changing its crop or reserved frame.
 Tabs and the displayed menu share a hydration boundary so an early selection
 cannot replace an unhydrated menu with a different view.
+Group Set Menu and Seasonal render one menu at a time. Each dropdown selection
+opens the collection introduction below the sticky tabs and shows that menu's
+courses. The first published menu is the default, including after editors reorder
+entries. Cards for the other menus appear after the selected menu's courses,
+before the shared notes and booking banner, and switch the selected menu.
+Section anchors, refresh, Back and Forward retain the selection. Selecting the
+same dropdown item again returns to the introduction after scrolling away.
 Each menu supplies its closing photograph and copy. The site header
 and footer remain shared with the homepage, including the footer's spacing,
 gutters and mobile section order.
 The Group Set Menu enquiry action opens the private-dining enquiry section.
+Its closing banner heading, description and enquiry button share a left edge
+on desktop and mobile; the desktop content keeps its existing position.
 Book a Table actions open the [booking page](brief.md#book-a-table).
 Enquiry submission remains inactive until its integration exists.
 

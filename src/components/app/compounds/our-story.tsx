@@ -6,6 +6,10 @@ import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/lib/constants";
 import { OUR_STORY_CONTENT } from "@/lib/constants/our-story";
 import { dmSans, ebGaramond } from "@/lib/fonts";
+import {
+  getJournalArticlePath,
+  getJournalCategoryPath,
+} from "@/lib/journal-data";
 import { cn } from "@/lib/utils";
 
 function StoryHero() {
@@ -56,7 +60,7 @@ function StoryTimeline() {
 
   return (
     <section
-      className="section-divider-subtle bg-[linear-gradient(rgb(46_42_40/10%),transparent_62.47px)] py-12 lg:py-20"
+      className="bg-[linear-gradient(rgb(46_42_40/10%),transparent_62.47px)] py-12 lg:py-20"
       aria-labelledby="story-philosophy"
     >
       <div className="site-container grid items-center gap-10 lg:min-h-[297px] lg:grid-cols-[525fr_671fr] lg:gap-[60px] xl:gap-[100px] min-[90rem]:grid-cols-[525px_minmax(0,1fr)]">
@@ -103,7 +107,7 @@ function StoryBuilding() {
 
   return (
     <section
-      className="section-divider-subtle bg-[color-mix(in_srgb,var(--peploe-burgundy)_6%,var(--warm-cream))]"
+      className="bg-[color-mix(in_srgb,var(--peploe-burgundy)_6%,var(--warm-cream))]"
       aria-labelledby="story-building"
     >
       <div className="site-container grid items-center gap-8 py-12 sm:grid-cols-[minmax(0,1fr)_170px] lg:min-h-[600px] lg:grid-cols-[525fr_23fr_518fr_57fr_173fr] lg:gap-0 lg:py-0">
@@ -169,15 +173,15 @@ function StoryFounder() {
   const { founder } = OUR_STORY_CONTENT;
 
   return (
-    <section
-      className="lg:section-divider-subtle relative"
-      aria-labelledby="story-founder"
-    >
-      {/* Figma leaves this portrait empty until the approved photo is supplied. */}
-      <div
-        className="h-60 bg-[#686565] lg:absolute lg:inset-y-0 lg:left-0 lg:h-auto lg:w-[52%] xl:w-[calc(100%_-_var(--story-gutter)_-_490px_-_68px)]"
-        aria-hidden="true"
-      />
+    <section className="relative" aria-labelledby="story-founder">
+      <div className="relative h-60 bg-[#686565] lg:absolute lg:inset-y-0 lg:left-0 lg:h-auto lg:w-[52%] xl:w-[calc(100%_-_var(--story-gutter)_-_490px_-_68px)]">
+        <Image
+          {...founder.image}
+          fill
+          sizes="(min-width: 1024px) 60vw, 100vw"
+          className="object-cover"
+        />
+      </div>
       <div className="site-container">
         <div
           data-scroll-reveal
@@ -235,13 +239,14 @@ function StoryMural() {
             {mural.description}
           </p>
           <Button
-            type="button"
-            aria-disabled="true"
+            asChild
             variant="brand-secondary-inverse"
             className="mt-6 h-auto min-h-11 w-[249px] max-w-full gap-[5px] rounded-[4px] border-0 px-5 py-2.5 text-base leading-6 whitespace-normal shadow-[inset_0_0_0_1px_currentColor] hover:bg-warm-cream hover:text-ink hover:shadow-[inset_0_0_0_1px_var(--warm-cream)] focus-visible:ring-0 forced-colors:[&:not(:focus-visible)]:-outline-offset-1 forced-colors:[&:not(:focus-visible)]:[outline:1px_solid_CanvasText]"
           >
-            {mural.action}
-            <ArrowRight aria-hidden="true" className="size-4" />
+            <Link href={getJournalArticlePath("the-art-of-peploes")}>
+              {mural.action}
+              <ArrowRight aria-hidden="true" className="size-4" />
+            </Link>
           </Button>
         </div>
       </div>
@@ -283,13 +288,14 @@ function StoryArchive() {
             {archive.description}
           </p>
           <Button
-            type="button"
-            aria-disabled="true"
+            asChild
             variant="brand-contact"
             className="mt-6 h-auto min-h-11 w-[210px] max-w-full gap-[5px] rounded-[4px] border-0 px-5 py-2.5 text-base leading-6 whitespace-normal shadow-[inset_0_0_0_1px_currentColor] hover:bg-peploe-burgundy hover:text-warm-cream hover:shadow-[inset_0_0_0_1px_var(--peploe-burgundy)] focus-visible:ring-0 lg:mt-5 forced-colors:[&:not(:focus-visible)]:-outline-offset-1 forced-colors:[&:not(:focus-visible)]:[outline:1px_solid_CanvasText]"
           >
-            {archive.action}
-            <ArrowRight aria-hidden="true" className="size-4" />
+            <Link href={getJournalCategoryPath("family-history")}>
+              {archive.action}
+              <ArrowRight aria-hidden="true" className="size-4" />
+            </Link>
           </Button>
         </div>
       </div>
@@ -301,15 +307,15 @@ function StoryNextChapter() {
   const { nextChapter } = OUR_STORY_CONTENT;
 
   return (
-    <section
-      className="lg:section-divider-subtle relative"
-      aria-labelledby="story-next-chapter"
-    >
-      {/* Match the unfilled Gina portrait in the approved frame. */}
-      <div
-        className="h-60 bg-[#686565] lg:absolute lg:inset-y-0 lg:left-0 lg:h-auto lg:w-[52%] xl:w-[calc(100%_-_var(--story-gutter)_-_527px_-_16px)]"
-        aria-hidden="true"
-      />
+    <section className="relative" aria-labelledby="story-next-chapter">
+      <div className="relative h-60 bg-[#686565] lg:absolute lg:inset-y-0 lg:left-0 lg:h-auto lg:w-[52%] xl:w-[calc(100%_-_var(--story-gutter)_-_527px_-_16px)]">
+        <Image
+          {...nextChapter.image}
+          fill
+          sizes="(min-width: 1024px) 60vw, 100vw"
+          className="object-cover"
+        />
+      </div>
       <div className="site-container">
         <div
           data-scroll-reveal

@@ -41,7 +41,7 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="scrollbar-thin">
       <head>
         <link
           href={ROUTES.LLMS}

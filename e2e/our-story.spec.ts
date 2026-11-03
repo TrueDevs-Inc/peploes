@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./menu-test";
 
 test("Our Story loads its photographs without stretching or horizontal overflow", async ({
   page,
@@ -13,7 +13,7 @@ test("Our Story loads its photographs without stretching or horizontal overflow"
   ).toBeVisible();
 
   const photographs = main.getByRole("img");
-  await expect(photographs).toHaveCount(5);
+  await expect(photographs).toHaveCount(7);
   for (const photograph of await photographs.all()) {
     await photograph.scrollIntoViewIfNeeded();
     await expect(photograph).toBeVisible();
@@ -55,7 +55,7 @@ test("archive copy and photograph stay separate at responsive widths", async ({
       element.getBoundingClientRect().toJSON(),
     );
     const copy = await archive
-      .locator("p, h2, button")
+      .locator("p, h2, a, button")
       .evaluateAll((elements) =>
         elements.map((element) => ({
           text: element.textContent,
@@ -160,23 +160,42 @@ test("the footer reaches Our Story and Our Location reaches Visit & Contact", as
   await expect(page.locator("#find-us")).toBeInViewport();
 });
 
-test("unbuilt story and booking actions remain clearly marked placeholders", async ({
+for (const [name, href, heading] of [
+  [
+    "Discover the Mural Story",
+    "/journal/the-art-of-peploes",
+    /The art of Peploe.s/,
+  ],
+  ["Explore the Archive", "/journal?category=family-history", /The Journal/],
+] as const) {
+  test(`Our Story ${name} opens its Journal destination by keyboard`, async ({
+    page,
+  }) => {
+    await page.goto("/our-story");
+    const action = page
+      .getByRole("main")
+      .getByRole("link", { name, exact: true });
+    await expect(action).toHaveAttribute("href", href);
+    await action.focus();
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(href);
+    const main = page.getByRole("main");
+    await expect(main).toBeVisible();
+    await expect(main.getByRole("heading", { level: 1 })).toHaveText(heading);
+  });
+}
+
+test("the unbuilt Book a Table action remains a clearly marked placeholder", async ({
   page,
 }) => {
   await page.goto("/our-story");
-  const main = page.getByRole("main");
-
-  for (const name of [
-    "Discover the Mural Story",
-    "Explore the Archive",
-    "Book a Table",
-  ]) {
-    const action = main.getByRole("button", { name, exact: true });
-    await expect(action).toHaveAttribute("type", "button");
-    await expect(action).toHaveAttribute("aria-disabled", "true");
-    await action.focus();
-    await page.keyboard.press("Enter");
-    await expect(page).toHaveURL("/our-story");
-    await expect(page.getByRole("dialog")).toHaveCount(0);
-  }
+  const action = page
+    .getByRole("main")
+    .getByRole("button", { name: "Book a Table", exact: true });
+  await expect(action).toHaveAttribute("type", "button");
+  await expect(action).toHaveAttribute("aria-disabled", "true");
+  await action.focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL("/our-story");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
 });

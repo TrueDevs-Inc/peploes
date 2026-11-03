@@ -59,3 +59,31 @@ it("preserves the published menu order and destinations in CMS navigation", asyn
     "/menus?menu=seasonal",
   ]);
 });
+
+it.each(["group-set-menu", "seasonal"] as const)(
+  "%s opens its introduction for the first published entry, even after reordering",
+  async (slug) => {
+    vi.mocked(getMenusPage).mockResolvedValue(
+      ok({
+        ...MENU_PAGE_CONTENT,
+        navigation: [{ menu: slug, label: "Special menus" }],
+      }),
+    );
+    vi.mocked(getMenuCollections).mockResolvedValue(
+      ok([
+        {
+          slug,
+          menus: [
+            { _key: "dinner", title: "Dinner" },
+            { _key: "lunch", title: "Lunch" },
+          ],
+        },
+      ]),
+    );
+    const navigation = await loadMenuNavigation();
+    expect(navigation[0].children).toEqual([
+      { label: "Dinner", href: `/menus?menu=${slug}#${slug}-introduction` },
+      { label: "Lunch", href: `/menus?menu=${slug}#lunch` },
+    ]);
+  },
+);

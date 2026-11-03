@@ -19,7 +19,7 @@ export const FOOTER_CONTENT: IFooterContent = {
     { label: "Our Story", href: ROUTES.OUR_STORY },
     { label: NAVBAR_CONTENT.groupsLabel, href: ROUTES.PRIVATE_DINING },
     { label: "What’s On", href: ROUTES.WHATS_ON },
-    { label: "The Journal" },
+    { label: "The Journal", href: ROUTES.JOURNAL },
     {
       label: "Visit & Contact",
       href: ROUTES.VISIT_CONTACT,
@@ -42,23 +42,20 @@ export const FOOTER_CONTENT: IFooterContent = {
       "We could not send your signup request. Please try again later.",
     requiredError: "Please enter your email address.",
     invalidError: "Please enter a valid email address, such as name@gmail.com.",
-    completionHint: "Press Tab to complete your email, or Escape to dismiss.",
-    domains: [
-      "gmail.com",
-      "outlook.com",
-      "hotmail.com",
-      "yahoo.com",
-      "icloud.com",
-    ],
   },
   copyright: "© 2026 Peploe’s",
   legalNavigationLabel: "Legal and accessibility",
   legalLabels: [
-    { label: "Privacy Policy", href: ROUTES.PRIVACY_POLICY },
+    {
+      label: "Privacy Policy",
+      shortLabel: "Privacy",
+      href: ROUTES.PRIVACY_POLICY,
+    },
     { label: "Terms", href: ROUTES.TERMS_CONDITIONS },
     { label: "Accessibility", href: ROUTES.ACCESSIBILITY_POLICY },
     {
       label: "Booking & Cancellation",
+      shortLabel: "Booking",
       href: ROUTES.BOOKING_CANCELLATION_TERMS,
     },
   ],
@@ -84,29 +81,8 @@ export const MOBILE_FOOTER_CONTENT = {
   directionsLabel: "Directions",
   navigation: [
     {
-      heading: "Explore",
-      links: [
-        { label: "Menus", href: ROUTES.MENUS },
-        { label: "Our Story", href: ROUTES.OUR_STORY },
-        { label: "What's On", href: ROUTES.WHATS_ON },
-        { label: "Visit & Contact", href: ROUTES.VISIT_CONTACT },
-        { label: "The Journal" },
-      ],
-    },
-    {
-      heading: "Occasions",
-      links: [
-        { label: "Groups & Celebrations", href: ROUTES.CELEBRATIONS },
-        { label: "Corporate & Exclusive Hire", href: ROUTES.CORPORATE_EVENTS },
-        { label: "Weddings", href: ROUTES.WEDDINGS },
-      ],
-    },
-    {
-      heading: "Peploe's",
-      links: [
-        { label: "People & Produce" },
-        { label: "Contact", href: ROUTES.VISIT_CONTACT },
-      ],
+      heading: FOOTER_CONTENT.exploreHeading,
+      links: FOOTER_CONTENT.exploreLinks,
     },
   ],
 } as const;

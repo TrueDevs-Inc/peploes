@@ -5,6 +5,7 @@ import { Fragment } from "react";
 import { TrackedAnchor } from "@/components/app/atoms/tracked-link";
 import styles from "@/components/app/compounds/policy-page.module.css";
 import { PolicyContents } from "@/components/app/molecules/policy-contents";
+import { Button } from "@/components/ui/button";
 import { POLICY_HELP } from "@/lib/constants/policies";
 import { GA4Event } from "@/lib/enums";
 import { dmSans, ebGaramond } from "@/lib/fonts";
@@ -57,10 +58,16 @@ export function PolicyPage({ policy }: IPolicyPageProps) {
             <ul aria-labelledby="related-policies-title">
               {policy.relatedPolicies.map((related) => (
                 <li key={related.path}>
-                  <Link href={related.path}>
-                    {related.title}
-                    <ArrowRight aria-hidden="true" className="size-4" />
-                  </Link>
+                  <Button
+                    asChild
+                    variant="brand-text"
+                    className="h-auto justify-start rounded-none p-0 text-left text-sm font-normal whitespace-normal"
+                  >
+                    <Link href={related.path}>
+                      {related.title}
+                      <ArrowRight aria-hidden="true" className="size-4" />
+                    </Link>
+                  </Button>
                 </li>
               ))}
             </ul>
@@ -105,13 +112,7 @@ export function PolicyPage({ policy }: IPolicyPageProps) {
         </div>
       </div>
 
-      <section
-        className={cn(
-          "section-divider-subtle section-divider-subtle-bottom",
-          styles.help,
-        )}
-        aria-labelledby="policy-help-title"
-      >
+      <section className={styles.help} aria-labelledby="policy-help-title">
         <div className={cn("site-container", styles.helpContainer)}>
           <div data-scroll-reveal className={styles.helpHeading}>
             <p className={styles.eyebrow}>{POLICY_HELP.eyebrow}</p>

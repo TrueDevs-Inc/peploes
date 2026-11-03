@@ -27,6 +27,19 @@ import type {
   TEmailProviderOutcome,
 } from "@/lib/types";
 
+const EMAIL_LOG = {
+  configurationInvalid: "Email configuration invalid",
+  claimFailed: "Email delivery claim failed",
+  statusUnavailable: "Email delivery status unavailable",
+  providerRejected: "Email provider rejected message",
+  outcomeUnknown: "Email provider outcome unknown",
+} as const;
+
+const EMAIL_ERROR = {
+  unavailable: "Email is unavailable.",
+  unknown: "Email status needs checking.",
+} as const;
+
 const emailMessageSchema = z.object({
   notificationId: z.uuid(),
   template: z.enum(["enquiry-admin", "enquiry-guest"]),
@@ -123,19 +136,25 @@ function prepareEmail(raw: IEmailMessage, deps: IEmailServiceDependencies) {
   const selected = selectEmailProvider(deps.providerFlag);
   const identity = deps.identity();
   if (selected.isErr() || identity.isErr()) {
-    logger.error(LogContext.Api, "Email configuration invalid", {
+    logger.error(LogContext.Api, EMAIL_LOG.configurationInvalid, {
       reason: selected.isErr()
         ? selected.error.reason
         : identity.isErr()
           ? identity.error.reason
           : "unknown",
     });
+    logToSentry(new Error(EMAIL_LOG.configurationInvalid), {
+      module: AppModule.Api,
+      stage: Stage.ServiceCall,
+      tags: { template: parsed.data.template },
+    });
     return err(
-      createError(ErrorCode.ServiceUnavailable, "Email is unavailable."),
+      createError(ErrorCode.ServiceUnavailable, EMAIL_ERROR.unavailable),
     );
   }
-  const message = transportMessage(parsed.data, identity.value, deps.live);
-  if (!deps.live && !stagingRecipientsAllowed(message, deps.stagingAllowlist)) {
+  const live = deps.live && !deps.stagingAllowlist;
+  const message = transportMessage(parsed.data, identity.value, live);
+  if (!live && !stagingRecipientsAllowed(message, deps.stagingAllowlist)) {
     logger.error(LogContext.Api, "Email staging recipient rejected", {
       id: message.id,
       template: parsed.data.template,
@@ -162,13 +181,13 @@ function reportOutcome(
     case "accepted":
       return ok({ id, provider, status: "accepted" as const });
     case "rejected":
-      logger.error(LogContext.Api, "Email provider rejected message", {
+      logger.error(LogContext.Api, EMAIL_LOG.providerRejected, {
         id,
         provider,
         template: email.template,
         reason: outcome.reason,
       });
-      logToSentry(new Error("Email provider rejected message"), {
+      logToSentry(new Error(EMAIL_LOG.providerRejected), {
         module: AppModule.Api,
         stage: Stage.ServiceCall,
         tags: {
@@ -182,13 +201,13 @@ function reportOutcome(
         createError(ErrorCode.ServiceUnavailable, "Email was not sent."),
       );
     case "unknown":
-      logger.error(LogContext.Api, "Email provider outcome unknown", {
+      logger.error(LogContext.Api, EMAIL_LOG.outcomeUnknown, {
         id,
         provider,
         template: email.template,
         reason: outcome.reason,
       });
-      logToSentry(new Error("Email provider outcome unknown"), {
+      logToSentry(new Error(EMAIL_LOG.outcomeUnknown), {
         module: AppModule.Api,
         stage: Stage.ServiceCall,
         tags: {
@@ -198,9 +217,7 @@ function reportOutcome(
           reason: outcome.reason,
         },
       });
-      return err(
-        createError(ErrorCode.OutcomeUnknown, "Email status needs checking."),
-      );
+      return err(createError(ErrorCode.OutcomeUnknown, EMAIL_ERROR.unknown));
   }
 }
 
@@ -220,18 +237,16 @@ async function persistOutcome(
   });
   if (finished.isOk() && finished.value)
     return reportOutcome(outcome, email, provider);
-  logger.error(LogContext.Database, "Email delivery status unavailable", {
+  logger.error(LogContext.Database, EMAIL_LOG.statusUnavailable, {
     id,
     provider,
   });
-  logToSentry(new Error("Email delivery status unavailable"), {
+  logToSentry(new Error(EMAIL_LOG.statusUnavailable), {
     module: AppModule.Api,
     stage: Stage.ServiceCall,
     tags: { deliveryId: id, provider, template: email.template },
   });
-  return err(
-    createError(ErrorCode.OutcomeUnknown, "Email status needs checking."),
-  );
+  return err(createError(ErrorCode.OutcomeUnknown, EMAIL_ERROR.unknown));
 }
 
 async function deliverEmail(
@@ -246,9 +261,18 @@ async function deliverEmail(
     provider: email.provider,
   });
   if (claim.isErr()) {
-    logger.error(LogContext.Database, "Email delivery claim failed", { id });
+    logger.error(LogContext.Database, EMAIL_LOG.claimFailed, { id });
+    logToSentry(new Error(EMAIL_LOG.claimFailed), {
+      module: AppModule.Api,
+      stage: Stage.ServiceCall,
+      tags: {
+        deliveryId: id,
+        provider: email.provider,
+        template: email.template,
+      },
+    });
     return err(
-      createError(ErrorCode.ServiceUnavailable, "Email is unavailable."),
+      createError(ErrorCode.ServiceUnavailable, EMAIL_ERROR.unavailable),
     );
   }
   if (claim.value.record.payloadHash !== email.payloadHash) {
@@ -263,9 +287,7 @@ async function deliverEmail(
           provider: claim.value.record.provider,
           status: "accepted" as const,
         })
-      : err(
-          createError(ErrorCode.OutcomeUnknown, "Email status needs checking."),
-        );
+      : err(createError(ErrorCode.OutcomeUnknown, EMAIL_ERROR.unknown));
   }
   const provider = claim.value.record.provider;
   const outcome = await (provider === "smtp"

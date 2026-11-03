@@ -1,0 +1,101 @@
+.card {
+  min-width: 0;
+}
+
+.card a:focus-visible {
+  outline: 2px solid var(--peploe-burgundy);
+  outline-offset: 4px;
+}
+
+.image {
+  position: relative;
+  display: block;
+  height: 240px;
+  overflow: hidden;
+  background: var(--soft-stone);
+}
+
+.image img {
+  object-fit: cover;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .image img {
+    /* Keep the image on its layer to avoid a sharpness jump after zooming out. */
+    will-change: transform;
+    transition: transform var(--duration-base) ease-in-out;
+  }
+
+  .image:focus-visible img {
+    transform: scale(1.05);
+  }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .image:hover img {
+    transform: scale(1.05);
+  }
+}
+
+.copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding-top: 20px;
+}
+
+.metadata {
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  letter-spacing: 1.05px;
+  text-transform: uppercase;
+}
+
+.metadata a:hover,
+.title a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.title {
+  font-family: var(--font-eb-garamond), serif;
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 32px;
+  overflow-wrap: anywhere;
+}
+
+.action {
+  justify-content: flex-start;
+  height: auto;
+  min-height: 44px;
+  max-width: 100%;
+  margin-bottom: -4px;
+  padding: 8px 0 12px;
+  border-radius: 0;
+  font-size: 16px;
+  line-height: 24px;
+  white-space: normal;
+  text-align: left;
+}
+
+@media (width < 40rem), (pointer: coarse) {
+  /* Keep touch targets in the existing gaps without increasing card height. */
+  .metadata a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin-block: -20px -4px;
+    padding-block: 20px 4px;
+  }
+
+  .title a {
+    display: block;
+    min-height: 44px;
+    margin-block: -4px -8px;
+    padding-block: 4px 8px;
+  }
+}

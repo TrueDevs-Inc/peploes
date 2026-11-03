@@ -32,6 +32,25 @@ export default defineConfig({
                   ]),
               ),
             S.listItem()
+              .title("Journal")
+              .child(
+                S.list()
+                  .title("Journal")
+                  .items([
+                    S.documentTypeListItem("journalArticle").title("Articles"),
+                    S.documentTypeListItem("journalCategory").title(
+                      "Categories",
+                    ),
+                    S.listItem()
+                      .title("Page settings")
+                      .child(
+                        S.document()
+                          .schemaType("journalPage")
+                          .documentId("journal-page"),
+                      ),
+                  ]),
+              ),
+            S.listItem()
               .id("menus")
               .title("Menus")
               .child(
@@ -59,10 +78,13 @@ export default defineConfig({
   document: {
     newDocumentOptions: (options) =>
       options.filter(
-        (option) => !["menusPage", "whatsOnPage"].includes(option.templateId),
+        (option) =>
+          !["menusPage", "whatsOnPage", "journalPage"].includes(
+            option.templateId,
+          ),
       ),
     actions: (actions, context) =>
-      ["menusPage", "whatsOnPage"].includes(context.schemaType)
+      ["menusPage", "whatsOnPage", "journalPage"].includes(context.schemaType)
         ? actions.filter(
             (action) =>
               action.action !== "duplicate" && action.action !== "delete",

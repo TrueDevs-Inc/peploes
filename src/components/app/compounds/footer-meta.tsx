@@ -21,16 +21,19 @@ export function FooterMeta() {
           |
         </span>
         <nav aria-label={FOOTER_CONTENT.legalNavigationLabel}>
-          <ul className="flex flex-col flex-wrap items-start gap-x-4 xl:flex-row xl:items-center xl:gap-y-2">
+          <ul className="flex flex-wrap items-center justify-around gap-x-px px-0.5 min-[360px]:gap-x-[7px] xl:justify-start xl:gap-x-4 xl:gap-y-2 xl:px-0">
             {FOOTER_CONTENT.legalLabels.map(
               ({ label, shortLabel, href }, index) => {
                 const linkLabel = (
                   <>
-                    <span data-footer-full-label={shortLabel ? "" : undefined}>
+                    <span
+                      data-footer-full-label={shortLabel ? "" : undefined}
+                      className={shortLabel ? "hidden xl:inline" : undefined}
+                    >
                       {label}
                     </span>
                     {shortLabel && (
-                      <span data-footer-short-label className="hidden">
+                      <span data-footer-short-label className="xl:hidden">
                         {shortLabel}
                       </span>
                     )}
@@ -47,9 +50,14 @@ export function FooterMeta() {
                     <Button
                       asChild
                       variant="brand-nav"
-                      className="min-h-11 min-w-11 h-auto justify-start rounded-none p-0 text-sm leading-[21px] font-normal text-text-secondary xl:min-h-0 xl:min-w-0 xl:justify-center xl:text-xs xl:leading-5"
+                      className="min-h-11 min-w-11 h-auto justify-center rounded-none p-0 text-[11px] leading-[21px] font-normal text-text-secondary min-[360px]:text-xs xl:min-h-0 xl:min-w-0 xl:leading-5"
                     >
-                      <Link href={href}>{linkLabel}</Link>
+                      <Link
+                        href={href}
+                        aria-label={shortLabel ? label : undefined}
+                      >
+                        {linkLabel}
+                      </Link>
                     </Button>
                   </li>
                 );

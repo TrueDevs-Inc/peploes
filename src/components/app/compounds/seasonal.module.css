@@ -198,12 +198,13 @@
 
 .terrace {
   position: relative;
-  color: var(--warm-cream);
-  background: var(--olive-green);
+  color: var(--ink);
+  background: color-mix(in srgb, var(--peploe-burgundy) 6%, var(--warm-cream));
 }
 
 .terraceImage {
   position: relative;
+  overflow: hidden;
   height: 240px;
 }
 
@@ -213,6 +214,10 @@
 
 .terraceCopy {
   padding-block: 40px 48px;
+}
+
+.terraceCopy .description {
+  color: var(--text-secondary);
 }
 
 .terraceCopy h2 {
@@ -445,6 +450,11 @@
     height: auto;
   }
 
+  .terraceImage img {
+    transform: scale(1.65);
+    transform-origin: left 15%;
+  }
+
   .terraceCopy {
     width: 54.938272%;
     margin-left: auto;
@@ -490,5 +500,11 @@
       rgb(var(--overlay-dark-ink-rgb) / 80%) 40.0266%,
       rgb(var(--overlay-dark-ink-rgb) / 0%)
     );
+  }
+}
+
+@media (64rem <= width < 80rem) {
+  .terraceImage img {
+    transform-origin: left 60%;
   }
 }

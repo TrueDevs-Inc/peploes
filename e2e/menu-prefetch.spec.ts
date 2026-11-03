@@ -8,14 +8,27 @@ for (const destination of [
     page,
   }) => {
     let prepared = false;
+    let delayNavigation = false;
+    await page.route("**/menus?**", async (route) => {
+      if (
+        delayNavigation &&
+        new URL(route.request().url()).searchParams.has("_rsc")
+      ) {
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+      }
+      await route.continue();
+    });
     page.on("response", (response) => {
       const url = new URL(response.url());
       if (
         url.pathname === "/menus" &&
         url.searchParams.get("menu") === destination.menu &&
-        url.searchParams.has("_rsc")
-      )
+        url.searchParams.has("_rsc") &&
+        response.request().headers()["next-router-state-tree"] &&
+        !response.request().headers()["next-router-prefetch"]
+      ) {
         prepared = response.ok();
+      }
     });
     await page.goto("/menus?menu=lunch");
     const navigation = page.getByRole("navigation", {
@@ -40,15 +53,10 @@ for (const destination of [
       exact: true,
     });
     await link.scrollIntoViewIfNeeded();
+    await link.hover();
     await expect.poll(() => prepared, { timeout: 10_000 }).toBe(true);
 
-    // A warmed tab should not pay network latency again when it is selected.
-    await page.route("**/menus?**", async (route) => {
-      if (new URL(route.request().url()).searchParams.has("_rsc")) {
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-      }
-      await route.continue();
-    });
+    delayNavigation = true;
     await link.click();
     await expect(page.locator("[data-menu-content]")).toHaveAttribute(
       "data-menu",

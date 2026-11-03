@@ -15,7 +15,9 @@
     "seed:development": "node seed.cjs menus apply",
     "audit": "bun audit --audit-level high",
     "seed:events:preview": "node seed.cjs events preview",
-    "seed:events:development": "node seed.cjs events apply"
+    "seed:events:development": "node seed.cjs events apply",
+    "seed:journal:preview": "node seed.cjs journal preview",
+    "seed:journal:development": "node seed.cjs journal apply"
   },
   "keywords": [
     "sanity"

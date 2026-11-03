@@ -69,7 +69,7 @@ test("newsletter shows errors for empty and invalid emails and recovers after ed
   );
 });
 
-test("newsletter completes inline with Tab without any popup suggestions", async ({
+test("newsletter has no email suggestions and Tab moves to Subscribe", async ({
   page,
 }) => {
   await page.goto("/");
@@ -79,33 +79,17 @@ test("newsletter completes inline with Tab without any popup suggestions", async
   await expect(page.getByRole("option")).toHaveCount(0);
   await expect(email).toHaveAttribute("autocomplete", "off");
   await expect(email).not.toHaveAttribute("list");
-  await expect(page.locator("[data-newsletter-completion]")).toHaveText(
-    "ali@gmail.com",
-  );
+  await expect(page.locator("[data-newsletter-completion]")).toHaveCount(0);
   await expect(email).toHaveValue("ali");
   await email.press("Tab");
-  await expect(email).toHaveValue("ali@gmail.com");
-  await expect(email).toBeFocused();
-  await email.press("Tab");
+  await expect(email).toHaveValue("ali");
   await expect(
     page.getByRole("button", { name: "Subscribe", exact: true }),
   ).toBeFocused();
 
-  await email.fill("ali@out");
-  await expect(page.locator("[data-newsletter-completion]")).toHaveText(
-    "ali@outlook.com",
-  );
-  await expect(page.getByRole("listbox")).toHaveCount(0);
-  await email.press("Tab");
-  await expect(email).toHaveValue("ali@outlook.com");
-  await email.fill("ali@gm");
-  await expect(page.locator("[data-newsletter-completion]")).toHaveText(
-    "ali@gmail.com",
-  );
-  await email.press("Escape");
-  await expect(page.locator("[data-newsletter-completion]")).toHaveCount(0);
-  await expect(email).toHaveValue("ali@gm");
-  await email.fill("ali@example.com");
-  await expect(page.locator("[data-newsletter-completion]")).toHaveCount(0);
-  await expect(email).toHaveValue("ali@example.com");
+  for (const value of ["ali@out", "ali@gm", "ali@example.com"]) {
+    await email.fill(value);
+    await expect(page.locator("[data-newsletter-completion]")).toHaveCount(0);
+    await expect(email).toHaveValue(value);
+  }
 });

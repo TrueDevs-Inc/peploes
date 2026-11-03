@@ -25,10 +25,27 @@
   }
 }
 
+.mobileEntrancePhoto,
 .entrance {
   position: relative;
-  aspect-ratio: 1440 / 1307;
   background-color: rgb(var(--hero-shadow-rgb));
+}
+
+.mobileEntrancePhoto {
+  height: 520px;
+}
+
+.mobileEntrancePhoto::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  pointer-events: none;
+  content: "";
+}
+
+.entrance {
+  aspect-ratio: 1440 / 1307;
 }
 
 .entranceOverlay {
@@ -46,9 +63,9 @@
   aspect-ratio: 1440 / 1407;
 }
 
+.mobileEntrancePhoto::after,
 .entranceCaption {
   height: clamp(100px, 14.653vw, 211px);
-  padding-bottom: clamp(16px, 2.639vw, 38px);
   background: linear-gradient(
     0deg,
     var(--warm-cream) 0%,
@@ -56,4 +73,8 @@
     rgb(var(--overlay-cream-rgb) / 75.3%) 56.73%,
     rgb(var(--overlay-cream-rgb) / 0%) 86.06%
   );
+}
+
+.entranceCaption {
+  padding-bottom: clamp(16px, 2.639vw, 38px);
 }

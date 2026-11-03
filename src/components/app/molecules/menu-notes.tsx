@@ -106,6 +106,7 @@ function MenuAllergenInformation({
       open
       className={cn(
         "group relative min-h-11",
+        !compact && "xl:content-center",
         compact && "xl:pl-[190px]",
         hasNotes &&
           !compact &&

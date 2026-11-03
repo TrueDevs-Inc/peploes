@@ -1,4 +1,13 @@
 import { drinksMenu } from "./drinks-menu";
+import { journalArticle } from "./journal-article";
+import { journalCategory } from "./journal-category";
+import {
+  journalHeading,
+  journalImage,
+  journalParagraph,
+  journalQuote,
+} from "./journal-fields";
+import { journalPage } from "./journal-page";
 import { menuCourse } from "./menu-course";
 import { menuDish } from "./menu-dish";
 import { menuAllergens, menuBooking, menuImage } from "./menu-fields";
@@ -50,4 +59,11 @@ export const schemaTypes = [
   wineMenu,
   setMenuCollection,
   menusPage,
+  journalArticle,
+  journalCategory,
+  journalParagraph,
+  journalHeading,
+  journalImage,
+  journalQuote,
+  journalPage,
 ];

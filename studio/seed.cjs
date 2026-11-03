@@ -2,14 +2,20 @@ const { spawnSync } = require("node:child_process");
 const { dirname, join } = require("node:path");
 
 const [target, mode, ...extra] = process.argv.slice(2);
-const scripts = { menus: "seed-menus.ts", events: "seed-seasonal.ts" };
+const scripts = {
+  menus: "seed-menus.ts",
+  events: "seed-seasonal.ts",
+  journal: "seed-journal.ts",
+};
 
 if (
   !Object.hasOwn(scripts, target) ||
   !["preview", "apply"].includes(mode) ||
   extra.length > 0
 ) {
-  process.stderr.write("Usage: node seed.cjs <menus|events> <preview|apply>\n");
+  process.stderr.write(
+    "Usage: node seed.cjs <menus|events|journal> <preview|apply>\n",
+  );
   process.exitCode = 1;
 } else {
   const cli = join(

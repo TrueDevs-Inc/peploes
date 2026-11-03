@@ -58,6 +58,10 @@ export const OUR_STORY_CONTENT = {
     heading: "Barry Canny\nopens Peploe’s.",
     description:
       "In 2003, Barry Canny brought his vision\nto life, creating a restaurant defined by great food,\nexceptional wine and warm, genuine hospitality.\nPeploe’s quickly became a much-loved part of\nDublin’s dining scene.",
+    image: {
+      src: "/peploes-story-dining-room.jpg",
+      alt: "Tables set beside mirrored walls and red flowers in Peploe’s dining room",
+    },
   },
   mural: {
     eyebrow: "On the Walls",
@@ -86,6 +90,10 @@ export const OUR_STORY_CONTENT = {
     heading: "Still a family restaurant.",
     description:
       "More than two decades later, Gina Canny continues\nthe next chapter alongside the team, building on what\nBarry created while keeping Peploe’s moving\nforward — the same values, the same warm welcome,\nand a dining room that feels like home.",
+    image: {
+      src: "/peploes-private-dining-table.webp",
+      alt: "Wine and plated food on a table at Peploe’s",
+    },
   },
   today: {
     eyebrow: "Today",

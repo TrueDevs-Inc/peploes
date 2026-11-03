@@ -1,0 +1,276 @@
+.categories {
+  border-bottom: 1px solid var(--soft-stone);
+  background: var(--warm-cream);
+}
+
+.categoriesInner {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 12px;
+  padding-block: 20px;
+}
+
+.categoriesLabel {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+}
+
+.categoryScroll {
+  position: relative;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.categoryLinks {
+  display: flex;
+  gap: 28px;
+  width: max-content;
+  padding-inline: 4px;
+}
+
+.categoryLinks a {
+  position: relative;
+  display: flex;
+  min-height: 40px;
+  align-items: center;
+  padding-block: 7px 13px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+.categoryLinks a[aria-current],
+.categoryLinks a:hover {
+  color: var(--peploe-burgundy);
+}
+
+.categoryScroll:not([data-indicator-ready]) a[aria-current]::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 7px;
+  left: 0;
+  height: 2px;
+  background: var(--peploe-burgundy);
+}
+
+.indicator {
+  position: absolute;
+  bottom: 7px;
+  left: 0;
+  width: 1px;
+  height: 2px;
+  visibility: hidden;
+  background: var(--peploe-burgundy);
+  pointer-events: none;
+  transform-origin: left;
+}
+
+.categoryScroll[data-indicator-ready] .indicator {
+  visibility: visible;
+  transition: transform 260ms ease;
+}
+
+.resultsEnter {
+  animation: journal-enter 220ms ease-out both;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .appended > article {
+    animation: journal-enter 350ms var(--ease-organic) both;
+  }
+}
+
+@keyframes journal-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .categoryScroll[data-indicator-ready] .indicator {
+    transition: none;
+  }
+
+  .resultsEnter {
+    animation: none;
+  }
+}
+
+.categoryLinks a:focus-visible {
+  outline-offset: -2px;
+}
+
+.stream {
+  padding-block: 48px;
+}
+
+.introduction {
+  margin-bottom: 36px;
+}
+
+.eyebrow {
+  margin-bottom: 8px;
+  color: var(--peploe-burgundy);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: 1.35px;
+  text-transform: uppercase;
+}
+
+.introduction h2 {
+  font-size: 36px;
+  line-height: 42px;
+}
+
+.introduction h2 + p {
+  margin-top: 16px;
+  color: var(--text-secondary);
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.cards {
+  display: grid;
+  gap: 36px 32px;
+}
+
+.cards > li {
+  min-width: 0;
+}
+
+.empty {
+  color: var(--text-secondary);
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.loadMore {
+  display: flex;
+  justify-content: center;
+  margin-top: 36px;
+}
+
+.loadMoreButton {
+  min-width: 178px;
+  min-height: 44px;
+  height: auto;
+  padding: 9px 20px;
+  border-color: var(--peploe-burgundy);
+  font-size: 16px;
+  line-height: 24px;
+  white-space: normal;
+}
+
+@media (width < 40rem) {
+  .stream {
+    padding-block: 44px 52px;
+  }
+
+  .introduction {
+    margin-bottom: 28px;
+  }
+
+  .eyebrow {
+    margin-bottom: 28px;
+    font-size: 10px;
+    line-height: 15px;
+    letter-spacing: 1.25px;
+  }
+
+  .introduction h2 {
+    font-size: 32px;
+    line-height: 37px;
+  }
+
+  .cards {
+    row-gap: 28px;
+  }
+
+  .loadMore {
+    justify-content: flex-start;
+    margin-top: 28px;
+  }
+
+  .categoriesInner {
+    gap: 14px;
+    padding-block: 24px;
+  }
+
+  .categoryScroll {
+    min-height: 48px;
+    scrollbar-width: none;
+  }
+
+  .categoriesLabel {
+    font-size: 10px;
+    line-height: 15px;
+    letter-spacing: 1.2px;
+  }
+
+  .categoryLinks {
+    gap: 24px;
+    padding-inline: 0;
+  }
+
+  .categoryLinks a {
+    min-height: 48px;
+    padding-block: 8px 20px;
+  }
+
+  .indicator,
+  .categoryScroll:not([data-indicator-ready]) a[aria-current]::after {
+    bottom: 14px;
+  }
+}
+
+@media (width >= 40rem) {
+  .cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (width >= 64rem) {
+  .categoriesInner {
+    min-height: 88px;
+    flex-direction: row;
+    align-items: center;
+    gap: 28px;
+    padding-block: 24px;
+  }
+
+  .categoriesLabel {
+    width: 180px;
+  }
+
+  .categoryLinks {
+    padding-inline: 0;
+  }
+
+  .stream {
+    padding-block: 60px;
+  }
+
+  .introduction h2 {
+    font-size: 42px;
+    line-height: 48px;
+  }
+
+  .cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

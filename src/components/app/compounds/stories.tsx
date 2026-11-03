@@ -8,6 +8,10 @@ import { Button } from "@/components/ui/button";
 import { MOBILE_HOME_CONTENT, ROUTES } from "@/lib/constants";
 import { STORIES_CONTENT } from "@/lib/constants/stories";
 import { dmSans, ebGaramond } from "@/lib/fonts";
+import {
+  getJournalArticlePath,
+  getJournalCategoryPath,
+} from "@/lib/journal-data";
 import type { IStoryActionProps } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -68,17 +72,18 @@ export function Stories() {
             {STORIES_CONTENT.description}
           </p>
           <Button
-            type="button"
+            asChild
             variant="brand-text"
-            aria-disabled="true"
             className="h-11 rounded-none px-0 has-[>svg]:px-0 text-base leading-6 font-medium text-peploe-burgundy"
           >
-            {STORIES_CONTENT.ctaLabel}
-            <ArrowRight aria-hidden="true" className="size-4" />
+            <Link href={ROUTES.JOURNAL}>
+              {STORIES_CONTENT.ctaLabel}
+              <ArrowRight aria-hidden="true" className="size-4" />
+            </Link>
           </Button>
         </div>
 
-        <div className="grid items-start gap-[18px] text-warm-cream sm:gap-7 xl:w-[calc(100%+4px)] xl:grid-cols-[repeat(2,minmax(0,636px))]">
+        <div className="grid items-start gap-[18px] text-warm-cream sm:gap-7 xl:grid-cols-2">
           <StoryCard className="relative isolate flex min-h-[460px] flex-col justify-end overflow-hidden rounded-[4px] bg-ink p-6 sm:min-h-[520px] sm:p-10 xl:min-h-[640px]">
             <Image
               src={STORIES_CONTENT.family.image.src}
@@ -102,7 +107,7 @@ export function Stories() {
               className="relative flex flex-col gap-[9px] sm:gap-4"
             >
               <p className="text-[11px] leading-[14px] font-medium tracking-[1.2px] uppercase sm:text-sm sm:leading-5 sm:tracking-[0.1em]">
-                {STORIES_CONTENT.family.eyebrow}
+                <span data-story-text>{STORIES_CONTENT.family.eyebrow}</span>
               </p>
               <h3
                 className={cn(
@@ -110,13 +115,17 @@ export function Stories() {
                   "text-[30px] leading-[31px] font-normal sm:text-[38px] sm:leading-[44px]",
                 )}
               >
-                {STORIES_CONTENT.family.heading}
-                <br />
-                {STORIES_CONTENT.family.headingContinuation}
+                <span data-story-text>
+                  {STORIES_CONTENT.family.heading}
+                  <br />
+                  {STORIES_CONTENT.family.headingContinuation}
+                </span>
               </h3>
               <div id="family-story-details" data-story-details>
                 <p className="text-sm leading-5 text-warm-cream/90 sm:text-[15px] sm:leading-[22px]">
-                  {STORIES_CONTENT.family.description}
+                  <span data-story-text>
+                    {STORIES_CONTENT.family.description}
+                  </span>
                 </p>
                 <div className="sm:pt-3">
                   <StoryAction
@@ -142,12 +151,18 @@ export function Stories() {
                 aria-hidden="true"
                 className={cn(styles.produceOverlay, "absolute inset-0")}
               />
+              <Link
+                href={getJournalCategoryPath("people-produce")}
+                aria-hidden="true"
+                tabIndex={-1}
+                className="absolute inset-0"
+              />
               <div
                 data-story-copy
                 className="relative flex w-full flex-col gap-[9px] p-6 sm:w-1/2 sm:gap-3 sm:p-8"
               >
                 <p className="text-[11px] leading-[14px] font-medium tracking-[1.2px] uppercase sm:text-xs sm:leading-[18px] sm:tracking-[0.1em]">
-                  {STORIES_CONTENT.produce.eyebrow}
+                  <span data-story-text>{STORIES_CONTENT.produce.eyebrow}</span>
                 </p>
                 <h3
                   className={cn(
@@ -155,13 +170,18 @@ export function Stories() {
                     "text-[30px] leading-[31px] font-normal sm:text-2xl sm:leading-[30px]",
                   )}
                 >
-                  {STORIES_CONTENT.produce.heading}
+                  <span data-story-text>{STORIES_CONTENT.produce.heading}</span>
                 </h3>
                 <div id="produce-story-details" data-story-details>
                   <p className="text-sm leading-5">
-                    {STORIES_CONTENT.produce.description}
+                    <span data-story-text>
+                      {STORIES_CONTENT.produce.description}
+                    </span>
                   </p>
-                  <StoryAction label={STORIES_CONTENT.produce.ctaLabel} />
+                  <StoryAction
+                    label={STORIES_CONTENT.produce.ctaLabel}
+                    href={getJournalCategoryPath("people-produce")}
+                  />
                 </div>
               </div>
             </StoryCard>
@@ -172,22 +192,34 @@ export function Stories() {
                   src={STORIES_CONTENT.gina.image.src}
                   alt={STORIES_CONTENT.gina.image.alt}
                   fill
-                  sizes="(min-width: 1440px) 304px, (min-width: 1280px) calc((100vw - 224px) / 4), (min-width: 640px) calc((100vw - 76px) / 2), calc(100vw - 48px)"
+                  sizes="(min-width: 1584px) 339px, (min-width: 1280px) calc((100vw - 228px) / 4), (min-width: 640px) calc((100vw - 76px) / 2), calc(100vw - 48px)"
                   className="object-cover"
                 />
                 <div
                   aria-hidden="true"
                   className={cn(styles.ginaOverlay, "absolute inset-0")}
                 />
+                <Link
+                  href={getJournalArticlePath("wine-things-just-happen")}
+                  aria-hidden="true"
+                  tabIndex={-1}
+                  className="absolute inset-0 sm:hidden"
+                />
+                <Link
+                  href={getJournalArticlePath("some-things-have-changed")}
+                  aria-hidden="true"
+                  tabIndex={-1}
+                  className="absolute inset-0 hidden sm:block"
+                />
                 <div
                   data-story-copy
                   className="relative flex flex-col gap-[9px] sm:gap-2"
                 >
                   <p className="text-[11px] leading-[14px] font-medium tracking-[1.2px] uppercase sm:text-xs sm:leading-[18px] sm:tracking-[0.1em]">
-                    <span className="sm:hidden">
+                    <span data-story-text className="sm:hidden">
                       {MOBILE_HOME_CONTENT.ginaEyebrow}
                     </span>
-                    <span className="hidden sm:inline">
+                    <span data-story-text className="hidden sm:inline">
                       {STORIES_CONTENT.gina.eyebrow}
                     </span>
                   </p>
@@ -197,10 +229,10 @@ export function Stories() {
                       "text-[30px] leading-[31px] font-normal sm:text-xl sm:leading-[26px]",
                     )}
                   >
-                    <span className="sm:hidden">
+                    <span data-story-text className="sm:hidden">
                       {MOBILE_HOME_CONTENT.ginaHeading}
                     </span>
-                    <span className="hidden sm:inline">
+                    <span data-story-text className="hidden sm:inline">
                       {STORIES_CONTENT.gina.heading}
                     </span>
                   </h3>
@@ -209,7 +241,18 @@ export function Stories() {
                     data-story-details
                     className="sm:pt-2"
                   >
-                    <StoryAction label={STORIES_CONTENT.gina.ctaLabel} />
+                    <div className="flex sm:hidden">
+                      <StoryAction
+                        label={STORIES_CONTENT.gina.ctaLabel}
+                        href={getJournalArticlePath("wine-things-just-happen")}
+                      />
+                    </div>
+                    <div className="hidden sm:flex">
+                      <StoryAction
+                        label={STORIES_CONTENT.gina.ctaLabel}
+                        href={getJournalArticlePath("some-things-have-changed")}
+                      />
+                    </div>
                   </div>
                 </div>
               </StoryCard>
@@ -226,12 +269,18 @@ export function Stories() {
                   aria-hidden="true"
                   className={cn(styles.artOverlay, "absolute inset-0")}
                 />
+                <Link
+                  href={getJournalArticlePath("the-art-of-peploes")}
+                  aria-hidden="true"
+                  tabIndex={-1}
+                  className="absolute inset-0"
+                />
                 <div
                   data-story-copy
                   className="relative flex flex-col gap-[9px] sm:gap-2"
                 >
                   <p className="text-[11px] leading-[14px] font-medium tracking-[1.2px] uppercase sm:text-xs sm:leading-[18px] sm:tracking-[0.1em]">
-                    {STORIES_CONTENT.art.eyebrow}
+                    <span data-story-text>{STORIES_CONTENT.art.eyebrow}</span>
                   </p>
                   <h3
                     className={cn(
@@ -239,14 +288,19 @@ export function Stories() {
                       "text-[30px] leading-[31px] font-normal sm:text-xl sm:leading-[26px]",
                     )}
                   >
-                    {STORIES_CONTENT.art.heading}
+                    <span data-story-text>{STORIES_CONTENT.art.heading}</span>
                   </h3>
                   <div id="art-story-details" data-story-details>
                     <p className="hidden text-[13px] leading-[18px] text-warm-cream/80 sm:block">
-                      {STORIES_CONTENT.art.description}
+                      <span data-story-text>
+                        {STORIES_CONTENT.art.description}
+                      </span>
                     </p>
                     <div className="sm:pt-2">
-                      <StoryAction label={STORIES_CONTENT.art.ctaLabel} />
+                      <StoryAction
+                        label={STORIES_CONTENT.art.ctaLabel}
+                        href={getJournalArticlePath("the-art-of-peploes")}
+                      />
                     </div>
                   </div>
                 </div>

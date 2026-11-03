@@ -81,6 +81,12 @@ export const LLMS_SECTIONS: { heading: string; pages: ILlmsPage[] }[] = [
         description: OUR_STORY_CONTENT.seoDescription,
       },
       {
+        name: "The Journal",
+        path: ROUTES.JOURNAL,
+        description:
+          "Food, wine, people, produce, art and the life of the restaurant.",
+      },
+      {
         name: "Visit & Contact",
         path: ROUTES.VISIT_CONTACT,
         description: VISIT_CONTACT_CONTENT.seoDescription,

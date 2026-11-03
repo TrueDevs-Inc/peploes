@@ -9,6 +9,18 @@
   gap: inherit;
 }
 
+.card [data-story-copy] {
+  cursor: text;
+  user-select: text;
+  /* Empty copy space keeps the photograph link underneath clickable. */
+  pointer-events: none;
+}
+
+.card [data-story-text],
+.card [data-story-copy] :is(a, button) {
+  pointer-events: var(--text-action-pointer-events, auto);
+}
+
 @media (hover: hover) and (pointer: fine) {
   .card [data-story-copy] {
     transform: translateY(var(--story-hidden-offset, 0px));
@@ -17,8 +29,12 @@
 
   .card [data-story-details] {
     opacity: 0;
-    pointer-events: none;
     transition: opacity 400ms var(--ease-organic);
+  }
+
+  .card [data-story-details] :is([data-story-text], a, button) {
+    --text-action-content-pointer-events: none;
+    pointer-events: none;
   }
 
   .card:where(:hover, :has(:focus-visible)) [data-story-copy] {
@@ -27,7 +43,21 @@
 
   .card:where(:hover, :has(:focus-visible)) [data-story-details] {
     opacity: 1;
-    pointer-events: auto;
+  }
+
+  .card:where(:hover, :has(:focus-visible))
+    [data-story-details]
+    :is([data-story-text], a, button) {
+    --text-action-content-pointer-events: auto;
+    pointer-events: var(--text-action-pointer-events, auto);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) and (width < 40rem) {
+  @media not (any-pointer: coarse) {
+    .card [data-variant="brand-secondary-inverse"] {
+      --text-action-pointer-events: none;
+    }
   }
 }
 
@@ -55,7 +85,11 @@
     opacity: 1;
     transform: none;
     transition: none;
-    pointer-events: auto;
+  }
+
+  .card [data-story-details] :is([data-story-text], a, button) {
+    --text-action-content-pointer-events: auto;
+    pointer-events: var(--text-action-pointer-events, auto);
   }
 }
 

@@ -1,0 +1,47 @@
+.field {
+  position: relative;
+  min-width: 0;
+}
+
+.label {
+  display: block;
+}
+
+.label input[type="date"] {
+  padding-right: 42px;
+}
+
+.label input[type="date"]::-webkit-calendar-picker-indicator {
+  display: none;
+}
+
+.trigger {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.trigger svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 1;
+}
+
+.trigger:focus-visible {
+  outline: 2px solid var(--text-secondary);
+  outline-offset: -2px;
+}
+
+.field .calendar {
+  width: 100%;
+  padding: 12px;
+}

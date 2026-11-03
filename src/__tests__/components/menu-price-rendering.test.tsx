@@ -5,6 +5,8 @@ import { DrinksMenu } from "@/components/app/compounds/drinks-menu";
 import { MenuDish } from "@/components/app/molecules/menu-dish";
 import type { IDrinksMenuContent, IMenuDish } from "@/lib/types";
 
+vi.mock("@/components/ui/button.module.css", () => ({ default: {} }));
+
 vi.mock("@/lib/fonts", () => ({
   dmSans: { className: "" },
   ebGaramond: { className: "" },

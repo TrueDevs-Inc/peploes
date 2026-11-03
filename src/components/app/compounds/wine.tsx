@@ -6,6 +6,7 @@ import styles from "@/components/app/compounds/wine.module.css";
 import { Button } from "@/components/ui/button";
 import { ROUTES, WINE_CONTENT } from "@/lib/constants";
 import { dmSans, ebGaramond } from "@/lib/fonts";
+import { getJournalCategoryPath } from "@/lib/journal-data";
 import { cn } from "@/lib/utils";
 
 export function Wine() {
@@ -15,7 +16,7 @@ export function Wine() {
       aria-labelledby="wine-heading"
       className={cn(
         dmSans.className,
-        "relative isolate scroll-mt-20 bg-ink text-warm-cream before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:z-10 before:h-[1.5px] before:bg-soft-stone/50",
+        "relative isolate scroll-mt-20 bg-ink text-warm-cream",
       )}
     >
       <div className="absolute inset-0 lg:h-[calc(100%/0.9815)] lg:origin-top lg:scale-y-[0.9815]">
@@ -79,13 +80,14 @@ export function Wine() {
               </Link>
             </Button>
             <Button
-              type="button"
+              asChild
               variant="brand-text"
-              aria-disabled="true"
-              className="h-11 w-full gap-2 rounded-[4px] border border-warm-cream/70 px-5 has-[>svg]:px-5 text-base leading-[22px] font-medium sm:leading-6 text-warm-cream max-sm:hover:bg-peploe-burgundy max-sm:hover:no-underline sm:w-auto sm:rounded-none sm:border-0 sm:px-0 sm:has-[>svg]:px-0"
+              className="h-11 w-full gap-2 rounded-[4px] border border-warm-cream/70 px-5 has-[>svg]:px-5 text-base leading-[22px] font-medium sm:leading-6 text-warm-cream max-sm:[--text-action-pointer-events:auto] max-sm:hover:bg-peploe-burgundy max-sm:hover:no-underline sm:w-auto sm:rounded-none sm:border-0 sm:px-0 sm:has-[>svg]:px-0"
             >
-              {WINE_CONTENT.secondaryCtaLabel}
-              <ArrowRight aria-hidden="true" className="size-4" />
+              <Link href={getJournalCategoryPath("food-wine")}>
+                {WINE_CONTENT.secondaryCtaLabel}
+                <ArrowRight aria-hidden="true" className="size-4" />
+              </Link>
             </Button>
           </div>
         </div>

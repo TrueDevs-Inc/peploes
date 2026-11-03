@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-
 import { allowEnquiry } from "@/lib/enquiry-rate-limit";
+import { logToSentry } from "@/lib/error-handler";
 
 const limiter = vi.hoisted(() => ({ limit: vi.fn() }));
 const settings = vi.hoisted(() => ({
@@ -19,6 +19,7 @@ vi.mock("@upstash/ratelimit", () => ({
 }));
 vi.mock("@upstash/redis", () => ({ Redis: class {} }));
 vi.mock("@/lib/env", () => ({ env: settings }));
+vi.mock("@/lib/error-handler", () => ({ logToSentry: vi.fn() }));
 
 beforeEach(() => {
   limiter.limit.mockReset();
@@ -26,6 +27,20 @@ beforeEach(() => {
 });
 
 describe("private dining enquiry limit", () => {
+  it("shares the quota across temporary IPv6 addresses in one network", async () => {
+    const used = new Map<string, number>();
+    limiter.limit.mockImplementation((key: string) => {
+      const count = (used.get(key) ?? 0) + 1;
+      used.set(key, count);
+      return Promise.resolve({ success: count <= 3 });
+    });
+    expect(await allowEnquiry("2001:db8:1:2::1")).toBe(true);
+    expect(await allowEnquiry("2001:0DB8:1:2:aaaa::5")).toBe(true);
+    expect(await allowEnquiry("2001:db8:1:2::3")).toBe(true);
+    expect(await allowEnquiry("2001:db8:1:2::4")).toBe(false);
+    expect(await allowEnquiry("2001:db8:1:3::1")).toBe(true);
+  });
+
   it("requires a trusted visitor address", async () => {
     expect(await allowEnquiry(null)).toBe(false);
     expect(limiter.limit).not.toHaveBeenCalled();
@@ -34,6 +49,33 @@ describe("private dining enquiry limit", () => {
   it("fails closed when Redis cannot confirm the limit", async () => {
     limiter.limit.mockRejectedValue(new Error("private Redis error"));
     expect(await allowEnquiry("192.0.2.10")).toBe(false);
+    expect(logToSentry).toHaveBeenCalledWith(
+      new Error("Enquiry rate limit unavailable"),
+      expect.any(Object),
+    );
+    expect(JSON.stringify(vi.mocked(logToSentry).mock.calls)).not.toContain(
+      "private Redis error",
+    );
+  });
+
+  it("reports a rate-limit timeout but not an exhausted quota", async () => {
+    limiter.limit
+      .mockResolvedValueOnce({ success: true, reason: "timeout" })
+      .mockResolvedValueOnce({ success: false });
+    expect(await allowEnquiry("192.0.2.10")).toBe(false);
+    expect(logToSentry).toHaveBeenCalledTimes(1);
+    expect(await allowEnquiry("192.0.2.10")).toBe(false);
+    expect(logToSentry).toHaveBeenCalledTimes(1);
+  });
+
+  it("reports missing rate-limit configuration", async () => {
+    settings.EMAIL_RATE_LIMIT_SECRET = "";
+    expect(await allowEnquiry("192.0.2.10")).toBe(false);
+    expect(logToSentry).toHaveBeenCalledWith(
+      new Error("Enquiry rate limit unavailable"),
+      expect.any(Object),
+    );
+    expect(limiter.limit).not.toHaveBeenCalled();
   });
 
   it("allows a visitor only when the limit confirms capacity", async () => {

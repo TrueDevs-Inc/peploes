@@ -2,6 +2,7 @@ import { err, ok } from "neverthrow";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ErrorCode } from "@/lib/enums";
+import { logToSentry } from "@/lib/error-handler";
 import { createError } from "@/lib/errors";
 import { sendEmail } from "@/services/email";
 import { deliverPrivateDiningEnquiry } from "@/services/private-dining-enquiry";
@@ -9,13 +10,13 @@ import { deliverPrivateDiningEnquiry } from "@/services/private-dining-enquiry";
 vi.mock("@/lib/enquiry-rate-limit", () => ({
   allowEnquiry: vi.fn(async () => true),
 }));
-vi.mock("@/lib/env", () => ({
-  env: {
-    EMAIL_RESTAURANT_TO: "restaurant@example.test",
-    EMAIL_REPLY_TO: "reply@example.test",
-    NEXT_PUBLIC_SITE_URL: "https://example.test",
-  },
+const settings = vi.hoisted(() => ({
+  EMAIL_RESTAURANT_TO: "restaurant@example.test",
+  EMAIL_REPLY_TO: "reply@example.test",
+  NEXT_PUBLIC_SITE_URL: "https://example.test",
 }));
+vi.mock("@/lib/env", () => ({ env: settings }));
+vi.mock("@/lib/error-handler", () => ({ logToSentry: vi.fn() }));
 vi.mock("@/services/email", () => ({ sendEmail: vi.fn() }));
 
 function enquiryInput() {
@@ -33,9 +34,22 @@ function enquiryInput() {
 
 beforeEach(() => {
   vi.mocked(sendEmail).mockReset();
+  settings.EMAIL_RESTAURANT_TO = "restaurant@example.test";
 });
 
 describe("private dining enquiry service", () => {
+  it("reports missing restaurant routing without attempting delivery", async () => {
+    settings.EMAIL_RESTAURANT_TO = "";
+    expect(
+      (await deliverPrivateDiningEnquiry(enquiryInput(), "192.0.2.10")).status,
+    ).toBe("error");
+    expect(sendEmail).not.toHaveBeenCalled();
+    expect(logToSentry).toHaveBeenCalledWith(
+      new Error("Enquiry email configuration missing"),
+      expect.any(Object),
+    );
+  });
+
   it("never reports success when the restaurant notification fails", async () => {
     vi.mocked(sendEmail).mockResolvedValueOnce(
       err(createError(ErrorCode.ServiceUnavailable, "Email was not sent.")),

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PR 65: AI comment validation</title>
+    <style>
+      :root { color-scheme: dark; --bg: #191c1c; --text: #eceae5; --muted: #b8bfbb; --accent: #a7d8c2; --border: #4e5953; }
+      [data-theme="light"] { color-scheme: light; --bg: #faf8f3; --text: #222c27; --muted: #515d55; --accent: #205b42; --border: #a3afa7; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--bg); color: var(--text); font: 1.0625rem/1.7 "Source Sans 3", system-ui, sans-serif; }
+      main { width: min(65ch, calc(100% - 2rem)); margin: 0 auto; padding: 2rem 0 3rem; overflow-wrap: anywhere; }
+      h1, h2 { font-family: Inter, system-ui, sans-serif; line-height: 1.25; letter-spacing: -0.02em; }
+      h1 { font-size: 2rem; } h2 { font-size: 1.35rem; margin-top: 2rem; }
+      a { color: var(--accent); text-underline-offset: 0.2em; }
+      code { font-family: "JetBrains Mono", Consolas, monospace; font-size: 0.875em; }
+      .meta { color: var(--muted); }
+      section { border-top: 1px solid var(--border); margin-top: 1.5rem; }
+      button { min-height: 44px; padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: 0.3rem; color: var(--text); background: var(--bg); font: inherit; cursor: pointer; }
+      :focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+      .skip { position: absolute; top: -100px; padding: 0.5rem; background: var(--bg); }
+      .skip:focus { top: 0; }
+      @media print { :root { --bg: #fff; --text: #111; --muted: #333; --accent: #111; --border: #777; } body { font-size: 11pt; } main { width: 100%; padding: 0; } button, .skip { display: none; } a[href^="https:"]::after { content: " (" attr(href) ")"; font-size: 0.8em; } }
+    </style>
+  </head>
+  <body>
+    <a class="skip" href="#verdict">Skip to verdict</a>
+    <main>
+      <button type="button" id="theme" hidden>Switch to light theme</button>
+      <h1>PR 65: keep both menu dividers</h1>
+      <p class="meta">29 October 2026 · <a href="https://github.com/TrueDevs-Inc/peploes/pull/65">Fix/ali/border</a> · head <code>42c0599</code> · base <code>b063ec3</code></p>
+      <p id="verdict"><strong>Neither AI suggestion is a valid bug fix under the requested scope.</strong> Both correctly describe a behavior change, but assume the previous exceptions must remain. The task explicitly expanded dividers to missing inner-page boundaries with similar backgrounds. These two exceptions were deliberately removed for that purpose.</p>
+      <section aria-labelledby="wine">
+        <h2 id="wine">Wine: first-section exemption</h2>
+        <p><strong>Verdict: incorrect as a regression finding.</strong> <a href="https://github.com/TrueDevs-Inc/peploes/pull/65#discussion_r4408083697">Cubic asks to hide the first wine divider.</a> The new line separates the wine index from the first wine group on the cream page background.</p>
+        <p>The index has its own panel border, but also <code>mb-8</code> before the first group. Its border and the new divider are separate edges, not an overlapping double border. The checked menu catalog's first group is not highlighted. Restoring <code>[section:first-of-type_&amp;]:before:hidden</code> would remove this intended separator.</p>
+        <p>Evidence: <a href="https://github.com/TrueDevs-Inc/peploes/blob/42c05991ac22210d60a2bb9e9b0ffdcc5c33963d/src/components/app/compounds/wine-menu.tsx#L22-L27">background and index spacing</a>, <a href="https://github.com/TrueDevs-Inc/peploes/blob/42c05991ac22210d60a2bb9e9b0ffdcc5c33963d/src/components/app/compounds/wine-menu.tsx#L105-L116">first-group boundary</a>.</p>
+      </section>
+      <section aria-labelledby="cocktails">
+        <h2 id="cocktails">Cocktails: mobile first-section exemption</h2>
+        <p><strong>Verdict: incorrect as a regression finding.</strong> <a href="https://github.com/TrueDevs-Inc/peploes/pull/65#discussion_r4408083714">Cubic asks to hide the first cocktail divider below 1280px.</a> The editorial introduction and first cocktail group share the article's cream background.</p>
+        <p>The introduction has bottom padding and no full-width bottom border. Its short text ornaments, and the cocktail heading's 42px ornament, serve different purposes. The new section line sits after the introduction, not through its photograph. Restoring the mobile exception would reopen the missing boundary.</p>
+        <p>Evidence: <a href="https://github.com/TrueDevs-Inc/peploes/blob/42c05991ac22210d60a2bb9e9b0ffdcc5c33963d/src/components/app/compounds/drinks-menu.tsx#L9-L32">shared background and divider</a>, <a href="https://github.com/TrueDevs-Inc/peploes/blob/42c05991ac22210d60a2bb9e9b0ffdcc5c33963d/src/components/app/molecules/menu-editorial-intro.tsx#L18-L29">introduction spacing</a>.</p>
+      </section>
+      <section aria-labelledby="scope">
+        <h2 id="scope">Review scope and limits</h2>
+        <p>Reviewed one Cubic review and both unresolved, current inline threads. No human reviews were returned. A separate <code>vercel[bot]</code> deployment-plan notice is infrastructure feedback, not an AI code finding; its account configuration was not assessed.</p>
+        <p>Read the current components, their caller, shared CSS, menu catalogs and browser tests. The existing divider test does not assert these two menu boundaries directly. No application browser run or new tests were performed for this source-based assessment; no application code, GitHub replies or thread states were changed.</p>
+        <p><strong>Recommended action:</strong> keep both dividers. If later extending regression coverage, add the first wine group and first mobile cocktail group to the existing divider test. The comments do not justify restoring the old exceptions.</p>
+        <p>Repository guidance: <a href="../guides/testing-guide.md">testing guide</a> · <a href="../guides/quality-guide.md">quality guide</a>. GitHub CLI was unavailable, so connected GitHub tools supplied review threads, review bodies and discussion comments.</p>
+      </section>
+    </main>
+    <script>
+      const toggle = document.getElementById("theme");
+      toggle.hidden = false;
+      toggle.textContent = document.documentElement.dataset.theme === "light"
+        ? "Switch to dark theme"
+        : "Switch to light theme";
+      toggle.addEventListener("click", () => {
+        const light = document.documentElement.dataset.theme !== "light";
+        document.documentElement.dataset.theme = light ? "light" : "dark";
+        toggle.textContent = light ? "Switch to dark theme" : "Switch to light theme";
+      });
+    </script>
+  </body>
+</html>

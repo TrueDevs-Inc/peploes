@@ -174,12 +174,11 @@ extend outward to the page edge, keeping text clear of the photograph.
 
 Wine keeps its 748px
 text column. Hospitality caps its text at 783px and reserves a separate artwork
-column on desktop, with a 32px gap and the shared left gutter. Stories follows the
-source frame's fixed 636px columns and 28px gap, shrinking those tracks on
-narrower desktops without stretching them on wider pages. At 1440px its
-desktop grid extends 4px beyond the 1296px content width. Its
-right-hand cards similarly extend 4px below the 640px left card; preserve this
-source geometry when comparing the design.
+column on desktop, with a 32px gap and the shared left gutter. Stories fills the
+shared container with two equal desktop columns and a 28px gap. Its left and
+right edges align with the navbar at standard and wide viewport sizes, including
+the shared 1440px content maximum. Its right-hand cards retain the source frame's
+4px extension below the 640px left card.
 
 The navigation and features use inset rules so strokes do not change their
 76px and 214px desktop heights or shift centered controls. Compare against
@@ -326,7 +325,8 @@ menu open and closed.
 The shared footer uses Figma Footer / Production desktop (`3041:2359`) and the
 mobile homepage footer (`3395:17877`). Desktop has brand, Explore, Contact and
 newsletter columns. Mobile shows brand, newsletter, expanded Explore,
-Occasions and Peploe's navigation, then contact details, socials and legal links.
+then contact details, socials and legal links. Explore uses the same links and
+order as desktop, without separate Occasions or Peploe's navigation.
 It uses the existing local logo and brand tokens, DM Sans body text and
 EB Garamond headings.
 Footer dividers, mobile row borders and the email field rule use 1px thickness.
@@ -338,7 +338,9 @@ Accessibility, Booking & Cancellation and Cookie Settings in that order. The fir
 four open their policy pages; Cookie Settings opens the Cookie Preferences
 modal. Booking & Cancellation Terms retains its existing URL. Legal links may
 wrap on narrow screens and when text is enlarged.
-On mobile, legal links stack vertically and the copyright is centered.
+On mobile, legal links share a horizontal row with smaller text and shortened
+Privacy and Booking labels. Full accessible names remain available, links can
+wrap when enlarged, and the copyright is centered.
 The modal follows the desktop and mobile Cookie Preferences designs: necessary
 cookies are always active, optional Analytics, Performance and Marketing choices
 are saved individually, and Accept All or Reject non-essential saves and closes.
@@ -368,9 +370,8 @@ Privacy. The links share the contents disclosure on mobile.
 Footer Instagram and Facebook links use the restaurant
 profiles linked from [the official website](https://peploes.com/) and open in a
 new tab. Other unbuilt navigation destinations remain inactive. The newsletter
-email field has an accessible label and inline completion for common email
-domains. Tab accepts the completion, and Escape dismisses it. No popup suggestion
-list is shown; browser autocomplete and the native datalist are disabled.
+email field has an accessible label without email-domain suggestions. Browser
+autocomplete and the native datalist are disabled.
 Focus colours the 1px bottom border burgundy and thickens it by 1px downward
 without moving the text. Enter and Subscribe show an error for empty
 or malformed addresses, including addresses without a dotted domain. Valid input
@@ -485,8 +486,7 @@ Stories from the cellar uses an outline on mobile.
 
 The yellow Wine journey note (`3131:11692`) sends Explore the Wine List to a
 structured wine menu and Stories from the cellar to related Journal content
-when available. Both actions remain inactive placeholders until those
-destinations are built, following the current homepage convention.
+when available. Stories from the cellar opens `/journal?category=food-wine`.
 
 When changing this section, compare the background crop, gradient, line breaks
 and stacked actions with Figma. Check image loading, mobile text contrast,
@@ -519,7 +519,7 @@ button now opens the private dining overview. Each card image and its Explore
 action open the same dedicated page. Images gently zoom on hover or keyboard
 focus, with motion disabled for visitors who prefer reduced motion.
 See [Private dining and events](private-dining.md)
-for the page layouts and enquiry preview limits.
+for the page layouts and enquiry interaction requirements.
 
 When changing this section, compare the photograph crops, gradient, typography,
 card order and spacing with Figma. Verify image loading, four destination links,
@@ -535,8 +535,12 @@ screens, with a vertical gradient behind the producer copy on mobile.
 
 The yellow Editorial gateway note (`3131:11698`) sends Our Story to its dedicated
 page, the other cards to Journal categories or articles, and Explore the Journal
-to the Journal hub. Discover Our Story now opens `/our-story`. The Journal
-actions remain inactive placeholders until those destinations are built.
+to the Journal hub. Discover Our Story opens `/our-story`; the Journal actions
+now link to the hub, matching categories and individual article URLs.
+
+Only each card's photograph and action link navigate. Card headings and copy
+remain selectable text with a text cursor. Empty space around the copy and
+beside the action also opens the photograph's destination.
 
 When changing this section, compare the card arrangement, image crops, line
 breaks and overlays with Figma. Check all four images, mobile text contrast,
@@ -566,9 +570,18 @@ reach the error boundary instead of silently showing fallback events.
 Book a Table opens the existing `/book-a-table` page. Contact Us opens Visit & Contact. Navigation and footer links, plus the homepage’s
 “View what’s on” action, open the new hub.
 
-Use the three original Figma photos. The terrace source is only 243×244px;
-it needs an approved larger source for a sharp desktop image. Preserve its
-natural proportions when cropping. No separate mobile frame is supplied. Below
+The hero and closing invitation retain their original Figma photos. The terrace
+uses the sharper 1360×1020px `peploes-events-terrace.webp` photograph. The
+contributor prioritised image quality over the exact camera angle. Its
+table-focused desktop crop approximates Figma while reducing the foreground
+stairs. Responsive image loading accounts for the enlarged crop; phones retain
+the full-width cover crop.
+Preserve the Figma terrace geometry: at 1440px, the image
+fills a 584×256px slot flush with the left edge. The right-hand copy starts at
+656px with 48px vertical padding. Its background uses the month bars' pale
+6% Burgundy and Warm Cream mix, with Ink and secondary-colour text.
+Keep the original responsive framing.
+No separate mobile frame is supplied. Below
 640px, follow the homepage and menu pages: 16px gutters, 48px hero type, 42px
 section headings, 16px body copy and stacked full-width invitation buttons.
 Photo banners use vertical overlays with room above the text; their height grows
@@ -767,15 +780,16 @@ to fill the banner as it widens, preserving the word-to-hand alignment.
 
 The design gives 2003 as the opening year; comment #47 requests Barry Canny
 alone in the founder references. The page and public site description use those
-facts consistently. The founder and Gina image areas are still empty grey placeholders
-in Figma. Preserve those areas until approved portraits are supplied. Comment
+facts consistently. The founder and Gina image areas reuse existing dining-room
+and table-setting photographs, preserving their original layout. Comment
 #60 says archive pieces will be supplied; the current archive artwork remains
 the design's temporary image. The building illustration and mural are also
 limited by the resolution of the supplied Figma sources.
 
 Our Location opens Visit & Contact at Find Us. Navigation, footer and the
-homepage family card open Our Story. The mural, archive and booking actions
-remain inactive placeholders until their destinations are built. Browser tests
+homepage family card open Our Story. The mural opens
+`/journal/the-art-of-peploes`, and the archive opens
+`/journal?category=family-history`. Browser tests
 cover these journeys, image loading and narrow-screen overflow. Compare crops,
 type sizes, line breaks, 2px eyebrow rules and 1px button outlines with Figma
 when changing the page.
@@ -818,3 +832,151 @@ footer retains those active links alongside the connected ResDiary booking flow.
 When changing the banner, compare the italic text, botanical crop, background,
 spacing and button with Figma. Check artwork and font loading, narrow-screen
 wrapping, horizontal overflow and navigation to the booking page.
+
+## Journal implementation
+
+The hub at `/journal` follows Final Pages desktop `4205:12993` and mobile
+`4214:6521`. Articles at `/journal/[slug]` use desktop template `4205:13879`.
+The observed Journal section contains one article template and a separate
+mobile hub. The article layout stacks on narrow screens.
+
+The hub uses the shared `site-container` gutters: 16px on each side on mobile,
+including the hero, featured story, category navigation, listing and closing copy.
+
+Journal content uses the shared 350ms upward scroll reveal, including category
+controls, filtered and appended cards, article photographs and body blocks.
+Category changes keep their existing entry transition; offscreen cards reveal
+when reached. Reduced motion keeps all content visible without these effects.
+Content arriving through a streamed boundary is registered after it has layout,
+so offscreen cards wait for scrolling instead of revealing inside hidden buffers.
+
+The six design notes require one CMS-selected featured article, category
+changes confined to the listing and active state, Load more within the current
+view, editable article fields and a final “More from
+[Category]” section excluding the current article. Comment #86 asks whether
+categories should be editable; Studio supplies category documents and an
+optional Navigation order field. Equal or missing order values use name,
+URL name and document ID as stable tie-breakers.
+
+The hub grid follows each article's optional Listing order, lowest first, to
+match the approved Figma card sequence without changing publication dates.
+Articles without an order follow newest first; equal orders use date, then URL
+name as stable tie-breakers. Category filtering preserves this sequence.
+
+Categories use `/journal?category=<slug>`. Filtering preserves the featured
+story, supports Back/Forward and resets the six-story page size when the
+category changes. Load more adds six stories and focuses the first new card.
+New cards fade and lift into place over 350ms without replaying earlier cards.
+The results area expands downward over 500ms, moving the following section
+gradually while preserving scroll position. It returns to natural height after
+expansion, on viewport resize or when reduced motion is enabled. Reduced motion
+shows the new cards immediately.
+The featured article is excluded from the grid. Related articles are the
+newest three in the same category, excluding the current URL. An empty related
+section is omitted. Unknown article URLs return HTTP 404; CMS failures reach
+the error boundary instead of becoming empty content or sample stories.
+Article routes read their own content and a bounded related-story query; they
+do not depend on the hub's selected feature. Related actions use the interface
+label “Read the Story”, while the hub's action label remains editable in settings.
+
+Latest and related story photographs zoom by 5% over 300ms on hover or keyboard
+focus, easing smoothly in and out within their existing frames. Keep the image
+layer through the return to avoid a sharpness jump. Reduced motion disables the
+zoom; touch-only pointers do not trigger hover motion.
+
+The hub's desktop closing banner follows `4211:15376`: a 740px text column,
+44px/1.04 heading and 48px vertical padding. Its photograph uses a separate
+260px frame with the lower crop shown in Figma; the right-to-left dark overlay
+fades out at 73%. Below 1280px, an extra dark layer keeps the wider text area
+readable. The mobile version keeps its centered text on a solid dark background
+without the photograph.
+
+### Preparing Journal content
+
+The website reads published Sanity documents. It has no local content fallback.
+Schemas alone do not populate the site. The optional development import below
+creates the initial Figma content; subsequent edits belong in Studio.
+
+1. In Studio, open **Journal → Categories**. Create the design categories below,
+   keeping these URL names for the existing homepage and footer links.
+2. Create and publish the articles those links target. An article needs its
+   title, standfirst, date, reading time, author, category, hero image and alt
+   text, intro, search description and at least one body block. Paragraphs,
+   h2/h3 headings, images with captions and quotes with attribution are supported.
+3. Open **Journal → Page settings** (`journal-page`). Complete the hero,
+   listing labels, closing image/heading and select one published featured
+   article. Publish the settings after the referenced article and category.
+4. Keep **Keep out of search engines** on for design previews. Turn it off only
+   for approved public articles; only those articles enter the sitemap.
+
+| Navigation order | Category | URL name |
+| --- | --- | --- |
+| 1 | From Gina | `from-gina` |
+| 2 | People & Produce | `people-produce` |
+| 3 | Food & Wine | `food-wine` |
+| 4 | Art & Place | `art-place` |
+| 5 | Family & History | `family-history` |
+
+Existing article links require `some-things-have-changed`,
+`wine-things-just-happen` and `the-art-of-peploes`. The mobile homepage advertises
+a different wine story from the desktop Gina card, so those destinations differ.
+Publish their approved copy before enabling these journeys in a public release.
+
+The design photographs already exist in `public/`: `peploes-seasonal-hero.jpg`
+for the hub hero, `peploes-private-dining-service.webp` for the featured story,
+`peploes-private-dining-steak.webp`, `peploes-visit-entrance.webp`,
+`peploes-wine-dinner.jpg`, `peploes-private-dining-celebrations.webp` and
+`peploes-events-cellar-room.webp` for the grid, and
+`peploes-events-gathering.webp` for the closing banner and example article hero.
+Upload the matching originals to Sanity and supply accurate alternative text.
+
+Article hero photographs use centered cover framing by default. The existing
+`heroImage.desktopPosition` and `heroImage.mobilePosition` fields can preserve an
+individual photograph's framing without changing its listing, featured or related
+card. The Growers example keeps its Figma desktop position of `center 95%`;
+mobile framing remains centered. At the 1440px desktop reference width, its hero
+photograph starts at x=600px in an 840px-wide, 356px-high frame. Longer article
+copy can increase the shared hero height.
+
+### Importing the development design content
+
+`studio/journal-content.ts` contains the hub copy, five categories and twelve
+articles shown across the Journal and homepage designs. The owner approved
+using the complete Growers article body temporarily for the other article
+cards, whose full copy is not present in Figma. All imported articles remain
+out of search engines until their editorial copy is approved.
+
+Run these commands from the repository root using an authorized Sanity CLI
+login:
+
+```sh
+bun run --cwd studio seed:journal:preview
+bun run --cwd studio seed:journal:development
+```
+
+The import only targets `w789ottu/development`. Preview reads the existing
+documents and validates the content and local images without uploading or
+writing. Apply creates missing documents and uploads their images, preserving
+existing published documents and drafts. A conflicting ID or URL stops the
+import. It does not overwrite later Studio edits or publish draft-only content.
+
+Run the import while nobody else is editing Journal content. Its conflict and
+draft checks describe the state before image uploads; it does not lock Studio
+or protect against another writer creating content during the import.
+
+Both reference frames feed one catalogue. The development import assigns
+Listing order 1–6 to Rooted in good relationships, A season at its best, The art
+of Peploe’s, Moments, menus and memories, A room worth being in, and Bottles
+worth sharing. Remaining stories follow in Load more. For existing content,
+set these six Listing order values in Studio; the import preserves existing
+documents. Related stories remain the newest three in the same category. The
+related cards that specify only a month use its first day as their stored date. The
+homepage-only wine story uses the article template's date and body until its
+own copy is supplied.
+
+`e2e/journal-fixtures.ts` is a reviewable design/testing content set, not a CMS
+seed or publishing source. The hub and article frames depict different example
+catalogues; the detail-only fixtures preserve those separate design scenarios.
+Additional stories and body blocks are labelled synthetic and exercise
+pagination, rendering and related-story exclusion. Never publish that synthetic
+copy as restaurant editorial content.

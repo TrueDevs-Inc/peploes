@@ -1,0 +1,140 @@
+.calendar {
+  container-type: inline-size;
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 6px);
+  left: 0;
+  width: min(100%, 700px);
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--booking-border, var(--soft-stone));
+  border-radius: 4px;
+  background: var(--booking-control, var(--warm-cream));
+  color: var(--ink);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--ink) 10%, transparent);
+}
+
+.calendar button {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.calendar button:focus-visible {
+  outline: 2px solid var(--booking-accent, var(--peploe-burgundy));
+  outline-offset: 2px;
+}
+
+.calendar button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.header strong {
+  margin-right: auto;
+}
+
+.header button {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+}
+
+.header svg {
+  width: 16px;
+  height: 16px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.grid > * {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 32px;
+  font-size: 12px;
+}
+
+.grid button {
+  border-radius: 50%;
+  aspect-ratio: 1;
+}
+
+.grid [data-outside="true"] {
+  color: var(--booking-muted, var(--text-secondary));
+}
+
+.grid [aria-pressed="true"] {
+  background: var(--booking-accent, var(--peploe-burgundy));
+  color: var(--booking-surface, var(--warm-cream));
+}
+
+.calendar button:hover:not(:disabled, [aria-pressed="true"]) {
+  background: var(
+    --booking-emblem,
+    color-mix(in srgb, var(--peploe-burgundy) 6%, var(--warm-cream))
+  );
+}
+
+@media (min-width: 1024px) {
+  .calendar {
+    width: min(100%, 400px);
+  }
+
+  .header {
+    font-size: 16px;
+  }
+
+  .header button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .grid > * {
+    font-size: 14px;
+    min-height: 36px;
+  }
+}
+
+@container (width < 280px) {
+  .header {
+    font-size: 12px;
+  }
+
+  .header button {
+    width: 28px;
+    height: 28px;
+  }
+
+  .grid > * {
+    font-size: 12px;
+    min-height: 24px;
+  }
+
+  .grid > span {
+    font-size: 11px;
+  }
+}
+
+@media (forced-colors: active) {
+  .grid [aria-pressed="true"] {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}

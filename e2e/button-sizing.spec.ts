@@ -5,6 +5,9 @@ test("homepage boxed actions use Figma medium sizing and fit phone layouts", asy
   isMobile,
 }) => {
   await page.goto("/");
+  await expect(
+    page.locator("#book-a-table").getByRole("link").first(),
+  ).toBeVisible();
   await page.evaluate(() => document.fonts.ready);
 
   const hero = page.getByRole("region", { name: /Good food, fine wine/ });
@@ -28,6 +31,7 @@ test("homepage boxed actions use Figma medium sizing and fit phone layouts", asy
   ];
 
   for (const group of actions) {
+    await expect(group.first()).toBeVisible();
     expect(await group.count()).toBeGreaterThan(0);
     for (const action of await group.all()) {
       await expect(action).toHaveCSS("height", "44px");

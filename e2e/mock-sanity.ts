@@ -8,6 +8,13 @@ import { MENU_PAGE_CONTENT } from "@/lib/constants/menu-page";
 import { PRE_THEATRE_MENU } from "@/lib/constants/pre-theatre-menu";
 import { SEASONAL_MENU } from "@/lib/constants/seasonal-menu";
 import { WINE_MENU } from "@/lib/constants/wine-menu";
+import {
+  journalArticleFixtures,
+  journalArticles,
+  journalCategories,
+  journalGrowersRelatedFixtures,
+  journalPageFixture,
+} from "./journal-fixtures";
 import { seasonalFixtures, seasonalPageFixture } from "./seasonal-fixtures";
 
 // Preloaded only by Playwright's server command, never by the application.
@@ -64,9 +71,64 @@ const collections = [GROUP_SET_MENU, SEASONAL_MENU].map((menu) => ({
   slug: menu.slug,
   menus: menu.menus.map((item) => ({ _key: item._key, title: item.title })),
 }));
+function relatedJournalQueryResult(params: URLSearchParams): unknown {
+  const categorySlug = JSON.parse(params.get("$categorySlug") ?? "null");
+  const currentSlug = JSON.parse(params.get("$currentSlug") ?? "null");
+  // The Growers frame has its own related-story content scenario.
+  const articles =
+    currentSlug === "growers-we-work-with"
+      ? journalGrowersRelatedFixtures
+      : journalArticles;
+  return project(
+    articles
+      .filter(
+        (article) =>
+          article.category.slug === categorySlug &&
+          article.slug !== currentSlug,
+      )
+      .sort(
+        (a, b) =>
+          b.date.localeCompare(a.date) ||
+          a.slug.localeCompare(b.slug) ||
+          a._id.localeCompare(b._id),
+      )
+      .slice(0, 3),
+  );
+}
+
+function journalQueryResult(
+  query: string,
+  slug: string | null,
+  params: URLSearchParams,
+): unknown {
+  if (query.includes('_type == "journalPage"'))
+    return project(journalPageFixture);
+  if (query.includes('_type == "journalCategory"')) return journalCategories;
+  if (query.includes('_type == "journalArticle"')) {
+    if (query.includes("$categorySlug"))
+      return relatedJournalQueryResult(params);
+    const articles = slug
+      ? journalArticleFixtures.filter(
+          (article) => article.slug === JSON.parse(slug),
+        )
+      : journalArticles;
+    if (query.startsWith("count(")) return articles.length;
+    if (!slug && !query.includes("heroImage"))
+      return articles.map(({ slug, _updatedAt, noIndex }) => ({
+        slug,
+        _updatedAt,
+        noIndex,
+      }));
+    return project(articles);
+  }
+  throw new Error(`No browser fixture for Sanity query: ${query}`);
+}
+
 function queryResult(url: URL): unknown {
   const query = url.searchParams.get("query") ?? "";
   const slug = url.searchParams.get("$slug");
+  if (query.includes('_type == "journal'))
+    return journalQueryResult(query, slug, url.searchParams);
   if (query.includes('_type == "whatsOnPage"'))
     return project(seasonalPageFixture);
   if (query.includes('_type == "seasonalEntry"')) {

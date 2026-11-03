@@ -4,7 +4,11 @@ import { createClient } from "@sanity/client";
 import { isValidSignature, SIGNATURE_HEADER_NAME } from "@sanity/webhook";
 import { errAsync, ResultAsync } from "neverthrow";
 
-import { MENU_DOCUMENT_TYPES, SANITY_CONTENT_CACHE_TAG } from "@/lib/constants";
+import {
+  JOURNAL_LIMITS,
+  MENU_DOCUMENT_TYPES,
+  SANITY_CONTENT_CACHE_TAG,
+} from "@/lib/constants";
 import { ErrorCode, LogContext } from "@/lib/enums";
 import { env } from "@/lib/env";
 import { createError } from "@/lib/errors";
@@ -94,6 +98,69 @@ export function fetchWhatsOnPage() {
   terrace{...,image{alt,"src":asset->url}},
   join{...,image{alt,"src":asset->url}}
  }`);
+}
+
+const JOURNAL_CATEGORY_PROJECTION = `{_id,name,"slug":slug.current}`;
+const JOURNAL_CARD_PROJECTION = `{
+ _id,_updatedAt,title,"slug":slug.current,standfirst,date,listingOrder,readTimeMinutes,author,
+ "category":category->${JOURNAL_CATEGORY_PROJECTION},
+ heroImage{alt,desktopPosition,mobilePosition,"src":asset->url},"noIndex":coalesce(noIndex,true)
+}`;
+
+export function fetchJournalArticles() {
+  // shortcut: client filtering uses at most 500 cards; use paginated reads above that limit.
+  // One extra result makes an oversized catalogue fail instead of silently truncating.
+  return requestContent(`*[_type == "journalArticle" && enabled != false]
+    | order(defined(listingOrder) desc, listingOrder asc, date desc, slug.current asc, _id asc)[0..${JOURNAL_LIMITS.MAX_ARTICLES}]${JOURNAL_CARD_PROJECTION}`);
+}
+
+export function fetchRelatedJournalArticles(
+  categorySlug: string,
+  currentSlug: string,
+) {
+  return requestContent(
+    `*[_type == "journalArticle" && enabled != false
+      && category->slug.current == $categorySlug && slug.current != $currentSlug]
+      | order(date desc, slug.current asc, _id asc)[0...${JOURNAL_LIMITS.RELATED_ARTICLES}]${JOURNAL_CARD_PROJECTION}`,
+    { categorySlug, currentSlug },
+  );
+}
+
+export function fetchJournalCategories() {
+  return requestContent(`*[_type == "journalCategory"]
+    | order(coalesce(sortOrder, 999) asc, name asc, slug.current asc, _id asc)[0..${JOURNAL_LIMITS.MAX_CATEGORIES}]${JOURNAL_CATEGORY_PROJECTION}`);
+}
+
+export function fetchJournalArticle(slug: string) {
+  return requestContent(
+    `*[_type == "journalArticle" && enabled != false && slug.current == $slug][0..1]{
+    ...${JOURNAL_CARD_PROJECTION},seoDescription,intro,
+    blocks[0..${JOURNAL_LIMITS.MAX_BLOCKS}]{_key,_type,text,level,caption,attribution,image{alt,"src":asset->url}}
+  }`,
+    { slug },
+  );
+}
+
+export function fetchJournalPage() {
+  return requestContent(`*[_type == "journalPage" && _id == "journal-page"][0]{
+    title,seoDescription,hero{eyebrow,heading,standfirst,description,image{alt,"src":asset->url}},
+    "featuredArticle":select(featuredArticle->_type == "journalArticle" && featuredArticle->enabled != false => featuredArticle->${JOURNAL_CARD_PROJECTION}, null),
+    listing,closing{heading,image{alt,"src":asset->url}}
+  }`);
+}
+
+export function fetchJournalArticleExists(slug: string) {
+  return requestContent(
+    'count(*[_type == "journalArticle" && enabled != false && slug.current == $slug][0..1])',
+    { slug },
+  );
+}
+
+export function fetchPublishedJournalSlugs() {
+  return requestContent(`*[_type == "journalArticle" && enabled != false]
+    | order(slug.current asc, _id asc)[0..${JOURNAL_LIMITS.MAX_ARTICLES}]{
+      "slug":slug.current,_updatedAt,"noIndex":coalesce(noIndex,true)
+    }`);
 }
 
 function requestContent(

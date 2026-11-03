@@ -10,11 +10,11 @@ import { cn } from "@/lib/utils";
 
 export function MobileFooterNavigation() {
   return (
-    <div data-footer-homepage-extra className="order-3 xl:hidden">
+    <div data-footer-homepage-extra className="order-3 -mb-10 xl:hidden">
       {MOBILE_FOOTER_CONTENT.navigation.map(({ heading, links }) => (
         <nav key={heading} aria-label={heading}>
           <details
-            className="group [&::details-content]:grid [&::details-content]:grid-rows-[0fr] [&::details-content]:opacity-0 [&::details-content]:transition-[grid-template-rows,opacity,content-visibility] [&::details-content]:duration-(--duration-base) [&::details-content]:ease-in-out [&::details-content]:transition-discrete [&[open]::details-content]:grid-rows-[1fr] [&[open]::details-content]:opacity-100 [&[open]::details-content]:duration-(--duration-slow) motion-reduce:[&::details-content]:transition-none"
+            className="group border-soft-stone open:border-b [&::details-content]:grid [&::details-content]:grid-rows-[0fr] [&::details-content]:opacity-0 [&::details-content]:transition-[grid-template-rows,opacity,content-visibility] [&::details-content]:duration-(--duration-base) [&::details-content]:ease-in-out [&::details-content]:transition-discrete [&[open]::details-content]:grid-rows-[1fr] [&[open]::details-content]:opacity-100 [&[open]::details-content]:duration-(--duration-slow) motion-reduce:[&::details-content]:transition-none"
             open={heading === FOOTER_CONTENT.exploreHeading}
           >
             <summary

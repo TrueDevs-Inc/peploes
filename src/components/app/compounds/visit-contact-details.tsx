@@ -91,10 +91,7 @@ export function VisitContactDetails() {
         </div>
       </section>
 
-      <section
-        aria-labelledby="visit-dining-heading"
-        className={cn("section-divider-subtle-bottom", styles.dining)}
-      >
+      <section aria-labelledby="visit-dining-heading" className={styles.dining}>
         <div className="site-container">
           <div data-scroll-reveal className={styles.diningIntro}>
             <div>

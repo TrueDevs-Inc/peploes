@@ -6,7 +6,7 @@ test.use({
   hasTouch: false,
 });
 
-test("arrows animate when hovering the whole control and respect reduced motion", async ({
+test("arrows animate on actionable content and respect reduced motion", async ({
   page,
 }) => {
   await page.goto("/visit-contact");
@@ -27,7 +27,11 @@ test("arrows animate when hovering the whole control and respect reduced motion"
   for (const control of [booking, email, subscribe]) {
     const arrow = control.locator("svg.lucide-arrow-right");
     await expect(arrow).toBeVisible();
-    await control.hover({ position: { x: 4, y: 4 } });
+    if (control === email) {
+      await control.hover();
+    } else {
+      await control.hover({ position: { x: 4, y: 4 } });
+    }
     await expect(arrow).toHaveCSS("transform", "matrix(1, 0, 0, 1, 3, 0)");
     await page.mouse.move(0, 0);
     await expect(arrow).toHaveCSS("transform", "none");

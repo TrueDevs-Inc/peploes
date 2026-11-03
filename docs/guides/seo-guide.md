@@ -68,8 +68,9 @@ where appropriate; crawler directives alone do not protect private content.
 
 `src/app/sitemap.ts` contains the home page, Our Story, What’s On, all seven
 query-selected menu URLs, the four private dining pages, the policy pages and
-Visit & Contact, plus published (not `noIndex`) What's On entries. Add public
-canonical pages when they exist. Use a content update time for `lastModified`;
+Visit & Contact, plus the Journal hub and published (not `noIndex`) What's On
+entries and Journal articles. Journal articles use their CMS update time for
+`lastModified`. Add public canonical pages when they exist. Use a content update time for `lastModified`;
 omit it when the application has no trustworthy value.
 
 Entries stay `noIndex` by default in the CMS. They are excluded from the
@@ -79,8 +80,8 @@ sitemap, `llms.txt` and structured data until an editor publishes them.
 
 `src/app/llms.txt/route.ts` serves Markdown built by `buildLlmsText()` in
 `src/lib/seo/discovery.ts`. It lists the site name and description, the public
-pages (home, What's On, Our Story, Visit & Contact), the seven menus and the four
-private dining pages, each with the description from its own page metadata, then
+pages (home, What's On, Our Story, Journal, Visit & Contact), the seven menus and
+the four private dining pages, each with the description from its own page metadata, then
 published What's On entries labelled by kind with their dates, then the sitemap
 and robots links. The route handler renders per request, reads the cached CMS entries, and sets a one-hour CDN `Cache-Control` header. If the CMS fails it serves the
 static sections with `no-store`, so the fallback is not cached. `/book-a-table` is left out while it is `noindex`. The root layout points agents to it with `rel="describedby"`.

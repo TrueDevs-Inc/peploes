@@ -49,9 +49,9 @@ export async function loadMenuNavigation(): Promise<IMenuNavigationLink[]> {
     return {
       label: item.label,
       href,
-      children: collection?.menus.map((menu) => ({
+      children: collection?.menus.map((menu, index) => ({
         label: menu.title,
-        href: `${href}#${menu._key}`,
+        href: `${href}#${index === 0 ? `${item.menu}-introduction` : menu._key}`,
       })),
     };
   });

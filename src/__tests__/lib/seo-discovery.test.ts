@@ -62,6 +62,9 @@ describe("public discovery", function publicDiscoveryTests() {
       "- [Home](https://example.com/): A family-run restaurant on St Stephen's Green, Dublin, since 2003.",
     );
     expect(content).toContain(
+      "- [The Journal](https://example.com/journal): Food, wine, people, produce, art and the life of the restaurant.",
+    );
+    expect(content).toContain(
       "- [Wine List](https://example.com/menus?menu=wine): ",
     );
     expect(content.endsWith("\n")).toBe(true);

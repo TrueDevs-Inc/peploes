@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 
 export function MenuBooking({
   booking = MENU_PAGE_CONTENT.booking,
+  alignLeft = false,
 }: IMenuBookingProps) {
   const actionContent = (
     <>
@@ -49,6 +50,8 @@ export function MenuBooking({
           !booking.description && "xl:gap-4",
           booking.description && "xl:py-10",
           booking.fullWidthOnMobile && "gap-4 xl:gap-6",
+          alignLeft &&
+            "items-start [&>h2]:text-left [&>p]:text-left xl:grid xl:grid-cols-[1fr_var(--menu-booking-content-width)] xl:justify-items-start xl:[&>*]:col-start-2",
         )}
       >
         <h2

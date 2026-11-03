@@ -1,4 +1,8 @@
-import { HTTP_STATUS, RESTAURANT_CONTACT } from "@/lib/constants";
+import {
+  HTTP_STATUS,
+  MAX_GUEST_COUNT,
+  RESTAURANT_CONTACT,
+} from "@/lib/constants";
 
 export const BOOKING_BUDGET_MS = {
   findTable: 8000,
@@ -33,7 +37,7 @@ export const BOOKING_HOLD = {
 } as const;
 
 export const BOOKING_GUEST_LIMITS = {
-  siteMaxPartySize: 7,
+  siteMaxPartySize: MAX_GUEST_COUNT,
   nameMaxLength: 100,
   emailMaxLength: 254,
   mobileMinDigits: 6,

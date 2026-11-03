@@ -177,7 +177,7 @@ function SeasonalTerrace(terrace: NonNullable<TWhatsOnPage["terrace"]>) {
         <Image
           {...terrace.image}
           fill
-          sizes="(min-width: 1024px) 41vw, 100vw"
+          sizes="(min-width: 1024px) 67vw, 100vw"
           className={styles.cover}
         />
       </div>

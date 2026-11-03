@@ -23,7 +23,7 @@ test("hero shading palette matches desktop on phones and tablets", async ({
   }
 });
 
-test("mobile hero fills the first screen before the entrance photograph", async ({
+test("mobile hero fills the first screen and keeps the desktop entrance artwork", async ({
   page,
   viewport,
 }) => {
@@ -34,6 +34,11 @@ test("mobile hero fills the first screen before the entrance photograph", async 
     { exact: true },
   );
   const heading = hero.getByRole("heading", { level: 1 });
+  const entrance = hero.getByRole("img", {
+    name: "Peploe’s red awning above the steps leading down to the restaurant.",
+    exact: true,
+  });
+  await expect(entrance).toHaveAttribute("src", /url=%2Fpeploes-entrance\.png/);
 
   if ((viewport?.width ?? 1440) >= 640) {
     await expect(description).toBeVisible();
@@ -49,15 +54,57 @@ test("mobile hero fills the first screen before the entrance photograph", async 
     await expect(
       hero.getByRole("link", { name: "Call Peploe's", exact: true }),
     ).toBeInViewport();
-    const entrance = hero.getByRole("img", {
-      name: "Peploe’s red awning above the steps leading down to the restaurant.",
-      exact: true,
-    });
     const bounds = await entrance.boundingBox();
     expect(bounds?.y).toBeCloseTo(height, 0);
     await expect(entrance).not.toBeInViewport();
     await page.evaluate(() => window.scrollBy(0, 200));
     await expect(entrance).toBeInViewport();
+    const screenshot = await entrance.screenshot({ scale: "css" });
+    const colors = await entrance.evaluate(async (image, png) => {
+      if (!(image instanceof HTMLImageElement))
+        throw new Error("Expected the entrance photograph");
+      const rendered = new Image();
+      rendered.src = `data:image/png;base64,${png}`;
+      await rendered.decode();
+      const canvas = document.createElement("canvas");
+      canvas.width = rendered.width;
+      canvas.height = rendered.height;
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("Image comparison needs a canvas");
+      const sample = (source: HTMLImageElement, x: number, y: number) => {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(source, 0, 0, canvas.width, canvas.height);
+        const pixels = context.getImageData(
+          Math.round(canvas.width * x),
+          Math.round(canvas.height * y),
+          4,
+          4,
+        ).data;
+        return [0, 1, 2].map(
+          (channel) =>
+            pixels.reduce(
+              (sum, value, index) => sum + (index % 4 === channel ? value : 0),
+              0,
+            ) / 16,
+        );
+      };
+      return {
+        originalCenter: sample(image, 0.5, 0.5),
+        renderedCenter: sample(rendered, 0.5, 0.5),
+        edge: sample(rendered, 0.01, 0.8),
+        bottom: sample(rendered, 0.01, 0.98),
+      };
+    }, screenshot.toString("base64"));
+    expect(colors.edge[0]).toBeGreaterThan(colors.edge[1] + 10);
+    expect(colors.edge[1]).toBeGreaterThan(colors.edge[2] + 5);
+    for (const [channel, cream] of [250, 247, 241].entries()) {
+      expect(Math.abs(colors.bottom[channel] - cream)).toBeLessThan(12);
+      expect(
+        Math.abs(
+          colors.renderedCenter[channel] - colors.originalCenter[channel],
+        ),
+      ).toBeLessThan(3);
+    }
   }
 });
 

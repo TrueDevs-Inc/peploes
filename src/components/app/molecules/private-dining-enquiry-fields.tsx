@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Calendar, ChevronDown } from "lucide-react";
+import { ArrowRight, Check, ChevronDown, LoaderCircle } from "lucide-react";
 import Link from "next/link";
 import {
   type FormEvent,
@@ -12,6 +12,7 @@ import {
 
 import { submitPrivateDiningEnquiry } from "@/actions/private-dining-enquiry";
 import styles from "@/components/app/compounds/private-dining.module.css";
+import { PrivateDiningDate } from "@/components/app/molecules/private-dining-date";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/lib/constants";
 import { PRIVATE_DINING_FORM } from "@/lib/constants/private-dining";
@@ -38,7 +39,14 @@ export function PrivateDiningEnquiryFields({
 
   function submit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
-    if (pending || submittingRef.current) return;
+    if (
+      pending ||
+      submittingRef.current ||
+      state.status === "success" ||
+      state.status === "unknown" ||
+      !event.currentTarget.reportValidity()
+    )
+      return;
     submittingRef.current = true;
     const data = new FormData(event.currentTarget);
     startTransition(async () => {
@@ -52,8 +60,7 @@ export function PrivateDiningEnquiryFields({
       } catch {
         setState({
           status: "unknown",
-          message:
-            "We could not confirm delivery. Please contact our team before sending this again.",
+          message: PRIVATE_DINING_FORM.feedback.unknown,
         });
       } finally {
         submittingRef.current = false;
@@ -62,7 +69,7 @@ export function PrivateDiningEnquiryFields({
   }
 
   function revise(): void {
-    if (state.status === "error") {
+    if (state.status === "error" || state.status === "success") {
       setNotificationId(crypto.randomUUID());
       setState({ status: "idle", message: "" });
     }
@@ -73,6 +80,7 @@ export function PrivateDiningEnquiryFields({
       ref={formRef}
       className={styles.enquiryFields}
       aria-label={content.formEyebrow ?? content.eyebrow}
+      noValidate
       onSubmit={submit}
       onChange={revise}
     >
@@ -112,17 +120,7 @@ export function PrivateDiningEnquiryFields({
         </div>
       )}
       <div className={styles.fieldRow}>
-        <label className={styles.dateField}>
-          <input
-            name="date"
-            aria-label={PRIVATE_DINING_FORM.date}
-            type="date"
-            onClick={(event) => event.currentTarget.showPicker?.()}
-            required
-          />
-          <span aria-hidden="true">{PRIVATE_DINING_FORM.date}</span>
-          <Calendar aria-hidden="true" className={styles.dateIcon} />
-        </label>
+        <PrivateDiningDate />
         <div className={styles.selectField}>
           <select
             name="guests"
@@ -193,14 +191,45 @@ export function PrivateDiningEnquiryFields({
       <Button
         type="submit"
         variant="brand-primary"
-        disabled={pending || !notificationId || state.status === "unknown"}
+        disabled={
+          pending ||
+          !notificationId ||
+          state.status === "success" ||
+          state.status === "unknown"
+        }
+        aria-busy={pending}
+        aria-describedby="enquiry-feedback"
         className={styles.sendButton}
       >
-        {pending ? "Sending…" : PRIVATE_DINING_FORM.submit}
-        <ArrowRight aria-hidden="true" className="size-4" />
+        {pending ? (
+          <>
+            {PRIVATE_DINING_FORM.loading}
+            <LoaderCircle
+              aria-hidden="true"
+              className="size-4 motion-safe:animate-spin"
+            />
+          </>
+        ) : state.status === "success" ? (
+          <>
+            {PRIVATE_DINING_FORM.complete}
+            <Check aria-hidden="true" className={styles.enquiryCheck} />
+          </>
+        ) : (
+          <>
+            {PRIVATE_DINING_FORM.submit}
+            <ArrowRight aria-hidden="true" className="size-4" />
+          </>
+        )}
       </Button>
-      <p className={styles.enquiryFeedback} role="status" aria-live="polite">
-        {state.message}
+      <p
+        id="enquiry-feedback"
+        role="status"
+        aria-atomic="true"
+        className={
+          state.status === "idle" && !pending ? "sr-only" : styles.enquiryStatus
+        }
+      >
+        {pending ? PRIVATE_DINING_FORM.loading : state.message}
       </p>
     </form>
   );

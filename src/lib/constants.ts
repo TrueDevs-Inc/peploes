@@ -113,6 +113,7 @@ export const ROUTES = {
   WHATS_ON: "/seasonal",
   BOOK_A_TABLE: "/book-a-table",
   OUR_STORY: "/our-story",
+  JOURNAL: "/journal",
   MENUS: "/menus",
   LUNCH: "/menus?menu=lunch",
   DINNER: "/menus?menu=dinner",
@@ -140,6 +141,7 @@ export const SITEMAP_STATIC_ROUTES = [
   ROUTES.HOME,
   ROUTES.WHATS_ON,
   ROUTES.OUR_STORY,
+  ROUTES.JOURNAL,
   ROUTES.LUNCH,
   ROUTES.DINNER,
   ROUTES.PRE_THEATRE,
@@ -356,6 +358,11 @@ export const CALENDAR_FORMAT = {
 } as const;
 
 export const GUEST_WORDS = { one: "guest", many: "guests" } as const;
+export const MAX_GUEST_COUNT = 7;
+export const GUEST_COUNTS = Array.from(
+  { length: MAX_GUEST_COUNT },
+  (_, index) => index + 1,
+);
 
 export const BOOKING_BANNER_CONTENT = {
   heading: "Book your table and step down",
@@ -591,6 +598,17 @@ export const CARD_DESCRIPTION_MAX_WORDS = 12;
 export const SEASONAL_GALLERY_LIMITS = {
   MIN_IMAGES: 3,
   MAX_IMAGES: 5,
+} as const;
+
+export const JOURNAL_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+export const JOURNAL_LIMITS = {
+  MAX_ARTICLES: 500,
+  MAX_CATEGORIES: 100,
+  MAX_BLOCKS: 200,
+  MAX_SLUG_LENGTH: 96,
+  MAX_READ_TIME_MINUTES: 180,
+  MAX_SEO_DESCRIPTION_CHARACTERS: 160,
+  RELATED_ARTICLES: 3,
 } as const;
 
 export const NEWSLETTER_LIMITS = {
