@@ -1848,10 +1848,6 @@ export interface IJournalRouteProps {
   params: Promise<{ slug: string }>;
 }
 
-export interface IJournalHubRouteProps {
-  searchParams: Promise<{ category?: string | string[] }>;
-}
-
 export type TJournalCategory = InferSchema<typeof journalCategorySchema>;
 export type TJournalArticleCard = InferSchema<typeof journalArticleCardSchema>;
 export type TJournalBlock = InferSchema<typeof journalBlockSchema>;

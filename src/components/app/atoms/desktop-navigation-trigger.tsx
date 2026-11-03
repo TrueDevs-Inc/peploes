@@ -41,7 +41,13 @@ export function DesktopNavigationTrigger({
         isOpen && "text-peploe-burgundy underline",
       )}
     >
-      {href ? <Link href={href}>{label}</Link> : label}
+      {href ? (
+        <Link href={href} prefetch={true}>
+          {label}
+        </Link>
+      ) : (
+        label
+      )}
     </Button>
   );
 }

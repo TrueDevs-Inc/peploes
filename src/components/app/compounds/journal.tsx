@@ -1,6 +1,7 @@
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
 import styles from "@/components/app/compounds/journal.module.css";
 import { JournalArticleList } from "@/components/app/compounds/journal-article-list";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ export function Journal({
               data-scroll-reveal
               data-card-image
               href={featuredHref}
+              prefetch={true}
               aria-label={featured.title}
               className={styles.featuredImage}
             >
@@ -76,12 +78,14 @@ export function Journal({
           </article>
         </div>
       </section>
-      <JournalArticleList
-        listing={content.listing}
-        categories={categories}
-        articles={articles.filter((article) => article._id !== featured._id)}
-        initialCategory={initialCategory}
-      />
+      <Suspense fallback={<div aria-busy="true" className="min-h-screen" />}>
+        <JournalArticleList
+          listing={content.listing}
+          categories={categories}
+          articles={articles.filter((article) => article._id !== featured._id)}
+          initialCategory={initialCategory}
+        />
+      </Suspense>
       <JournalClosing {...content.closing} />
     </main>
   );

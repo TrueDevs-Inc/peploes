@@ -20,6 +20,7 @@ import { TableBookingSupport } from "@/components/app/molecules/table-booking-su
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/lib/constants";
 import { TABLE_BOOKING_CONTENT as content } from "@/lib/constants/table-booking";
+import { dublinToday } from "@/lib/dates";
 import type {
   ITableBookingGuestDetails,
   ITableBookingProgressProps,
@@ -29,7 +30,7 @@ import { cn } from "@/lib/utils";
 
 export function TableBookingPanel() {
   const [step, setStep] = useState(0);
-  const [date, setDate] = useState<string>(content.date.initialValue);
+  const [date, setDate] = useState("");
   const [partySize, setPartySize] = useState<string>(
     content.partySize.initialValue,
   );
@@ -46,10 +47,25 @@ export function TableBookingPanel() {
   });
   const panel = useRef<HTMLElement>(null);
   const previousStep = useRef(0);
-  const shortDate = format(parseISO(date), "EEE, d MMM yyyy");
-  const longDate = format(parseISO(date), "EEEE, d MMMM yyyy");
+  const shortDate = date ? format(parseISO(date), "EEE, d MMM yyyy") : "";
+  const longDate = date ? format(parseISO(date), "EEEE, d MMMM yyyy") : "";
   const guests = partySize === "1" ? "1 guest" : `${partySize} guests`;
   const requiresReturn = time === content.returnTime.start;
+
+  useEffect(() => {
+    if (step !== 0) return;
+    function refreshDate() {
+      const today = dublinToday();
+      setDate((current) => (current < today ? today : current));
+    }
+    refreshDate();
+    window.addEventListener("focus", refreshDate);
+    document.addEventListener("visibilitychange", refreshDate);
+    return () => {
+      window.removeEventListener("focus", refreshDate);
+      document.removeEventListener("visibilitychange", refreshDate);
+    };
+  }, [step]);
 
   useEffect(() => {
     if (previousStep.current !== step) {
@@ -94,7 +110,13 @@ export function TableBookingPanel() {
               type="button"
               variant="brand-primary"
               className={styles.findTable}
+              disabled={!date}
               onClick={() => {
+                const today = dublinToday();
+                if (date < today) {
+                  setDate(today);
+                  return;
+                }
                 setTime("");
                 setReturnAccepted(false);
 

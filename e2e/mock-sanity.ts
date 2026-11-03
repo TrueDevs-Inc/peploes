@@ -203,5 +203,10 @@ globalThis.fetch = async (input, init) => {
       `Unexpected Sanity request in browser tests: ${url.origin}${url.pathname}`,
     );
   }
+  const delayPath = ".next/e2e/content-delay.json";
+  if (existsSync(delayPath)) {
+    const delay: number = JSON.parse(readFileSync(delayPath, "utf8"));
+    await new Promise((resolve) => setTimeout(resolve, delay));
+  }
   return Response.json({ result: queryResult(url) });
 };

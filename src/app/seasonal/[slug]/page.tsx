@@ -5,6 +5,10 @@ import { getSeasonalEventContent, seasonalPath } from "@/lib/seasonal-data";
 import { buildSeoMetadata, getSeasonalBreadcrumb } from "@/lib/seo";
 import type { ISeasonalRouteProps } from "@/lib/types";
 
+export function generateStaticParams() {
+  return [];
+}
+
 export async function generateMetadata({ params }: ISeasonalRouteProps) {
   const { slug } = await params;
   const content = await loadSeasonalEntry(slug);

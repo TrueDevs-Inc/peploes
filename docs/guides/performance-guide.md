@@ -34,6 +34,33 @@ Use route or data caching only when the product can name the acceptable stale
 window and invalidation event. Mutations should revalidate the affected path or
 tag after a successful write.
 
+Published Sanity content uses a five-minute data cache invalidated by the signed
+publish webhook. Content loaders must allow prerendering rather than forcing a
+request with `connection()`. Journal category selection stays in its existing
+client list so the hub can be cached independently of query parameters. Journal
+categories and the filtered story grid hydrate inside a local Suspense boundary;
+the Journal hero and featured story are prerendered. Article
+and event detail pages enter the route cache on their first visit. What's On
+also revalidates its rendered page every five minutes so Dublin's current date
+is refreshed even when no content is published. Time-based revalidation can
+serve the previous page while it refreshes in the background.
+
+Browser-test builds preload the isolated Sanity fixtures through `build:e2e`,
+including during prerendering. Normal production builds require the configured
+published CMS content. Never deploy a browser-test build.
+
+Homepage menu links, navigation shelves, footer navigation and visible article
+and event cards prefetch their full destination. Static pages keep Next's
+default full prefetching. Journal category tabs keep prefetching disabled because
+they update the existing client filter without a server navigation. Booking
+availability requests retain their no-store policy.
+
+Only Menus has a route loading boundary. Article and event detail pages resolve
+their content before sending a response, so missing pages return HTTP 404
+without an uncached CMS availability query in Proxy. Existing content stays
+visible during an unprepared detail navigation; visible cards prefetch the full
+destination before activation.
+
 ## Images and fonts
 
 Use `next/image` for application images. Supply dimensions or `fill` with a

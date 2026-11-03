@@ -501,6 +501,9 @@
   min-width: 0;
   gap: 4px;
 }
+.bookingCalendar [data-past-week="true"] {
+  display: none;
+}
 .selection:not(:disabled),
 .timeSlot {
   cursor: pointer;
@@ -873,6 +876,16 @@
   }
   .dateField {
     gap: 8px;
+  }
+  .bookingCalendar [data-date] {
+    width: 36px;
+    height: 36px;
+    min-height: 36px;
+    justify-self: center;
+    aspect-ratio: auto;
+  }
+  .bookingCalendar > div:last-child {
+    row-gap: 10px;
   }
   .summary {
     gap: 12px;

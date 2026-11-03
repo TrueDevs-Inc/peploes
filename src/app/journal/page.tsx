@@ -7,7 +7,6 @@ import {
   loadJournalPage,
 } from "@/lib/journal-content";
 import { buildSeoMetadata } from "@/lib/seo";
-import type { IJournalHubRouteProps } from "@/lib/types";
 
 export async function generateMetadata() {
   const content = await loadJournalPage();
@@ -20,7 +19,7 @@ export async function generateMetadata() {
   });
 }
 
-export default function JournalPage(props: IJournalHubRouteProps) {
+export default function JournalPage() {
   return (
     <Suspense
       fallback={
@@ -32,26 +31,18 @@ export default function JournalPage(props: IJournalHubRouteProps) {
         </main>
       }
     >
-      <PublishedJournalPage {...props} />
+      <PublishedJournalPage />
     </Suspense>
   );
 }
 
-async function PublishedJournalPage({ searchParams }: IJournalHubRouteProps) {
-  const [content, categories, articles, query] = await Promise.all([
+async function PublishedJournalPage() {
+  const [content, categories, articles] = await Promise.all([
     loadJournalPage(),
     loadJournalCategories(),
     loadJournalArticles(),
-    searchParams,
   ]);
   return (
-    <Journal
-      content={content}
-      categories={categories}
-      articles={articles}
-      initialCategory={
-        typeof query.category === "string" ? query.category : undefined
-      }
-    />
+    <Journal content={content} categories={categories} articles={articles} />
   );
 }

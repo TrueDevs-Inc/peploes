@@ -91,7 +91,13 @@ export function Menus() {
                     "group h-[51px] w-full flex-col items-stretch justify-center gap-1.5 rounded-none border-b border-soft-stone p-0 text-xl leading-[26px] font-medium hover:no-underline sm:h-[72px] sm:justify-start sm:border-0 sm:pt-4",
                   )}
                 >
-                  {href ? <Link href={href}>{content}</Link> : content}
+                  {href ? (
+                    <Link href={href} prefetch={true}>
+                      {content}
+                    </Link>
+                  ) : (
+                    content
+                  )}
                 </Button>
               </li>
             );
@@ -104,7 +110,7 @@ export function Menus() {
           size="cta"
           className="w-full self-start sm:w-[204px]"
         >
-          <Link href={ROUTES.MENUS}>
+          <Link href={ROUTES.MENUS} prefetch={true}>
             {MENUS_CONTENT.ctaLabel}
             <ArrowRight aria-hidden="true" className="size-4" />
           </Link>

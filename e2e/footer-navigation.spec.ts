@@ -1,6 +1,146 @@
 import type { Locator } from "@playwright/test";
 import { expect, test } from "./menu-test";
 
+test("footer groups social links with contact details before opening hours", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await page.evaluate(() => document.fonts.ready);
+  const footer = page.getByRole("contentinfo");
+  const contact = footer.getByRole("region", { name: /Contact|Get in Touch/ });
+  const instagram = contact.getByRole("link", { name: /on Instagram/ });
+  const facebook = contact.getByRole("link", { name: /on Facebook/ });
+  await expect(instagram).toBeVisible();
+  await expect(facebook).toBeVisible();
+  await expect(instagram).toHaveAttribute(
+    "href",
+    "https://www.instagram.com/peploesstephensgreen/",
+  );
+  await expect(facebook).toHaveAttribute(
+    "href",
+    "https://www.facebook.com/Peploes",
+  );
+  const email = await contact
+    .getByRole("link", { name: "reception@peploes.com", exact: true })
+    .boundingBox();
+  const social = await instagram.boundingBox();
+  const hours = await contact
+    .getByRole("heading", { name: "Opening Hours", exact: true })
+    .boundingBox();
+  if (!email || !social || !hours)
+    throw new Error("Contact details must be visible");
+  expect(social.y - (email.y + email.height)).toBeGreaterThanOrEqual(16);
+  expect(social.y - (email.y + email.height)).toBeLessThanOrEqual(24);
+  expect(hours.y - (social.y + social.height)).toBeGreaterThanOrEqual(24);
+  const instagramIcon = instagram.locator("svg");
+  const facebookIcon = facebook.locator("svg");
+  await expect(instagramIcon).toHaveCSS("width", "28px");
+  await expect(facebookIcon).toHaveCSS("width", "28px");
+  await expect(instagramIcon).toHaveAttribute("stroke-width", "1.75");
+  await expect(facebookIcon).toHaveAttribute("stroke-width", "1.75");
+  await expect(instagramIcon).toHaveCSS("color", "rgb(46, 42, 40)");
+  await expect(facebookIcon).toHaveCSS("color", "rgb(46, 42, 40)");
+  const firstIcon = await instagramIcon.boundingBox();
+  const secondIcon = await facebookIcon.boundingBox();
+  if (!firstIcon || !secondIcon)
+    throw new Error("Social icons must be visible");
+  expect(firstIcon.x).toBeCloseTo(hours.x, 0);
+  expect(secondIcon.x - (firstIcon.x + firstIcon.width)).toBeLessThanOrEqual(
+    16,
+  );
+});
+
+test("footer places the TrueDevs credit below the copyright", async ({
+  page,
+  isMobile,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await page.evaluate(() => document.fonts.ready);
+  const footer = page.getByRole("contentinfo");
+  const credit = footer.getByRole("link", {
+    name: "Made with care by TrueDevs",
+    exact: true,
+  });
+  await expect(credit).toBeVisible();
+  await expect(credit).toHaveAttribute(
+    "href",
+    "https://truedevs.tech/?utm_source=peploes&utm_medium=referral&utm_campaign=client_credit&utm_content=footer",
+  );
+  await expect(credit).toHaveAttribute("target", "_blank");
+  await expect(credit).toHaveAttribute("rel", "noopener noreferrer");
+  await expect(credit).toHaveCSS("font-family", /Inter/);
+  await expect(credit).toHaveCSS("font-size", isMobile ? "12px" : "13.5px");
+  await expect(credit).toHaveCSS("line-height", isMobile ? "16px" : "18px");
+  await expect(credit).toHaveCSS("min-height", isMobile ? "24px" : "27px");
+  await expect(credit.getByText("True", { exact: true })).toHaveCSS(
+    "font-weight",
+    "700",
+  );
+  await expect(credit.getByText("Devs", { exact: true })).toHaveCSS(
+    "font-weight",
+    "300",
+  );
+  const copyright = await footer
+    .getByText("© 2026 Peploe’s", { exact: true })
+    .boundingBox();
+  const bounds = await credit.boundingBox();
+  const footerBounds = await footer.boundingBox();
+  if (!copyright || !bounds || !footerBounds)
+    throw new Error("Footer credit and copyright must be visible");
+  expect(bounds.y).toBeGreaterThanOrEqual(copyright.y + copyright.height);
+  expect(bounds.x + bounds.width / 2).toBeCloseTo(
+    footerBounds.x + footerBounds.width / 2,
+    0,
+  );
+  expect(
+    footerBounds.y + footerBounds.height - (bounds.y + bounds.height),
+  ).toBeCloseTo(isMobile ? 12 : 13.5, 0);
+  const legalBounds = await footer.locator("[data-footer-legal]").boundingBox();
+  if (!legalBounds) throw new Error("Footer legal row must be visible");
+  expect(bounds.y - (legalBounds.y + legalBounds.height)).toBeCloseTo(
+    isMobile ? 16 : 18,
+    0,
+  );
+  if (!isMobile) {
+    await page.setViewportSize({ width: 1100, height: 900 });
+    await expect(credit).toHaveCSS("font-size", "12.375px");
+    await expect(credit).toHaveCSS("line-height", "16.5px");
+    await expect(credit).toHaveCSS("min-height", "24.75px");
+  }
+  if (isMobile) await credit.focus();
+  else await credit.hover();
+  await expect(credit.getByText("True", { exact: true })).toHaveCSS(
+    "color",
+    "rgb(255, 77, 0)",
+  );
+});
+
+test("mobile footer uses one address button without redundant hours or Directions links", async ({
+  page,
+  viewport,
+}) => {
+  if ((viewport?.width ?? 1440) >= 1280) {
+    await page.setViewportSize({ width: 390, height: 844 });
+  }
+  await page.goto("/");
+  const footer = page.getByRole("contentinfo");
+  await expect(
+    footer.getByRole("link", { name: "View full opening times", exact: true }),
+  ).toHaveCount(0);
+  const address = footer.getByRole("link", {
+    name: "16 St Stephen's Green",
+    exact: true,
+  });
+  await expect(address).toBeVisible();
+  await expect(address).toHaveAttribute("href", "/visit-contact#find-us");
+  await expect(address).toHaveCSS("border-top-width", "1px");
+  await expect(
+    footer.getByRole("link", { name: "Directions", exact: true }),
+  ).toHaveCount(0);
+});
+
 test("mobile footer legal links share one row with comfortable touch targets", async ({
   page,
   viewport,

@@ -187,7 +187,11 @@ export function MobileNavigation({
                                       )}
                                     >
                                       {href ? (
-                                        <Link href={href} onClick={closeMenu}>
+                                        <Link
+                                          href={href}
+                                          prefetch={true}
+                                          onClick={closeMenu}
+                                        >
                                           {label}
                                         </Link>
                                       ) : (

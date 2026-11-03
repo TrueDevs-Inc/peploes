@@ -1,5 +1,5 @@
-import { Facebook, Instagram } from "lucide-react";
 import Link from "next/link";
+import { FooterCredit } from "@/components/app/atoms/footer-credit";
 import { CookiePreferences } from "@/components/app/molecules/cookie-preferences";
 import { Button } from "@/components/ui/button";
 import { FOOTER_CONTENT } from "@/lib/constants/footer";
@@ -8,11 +8,11 @@ export function FooterMeta() {
   return (
     <div
       data-footer-meta
-      className="relative mt-16 flex flex-col gap-4 text-sm leading-[21px] text-text-secondary xl:flex-row xl:items-center xl:justify-between xl:gap-6 xl:pt-[25px] xl:text-xs xl:leading-5 xl:before:absolute xl:before:inset-x-0 xl:before:top-0 xl:before:h-px xl:before:bg-soft-stone"
+      className="relative mt-16 flex flex-col text-sm leading-[21px] text-text-secondary xl:pt-[25px] xl:text-xs xl:leading-5 xl:before:absolute xl:before:inset-x-0 xl:before:top-0 xl:before:h-px xl:before:bg-soft-stone"
     >
       <div
         data-footer-legal
-        className="order-2 flex flex-col gap-2 xl:order-1 xl:flex-row xl:items-center xl:gap-4"
+        className="flex flex-col gap-2 xl:flex-row xl:items-center xl:gap-4"
       >
         <p className="order-2 text-center xl:order-none xl:text-left">
           {FOOTER_CONTENT.copyright}
@@ -72,39 +72,7 @@ export function FooterMeta() {
           </ul>
         </nav>
       </div>
-      <div
-        data-footer-social
-        className="order-1 flex items-center gap-3 xl:order-2"
-      >
-        <Button
-          asChild
-          variant="brand-nav"
-          aria-label={FOOTER_CONTENT.instagramLabel}
-          className="size-11 p-0 text-text-secondary has-[>svg]:px-0 xl:size-5"
-        >
-          <a
-            href={FOOTER_CONTENT.instagramHref}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Instagram aria-hidden="true" className="size-5" />
-          </a>
-        </Button>
-        <Button
-          asChild
-          variant="brand-nav"
-          aria-label={FOOTER_CONTENT.facebookLabel}
-          className="size-11 p-0 text-text-secondary has-[>svg]:px-0 xl:size-5"
-        >
-          <a
-            href={FOOTER_CONTENT.facebookHref}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Facebook aria-hidden="true" className="size-5" />
-          </a>
-        </Button>
-      </div>
+      <FooterCredit />
     </div>
   );
 }

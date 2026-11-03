@@ -1,4 +1,11 @@
-import { DM_Sans, EB_Garamond } from "next/font/google";
+import { DM_Sans, EB_Garamond, Inter } from "next/font/google";
+
+export const inter = Inter({
+  subsets: ["latin"],
+  weight: ["300", "400", "700"],
+  display: "swap",
+  preload: false,
+});
 
 export const dmSans = DM_Sans({
   subsets: ["latin"],

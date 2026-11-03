@@ -72,19 +72,16 @@ test("navigation reaches Visit, closes the mobile menu and shows the desktop act
   }
 });
 
-for (const destination of [
-  { id: "opening-hours", label: "View full opening times" },
-  { id: "find-us", label: "16 St Stephen's Green" },
-]) {
+for (const destination of [{ id: "opening-hours" }, { id: "find-us" }]) {
   test(`${destination.id} lands below the sticky navigation`, async ({
     page,
     isMobile,
   }) => {
     const path = `/visit-contact#${destination.id}`;
-    if (isMobile) {
+    if (isMobile && destination.id === "find-us") {
       await page.goto("/");
       const link = page.getByRole("contentinfo").getByRole("link", {
-        name: destination.label,
+        name: "16 St Stephen's Green",
         exact: true,
       });
       await expect(link).toHaveAttribute("href", path);

@@ -17,13 +17,13 @@ export function WineIndexCloseButton() {
   }
 
   return (
-    <div ref={containerRef} className="hidden xl:block">
+    <div ref={containerRef} className="hidden xl:contents">
       <CloseButton
         ariaLabel="Close wine list"
         onClick={closeIndex}
         className={cn(
           FOCUS_RING,
-          "-top-3.5 -right-3.5 size-11 rounded-none border-0 text-ink hover:text-peploe-burgundy focus-visible:ring-peploe-burgundy",
+          "-top-[60px] right-0 size-11 rounded-none border-0 text-ink hover:text-peploe-burgundy focus-visible:ring-peploe-burgundy",
         )}
       />
     </div>

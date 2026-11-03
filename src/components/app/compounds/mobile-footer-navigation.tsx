@@ -47,7 +47,13 @@ export function MobileFooterNavigation() {
                       aria-disabled={href ? undefined : true}
                       className="h-11 w-full justify-start rounded-none p-0 text-base leading-[22px] font-normal text-text-secondary focus-visible:ring-inset"
                     >
-                      {href ? <Link href={href}>{label}</Link> : label}
+                      {href ? (
+                        <Link href={href} prefetch={true}>
+                          {label}
+                        </Link>
+                      ) : (
+                        label
+                      )}
                     </Button>
                   </li>
                 ))}
