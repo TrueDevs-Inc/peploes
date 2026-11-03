@@ -43,7 +43,7 @@ function StoryHero() {
           >
             {hero.heading}
           </h1>
-          <p className="mt-4 text-lg leading-7 text-text-secondary lg:max-w-[498px]">
+          <p className="mt-6 text-lg leading-7 text-text-secondary lg:max-w-[498px]">
             {hero.description}
           </p>
           <p className="mt-6 text-xs leading-4 font-semibold text-peploe-burgundy">
@@ -124,7 +124,7 @@ function StoryBuilding() {
           >
             {building.heading}
           </h2>
-          <p className="mt-4 text-lg leading-7 text-text-secondary xl:whitespace-pre-line">
+          <p className="mt-6 text-lg leading-7 text-text-secondary xl:whitespace-pre-line">
             {building.description}
           </p>
           <Button
@@ -143,7 +143,7 @@ function StoryBuilding() {
           width={1036}
           height={1084}
           sizes="(min-width: 1584px) 576px, (min-width: 1024px) 36vw, (min-width: 640px) 60vw, calc(100vw - 48px)"
-          className="block h-auto w-full object-contain lg:col-[3] xl:mt-[21px] xl:self-start"
+          className="block h-auto w-full object-contain lg:col-[3] xl:self-start"
         />
         <ol
           className="grid gap-6 sm:gap-1.5 lg:col-[5]"
@@ -173,8 +173,8 @@ function StoryFounder() {
   const { founder } = OUR_STORY_CONTENT;
 
   return (
-    <section className="relative" aria-labelledby="story-founder">
-      <div className="relative h-60 bg-[#686565] lg:absolute lg:inset-y-0 lg:left-0 lg:h-auto lg:w-[52%] xl:w-[calc(100%_-_var(--story-gutter)_-_490px_-_68px)]">
+    <section className="relative lg:py-12" aria-labelledby="story-founder">
+      <div className="relative h-60 bg-[#686565] lg:absolute lg:inset-y-12 lg:left-0 lg:h-auto lg:w-[52%] xl:w-[calc(100%_-_var(--story-gutter)_-_490px_-_68px)]">
         <Image
           {...founder.image}
           fill
@@ -196,7 +196,7 @@ function StoryFounder() {
           >
             {founder.heading}
           </h2>
-          <p className="mt-4 text-lg leading-7 text-text-secondary xl:whitespace-pre-line">
+          <p className="mt-6 text-lg leading-7 text-text-secondary xl:whitespace-pre-line">
             {founder.description}
           </p>
         </div>
@@ -235,7 +235,7 @@ function StoryMural() {
           >
             {mural.heading}
           </h2>
-          <p className="mt-4 text-lg leading-7 lg:whitespace-pre-line">
+          <p className="mt-6 text-lg leading-7 lg:whitespace-pre-line">
             {mural.description}
           </p>
           <Button
@@ -284,7 +284,7 @@ function StoryArchive() {
           >
             {archive.heading}
           </h2>
-          <p className="mt-4 text-lg leading-7 text-text-secondary lg:mt-5 lg:whitespace-pre-line">
+          <p className="mt-6 text-lg leading-7 text-text-secondary lg:whitespace-pre-line">
             {archive.description}
           </p>
           <Button
@@ -307,7 +307,10 @@ function StoryNextChapter() {
   const { nextChapter } = OUR_STORY_CONTENT;
 
   return (
-    <section className="relative" aria-labelledby="story-next-chapter">
+    <section
+      className="relative lg:mb-[47px]"
+      aria-labelledby="story-next-chapter"
+    >
       <div className="relative h-60 bg-[#686565] lg:absolute lg:inset-y-0 lg:left-0 lg:h-auto lg:w-[52%] xl:w-[calc(100%_-_var(--story-gutter)_-_527px_-_16px)]">
         <Image
           {...nextChapter.image}
@@ -370,7 +373,7 @@ function StoryToday() {
           >
             {today.heading}
           </h2>
-          <p className="mt-4 text-lg leading-7 lg:mt-5 lg:text-xl lg:whitespace-pre-line">
+          <p className="mt-6 text-lg leading-7 lg:text-xl lg:whitespace-pre-line">
             {today.description}
           </p>
           <Button

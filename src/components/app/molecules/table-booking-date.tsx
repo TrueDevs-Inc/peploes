@@ -7,11 +7,13 @@ import { useRef, useState } from "react";
 import { DateCalendar } from "@/components/app/atoms/date-calendar";
 import styles from "@/components/app/compounds/table-booking-panel.module.css";
 import { TABLE_BOOKING_CONTENT } from "@/lib/constants/table-booking";
+import { dublinToday } from "@/lib/dates";
 import type { ITableBookingDateProps } from "@/lib/types";
 
 export function TableBookingDate({ value, onChange }: ITableBookingDateProps) {
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
+  const minimum = dublinToday();
 
   return (
     <fieldset
@@ -37,20 +39,30 @@ export function TableBookingDate({ value, onChange }: ITableBookingDateProps) {
         aria-expanded={open}
         aria-controls="booking-calendar"
         className={styles.selection}
-        onClick={() => setOpen(!open)}
+        onClick={() => {
+          const today = dublinToday();
+          if (value < today) onChange(today);
+          setOpen(!open);
+        }}
       >
         <CalendarDays aria-hidden="true" className={styles.fieldIcon} />
         <span id="booking-date-value">
-          {format(parseISO(value), "EEE, d MMM yyyy")}
+          {value
+            ? format(parseISO(value), "EEE, d MMM yyyy")
+            : TABLE_BOOKING_CONTENT.date.placeholder}
         </span>
         <ChevronDown aria-hidden="true" className={styles.chevron} />
       </button>
       {open && (
         <DateCalendar
+          key={minimum}
           id="booking-calendar"
           value={value}
+          min={minimum}
+          className={styles.bookingCalendar}
           onChange={(date) => {
-            onChange(date);
+            const today = dublinToday();
+            onChange(date < today ? today : date);
             setOpen(false);
             trigger.current?.focus();
           }}

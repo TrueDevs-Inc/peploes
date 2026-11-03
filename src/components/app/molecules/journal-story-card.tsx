@@ -22,6 +22,7 @@ export function JournalStoryCard({
     <article data-image-card className={styles.card}>
       <Link
         href={href}
+        prefetch={true}
         data-card-image
         aria-label={article.title}
         className={styles.image}

@@ -3,6 +3,11 @@
 The starter provides Next.js metadata, factual structured data, crawler policy,
 a sitemap, and `llms.txt`. Replace its public site facts before launch.
 
+The browser favicon is `src/app/icon.svg`, which embeds the original 32×32 PNG from
+`https://peploes.com/media/sqekby2f/peploes_fav.png?width=32&height=32`.
+A 7px clipping radius rounds its corners. Next.js includes it through the root
+app icon file convention.
+
 ## Site URL and defaults
 
 `NEXT_PUBLIC_SITE_URL` supplies canonical and sitemap URLs.

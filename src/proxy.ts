@@ -1,21 +1,15 @@
 import { Result } from "neverthrow";
 import { type NextRequest, NextResponse } from "next/server";
-import { journalArticleExists } from "@/services/journal";
-import { seasonalEntryExists } from "@/services/seasonal";
 
-export async function proxy(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const encodedSlug = request.nextUrl.pathname.split("/")[2] ?? "";
-  const slug =
-    Result.fromThrowable(decodeURIComponent)(encodedSlug).unwrapOr("");
-  // Check before the shared loading boundary sends HTTP 200.
-  const result = request.nextUrl.pathname.startsWith("/journal/")
-    ? await journalArticleExists(slug)
-    : await seasonalEntryExists(slug);
-  // Let the page's normal error boundary handle provider failures.
-  if (result.isErr() || result.value) return NextResponse.next();
-  return NextResponse.rewrite(new URL("/_not-found", request.url), {
-    status: 404,
-  });
+  const decodedSlug = Result.fromThrowable(decodeURIComponent)(encodedSlug);
+  if (decodedSlug.isErr()) {
+    return NextResponse.rewrite(new URL("/_not-found", request.url), {
+      status: 404,
+    });
+  }
+  return NextResponse.next();
 }
 
 export const config = { matcher: ["/seasonal/:slug", "/journal/:slug"] };

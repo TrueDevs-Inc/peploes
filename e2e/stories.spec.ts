@@ -223,8 +223,8 @@ for (const target of ["CTA", "image"] as const) {
     for (const [heading, href, destinationHeading] of [
       [
         /Rooted in good relationships/,
-        "/journal?category=people-produce",
-        /The Journal/,
+        "/journal/rooted-in-good-relationships",
+        /Rooted in good relationships/,
       ],
       [
         isMobile ? /Wine things just happen/ : /Some things have changed/,

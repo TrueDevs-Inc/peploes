@@ -2,6 +2,7 @@ import { ChevronDown, Minus, Plus } from "lucide-react";
 
 import { WineIndexCloseButton } from "@/components/app/atoms/wine-index-close-button";
 import { MenuBooking } from "@/components/app/compounds/menu-booking";
+import styles from "@/components/app/compounds/wine-menu.module.css";
 import { MenuEditorialIntro } from "@/components/app/molecules/menu-editorial-intro";
 import { MenuNotes } from "@/components/app/molecules/menu-notes";
 import { WineCategory } from "@/components/app/molecules/wine-category";
@@ -24,12 +25,15 @@ export function WineMenu({ menu }: IWineMenuProps) {
         {sections.length > 0 && (
           <details
             open
-            className="group mb-8 border border-soft-stone bg-[#f1e9e3] px-[17px] py-[5px] xl:relative xl:-translate-x-[9px] xl:mb-8 xl:border-0 xl:bg-transparent xl:p-0"
+            className={cn(
+              styles.index,
+              "group mb-8 border border-soft-stone bg-[#f1e9e3] px-[17px] py-[5px] xl:relative xl:-translate-x-[9px] xl:mb-8 xl:border-0 xl:bg-transparent xl:p-0",
+            )}
           >
             <summary
               className={cn(
                 FOCUS_RING,
-                "flex min-h-10 w-full justify-between xl:w-fit xl:justify-start xl:min-h-12 cursor-pointer list-none items-center gap-6 text-xs tracking-[0.1em] text-peploe-burgundy uppercase focus-visible:ring-peploe-burgundy [&::-webkit-details-marker]:hidden xl:bg-peploe-burgundy xl:rounded-t-[4px] xl:px-6 xl:gap-2 xl:text-lg xl:tracking-normal xl:text-warm-cream xl:normal-case",
+                "flex min-h-10 w-full justify-between xl:w-fit xl:justify-start xl:min-h-12 cursor-pointer list-none items-center gap-6 text-xs tracking-[0.1em] text-peploe-burgundy uppercase focus-visible:ring-peploe-burgundy [&::-webkit-details-marker]:hidden xl:bg-peploe-burgundy xl:rounded-[4px] xl:px-6 xl:gap-2 xl:text-lg xl:tracking-normal xl:text-warm-cream xl:normal-case",
               )}
             >
               {menu.indexLabel}
@@ -46,11 +50,11 @@ export function WineMenu({ menu }: IWineMenuProps) {
                 className="hidden size-4 group-open:rotate-180 xl:block"
               />
             </summary>
-            <WineIndexCloseButton />
             <nav
               aria-label={menu.indexLabel}
-              className="grid xl:grid-cols-5 xl:border xl:border-soft-stone xl:bg-[#f1e9e3] xl:py-[15px]"
+              className="relative grid xl:mt-3 xl:grid-cols-5 xl:border xl:border-soft-stone xl:bg-[#f1e9e3] xl:py-[15px]"
             >
+              <WineIndexCloseButton />
               {sections.map((section) => (
                 <div
                   key={section._key}

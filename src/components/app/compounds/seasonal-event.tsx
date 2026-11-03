@@ -106,6 +106,7 @@ export function SeasonalEvent({ content, join }: ISeasonalEventProps) {
                     {card.href ? (
                       <Link
                         href={card.href as Route}
+                        prefetch={true}
                         aria-label={card.title}
                         data-card-image
                         className={cn(

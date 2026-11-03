@@ -14,7 +14,6 @@ import {
 } from "@/lib/journal-schema";
 import {
   fetchJournalArticle,
-  fetchJournalArticleExists,
   fetchJournalArticles,
   fetchJournalCategories,
   fetchJournalPage,
@@ -218,22 +217,4 @@ export async function getPublishedJournalSlugs(): Promise<
       ),
     );
   return ok(parsed.data);
-}
-
-export async function journalArticleExists(
-  slug: string,
-): Promise<Result<boolean, IError>> {
-  if (!journalSlugSchema.safeParse(slug).success) return ok(false);
-  const result = await fetchJournalArticleExists(slug);
-  if (result.isErr()) return err(result.error);
-  const parsed = z.union([z.literal(0), z.literal(1)]).safeParse(result.value);
-  if (!parsed.success)
-    return err(
-      createError(
-        ErrorCode.InternalError,
-        "Invalid article availability response.",
-        parsed.error,
-      ),
-    );
-  return ok(parsed.data === 1);
 }

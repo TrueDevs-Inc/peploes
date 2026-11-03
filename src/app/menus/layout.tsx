@@ -7,7 +7,7 @@ import type { IMenuLayoutProps } from "@/lib/types";
 
 export default function MenusLayout({ children }: IMenuLayoutProps) {
   return (
-    <main className="[font-optical-sizing:none] [font-variation-settings:'opsz'_14]">
+    <main className="min-h-screen [font-optical-sizing:none] [font-variation-settings:'opsz'_14]">
       <Suspense
         fallback={
           <>

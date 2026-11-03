@@ -8,6 +8,15 @@ documented in [Private dining and events](private-dining.md).
 
 ## Book a Table design preview
 
+The date field starts on today's date in Dublin after hydration. Past dates and
+earlier months cannot be selected, including through keyboard navigation. The
+date refreshes when the search step regains focus or visibility; future choices
+are kept. Find a Table checks the date again before opening sample times.
+Desktop booking calendars use 36px day cells and 10px row gaps; the booking
+card dimensions and mobile day-cell sizes stay the same.
+Fully elapsed weeks are hidden from the booking calendar. Earlier dates in the
+current week stay disabled so weekday alignment is preserved.
+
 The /book-a-table page follows the desktop and mobile booking frames in Figma.
 Its server contract, hold timer and failure behaviour are documented in
 [Booking page and the table hold](booking-page.md).
@@ -85,9 +94,10 @@ replace it with the client's URL-restricted public token for production.
 Mapbox attribution stays visible. Zoom, fullscreen and recenter controls are
 available; scroll-wheel zoom is disabled so the page remains easy to scroll.
 Booking controls open the [Book a Table design preview](#book-a-table-design-preview).
-Main navigation and footer opening-hours and location links point to this page,
-using its `#opening-hours` and `#find-us` anchors where relevant. The desktop
-Explore footer's Visit & Contact link uses
+Main navigation opening-hours and location links point to this page, using its
+`#opening-hours` and `#find-us` anchors. The mobile footer's address button
+opens `#find-us`; its opening hours appear without a separate link.
+The desktop Explore footer's Visit & Contact link uses
 the same-site `/visit-contact` route so it works on every deployment.
 Direct anchor links recover a missed initial browser scroll after the document
 loads. Client navigation and history remain handled by the router.
@@ -332,6 +342,16 @@ mobile homepage footer (`3395:17877`). Desktop has brand, Explore, Contact and
 newsletter columns. Mobile shows brand, newsletter, expanded Explore,
 then contact details, socials and legal links. Explore uses the same links and
 order as desktop, without separate Occasions or Peploe's navigation.
+Social links sit directly below phone and email in the contact section on all
+screen sizes, before opening hours. The dark 28px social icons align with the
+content below and retain adjacent 44px touch targets. Mobile leaves 24px before
+opening hours, 16px below their heading and 12px between rows. The outlined
+address button has a location icon and a 44px touch target.
+The TrueDevs credit from Samsú sits on its own centered bottom row below the copyright.
+The credit follows Samsú's fluid scale: 12–13.5px text, 16–18px line height and
+upper gap, a 24–27px link height, and 12–13.5px below it. It keeps its Inter type, underline,
+bold True / light Devs lettering and orange hover and keyboard-focus treatment.
+Its referral URL identifies Peploe's as the source. Social icons use a stroke width of 1.75.
 It uses the existing local logo and brand tokens, DM Sans body text and
 EB Garamond headings.
 Footer dividers, mobile row borders and the email field rule use 1px thickness.
@@ -604,10 +624,11 @@ image loading and horizontal overflow when changing this page.
 campaign.” Comment #69 identifies it as the page for individual events. The
 CMS implementation uses this layout for each published entry's own content.
 New slugs work without a code change or rebuild. Unknown, unpublished or
-disabled entries return HTTP 404 and show the not-found page. A route-specific
-proxy checks only the published document’s existence before the shared loading
-boundary can stream a response. This adds one small Sanity read per detail
-request; full content is still loaded once per render. Provider failures reach
+disabled entries return HTTP 404 and show the not-found page. Detail routes
+resolve their content before sending a response; the loading boundary is local
+to Menus. A synchronous proxy preserves 404 responses for malformed URL
+encoding without querying Sanity. Published detail pages reuse cached HTML,
+and visible event cards prefetch their destination. Provider failures reach
 the page error boundary, not a false 404. Search indexing is off by default for test content.
 Approved entries with indexing enabled appear in the sitemap; metadata uses
 their title, description and hero. No unverified Event structured data is emitted.
@@ -759,25 +780,29 @@ and retain both high-severity audit gates.
 timeline, Georgian building, founder, mural, archive, next generation and
 closing service photograph. It uses the existing brand fonts, buttons and
 production footer. Desktop section minimum heights at 1440px are 546, 457, 600,
-390, 444, 516, 340 and 390px. The mural and closing service banners use matching
+486, 444, 516, 340 and 390px. The mural and closing service banners use matching
 48px top and bottom padding (issue #28), growing beyond their minimum heights
 as needed. Narrow layouts stack the content with 16px gutters,
 a vertical timeline and readable overlays; Figma has no separate mobile frame.
 Main headings use 38px type on phones and 35px below 360px, with 42px and
 40px line heights respectively. Smaller timeline titles retain their existing
 scale. Tablet and desktop typography and image crops remain
-unchanged. Page styling lives in Tailwind classes in the Our Story component.
+unchanged. The hero, building, founder, mural, archive and closing service
+sections use a 24px gap between their heading and description at every width.
+Page styling lives in Tailwind classes in the Our Story component.
 At the 1440px reference width and above, the philosophy column stays 525px
 wide beside a flexible timeline, with a 100px gap. The timeline has 22px top
 padding, so its dates and divider do not move when the descriptions reflow.
 The desktop descriptions keep Figma's 199.667px text width and 4/5/4 line
 breaks even when the timeline columns grow. Mobile paragraphs remain fluid.
 From 1280px, the founder section keeps a 490px copy column and a 68px gap
-beside the portrait. The portrait fills the remaining width, preserving the
-390px section height and the paragraph's five authored desktop lines.
+beside the portrait. The portrait fills the remaining width beside a minimum
+390px copy area, with 48px of space above and below the desktop image and copy.
+The paragraph retains its five authored desktop lines.
 The next-generation section also keeps its 527px copy column, 16px portrait
 gap and five authored lines from 1280px, with 48px vertical padding inside
-the 340px section. Its paragraph wraps naturally on smaller screens.
+the 340px section. A 47px desktop gap below it matches the archive image's
+bottom inset above it. Its paragraph wraps naturally on smaller screens.
 The closing banner retains its 60px heading and 20px body text on desktop.
 From 1440px, anchor the photograph to the wrist beneath
 “dining” on the third body line. Scale the image uniformly around that point

@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { PageLoading } from "@/components/app/atoms/page-loading";
 import { Seasonal } from "@/components/app/compounds/seasonal";
 import { ROUTES } from "@/lib/constants";
 import { loadSeasonalEntries, loadWhatsOnPage } from "@/lib/seasonal-content";
@@ -8,6 +9,8 @@ import {
   upcomingSeasonalEntries,
 } from "@/lib/seasonal-data";
 import { buildSeoMetadata } from "@/lib/seo";
+
+export const revalidate = 300;
 
 export async function generateMetadata() {
   const content = await loadWhatsOnPage();
@@ -21,7 +24,13 @@ export async function generateMetadata() {
 }
 export default function SeasonalPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense
+      fallback={
+        <main>
+          <PageLoading />
+        </main>
+      }
+    >
       <PublishedSeasonalPage />
     </Suspense>
   );

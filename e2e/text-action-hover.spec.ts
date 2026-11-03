@@ -164,15 +164,7 @@ for (const route of [
       });
       const center = (content.left + content.right) / 2;
       if (isMobile) {
-        const minimumHeight = await link.evaluate((element) => {
-          const isInlineFooterLink =
-            element.closest("footer") &&
-            ["View full opening times", "Directions"].includes(
-              element.textContent?.trim() ?? "",
-            );
-          return isInlineFooterLink ? 18 : 44;
-        });
-        expect(bounds.height, label).toBeGreaterThanOrEqual(minimumHeight);
+        expect(bounds.height, label).toBeGreaterThanOrEqual(44);
         const textPosition = (content.inside.x - bounds.x) / bounds.width;
         await expect
           .poll(

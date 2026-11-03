@@ -9,7 +9,6 @@ import { ErrorCode } from "@/lib/enums";
 import { createError } from "@/lib/errors";
 import {
   fetchJournalArticle,
-  fetchJournalArticleExists,
   fetchJournalArticles,
   fetchJournalCategories,
   fetchJournalPage,
@@ -23,7 +22,6 @@ import {
   getJournalPage,
   getPublishedJournalSlugs,
   getRelatedJournalArticles,
-  journalArticleExists,
 } from "@/services/journal";
 
 vi.mock("@/lib/sanity-provider", () => ({
@@ -31,7 +29,6 @@ vi.mock("@/lib/sanity-provider", () => ({
   fetchJournalArticle: vi.fn(),
   fetchJournalCategories: vi.fn(),
   fetchJournalPage: vi.fn(),
-  fetchJournalArticleExists: vi.fn(),
   fetchPublishedJournalSlugs: vi.fn(),
   fetchRelatedJournalArticles: vi.fn(),
 }));
@@ -427,22 +424,4 @@ it("returns published URL metadata for sitemap integration", async () => {
   expect(result.isOk() ? result.value : null).toEqual([
     { slug: "sample", _updatedAt: "2026-10-19T12:00:00Z", noIndex: false },
   ]);
-});
-
-it("keeps a failed availability check distinct from a missing article", async () => {
-  vi.mocked(fetchJournalArticleExists).mockResolvedValue(
-    err(createError(ErrorCode.InternalError, "CMS unavailable")),
-  );
-  expect((await journalArticleExists("sample")).isErr()).toBe(true);
-});
-
-it("reports an unpublished article as unavailable", async () => {
-  vi.mocked(fetchJournalArticleExists).mockResolvedValue(ok(0));
-  const result = await journalArticleExists("sample");
-  expect(result.isOk() ? result.value : null).toBe(false);
-});
-
-it("fails availability checks for duplicate published URLs", async () => {
-  vi.mocked(fetchJournalArticleExists).mockResolvedValue(ok(2));
-  expect((await journalArticleExists("sample")).isErr()).toBe(true);
 });

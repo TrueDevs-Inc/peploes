@@ -1,4 +1,12 @@
-import { ArrowRight, Clock3, Mail, MapPin, Phone } from "lucide-react";
+import {
+  ArrowRight,
+  Clock3,
+  Facebook,
+  Instagram,
+  Mail,
+  MapPin,
+  Phone,
+} from "lucide-react";
 import Link from "next/link";
 import {
   TrackedAnchor,
@@ -28,7 +36,7 @@ export function Footer() {
     >
       <div
         data-footer-container
-        className="site-container-inset pt-8 pb-10 xl:pt-20"
+        className="site-container-inset pt-8 pb-[clamp(12px,1.125vw,13.5px)] xl:pt-20"
       >
         <div
           data-footer-columns
@@ -113,7 +121,7 @@ export function Footer() {
                     className="flex h-12 w-full justify-between rounded-none p-0 text-sm leading-[21px] font-normal text-ink has-[>svg]:px-0 xl:h-auto xl:justify-start"
                   >
                     {href ? (
-                      <Link href={href}>
+                      <Link href={href} prefetch={true}>
                         {label}
                         <ArrowRight
                           aria-hidden="true"
@@ -182,12 +190,53 @@ export function Footer() {
                 {RESTAURANT_CONTACT.email}
               </TrackedAnchor>
             </div>
-            <div className="mt-4 xl:relative xl:mt-6 xl:pt-[25px] xl:before:absolute xl:before:inset-x-0 xl:before:top-0 xl:before:h-px xl:before:bg-soft-stone">
+            <div
+              data-footer-social
+              className="mt-4 flex items-center gap-0 xl:mt-6"
+            >
+              <Button
+                asChild
+                variant="brand-nav"
+                aria-label={FOOTER_CONTENT.instagramLabel}
+                className="size-11 justify-start p-0 text-ink has-[>svg]:px-0"
+              >
+                <a
+                  href={FOOTER_CONTENT.instagramHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Instagram
+                    aria-hidden="true"
+                    className="size-7"
+                    strokeWidth={1.75}
+                  />
+                </a>
+              </Button>
+              <Button
+                asChild
+                variant="brand-nav"
+                aria-label={FOOTER_CONTENT.facebookLabel}
+                className="size-11 justify-start p-0 text-ink has-[>svg]:px-0"
+              >
+                <a
+                  href={FOOTER_CONTENT.facebookHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Facebook
+                    aria-hidden="true"
+                    className="size-7"
+                    strokeWidth={1.75}
+                  />
+                </a>
+              </Button>
+            </div>
+            <div className="mt-6 xl:relative xl:pt-[25px] xl:before:absolute xl:before:inset-x-0 xl:before:top-0 xl:before:h-px xl:before:bg-soft-stone">
               <h3 className="flex items-center gap-2 text-sm leading-5 font-medium xl:leading-[21px]">
                 <Clock3 aria-hidden="true" className="size-4 shrink-0" />
                 {FOOTER_CONTENT.openingHoursHeading}
               </h3>
-              <dl className="mt-2.5 space-y-1.5 text-sm leading-[21px] text-text-secondary xl:mt-3 xl:space-y-2">
+              <dl className="mt-4 space-y-3 text-sm leading-[21px] text-text-secondary xl:mt-3 xl:space-y-2">
                 {FOOTER_CONTENT.openingHours.map(({ days, hours }) => (
                   <div key={days} className="flex justify-between gap-3">
                     <dt>{days}</dt>
@@ -195,37 +244,12 @@ export function Footer() {
                   </div>
                 ))}
               </dl>
-              <Button
-                data-footer-homepage-extra
-                asChild
-                variant="brand-text"
-                className="mt-2.5 flex h-[18px] justify-start rounded-none p-0 has-[>svg]:px-0 text-[13px] leading-[18px] text-peploe-burgundy xl:hidden"
-              >
-                <Link href={`${ROUTES.VISIT_CONTACT}#opening-hours`}>
-                  {MOBILE_FOOTER_CONTENT.openingTimesLabel}
-                  <ArrowRight aria-hidden="true" className="size-4" />
-                </Link>
-              </Button>
             </div>
             <div
               data-footer-homepage-extra
-              className="mt-4 flex flex-col items-start gap-1.5 xl:hidden"
+              className="mt-6 flex flex-col items-start xl:hidden"
             >
-              <Button
-                asChild
-                variant="brand-contact"
-                className="h-11 gap-2 rounded-[4px] border-peploe-burgundy/25 bg-transparent pr-5 pl-4 has-[>svg]:pr-5 has-[>svg]:pl-4 text-[15px] leading-[22px] text-peploe-burgundy"
-              >
-                <Link href={`${ROUTES.VISIT_CONTACT}#find-us`}>
-                  <MapPin aria-hidden="true" className="size-4" />
-                  {MOBILE_FOOTER_CONTENT.locationLabel}
-                </Link>
-              </Button>
-              <Button
-                asChild
-                variant="brand-text"
-                className="h-[18px] rounded-none p-0 has-[>svg]:px-0 text-[13px] leading-[18px] text-peploe-burgundy"
-              >
+              <Button asChild variant="brand-contact" size="cta">
                 <TrackedLink
                   href={`${ROUTES.VISIT_CONTACT}#find-us`}
                   interaction={{
@@ -233,8 +257,8 @@ export function Footer() {
                     placement: "footer",
                   }}
                 >
-                  {MOBILE_FOOTER_CONTENT.directionsLabel}
-                  <ArrowRight aria-hidden="true" className="size-4" />
+                  <MapPin aria-hidden="true" className="size-4" />
+                  {MOBILE_FOOTER_CONTENT.locationLabel}
                 </TrackedLink>
               </Button>
             </div>

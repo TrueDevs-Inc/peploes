@@ -13,7 +13,7 @@ export const TABLE_BOOKING_CONTENT = {
     { number: "03", mobileNumber: "3", label: "Your details" },
     { number: "04", mobileNumber: "4", label: "Confirmation" },
   ],
-  date: { label: "Date", initialValue: "2025-04-24" },
+  date: { label: "Date", placeholder: "Choose date" },
   partySize: {
     label: "Party size",
     initialValue: "2",

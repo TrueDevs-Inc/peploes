@@ -27,7 +27,13 @@ export function NavigationShelfLink({
           "relative -mt-1 min-h-11 h-auto w-fit max-w-full shrink-0 justify-start rounded-sm p-0 pb-2 text-left text-2xl leading-[30px] font-medium whitespace-normal after:absolute after:bottom-0.5 after:left-0 after:h-0.5 after:w-8 after:bg-peploe-burgundy after:opacity-0 after:transition-opacity after:duration-(--duration-interaction) hover:no-underline hover:after:opacity-100 focus-visible:ring-peploe-burgundy motion-reduce:after:transition-none",
         )}
       >
-        {href ? <Link href={href}>{label}</Link> : label}
+        {href ? (
+          <Link href={href} prefetch={true}>
+            {label}
+          </Link>
+        ) : (
+          label
+        )}
       </Button>
       {description && <p className="text-sm leading-[21px]">{description}</p>}
     </div>

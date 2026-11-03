@@ -1,5 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
   <title>Peploe's</title>
-  <rect width="64" height="64" rx="10" fill="#7a1e24" />
-  <path d="M20 50V15h13c10 0 16 5 16 14s-6 14-16 14H20" fill="none" stroke="#fffaf0" stroke-linecap="round" stroke-linejoin="round" stroke-width="7" />
+  <defs>
+    <clipPath id="rounded-icon">
+      <rect width="32" height="32" rx="7" />
+    </clipPath>
+  </defs>
+  <image width="32" height="32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAA7EAAAOxAGVKw4bAAADM0lEQVR4nMWXTyybYRzHv/2fUFrEZcpCRbI6yKyNxRSJHhzGEomdGoYdzOxAVxLhYJlwsMROsoyNmJTINItkYzKXOSBhDmIRqYmSqMxVaN/WnueRdqpb0nZv331PfZ6+7/P7PO/vz/N7pOdE+I+S8rHI8vISJicnsbv7A4WFd9DU9BhxcXGxBTg5OcHs7CcMDb3GwsICzs48bN5u/4CVlWUCNAWRSMQ/wOHhIUZG3mJ8/B02NjbZnEwmgVx+sRT16NTUe9TXz6G8vJxfAJvNhvZ2K5zOA9DNUaNXQ8i/6/l5ngFGR0fIrupA7fl36/Fw5LeMGfV4PJBIJIHn9/cPwlo3LIC9vT20tVmZcZnst/H8/JsYHHwFr9eLmhozHA4HpNKL/5OTk/gDsNuncXT0M8jP9Ev39PTCYDCwOb3egO1tR+Cd4uJS/gBWV1eDxhSApllOTg4bO51OLC5+JS4QgeM4pKVdg8lk4g/A7XYHjcViMUvDiQkbioqMsFhaWWDSL+R2c6iqqkJqaip/AOnp6aEvEl93dXWyAOQ4HzPu8/mQmKhEY+MjhKuwAIxGI/r7X4TM06in7vDHBgUxm83Q6XT8ApSVmZCbewObm98DWeCXP+9pJiQlqdDSYkEkCgsgPj4eDQ0P0dr698W93nPU1j5AdnY2/wBU1dX30dfXi+Pj46CCc2HcS/JejebmJ4hUYQNoNBoW8dPTdlyxz3ZfWXkPWq02dgBUNLcpwGXRIKT5T4MvGkUEoNfroVDIWLpdDj6684KC27EHyMi4TnydTMryUSAOCAs5E25BqVTGHkCtViMlJYX0BK6gOMjLy0O0ighAoVAgISEBV7vIzMxMYQCo5HJFyJxKpRIOQCwO7fPoCSgYwJ+CzeVyCQeg1YaW2vX1deEA6Mk4MPAyMKblgDYjtGeQy+WxBygpKSX1QEOazn3WE0ilEmxtbZEWfYPUg/zYA9A6UFdXj+7uZ2xMK+LpqZtcUj4KA0BlsTzFzMwM1ta+BZqRubnP6OjoFAaAFqOxsTFUVNzFzs4um5NIxNEsFf3dUKfLJbefL6Q1f04OJA5Wa5uwAFRZWVkYHn7zL0vgF+QMFdvgP77NAAAAAElFTkSuQmCC" clip-path="url(#rounded-icon)" />
 </svg>

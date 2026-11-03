@@ -1,5 +1,96 @@
 import { expect, test } from "./menu-test";
 
+test("booking starts on today's Dublin date and prevents past date selection", async ({
+  page,
+}) => {
+  await page.clock.setFixedTime(new Date("2026-07-02T23:30:00Z"));
+  await page.goto("/book-a-table");
+  const reservations = page.getByRole("region", { name: "Table reservations" });
+  const date = reservations.getByRole("button", { name: /^Date / });
+  await expect(date).toHaveText("Fri, 3 Jul 2026");
+  await date.click();
+  const calendar = reservations.getByRole("group", {
+    name: "Choose date",
+    exact: true,
+  });
+  await expect(calendar.getByText("July 2026", { exact: true })).toBeVisible();
+  await expect(
+    calendar.getByRole("button", { name: "Previous month" }),
+  ).toBeDisabled();
+  await expect(
+    calendar.getByRole("button", {
+      name: "Thursday, 2 July 2026",
+      exact: true,
+    }),
+  ).toBeDisabled();
+  await expect(
+    calendar.getByRole("button", { name: "Friday, 3 July 2026", exact: true }),
+  ).toBeEnabled();
+  await calendar
+    .getByRole("button", { name: "Friday, 3 July 2026", exact: true })
+    .focus();
+  await page.keyboard.press("ArrowLeft");
+  await expect(
+    calendar.getByRole("button", { name: "Friday, 3 July 2026", exact: true }),
+  ).toBeFocused();
+  await calendar
+    .getByRole("button", { name: "Saturday, 4 July 2026", exact: true })
+    .click();
+  await expect(date).toHaveText("Sat, 4 Jul 2026");
+});
+
+test("booking refreshes expired dates across midnight and keeps future choices", async ({
+  page,
+}) => {
+  await page.clock.setFixedTime(new Date("2026-12-31T23:30:00Z"));
+  await page.goto("/book-a-table");
+  const reservations = page.getByRole("region", { name: "Table reservations" });
+  const date = reservations.getByRole("button", { name: /^Date / });
+  await expect(date).toHaveText("Thu, 31 Dec 2026");
+  await page.clock.setFixedTime(new Date("2027-01-01T00:30:00Z"));
+  await reservations
+    .getByRole("button", { name: "Find a Table", exact: true })
+    .click();
+  await expect(date).toHaveText("Fri, 1 Jan 2027");
+  await date.click();
+  const calendar = reservations.getByRole("group", {
+    name: "Choose date",
+    exact: true,
+  });
+  await expect(
+    calendar.getByText("January 2027", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    calendar.getByRole("button", {
+      name: "Thursday, 31 December 2026",
+      exact: true,
+    }),
+  ).toBeDisabled();
+  await calendar
+    .getByRole("button", { name: "Tuesday, 5 January 2027", exact: true })
+    .click();
+  await page.clock.setFixedTime(new Date("2027-01-02T00:30:00Z"));
+  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await expect(date).toHaveText("Tue, 5 Jan 2027");
+  await page.clock.setFixedTime(new Date("2027-01-06T00:30:00Z"));
+  await page.evaluate(() =>
+    document.dispatchEvent(new Event("visibilitychange")),
+  );
+  await expect(date).toHaveText("Wed, 6 Jan 2027");
+  await date.click();
+  await expect(
+    calendar.getByRole("button", {
+      name: "Tuesday, 5 January 2027",
+      exact: true,
+    }),
+  ).toBeDisabled();
+  await page.clock.setFixedTime(new Date("2027-01-07T00:30:00Z"));
+  await calendar
+    .getByRole("button", { name: "Wednesday, 6 January 2027", exact: true })
+    .click();
+  await expect(date).toHaveText("Thu, 7 Jan 2027");
+});
+
 test("desktop booking keeps the panel in place when opening available times", async ({
   page,
 }) => {
@@ -24,6 +115,54 @@ test("desktop booking keeps the panel in place when opening available times", as
   if (initialBounds && timesBounds) {
     expect(Math.abs(timesBounds.y - initialBounds.y)).toBeLessThanOrEqual(1);
   }
+});
+
+test("desktop booking calendar has shorter rows without changing the booking box", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.clock.setFixedTime(new Date("2026-11-03T12:00:00Z"));
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/book-a-table");
+  await page.evaluate(() => document.fonts.ready);
+  const panel = page.getByRole("region", { name: "Table reservations" });
+  const closedBounds = await panel.boundingBox();
+  await panel.getByRole("button", { name: /^Date / }).click();
+  const calendar = panel.getByRole("group", {
+    name: "Choose date",
+    exact: true,
+  });
+  const calendarBounds = await calendar.boundingBox();
+  const openBounds = await panel.boundingBox();
+  if (!closedBounds || !openBounds || !calendarBounds)
+    throw new Error("Calendar and booking box must be visible");
+  expect(openBounds.height).toBeCloseTo(closedBounds.height, 0);
+  expect(calendarBounds.height).toBeLessThanOrEqual(370);
+  expect(calendarBounds.height).toBeGreaterThanOrEqual(340);
+  await expect(calendar.locator("[data-date]:visible")).toHaveCount(35);
+  await expect(
+    calendar.getByRole("button", {
+      name: "Sunday, 1 November 2026",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await expect(
+    calendar.getByRole("button", {
+      name: "Monday, 2 November 2026",
+      exact: true,
+    }),
+  ).toBeDisabled();
+  expect(
+    await calendar.evaluate(
+      (element) => element.scrollHeight <= element.clientHeight,
+    ),
+  ).toBe(true);
+  await calendar
+    .getByRole("button", { name: "Monday, 30 November 2026", exact: true })
+    .click();
+  await expect(panel.getByRole("button", { name: /^Date / })).toHaveText(
+    "Mon, 30 Nov 2026",
+  );
 });
 
 test("booking brings hidden step controls back into view on forward and back navigation", async ({
@@ -249,6 +388,7 @@ test("booking preview moves through time, details and confirmation without submi
 test("booking preview preserves selections on back navigation and resets time when the search changes", async ({
   page,
 }) => {
+  await page.clock.setFixedTime(new Date("2025-04-24T12:00:00Z"));
   await page.goto("/book-a-table");
   const reservations = page.getByRole("region", { name: "Table reservations" });
   await reservations.getByRole("combobox", { name: "Party size" }).click();
