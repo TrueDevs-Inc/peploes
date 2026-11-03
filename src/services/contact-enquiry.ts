@@ -45,6 +45,7 @@ export async function deliverContactEnquiry(
       ? { status: "unknown", message: feedback.unknown }
       : { status: "error", message: feedback.failed };
   } catch {
+    // Provider exceptions may contain guest text or credentials; report only a safe category.
     logger.error(LogContext.Api, "Contact delivery failed unexpectedly");
     logToSentry(new Error("Contact delivery failed unexpectedly"), {
       module: AppModule.Api,

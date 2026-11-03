@@ -3,7 +3,8 @@
 import { headers } from "next/headers";
 
 import { VISIT_CONTACT_CONTENT } from "@/lib/constants/visit-contact";
-import { LogContext } from "@/lib/enums";
+import { AppModule, LogContext, Stage } from "@/lib/enums";
+import { logToSentry } from "@/lib/error-handler";
 import { logger } from "@/lib/logger";
 import type { IEnquiryActionState } from "@/lib/types";
 import { deliverContactEnquiry } from "@/services/contact-enquiry";
@@ -27,6 +28,11 @@ export async function submitContactEnquiry(
     );
   } catch {
     logger.error(LogContext.Api, "Contact action failed unexpectedly");
+    logToSentry(new Error("Contact action failed unexpectedly"), {
+      module: AppModule.Action,
+      stage: Stage.ErrorHandling,
+      tags: { template: "contact-admin" },
+    });
     return {
       status: "unknown",
       message: VISIT_CONTACT_CONTENT.form.feedback.unknown,
