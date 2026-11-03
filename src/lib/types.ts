@@ -1428,6 +1428,7 @@ export interface IFooterContent {
     description: string;
     emailLabel: string;
     submitLabel: string;
+    loadingLabel: string;
     pendingLabel: string;
     unavailableError: string;
     rateLimitError: string;

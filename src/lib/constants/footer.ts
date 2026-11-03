@@ -31,6 +31,7 @@ export const FOOTER_CONTENT: IFooterContent = {
       "Seasonal notes from St Stephen's Green — food, wine, people and what's happening at Peploe's.",
     emailLabel: "Your email address",
     submitLabel: "Subscribe",
+    loadingLabel: "Loading signup…",
     pendingLabel: "Sending…",
     unknownError:
       "We could not confirm your signup request. Please check your inbox before trying again.",

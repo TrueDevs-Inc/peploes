@@ -12,7 +12,9 @@ if (
     process.env.SANITY_PROJECT_ID !== "testproject" ||
     process.env.SANITY_DATASET !== "development")
 ) {
-  throw new Error("Email browser fixtures require the isolated test project.");
+  throw new Error(
+    "Browser provider fixtures require the isolated test project.",
+  );
 }
 
 const STRIPE_SOURCES = {
@@ -45,12 +47,14 @@ function getPostHogSource(): string | undefined {
 }
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ["127.0.0.1"],
   ...(emailBrowserFixture
     ? {
         turbopack: {
           resolveAlias: {
             "@/dal/email-deliveries": "./e2e/fake-email-deliveries.ts",
             "@/lib/enquiry-rate-limit": "./e2e/allow-enquiry.ts",
+            "@/lib/newsletter-provider": "./e2e/fake-newsletter-provider.ts",
           },
         },
       }

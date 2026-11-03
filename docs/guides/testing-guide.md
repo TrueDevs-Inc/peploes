@@ -141,6 +141,10 @@ consent reaching the network, navigation counts, unload delivery and browser
 storage. A rule may appear in more than one layer when each checks its own
 boundary; do not repeat the same assertion at the same boundary.
 
+General browser journeys start with a remembered newsletter-popup dismissal so
+an automatic prompt does not interrupt unrelated assertions. Both newsletter
+popup specs override that preference with fresh storage and verify the prompt.
+
 Test the production build, locate controls by accessible role or label, and give
 each test isolated data. Add coverage for critical journeys such as sign-in,
 checkout, permission enforcement or a destructive workflow as they are built.

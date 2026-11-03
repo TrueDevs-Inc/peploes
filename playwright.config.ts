@@ -1,9 +1,16 @@
 import { defineConfig } from "@playwright/test";
 import { E2E_SANITY_WEBHOOK_SECRET } from "./e2e/sanity-webhook";
+import { NEWSLETTER_POPUP } from "./src/lib/constants/newsletter-popup";
 
 const baseURL = "http://127.0.0.1:3107";
 const emailTestIgnore =
-  process.env.EMAIL_E2E_BUILD === "1" ? [] : ["**/enquiry-delivery.spec.ts"];
+  process.env.EMAIL_E2E_BUILD === "1"
+    ? []
+    : [
+        "**/enquiry-delivery.spec.ts",
+        "**/newsletter-delivery.spec.ts",
+        "**/newsletter-popup-delivery.spec.ts",
+      ];
 
 export default defineConfig({
   testDir: "./e2e",
@@ -11,6 +18,17 @@ export default defineConfig({
   workers: 1,
   use: {
     baseURL,
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: baseURL,
+          localStorage: [
+            { name: NEWSLETTER_POPUP.dismissedKey, value: "true" },
+          ],
+        },
+      ],
+    },
     browserName: "chromium",
     launchOptions: { args: ["--font-render-hinting=none"] },
     trace: "retain-on-failure",
