@@ -118,6 +118,8 @@ for (const destination of [
       if (
         destinationPath(url) !== destination.href ||
         !url.searchParams.has("_rsc") ||
+        response.request().headers()["next-router-segment-prefetch"] ===
+          "/_tree" ||
         !response.ok()
       )
         return;
