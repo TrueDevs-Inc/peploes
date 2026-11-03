@@ -12,23 +12,25 @@ const emailTestIgnore =
         "**/newsletter-popup-delivery.spec.ts",
       ];
 
+export function newsletterDismissedState(origin: string) {
+  return {
+    cookies: [],
+    origins: [
+      {
+        origin,
+        localStorage: [{ name: NEWSLETTER_POPUP.dismissedKey, value: "true" }],
+      },
+    ],
+  };
+}
+
 export default defineConfig({
   testDir: "./e2e",
   forbidOnly: true,
   workers: 1,
   use: {
     baseURL,
-    storageState: {
-      cookies: [],
-      origins: [
-        {
-          origin: baseURL,
-          localStorage: [
-            { name: NEWSLETTER_POPUP.dismissedKey, value: "true" },
-          ],
-        },
-      ],
-    },
+    storageState: newsletterDismissedState(baseURL),
     browserName: "chromium",
     launchOptions: { args: ["--font-render-hinting=none"] },
     trace: "retain-on-failure",

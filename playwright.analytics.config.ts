@@ -1,6 +1,6 @@
 import { defineConfig } from "@playwright/test";
 
-import base from "./playwright.config";
+import base, { newsletterDismissedState } from "./playwright.config";
 
 // Provider values are compiled into the browser bundle, so this spec needs its
 // own production build with synthetic provider variables: run
@@ -22,6 +22,7 @@ export default defineConfig({
   use: {
     ...base.use,
     baseURL,
+    storageState: newsletterDismissedState(baseURL),
     // posthog-js drops events from "Headless" user agents and webdriver
     // browsers (the harness also masks navigator.webdriver); present an
     // ordinary Chrome string so real SDK delivery is exercised.
