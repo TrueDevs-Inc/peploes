@@ -6,6 +6,7 @@ import {
 } from "@/components/app/atoms/tracked-link";
 import styles from "@/components/app/compounds/visit-contact.module.css";
 import { VisitContactDetails } from "@/components/app/compounds/visit-contact-details";
+import { ContactEnquiryForm } from "@/components/app/molecules/contact-enquiry-form";
 import { VisitLocationMap } from "@/components/app/molecules/visit-location-map";
 import { Button } from "@/components/ui/button";
 import {
@@ -228,6 +229,7 @@ export function VisitContact() {
     <main className={cn(dmSans.className, ebGaramond.variable, styles.page)}>
       <VisitHero />
       <VisitContactInformation />
+      <ContactEnquiryForm />
       <VisitLocation />
       <VisitContactDetails />
       <VisitClosing />

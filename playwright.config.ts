@@ -3,7 +3,9 @@ import { E2E_SANITY_WEBHOOK_SECRET } from "./e2e/sanity-webhook";
 
 const baseURL = "http://127.0.0.1:3107";
 const emailTestIgnore =
-  process.env.EMAIL_E2E_BUILD === "1" ? [] : ["**/enquiry-delivery.spec.ts"];
+  process.env.EMAIL_E2E_BUILD === "1"
+    ? []
+    : ["**/enquiry-delivery.spec.ts", "**/contact-delivery.spec.ts"];
 
 export default defineConfig({
   testDir: "./e2e",
