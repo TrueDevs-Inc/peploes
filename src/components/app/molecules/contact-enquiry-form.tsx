@@ -72,7 +72,7 @@ export function ContactEnquiryForm() {
       aria-labelledby="contact-message-heading"
     >
       <div className={`site-container ${styles.messageGrid}`}>
-        <div>
+        <div data-scroll-reveal>
           <p className={styles.eyebrow}>{content.eyebrow}</p>
           <h2 id="contact-message-heading" className={styles.heading}>
             {content.heading}
@@ -80,6 +80,7 @@ export function ContactEnquiryForm() {
           <p className={styles.description}>{content.description}</p>
         </div>
         <form
+          data-scroll-reveal
           ref={formRef}
           className={styles.messageForm}
           aria-label="General contact message"
