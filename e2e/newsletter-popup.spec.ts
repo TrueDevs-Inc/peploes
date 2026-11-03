@@ -201,15 +201,15 @@ test("active footer controls keep focus without a popup interruption", async ({
   await page.goto("/");
   const section = page
     .getByRole("contentinfo")
-    .getByRole("navigation", { name: "Occasions", exact: true });
+    .getByRole("navigation", { name: "Explore", exact: true });
   const toggle = section.locator("summary");
-  const weddings = section.getByRole("link", { name: "Weddings", exact: true });
+  const story = section.getByRole("link", { name: "Our Story", exact: true });
   await toggle.focus();
   await passWine(page);
   await toggle.click();
-  await expect(weddings).toBeVisible();
+  await expect(story).toBeHidden();
   await toggle.click();
-  await expect(weddings).toBeHidden();
+  await expect(story).toBeVisible();
   await expect(
     page.getByRole("dialog", { name: "A Letter from Gina" }),
   ).not.toBeVisible();
