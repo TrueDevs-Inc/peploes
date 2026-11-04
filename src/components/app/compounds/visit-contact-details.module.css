@@ -19,8 +19,7 @@
 }
 
 .heading,
-.serviceHeading,
-.serviceHours {
+.serviceHeading {
   font-family: var(--font-eb-garamond), serif;
   font-weight: 400;
 }
@@ -158,8 +157,9 @@
 }
 
 .serviceHours {
-  font-size: 26px;
-  line-height: 34px;
+  color: var(--text-secondary);
+  font-size: 20px;
+  line-height: 28px;
 }
 
 .serviceDetail {
