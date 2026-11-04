@@ -119,10 +119,13 @@ changes it.
 ## Pending owner decisions
 
 Not implemented because they need facts or choices from the owner: Restaurant
-schema (hours, cuisine, price, profiles, coordinates), one source of truth for
-opening hours, AI training crawler policy, Event markup (needs a venue field), an
-Organization logo asset, Sanity SEO fields for menus and private dining, IndexNow
-and Search Console, FAQ content, and visible breadcrumbs.
+schema (confirmed hours, cuisine, price and coordinates), Event markup (needs a
+confirmed venue), an Organization logo asset, Sanity SEO fields for menus and
+private dining, IndexNow and Search Console, and FAQ content. The footer and
+Visit opening-hours table already share `RESTAURANT_OPENING_HOURS`. Dining-service
+times remain separate from building opening hours. The footer social profiles
+are recorded in the project brief; crawler policy is implemented above. Menu
+breadcrumbs are already visible.
 
 ## Social images
 
@@ -154,3 +157,64 @@ is better than a large graph of invented facts.
 - [Google AI crawler controls](https://developers.google.com/crawling/docs/crawlers-fetchers/google-common-crawlers)
 - [Common Crawl CCBot controls](https://commoncrawl.org/ccbot)
 - [`llms.txt` proposal](https://llmstxt.org/)
+
+
+## Release verification for #80 on 4 November 2026
+
+Source revision: `a3b3b8d99f0660ae75c907e1ba731612983e30cd` on integrated
+`dev`. This is a code and public-response audit, not owner approval or proof
+that this revision is deployed.
+
+The [current official site](https://peploes.com/) returns HTTP 200 and declares
+`https://peploes.com/` as canonical. `https://www.peploes.com/` redirects there
+with HTTP 301. It publishes the same street address, phone and email as the
+application constants. Its footer opening and dining-service times match the
+application's separate opening-hours and dining-service lists. These published
+facts corroborate the implementation; the project brief still requires the
+restaurant to confirm them before launch. Exact closing times for "Late",
+bank-holiday exceptions, cuisine, price range and approved coordinates remain
+unconfirmed for Restaurant schema. Do not convert "Late" to an invented time.
+The brief records the footer Instagram and Facebook links as taken from the
+official site. Approval of replacement social artwork and a logo visible on
+white remains a launch check.
+
+Public staging responses from `https://peploes-fork.vercel.app/` returned HTTP
+200 and both `X-Robots-Tag: noindex` and `noindex, follow` page metadata.
+Its robots file permits crawling, so crawlers can read the noindex directive.
+Its sitemap returned 19 entries, excluded Book a Table, and used
+`https://peploes-fork-staging-msf.vercel.app` throughout. The home canonical and
+absolute social-image URL also use that older staging alias. This is consistent with
+a hosted `NEXT_PUBLIC_SITE_URL` discrepancy with the intended staging URL;
+it does not establish a hardcoded production-origin defect. Correct the value
+in the owning hosting project and rebuild before checking the rendered URLs
+again. Gina's production project must use her approved production origin,
+never either staging alias. The audit corrected only the Preview `NEXT_PUBLIC_SITE_URL` in Salman's
+`msf-projects/peploes-fork` project to `https://peploes-fork.vercel.app`.
+No local environment file or other hosted setting changed. A rebuild of the
+existing staging snapshot is being checked separately; this does not deploy
+the integrated `dev` revision or establish its Git production-branch setting.
+
+The application emits linked Organization and WebSite data, not Restaurant or
+Event claims. Event location has no confirmed CMS field. Keep those richer
+types pending real owner facts. Search Console ownership, sitemap submission,
+URL inspection, deployed Rich Results validation and actual social-platform
+preview rendering were not verified. The public official site is still the
+legacy application, so its markup cannot prove this Next.js release is live.
+
+Issue #80 must stay open until the owner facts and hosted checks above are
+satisfied. Code checks alone cannot supply those approvals.
+
+Local verification on that revision passed 27 tests across
+`src/__tests__/app/robots.test.ts`, `src/__tests__/lib/seo-discovery.test.ts`
+and `src/__tests__/lib/seo-structured-data.test.ts`, plus 16 tests in
+`src/__tests__/config/security-headers.test.ts`, using `bun run test` with those
+paths. These cover crawler policy, preview metadata/header gating, discovery
+route alignment, truthful linked schema and serialization. `bun run lint` and
+`git diff --check` passed. No application code changed; a full build and browser
+suite were not required for this documentation correction. Public-response
+checks used HTTP GET for the home page, robots and sitemap and HTTP HEAD for
+the www redirect. They do not prove Search Console receipt or social rendering.
+
+Standards and spec reviews found no remaining issue in this documentation
+change after adding the check results and qualifying the inferred configuration
+cause. Owner and hosted acceptance gaps remain as stated above.
