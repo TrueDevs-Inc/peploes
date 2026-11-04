@@ -11,7 +11,7 @@
 .card::before {
   position: absolute;
   inset-block: 0;
-  left: 0;
+  left: 1px;
   display: none;
   width: 1px;
   background: var(--soft-stone);
@@ -96,7 +96,10 @@
   .cards {
     --card-gap: 28px;
     --card-track-width: round(down, (100% - 2 * var(--card-gap)) / 3, 4px);
-    grid-template-columns: repeat(3, minmax(0, var(--card-track-width)));
+    grid-template-columns: repeat(2, minmax(0, var(--card-track-width))) minmax(
+        0,
+        1fr
+      );
     column-gap: var(--card-gap);
   }
 
