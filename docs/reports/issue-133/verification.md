@@ -21,10 +21,10 @@ Final review verification runs fifteen browser checks: the twelve raster cases,
 shared card sizing, published diary content and encoded event URLs. Reduced
 motion keeps the raster samples independent of entrance transitions.
 
-- [Desktop occasion cards](occasion-cards-desktop.png)
-- [Desktop seasonal related cards](seasonal-related-desktop.png)
-- [Phone occasion cards](occasion-cards-phone.png)
-- [Magnified divider comparison](divider-comparison.png): before on the left,
+- [Desktop occasion cards](https://raw.githubusercontent.com/TrueDevs-Inc/peploes/5817c2f2583082e716c504b4f44b28046b0256ab/docs/reports/issue-133/occasion-cards-desktop.png)
+- [Desktop seasonal related cards](https://raw.githubusercontent.com/TrueDevs-Inc/peploes/5817c2f2583082e716c504b4f44b28046b0256ab/docs/reports/issue-133/seasonal-related-desktop.png)
+- [Phone occasion cards](https://raw.githubusercontent.com/TrueDevs-Inc/peploes/5817c2f2583082e716c504b4f44b28046b0256ab/docs/reports/issue-133/occasion-cards-phone.png)
+- [Magnified divider comparison](https://raw.githubusercontent.com/TrueDevs-Inc/peploes/5817c2f2583082e716c504b4f44b28046b0256ab/docs/reports/issue-133/divider-comparison.png): before on the left,
   after on the right; each row shows the corresponding divider. This comparison
   uses a 1280-pixel viewport and pixel ratio 1.25, enlarged without interpolation.
 
