@@ -684,6 +684,12 @@
   flex-shrink: 0;
   accent-color: var(--booking-accent);
 }
+.terms ~ .terms {
+  margin-top: 8px;
+}
+.terms input {
+  margin: 0;
+}
 .flowActions {
   display: flex;
   align-items: center;

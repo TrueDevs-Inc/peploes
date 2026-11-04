@@ -377,7 +377,7 @@ for (const newsletterOptIn of [false, true]) {
       reservations.getByText(
         "No newsletter subscription will be made in this preview.",
       ),
-    ).toBeVisible();
+    ).toHaveCount(0);
     await reservations.getByRole("checkbox", { name: /By confirming/ }).check();
     await reservations
       .getByRole("button", { name: "Confirm Reservation", exact: true })

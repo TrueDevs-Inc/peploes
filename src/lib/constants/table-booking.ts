@@ -51,8 +51,6 @@ export const TABLE_BOOKING_CONTENT = {
     phoneError: "Please enter a valid telephone number.",
     termsError: "Please acknowledge the booking terms for this preview.",
     newsletterLabel: "Email me news and updates from Peploe’s (optional)",
-    newsletterPreview:
-      "No newsletter subscription will be made in this preview.",
     action: "Confirm Reservation",
   },
   support: {

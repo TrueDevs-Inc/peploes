@@ -212,14 +212,10 @@ export function TableBookingDetails({
         <input
           type="checkbox"
           checked={details.newsletterOptIn}
-          aria-describedby="booking-newsletter-preview"
           onChange={(event) => update("newsletterOptIn", event.target.checked)}
         />
         <span>{copy.newsletterLabel}</span>
       </label>
-      <p id="booking-newsletter-preview" className={styles.flowDescription}>
-        {copy.newsletterPreview}
-      </p>
       <div className={styles.flowActions}>
         <button type="button" className={styles.backAction} onClick={onBack}>
           <ArrowLeft aria-hidden="true" /> Back to times

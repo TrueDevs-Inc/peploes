@@ -231,9 +231,9 @@ Issue #120 adds an optional newsletter checkbox beneath the booking terms on
 the guest-details step. It starts unchecked, remains independent of the required
 terms, keeps its choice when going back to times, and resets on Start again.
 Both checked and unchecked choices allow the preview to complete.
-The booking page explains that no newsletter subscription is made in this
-preview. Connecting consent to the newsletter service belongs with activation
-of the live booking flow; the preview does not submit guest details.
+The checkbox rows have an 8px gap with no separate newsletter preview note.
+Connecting consent to the newsletter service belongs with activation of the
+live booking flow; the preview does not submit guest details.
 
 ## Homepage interaction previews
 
