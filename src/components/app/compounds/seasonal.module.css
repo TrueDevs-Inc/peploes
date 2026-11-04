@@ -198,6 +198,7 @@
 
 .terrace {
   position: relative;
+  margin-bottom: 48px;
   color: var(--ink);
   background: color-mix(in srgb, var(--peploe-burgundy) 6%, var(--warm-cream));
 }
