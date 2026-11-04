@@ -36,6 +36,11 @@ test.describe("popup provider outcomes", () => {
   test("acceptance shows confirmation, blocks duplicate clicks and suppresses revisit", async ({
     page,
   }, testInfo) => {
+    let submissions = 0;
+    page.on("request", (request) => {
+      if (request.method() === "POST" && request.headers()["next-action"])
+        submissions += 1;
+    });
     await page.goto("/");
     await passWine(page);
     const popup = page.getByRole("dialog", { name: "A Letter from Gina" });
@@ -75,6 +80,7 @@ test.describe("popup provider outcomes", () => {
       }),
     ).toBeInViewport();
     await page.screenshot({ path: testInfo.outputPath("popup-accepted.png") });
+    expect(submissions).toBe(1);
     expect(await page.evaluate(() => scrollY)).toBe(scroll);
     await expect(page).toHaveURL("/");
     await page.reload();

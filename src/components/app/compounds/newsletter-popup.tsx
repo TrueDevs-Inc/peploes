@@ -62,7 +62,7 @@ export function NewsletterPopup() {
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting || entry.boundingClientRect.bottom >= 0) return;
       observer.disconnect();
-      if (shownThisVisit) return;
+      if (shownThisVisit || hasNewsletterSubscription()) return;
       if (anotherTaskIsActive()) return;
       remember(NEWSLETTER_POPUP.lastShownKey, String(Date.now()));
       previousFocus =

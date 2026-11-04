@@ -22,4 +22,9 @@ it("gives coexisting newsletter forms distinct associated labels and status IDs"
   expect(new Set(ids).size).toBe(ids.length);
   for (const match of html.matchAll(/ for="([^"]+)"/g))
     expect(ids).toContain(match[1]);
+  const descriptions = [
+    ...html.matchAll(/ aria-describedby="([^"]+)"/g),
+  ].flatMap((match) => match[1]?.split(/\s+/) ?? []);
+  expect(descriptions).toHaveLength(4);
+  for (const reference of descriptions) expect(ids).toContain(reference);
 });

@@ -219,3 +219,25 @@ test("active footer controls keep focus without a popup interruption", async ({
   ).not.toBeVisible();
   await expect(toggle).toBeFocused();
 });
+
+test("acceptance saved by another tab suppresses a pending popup", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(
+    page
+      .getByRole("contentinfo")
+      .getByRole("button", { name: "Subscribe", exact: true }),
+  ).toBeEnabled();
+  const other = await page.context().newPage();
+  await other.goto("/our-story");
+  await other.evaluate(() =>
+    localStorage.setItem("peploes:newsletter:subscribed", "true"),
+  );
+  await other.close();
+  await page.bringToFront();
+  await passWine(page);
+  await expect(
+    page.getByRole("dialog", { name: "A Letter from Gina" }),
+  ).not.toBeVisible();
+});

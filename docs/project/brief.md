@@ -222,8 +222,8 @@ Compare section positions, line breaks, crops and overlays at 390px, then check
 narrow phones, tablet and desktop for overflow. Book a Table opens its design
 preview. Homepage telephone actions use the shared restaurant contact. Event
 buttons open the existing seasonal event templates; menu, story, private dining
-and contact links open their matching pages. Unbuilt editorial pages, Gift
-Vouchers and newsletter subscription remain inactive.
+and contact links open their matching pages. Unbuilt editorial pages and Gift Vouchers remain inactive. Newsletter signup
+uses the shared provider-backed form described below.
 
 ## Homepage interaction previews
 
@@ -234,8 +234,9 @@ button (issue #27). Text-entry fields retain their text cursor.
 Remaining placeholder actions use inert `type="button"` controls with `aria-disabled="true"`
 and no click handlers. They remain focusable and show the Figma hover styles
 without navigating, booking or submitting. The newsletter form validates email
-on Enter or Subscribe, then explains that signup is unavailable. It does not
-send or store the entered address.
+on Enter or Subscribe and submits to the configured newsletter provider. It
+shows acceptance only after the provider accepts the request and reports
+unavailability when the provider is not configured.
 
 The existing shared button owns the homepage's brand variants: primary,
 primary inverse, secondary inverse, editorial text, navigation and contact.
@@ -400,7 +401,8 @@ autocomplete and the native datalist are disabled.
 Focus colours the 1px bottom border burgundy and thickens it by 1px downward
 without moving the text. Enter and Subscribe show an error for empty
 or malformed addresses, including addresses without a dotted domain. Valid input
-shows that signup is unavailable pending integration; no email is sent or saved.
+uses the shared newsletter action. Accepted requests show confirmation; failures
+retain the entered address for correction or retry.
 Opening hours and contact details follow the design and should be confirmed by
 the restaurant before launch.
 
