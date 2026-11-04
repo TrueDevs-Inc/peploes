@@ -25,7 +25,7 @@
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:e2e": "bun e2e/run.ts default",
     "test:e2e:sandbox": "bun e2e/run.ts sandbox",
-    "test:e2e:email": "export EMAIL_E2E_BUILD=1 PREFER_SMTP=false EMAIL_RESEND_API_KEY=synthetic-key EMAIL_FROM_ADDRESS=sender@example.test EMAIL_FROM_NAME=Peploes EMAIL_REPLY_TO=reply@example.test EMAIL_RESTAURANT_TO=restaurant@example.test EMAIL_STAGING_ALLOWLIST=restaurant@example.test,reply@example.test,guest@example.test NEXT_PUBLIC_SITE_URL=http://127.0.0.1:3107 DATABASE_URL=postgres://localhost/email_e2e_unused NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=pk.e2e-only SANITY_PROJECT_ID=testproject SANITY_DATASET=development SANITY_API_VERSION=2026-10-06; bun run build:e2e && playwright test e2e/enquiry-delivery.spec.ts e2e/contact-delivery.spec.ts e2e/newsletter-delivery.spec.ts e2e/newsletter-popup-delivery.spec.ts",
+    "test:e2e:email": "export EMAIL_E2E_BUILD=1 PREFER_SMTP=false EMAIL_RESEND_API_KEY=synthetic-key EMAIL_FROM_ADDRESS=sender@example.test EMAIL_FROM_NAME=Peploes EMAIL_REPLY_TO=reply@example.test EMAIL_RESTAURANT_TO=restaurant@example.test EMAIL_STAGING_ALLOWLIST=restaurant@example.test,reply@example.test,guest@example.test NEXT_PUBLIC_SITE_URL=http://127.0.0.1:3107 DATABASE_URL=postgres://localhost/email_e2e_unused NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=pk.e2e-only SANITY_PROJECT_ID=testproject SANITY_DATASET=development SANITY_API_VERSION=2026-10-06; bun e2e/run.ts default e2e/enquiry-delivery.spec.ts e2e/contact-delivery.spec.ts e2e/newsletter-delivery.spec.ts e2e/newsletter-popup-delivery.spec.ts",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
