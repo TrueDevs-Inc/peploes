@@ -72,6 +72,86 @@ test("the date picker opens on the first open day and offers only the days ResDi
   }
 });
 
+test("Escape closes the date picker while focus stays on its trigger", async ({
+  page,
+}) => {
+  await page.goto("/book-a-table");
+  const reservations = page.getByRole("region", { name: "Table reservations" });
+  const trigger = reservations.getByRole("button", { name: /^Date / });
+  const picker = bookingCalendar(reservations);
+  await trigger.click();
+  await expect(picker.calendar).toBeVisible();
+  await expect(trigger).toBeFocused();
+  await trigger.press("Escape");
+  await expect(picker.calendar).toBeHidden();
+  await expect(trigger).toBeFocused();
+});
+
+test("booking calendar keeps one day tab stop and supports day, week and month keys", async ({
+  page,
+}) => {
+  const today = dublinToday();
+  const free = freeDates(today, FAKE_RESDIARY.defaultPartySize);
+  const anchor = free.find((date) =>
+    [-1, 1, 7].every((offset) => free.includes(addDays(date, offset))),
+  );
+  if (!anchor) throw new Error("Calendar fixture needs adjacent free days");
+  await page.goto("/book-a-table");
+  const reservations = page.getByRole("region", { name: "Table reservations" });
+  const picker = bookingCalendar(reservations);
+  await picker.open();
+  await picker.showMonth(anchor);
+  await expect(picker.day(anchor)).toBeEnabled();
+  await expect(
+    picker.calendar.locator('button[data-date][tabindex="0"]'),
+  ).toHaveCount(1);
+  await picker.day(anchor).focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(picker.day(addDays(anchor, 1))).toBeFocused();
+  await page.keyboard.press("ArrowLeft");
+  await expect(picker.day(anchor)).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  await expect(picker.day(addDays(anchor, 7))).toBeFocused();
+  await page.keyboard.press("ArrowUp");
+  await expect(picker.day(anchor)).toBeFocused();
+  const weekday = new Date(`${anchor}T12:00:00Z`).getUTCDay();
+  const monday = addDays(anchor, -((weekday + 6) % 7));
+  const sunday = addDays(monday, 6);
+  const week = free.filter((date) => date >= monday && date <= sunday);
+  await page.keyboard.press("Home");
+  await expect(picker.day(week[0] ?? "")).toBeFocused();
+  await page.keyboard.press("End");
+  await expect(picker.day(week.at(-1) ?? "")).toBeFocused();
+  await page.reload();
+  await picker.open();
+  await picker.day(free[0] ?? "").focus();
+  await page.keyboard.press("PageUp");
+  await expect(picker.day(free[0] ?? "")).toBeFocused();
+  const next = new Date(`${free[0]}T12:00:00Z`);
+  const day = next.getUTCDate();
+  next.setUTCDate(1);
+  next.setUTCMonth(next.getUTCMonth() + 1);
+  const lastDay = new Date(
+    Date.UTC(next.getUTCFullYear(), next.getUTCMonth() + 1, 0),
+  ).getUTCDate();
+  next.setUTCDate(Math.min(day, lastDay));
+  const nextDate = next.toISOString().slice(0, 10);
+  const nextFree = free.find((date) => date >= nextDate);
+  if (!nextFree)
+    throw new Error("Calendar fixture needs next-month availability");
+  await page.keyboard.press("PageDown");
+  await expect(picker.day(nextFree)).toBeFocused();
+  await expect(
+    picker.calendar.locator('button[data-date][tabindex="0"]'),
+  ).toHaveCount(1);
+  await page.keyboard.press("PageUp");
+  await expect(picker.calendar.locator("strong")).toHaveText(
+    monthLabel(free[0] ?? ""),
+  );
+  await page.keyboard.press("Escape");
+  await expect(picker.calendar).toBeHidden();
+});
+
 test("party size offers ResDiary's online range and starts on its default", async ({
   page,
 }) => {

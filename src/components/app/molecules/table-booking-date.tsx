@@ -1,7 +1,9 @@
 "use client";
 
 import {
+  addDays,
   addMonths,
+  endOfWeek,
   format,
   isAfter,
   isBefore,
@@ -11,7 +13,7 @@ import {
   startOfWeek,
 } from "date-fns";
 import { ArrowLeft, ArrowRight, CalendarDays, ChevronDown } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { type KeyboardEvent, useEffect, useRef, useState } from "react";
 
 import styles from "@/components/app/compounds/table-booking-panel.module.css";
 import { TABLE_BOOKING_CONTENT } from "@/lib/constants/table-booking";
@@ -25,6 +27,8 @@ export function TableBookingDate({
   onChange,
 }: ITableBookingDateProps) {
   const [open, setOpen] = useState(false);
+  const [activeDate, setActiveDate] = useState(value);
+  const grid = useRef<HTMLFieldSetElement>(null);
   const [month, setMonth] = useState(() => startOfMonth(parseISO(value)));
   const selectedMonth = value.slice(0, 7);
   const [previousSelectedMonth, setPreviousSelectedMonth] =
@@ -50,6 +54,59 @@ export function TableBookingDate({
   const openDates = availability.datesFor(month);
   const { load } = availability;
 
+  function isUnavailable(date: string, available = openDates) {
+    return (
+      date < minimum ||
+      !isBookableDay(date, calendar) ||
+      (Array.isArray(available) && !available.includes(date))
+    );
+  }
+  const tabDay =
+    days.find(
+      (day) =>
+        format(day, "yyyy-MM-dd") === activeDate && !isUnavailable(activeDate),
+    ) ?? days.find((day) => !isUnavailable(format(day, "yyyy-MM-dd")));
+
+  function moveDay(event: KeyboardEvent<HTMLButtonElement>, day: Date) {
+    const next = new Map([
+      ["ArrowLeft", addDays(day, -1)],
+      ["ArrowRight", addDays(day, 1)],
+      ["ArrowUp", addDays(day, -7)],
+      ["ArrowDown", addDays(day, 7)],
+      ["Home", startOfWeek(day, { weekStartsOn: 1 })],
+      ["End", endOfWeek(day, { weekStartsOn: 1 })],
+      ["PageUp", addMonths(day, -1)],
+      ["PageDown", addMonths(day, 1)],
+    ]).get(event.key);
+    if (!next) return;
+    event.preventDefault();
+    const targetMonth = startOfMonth(next);
+    if (
+      isBefore(targetMonth, firstMonth) ||
+      (lastMonth && isAfter(targetMonth, lastMonth))
+    )
+      return;
+    const forward =
+      event.key === "Home" || (event.key !== "End" && !isBefore(next, day));
+    const candidates = monthGrid(targetMonth);
+    if (!forward) candidates.reverse();
+    const available = availability.datesFor(targetMonth) ?? "loading";
+    const target = candidates.find(
+      (candidate) =>
+        (forward ? !isBefore(candidate, next) : !isAfter(candidate, next)) &&
+        !isUnavailable(format(candidate, "yyyy-MM-dd"), available),
+    );
+    if (!target) return;
+    const date = format(target, "yyyy-MM-dd");
+    setMonth(targetMonth);
+    setActiveDate(date);
+    requestAnimationFrame(() => {
+      grid.current
+        ?.querySelector<HTMLButtonElement>(`[data-date="${date}"]`)
+        ?.focus();
+    });
+  }
+
   useEffect(() => {
     if (open) load(month);
   }, [open, month, load]);
@@ -57,6 +114,13 @@ export function TableBookingDate({
   return (
     <fieldset
       className={styles.dateField}
+      onKeyDown={(event) => {
+        if (event.key === "Escape" && open) {
+          event.preventDefault();
+          setOpen(false);
+          trigger.current?.focus();
+        }
+      }}
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
       }}
@@ -87,15 +151,10 @@ export function TableBookingDate({
       </button>
       {open && (
         <fieldset
+          ref={grid}
           id="booking-calendar"
           className={styles.calendar}
           aria-label="Choose date"
-          onKeyDown={(event) => {
-            if (event.key === "Escape") {
-              setOpen(false);
-              trigger.current?.focus();
-            }
-          }}
         >
           <div className={styles.calendarHeader}>
             <strong aria-live="polite">{format(month, "MMMM yyyy")}</strong>
@@ -104,7 +163,11 @@ export function TableBookingDate({
               aria-label="Previous month"
               aria-disabled={atFirstMonth}
               onClick={() => {
-                if (!atFirstMonth) setMonth(addMonths(month, -1));
+                if (!atFirstMonth) {
+                  const next = addMonths(month, -1);
+                  setMonth(next);
+                  setActiveDate(format(next, "yyyy-MM-dd"));
+                }
               }}
             >
               <ArrowLeft aria-hidden="true" />
@@ -114,7 +177,11 @@ export function TableBookingDate({
               aria-label="Next month"
               aria-disabled={atLastMonth}
               onClick={() => {
-                if (!atLastMonth) setMonth(addMonths(month, 1));
+                if (!atLastMonth) {
+                  const next = addMonths(month, 1);
+                  setMonth(next);
+                  setActiveDate(format(next, "yyyy-MM-dd"));
+                }
               }}
             >
               <ArrowRight aria-hidden="true" />
@@ -134,11 +201,11 @@ export function TableBookingDate({
                   key={date}
                   aria-label={format(day, "EEEE, d MMMM yyyy")}
                   aria-pressed={date === value}
-                  disabled={
-                    date < minimum ||
-                    !isBookableDay(date, calendar) ||
-                    (Array.isArray(openDates) && !openDates.includes(date))
-                  }
+                  disabled={isUnavailable(date)}
+                  data-date={date}
+                  tabIndex={day === tabDay ? 0 : -1}
+                  onFocus={() => setActiveDate(date)}
+                  onKeyDown={(event) => moveDay(event, day)}
                   data-outside={!isSameMonth(day, month)}
                   onClick={() => {
                     const today = dublinToday();
