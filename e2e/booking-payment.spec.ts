@@ -497,7 +497,9 @@ test("restoring yesterday's payment keeps its reservation date in subsequent rea
   );
   await page.reload();
   await expect(
-    page.getByRole("heading", { name: "Secure your table", exact: true }),
+    page.getByText("We can't check booking E2E99999 from this page.", {
+      exact: false,
+    }),
   ).toBeVisible();
   await expect.poll(() => requestedDates).toContain(evening);
   expect(requestedDates).not.toContain(dublinToday());

@@ -197,7 +197,10 @@ test("reloading the details check shows a failed hold rather than a fresh search
   const { reservations, confirm } = await heldWithDetails(page, isMobile, {
     time: "12:00 pm",
   });
-  await page.route("**/api/bookings/hold-status?**", () => undefined);
+  let statusCheckStarted = false;
+  await page.route("**/api/bookings/hold-status?**", () => {
+    statusCheckStarted = true;
+  });
   await dropPosts(page, false);
   await confirm.click();
   await expect(
@@ -205,6 +208,7 @@ test("reloading the details check shows a failed hold rather than a fresh search
       exact: true,
     }),
   ).toBeVisible();
+  await expect.poll(() => statusCheckStarted).toBe(true);
   await page.unroute("**/api/bookings/hold-status?**");
   await page.unroute("**/book-a-table");
   await page.reload();
