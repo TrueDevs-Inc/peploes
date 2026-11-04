@@ -23,6 +23,30 @@ export const VISIT_CONTACT_CONTENT = {
     heading: "Contact",
     address: "16 St Stephen’s Green\nDublin 2\nIreland",
   },
+  form: {
+    eyebrow: "Get in touch",
+    heading: "Send us a message.",
+    description:
+      "For a general question, send our team a note and we’ll get back to you. For reservations, please use Book a Table or call us.",
+    name: "Your name",
+    email: "Email address",
+    message: "Your message",
+    submit: "Send Message",
+    sending: "Sending…",
+    sent: "Message Sent",
+    feedback: {
+      success: "Your message has reached our team. We’ll be in touch.",
+      invalid: "Please check the form and try again.",
+      blocked: "We could not send your message.",
+      unavailable: "Online messages are unavailable. Please email or call us.",
+      limited:
+        "Please wait before sending another message, or contact us directly.",
+      failed:
+        "We could not send your message. Your details are still here; please try again or contact us directly.",
+      unknown:
+        "We could not confirm delivery. Please contact our team before sending this again.",
+    },
+  },
   location: {
     eyebrow: "Find us",
     heading: "Right on\nSt Stephen’s Green.",

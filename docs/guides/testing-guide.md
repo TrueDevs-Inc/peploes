@@ -170,6 +170,14 @@ tests only for what the sandbox cannot do on demand: failures, slow or
 out-of-order replies and states it does not have. Report which evidence came
 from the sandbox and which from the fake.
 
+General browser journeys start with a remembered newsletter-popup dismissal so
+an automatic prompt does not interrupt unrelated assertions. Both newsletter
+popup specs override that preference with fresh storage and verify the prompt.
+
+Test the production build, locate controls by accessible role or label, and give
+each test isolated data. Add coverage for critical journeys such as sign-in,
+checkout, permission enforcement or a destructive workflow as they are built.
+
 Use `bun run test:e2e:reporting` for analytics, the booking funnel, Sentry and
 SEO. It builds once with synthetic provider credentials and runs the combined
 suite through `playwright.reporting.config.ts`. Provider hosts are intercepted;

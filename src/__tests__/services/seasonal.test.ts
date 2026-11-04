@@ -6,20 +6,17 @@ import { createError } from "@/lib/errors";
 import {
   fetchSeasonalEntries,
   fetchSeasonalEntry,
-  fetchSeasonalEntryExists,
   fetchWhatsOnPage,
 } from "@/lib/sanity-provider";
 import {
   getSeasonalEntries,
   getSeasonalEntry,
   getWhatsOnPage,
-  seasonalEntryExists,
 } from "@/services/seasonal";
 
 vi.mock("@/lib/sanity-provider", () => ({
   fetchSeasonalEntries: vi.fn(),
   fetchSeasonalEntry: vi.fn(),
-  fetchSeasonalEntryExists: vi.fn(),
   fetchWhatsOnPage: vi.fn(),
 }));
 
@@ -92,16 +89,4 @@ describe("published events", () => {
     vi.mocked(fetchWhatsOnPage).mockResolvedValue(ok({ hero: null }));
     expect((await getWhatsOnPage()).isErr()).toBe(true);
   });
-});
-
-it("does not report a missing event when the availability check fails", async () => {
-  vi.mocked(fetchSeasonalEntryExists).mockResolvedValue(
-    err(createError(ErrorCode.InternalError, "Unavailable")),
-  );
-  expect((await seasonalEntryExists("sample")).isErr()).toBe(true);
-});
-it("reports an unpublished event as unavailable before streaming starts", async () => {
-  vi.mocked(fetchSeasonalEntryExists).mockResolvedValue(ok(false));
-  const result = await seasonalEntryExists("sample");
-  expect(result.isOk() ? result.value : null).toBe(false);
 });

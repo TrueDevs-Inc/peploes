@@ -79,13 +79,6 @@ export function fetchSeasonalEntries() {
     `*[_type == "seasonalEntry" && enabled != false] | order(date asc, title asc)${SEASONAL_CARD_PROJECTION}`,
   );
 }
-export function fetchSeasonalEntryExists(slug: string) {
-  return requestContent(
-    'defined(*[_type == "seasonalEntry" && enabled != false && slug.current == $slug][0]._id)',
-    { slug },
-  );
-}
-
 export function fetchSeasonalEntry(slug: string) {
   return requestContent(
     `*[_type == "seasonalEntry" && enabled != false && slug.current == $slug][0..1]${SEASONAL_ENTRY_PROJECTION}`,
@@ -147,13 +140,6 @@ export function fetchJournalPage() {
     "featuredArticle":select(featuredArticle->_type == "journalArticle" && featuredArticle->enabled != false => featuredArticle->${JOURNAL_CARD_PROJECTION}, null),
     listing,closing{heading,image{alt,"src":asset->url}}
   }`);
-}
-
-export function fetchJournalArticleExists(slug: string) {
-  return requestContent(
-    'count(*[_type == "journalArticle" && enabled != false && slug.current == $slug][0..1])',
-    { slug },
-  );
 }
 
 export function fetchPublishedJournalSlugs() {

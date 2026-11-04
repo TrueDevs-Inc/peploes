@@ -6,6 +6,13 @@ import {
 } from "@/lib/constants";
 import type { IFooterContent } from "@/lib/types";
 
+export const FOOTER_CREDIT = {
+  prefix: "Made with care by",
+  brandEmphasis: "True",
+  brandSuffix: "Devs",
+  href: "https://truedevs.tech/?utm_source=peploes&utm_medium=referral&utm_campaign=client_credit&utm_content=footer",
+} as const;
+
 export const FOOTER_CONTENT: IFooterContent = {
   homeLabel: "Peploe’s home",
   address: `${RESTAURANT_ADDRESS.streetAddress}, ${RESTAURANT_ADDRESS.locality}`,
@@ -31,6 +38,7 @@ export const FOOTER_CONTENT: IFooterContent = {
       "Seasonal notes from St Stephen's Green — food, wine, people and what's happening at Peploe's.",
     emailLabel: "Your email address",
     submitLabel: "Subscribe",
+    loadingLabel: "Loading signup…",
     pendingLabel: "Sending…",
     unknownError:
       "We could not confirm your signup request. Please check your inbox before trying again.",
@@ -76,9 +84,7 @@ export const FOOTER_STYLES = {
 
 export const MOBILE_FOOTER_CONTENT = {
   contactHeading: "Find Us & Get in Touch",
-  openingTimesLabel: "View full opening times",
-  locationLabel: "16 St Stephen's Green",
-  directionsLabel: "Directions",
+  locationLabel: RESTAURANT_ADDRESS.streetAddress,
   navigation: [
     {
       heading: FOOTER_CONTENT.exploreHeading,

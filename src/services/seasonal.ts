@@ -7,7 +7,6 @@ import { createError } from "@/lib/errors";
 import {
   fetchSeasonalEntries,
   fetchSeasonalEntry,
-  fetchSeasonalEntryExists,
   fetchWhatsOnPage,
 } from "@/lib/sanity-provider";
 import {
@@ -92,24 +91,6 @@ export async function getWhatsOnPage(): Promise<Result<TWhatsOnPage, IError>> {
       createError(
         ErrorCode.InternalError,
         "Unable to load What’s On settings.",
-        parsed.error,
-      ),
-    );
-  return ok(parsed.data);
-}
-
-export async function seasonalEntryExists(
-  slug: string,
-): Promise<Result<boolean, IError>> {
-  if (!seasonalSlugSchema.safeParse(slug).success) return ok(false);
-  const result = await fetchSeasonalEntryExists(slug);
-  if (result.isErr()) return err(result.error);
-  const parsed = z.boolean().safeParse(result.value);
-  if (!parsed.success)
-    return err(
-      createError(
-        ErrorCode.InternalError,
-        "Invalid event availability response.",
         parsed.error,
       ),
     );

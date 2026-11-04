@@ -620,3 +620,8 @@ export const NEWSLETTER_LIMITS = {
   providerTimeoutMs: 10_000,
   redisPrefix: "peploes-newsletter",
 } as const;
+
+export const NEWSLETTER_SUBSCRIPTION = {
+  subscribedKey: "peploes:newsletter:subscribed",
+  acceptedEvent: "peploes:newsletter:accepted",
+} as const;

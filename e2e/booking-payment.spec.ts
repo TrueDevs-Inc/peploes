@@ -1,6 +1,6 @@
 import type { Page, Route } from "@playwright/test";
 
-import { FAKE_TIMES } from "./booking-fixtures";
+import { addDays, dublinToday, FAKE_TIMES } from "./booking-fixtures";
 import {
   chooseDate,
   findTable,
@@ -447,4 +447,58 @@ test("Edit is already disabled when the payment step first appears, before Strip
           .editWhenPaymentAppeared,
     ),
   ).toEqual([true]);
+});
+
+test("restoring yesterday's payment keeps its reservation date in subsequent reads", async ({
+  page,
+}) => {
+  await page.route("https://js.stripe.com/**", (route) => route.abort());
+  const requestedDates: string[] = [];
+  await page.route("**/api/bookings/times?**", (route) => {
+    requestedDates.push(
+      new URL(route.request().url()).searchParams.get("date") ?? "",
+    );
+    return route.fallback();
+  });
+  await openBooking(page);
+  const evening = addDays(dublinToday(), -1);
+  await page.evaluate(
+    (date) =>
+      sessionStorage.setItem(
+        "peploes:booking-payment",
+        JSON.stringify({
+          kind: "payment",
+          amountCents: 2000,
+          amountText: "€20.00",
+          stripe: {
+            publishableKey: "pk_test_e2e",
+            accountId: "acct_e2e",
+            clientSecret: "pi_saved_secret_saved",
+          },
+          summary: {
+            reference: "E2E99999",
+            revision: 1,
+            date,
+            dateLabel: date,
+            time: "18:00",
+            timeLabel: "6:00 pm",
+            partySize: 4,
+            guestsLabel: "4 guests",
+            offer: {
+              kind: "standard",
+              feeCents: 2000,
+              mayRequireCard: false,
+              returnBy: null,
+            },
+          },
+        }),
+      ),
+    evening,
+  );
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { name: "Secure your table", exact: true }),
+  ).toBeVisible();
+  await expect.poll(() => requestedDates).toContain(evening);
+  expect(requestedDates).not.toContain(dublinToday());
 });

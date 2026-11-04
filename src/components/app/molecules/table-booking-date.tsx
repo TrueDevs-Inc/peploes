@@ -8,13 +8,14 @@ import {
   isSameMonth,
   parseISO,
   startOfMonth,
+  startOfWeek,
 } from "date-fns";
 import { ArrowLeft, ArrowRight, CalendarDays, ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import styles from "@/components/app/compounds/table-booking-panel.module.css";
 import { TABLE_BOOKING_CONTENT } from "@/lib/constants/table-booking";
-import { isBookableDay, monthGrid } from "@/lib/dates";
+import { dublinToday, isBookableDay, monthGrid } from "@/lib/dates";
 import type { ITableBookingDateProps } from "@/lib/types";
 
 export function TableBookingDate({
@@ -34,13 +35,18 @@ export function TableBookingDate({
     setMonth(startOfMonth(parseISO(value)));
   }
   const trigger = useRef<HTMLButtonElement>(null);
-  const firstMonth = startOfMonth(parseISO(calendar.today));
+  const today = dublinToday();
+  const minimum = today > calendar.today ? today : calendar.today;
+  const firstMonth = startOfMonth(parseISO(minimum));
   const lastMonth = calendar.lastDate
     ? startOfMonth(parseISO(calendar.lastDate))
     : null;
   const atFirstMonth = !isAfter(month, firstMonth);
   const atLastMonth = lastMonth !== null && !isBefore(month, lastMonth);
-  const days = monthGrid(month);
+  const days = monthGrid(month).filter(
+    (day) =>
+      !isBefore(day, startOfWeek(parseISO(minimum), { weekStartsOn: 1 })),
+  );
   const openDates = availability.datesFor(month);
   const { load } = availability;
 
@@ -65,11 +71,17 @@ export function TableBookingDate({
         aria-expanded={open}
         aria-controls="booking-calendar"
         className={styles.selection}
-        onClick={() => setOpen(!open)}
+        onClick={() => {
+          const today = dublinToday();
+          if (value < today) onChange(today);
+          setOpen(!open);
+        }}
       >
         <CalendarDays aria-hidden="true" className={styles.fieldIcon} />
         <span id="booking-date-value">
-          {format(parseISO(value), "EEE, d MMM yyyy")}
+          {value
+            ? format(parseISO(value), "EEE, d MMM yyyy")
+            : TABLE_BOOKING_CONTENT.date.placeholder}
         </span>
         <ChevronDown aria-hidden="true" className={styles.chevron} />
       </button>
@@ -123,12 +135,14 @@ export function TableBookingDate({
                   aria-label={format(day, "EEEE, d MMMM yyyy")}
                   aria-pressed={date === value}
                   disabled={
+                    date < minimum ||
                     !isBookableDay(date, calendar) ||
                     (Array.isArray(openDates) && !openDates.includes(date))
                   }
                   data-outside={!isSameMonth(day, month)}
                   onClick={() => {
-                    onChange(date);
+                    const today = dublinToday();
+                    onChange(date < today ? today : date);
                     setOpen(false);
                     trigger.current?.focus();
                   }}

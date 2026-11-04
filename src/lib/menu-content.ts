@@ -1,7 +1,6 @@
 import "server-only";
 
 import { notFound } from "next/navigation";
-import { connection } from "next/server";
 import { cache } from "react";
 
 import { MENU_ROUTES, ROUTES } from "@/lib/constants";
@@ -19,14 +18,12 @@ const getCachedMenusPage = cache(getMenusPage);
 const getCachedMenuCollections = cache(getMenuCollections);
 
 export async function loadMenu(slug: TMenuSlug) {
-  await connection();
   const result = await getCachedMenu(slug);
   if (result.isErr() && result.error.code === ErrorCode.NotFound) notFound();
   return unwrapResultOrThrow(result, "Unable to load the menu.");
 }
 
 export async function loadMenusPage() {
-  await connection();
   return unwrapResultOrThrow(
     await getCachedMenusPage(),
     "Unable to load menu settings.",
@@ -34,7 +31,6 @@ export async function loadMenusPage() {
 }
 
 export async function loadMenuNavigation(): Promise<IMenuNavigationLink[]> {
-  await connection();
   const [page, result] = await Promise.all([
     loadMenusPage(),
     getCachedMenuCollections(),

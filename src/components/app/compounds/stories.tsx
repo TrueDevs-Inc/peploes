@@ -8,10 +8,7 @@ import { Button } from "@/components/ui/button";
 import { MOBILE_HOME_CONTENT, ROUTES } from "@/lib/constants";
 import { STORIES_CONTENT } from "@/lib/constants/stories";
 import { dmSans, ebGaramond } from "@/lib/fonts";
-import {
-  getJournalArticlePath,
-  getJournalCategoryPath,
-} from "@/lib/journal-data";
+import { getJournalArticlePath } from "@/lib/journal-data";
 import type { IStoryActionProps } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -152,7 +149,7 @@ export function Stories() {
                 className={cn(styles.produceOverlay, "absolute inset-0")}
               />
               <Link
-                href={getJournalCategoryPath("people-produce")}
+                href={getJournalArticlePath("rooted-in-good-relationships")}
                 aria-hidden="true"
                 tabIndex={-1}
                 className="absolute inset-0"
@@ -180,7 +177,7 @@ export function Stories() {
                   </p>
                   <StoryAction
                     label={STORIES_CONTENT.produce.ctaLabel}
-                    href={getJournalCategoryPath("people-produce")}
+                    href={getJournalArticlePath("rooted-in-good-relationships")}
                   />
                 </div>
               </div>

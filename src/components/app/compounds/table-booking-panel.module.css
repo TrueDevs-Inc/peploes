@@ -1017,9 +1017,18 @@
     width: 36px;
     height: 36px;
   }
+  .calendarGrid {
+    row-gap: 10px;
+  }
   .calendarGrid > * {
     font-size: 14px;
     min-height: 36px;
+  }
+  .calendarGrid button {
+    width: 36px;
+    height: 36px;
+    justify-self: center;
+    aspect-ratio: auto;
   }
   .summary {
     gap: 12px;

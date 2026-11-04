@@ -83,8 +83,8 @@ and retains the design styling. Submission uses the connected enquiry service de
 
 The overview's occasion cards use 416 × 216px image frames and 24px gaps at the
 1440px reference. Their photographs retain the Figma crops toward the bottom of
-the original images. Desktop copy aligns with the photograph edges without side
-padding, and card numbers are 12px. The darker 2px dividers span the full card
+the original images. Desktop copy has a 12px left inset from the photographs,
+and card numbers are 12px. The 1.3px dividers use 70% opacity, span the full card
 height and sit halfway across the gaps, with no dividers at the row's outer edges.
 The corporate title breaks
 before “Exclusive Hire” on desktop. The eyebrow rule is 2px on desktop and 3px

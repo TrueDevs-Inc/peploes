@@ -83,7 +83,7 @@ test("homepage boxed actions use Figma medium sizing and fit phone layouts", asy
       name: "Subscribe",
       exact: true,
     });
-    const email = page.locator("#footer-newsletter-email");
+    const email = page.getByLabel("Your email address", { exact: true });
     expect((await subscribe.boundingBox())?.width).toBe(
       (await email.boundingBox())?.width,
     );

@@ -1,7 +1,7 @@
 import { defineConfig } from "@playwright/test";
 
 import { REPORTING_ENVIRONMENT } from "./e2e/environment";
-import base from "./playwright.config";
+import base, { newsletterDismissedState } from "./playwright.config";
 
 const port = 3108;
 const baseURL = `http://127.0.0.1:${port}`;
@@ -29,6 +29,7 @@ export default defineConfig({
   use: {
     ...base.use,
     baseURL,
+    storageState: newsletterDismissedState(baseURL),
     userAgent:
       "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
   },

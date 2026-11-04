@@ -8,6 +8,10 @@ import { getJournalArticlePath } from "@/lib/journal-data";
 import { buildSeoMetadata } from "@/lib/seo";
 import type { IJournalRouteProps } from "@/lib/types";
 
+export function generateStaticParams() {
+  return [];
+}
+
 export async function generateMetadata({ params }: IJournalRouteProps) {
   const { slug } = await params;
   const article = await loadJournalArticle(slug);

@@ -39,6 +39,7 @@
   --color-border-interactive: var(--border-interactive);
   --color-olive-green: var(--olive-green);
   --color-warm-brass: var(--warm-brass);
+  --color-truedevs-orange: #ff4d00;
 }
 
 /* Keep aliases inline so scoped font and dark-mode variables resolve locally. */

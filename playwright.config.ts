@@ -2,13 +2,33 @@ import { defineConfig } from "@playwright/test";
 import { FAKE_RESDIARY } from "./e2e/booking-fixtures";
 import { E2E_ENVIRONMENT } from "./e2e/environment";
 import { E2E_SANITY_WEBHOOK_SECRET } from "./e2e/sanity-webhook";
+import { NEWSLETTER_POPUP } from "./src/lib/constants/newsletter-popup";
 
 const baseURL = "http://127.0.0.1:3107";
 const resDiaryDownURL = "http://127.0.0.1:3108";
 const unavailableSpec = /booking-unavailable\.spec\.ts/;
 const sandboxSpec = /booking-sandbox\.spec\.ts/;
 const emailTestIgnore =
-  process.env.EMAIL_E2E_BUILD === "1" ? [] : ["**/enquiry-delivery.spec.ts"];
+  process.env.EMAIL_E2E_BUILD === "1"
+    ? []
+    : [
+        "**/enquiry-delivery.spec.ts",
+        "**/contact-delivery.spec.ts",
+        "**/newsletter-delivery.spec.ts",
+        "**/newsletter-popup-delivery.spec.ts",
+      ];
+
+export function newsletterDismissedState(origin: string) {
+  return {
+    cookies: [],
+    origins: [
+      {
+        origin,
+        localStorage: [{ name: NEWSLETTER_POPUP.dismissedKey, value: "true" }],
+      },
+    ],
+  };
+}
 
 const preloads =
   "bun build e2e/mock-sanity.ts e2e/mock-resdiary.ts --target=node --outdir=.next/e2e --entry-naming='[name].mjs'";
@@ -36,6 +56,7 @@ export default defineConfig({
   workers: 1,
   use: {
     baseURL,
+    storageState: newsletterDismissedState(baseURL),
     browserName: "chromium",
     launchOptions: { args: ["--font-render-hinting=none"] },
     trace: "retain-on-failure",

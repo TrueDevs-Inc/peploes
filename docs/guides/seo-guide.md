@@ -3,6 +3,11 @@
 The starter provides Next.js metadata, factual structured data, crawler policy,
 a sitemap, and `llms.txt`. Replace its public site facts before launch.
 
+The browser favicon is `src/app/icon.svg`, which embeds the original 32×32 PNG from
+`https://peploes.com/media/sqekby2f/peploes_fav.png?width=32&height=32`.
+A 7px clipping radius rounds its corners. Next.js includes it through the root
+app icon file convention.
+
 ## Site URL and defaults
 
 `NEXT_PUBLIC_SITE_URL` supplies canonical and sitemap URLs.
@@ -109,10 +114,14 @@ changes it.
 ## Pending owner decisions
 
 Not implemented because they need facts or choices from the owner: Restaurant
-schema (hours, cuisine, price, profiles, coordinates), one source of truth for
-opening hours, AI training crawler policy, Event markup (needs a venue field), an
-Organization logo asset, Sanity SEO fields for menus and private dining, IndexNow
-and Search Console, FAQ content, and visible breadcrumbs.
+schema (confirmed hours, cuisine, price and coordinates), Event markup (needs a
+confirmed venue), an Organization logo asset, Sanity SEO fields for menus and
+private dining, IndexNow and Search Console, and FAQ content. The footer and
+Visit opening-hours table already share `RESTAURANT_OPENING_HOURS`. Dining-service
+times remain separate from building opening hours. The footer social profiles
+are recorded in the project brief; crawler policy is implemented above, but its
+mixed-use choice still needs product-owner review. Menu breadcrumbs are already
+visible.
 
 ## Social images
 

@@ -55,6 +55,7 @@ function EventCard({ event, featured = false }: IEventCardProps) {
       <Link
         data-card-image
         href={event.href}
+        prefetch={true}
         aria-label={event.title}
         className={cn(
           FOCUS_RING,

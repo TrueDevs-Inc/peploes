@@ -1,8 +1,16 @@
 import type { ITimesData, TBookingResponse } from "../src/lib/types";
 
-import { dayLabel, dublinToday, openDates } from "./booking-fixtures";
+import {
+  addDays,
+  dayLabel,
+  dublinToday,
+  freeDates,
+  openDates,
+  shortDayLabel,
+} from "./booking-fixtures";
 import {
   chooseDate,
+  chooseGuests,
   findTable,
   laterFreeDate,
   openBooking,
@@ -119,6 +127,40 @@ for (const restored of [false, true]) {
   });
 }
 
+test("an after-midnight hold shows its calendar day and restores the same reservation", async ({
+  page,
+}) => {
+  const panel = await openBooking(page);
+  await chooseGuests(panel, 1);
+  const evening = laterFreeDate(1);
+  const visit = addDays(evening, 1);
+  await chooseDate(panel, evening);
+  await findTable(panel);
+  await panel
+    .getByRole("button", { name: "12:15 am (next day)", exact: true })
+    .click();
+  await panel.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(panel.getByRole("timer")).toBeVisible();
+  await expect(
+    panel.getByText(shortDayLabel(visit), { exact: false }),
+  ).toBeVisible();
+  await page.reload();
+  await expect(panel.getByRole("timer")).toBeVisible();
+  await expect(
+    panel.getByText(shortDayLabel(visit), { exact: false }),
+  ).toBeVisible();
+  await panel
+    .getByRole("button", { name: "Edit date & guests", exact: true })
+    .click();
+  await chooseGuests(panel, 2);
+  await expect(
+    panel.getByText(
+      `No tables for 2 guests on ${shortDayLabel(evening)}. Please choose another day.`,
+      { exact: true },
+    ),
+  ).toBeVisible();
+});
+
 test("desktop booking keeps the panel in place when opening available times", async ({
   page,
 }) => {
@@ -143,6 +185,95 @@ test("desktop booking keeps the panel in place when opening available times", as
   if (initialBounds && timesBounds) {
     expect(Math.abs(timesBounds.y - initialBounds.y)).toBeLessThanOrEqual(1);
   }
+});
+
+test("desktop booking calendar keeps compact day rows and hides elapsed weeks", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const panel = await openBooking(page);
+  const field = panel.getByRole("button", { name: /^Date / });
+  await expect(field).toBeVisible();
+  await page.evaluate(() => document.fonts.ready);
+  const closedBounds = await panel.boundingBox();
+  await field.click();
+  const calendar = panel.getByRole("group", {
+    name: "Choose date",
+    exact: true,
+  });
+  const openBounds = await panel.boundingBox();
+  if (!closedBounds || !openBounds)
+    throw new Error("Booking box must be visible");
+  expect(openBounds.height).toBeCloseTo(closedBounds.height, 0);
+  const days = calendar.getByRole("button", { name: /, \d+ / });
+  const first = await days.nth(0).boundingBox();
+  const nextRow = await days.nth(7).boundingBox();
+  if (!first || !nextRow) throw new Error("Calendar days must be visible");
+  expect(first.width).toBeCloseTo(36, 0);
+  expect(first.height).toBeCloseTo(36, 0);
+  expect(nextRow.y - first.y - first.height).toBeCloseTo(10, 0);
+  const today = dublinToday();
+  const weekday = new Date(`${today}T12:00:00Z`).getUTCDay();
+  const previousSunday = addDays(today, -(weekday || 7));
+  await expect(
+    calendar.getByRole("button", {
+      name: dayLabel(previousSunday),
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  expect(
+    await calendar.evaluate(
+      (element) => element.scrollHeight <= element.clientHeight,
+    ),
+  ).toBe(true);
+  const chosen = laterFreeDate();
+  await calendar
+    .getByRole("button", { name: dayLabel(chosen), exact: true })
+    .click();
+  await expect(field).toHaveText(shortDayLabel(chosen));
+});
+
+test("booking refreshes expired dates on search, focus and visibility while keeping future choices", async ({
+  page,
+}) => {
+  const panel = await openBooking(page);
+  const date = panel.getByRole("button", { name: /^Date / });
+  const chosen = laterFreeDate();
+  await chooseDate(panel, chosen);
+  await page.clock.setFixedTime(new Date(`${addDays(chosen, 1)}T12:00:00Z`));
+  await panel
+    .getByRole("button", { name: "Find a Table", exact: true })
+    .click();
+  await expect(date).toHaveText(shortDayLabel(addDays(chosen, 1)));
+  await expect(
+    panel.getByRole("button", { name: "Find a Table", exact: true }),
+  ).toBeVisible();
+  await date.click();
+  const calendar = panel.getByRole("group", {
+    name: "Choose date",
+    exact: true,
+  });
+  await expect(
+    calendar.getByRole("button", { name: dayLabel(chosen), exact: true }),
+  ).toBeDisabled();
+  const future = freeDates(dublinToday(), 4).find(
+    (day) => day > addDays(chosen, 3),
+  );
+  if (!future) throw new Error("Fixture needs a future open date");
+  await calendar
+    .getByRole("button", { name: dayLabel(future), exact: true })
+    .click();
+  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await expect(date).toHaveText(shortDayLabel(future));
+  await page.clock.setFixedTime(new Date(`${addDays(future, 1)}T12:00:00Z`));
+  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await expect(date).toHaveText(shortDayLabel(addDays(future, 1)));
+  await page.clock.setFixedTime(new Date(`${addDays(future, 2)}T12:00:00Z`));
+  await page.evaluate(() =>
+    document.dispatchEvent(new Event("visibilitychange")),
+  );
+  await expect(date).toHaveText(shortDayLabel(addDays(future, 2)));
 });
 
 test("booking brings hidden step controls back into view on forward and back navigation", async ({

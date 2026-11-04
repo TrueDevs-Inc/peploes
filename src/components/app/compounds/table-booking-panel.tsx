@@ -47,7 +47,7 @@ import {
   BOOKING_RETURN_PARAMS,
 } from "@/lib/constants/booking";
 import { TABLE_BOOKING_CONTENT as content } from "@/lib/constants/table-booking";
-import { firstFreeBookingDate } from "@/lib/dates";
+import { dublinToday, firstFreeBookingDate, guestsLabel } from "@/lib/dates";
 import { GA4Event } from "@/lib/enums";
 import type {
   IBookingBankReturn,
@@ -129,9 +129,12 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
   const [paymentBusy, setPaymentBusy] = useState(false);
   const panel = useRef<HTMLElement>(null);
   const previousStep = useRef(0);
-  const shortDate = format(parseISO(date), "EEE, d MMM yyyy");
+  const shortDate = format(
+    parseISO(step === 2 && time?.date ? time.date : date),
+    "EEE, d MMM yyyy",
+  );
   const longDate = format(parseISO(date), "EEEE, d MMMM yyyy");
-  const guests = partySize === "1" ? "1 guest" : `${partySize} guests`;
+  const guests = guestsLabel(Number(partySize));
   const returnBy = returnByOf(time);
   const times = useBookingTimes(date, partySize, step === 1 || step === 2);
   const hold = useTableHold();
@@ -282,6 +285,20 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
   }, [step, moveDate, firstFree]);
 
   useEffect(() => {
+    if (step !== 0) return;
+    function refreshDate() {
+      const today = dublinToday();
+      setDate((current) => (current < today ? today : current));
+    }
+    window.addEventListener("focus", refreshDate);
+    document.addEventListener("visibilitychange", refreshDate);
+    return () => {
+      window.removeEventListener("focus", refreshDate);
+      document.removeEventListener("visibilitychange", refreshDate);
+    };
+  }, [step]);
+
+  useEffect(() => {
     if (previousStep.current !== step) {
       previousStep.current = step;
       panel.current?.focus({ preventScroll: true });
@@ -350,7 +367,13 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
               type="button"
               variant="brand-primary"
               className={styles.findTable}
+              disabled={!date}
               onClick={() => {
+                const today = dublinToday();
+                if (date < today) {
+                  setDate(today);
+                  return;
+                }
                 const attemptId = beginBookingSearch();
                 trackBooking(GA4Event.BookingSearch, "submitted", {
                   attemptId,

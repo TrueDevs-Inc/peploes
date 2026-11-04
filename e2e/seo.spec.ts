@@ -16,6 +16,12 @@ test("home HTML carries its title, canonical and linked JSON-LD graph in the hea
     "<title>Peploe&#x27;s | A Dublin Restaurant on St Stephen&#x27;s Green</title>",
   );
   expect(head).toContain('rel="canonical"');
+  expect(head).toMatch(
+    /<link rel="icon" href="\/icon\.svg[^"]*" sizes="any" type="image\/svg\+xml"/u,
+  );
+  const favicon = await request.get("/icon.svg");
+  expect(favicon.ok()).toBe(true);
+  expect(await favicon.text()).toContain("data:image/png;base64,");
   expect(head).toContain('<meta property="og:image:width" content="1452"/>');
   expect(head).toContain('<meta property="og:image:height" content="1407"/>');
   const script = /<script type="application\/ld\+json">(.*?)<\/script>/su.exec(

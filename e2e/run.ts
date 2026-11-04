@@ -17,7 +17,7 @@ const env = {
 };
 
 for (const args of [
-  ["run", "build"],
+  ["run", "build:e2e"],
   ["x", "playwright", "test", "--config", config, ...process.argv.slice(3)],
 ]) {
   const result = spawnSync(process.execPath, args, { env, stdio: "inherit" });

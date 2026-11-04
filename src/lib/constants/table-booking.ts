@@ -26,7 +26,7 @@ export const TABLE_BOOKING_CONTENT = {
     { number: "03", mobileNumber: "3", label: "Your details" },
     { number: "04", mobileNumber: "4", label: "Confirmation" },
   ],
-  date: { label: "Date" },
+  date: { label: "Date", placeholder: "Choose date" },
   partySize: { label: "Party size" },
   weekdays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
   action: "Find a Table",

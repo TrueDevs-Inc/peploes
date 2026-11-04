@@ -115,6 +115,11 @@ export function DateCalendar({
               aria-pressed={date === value}
               data-outside={!isSameMonth(day, month)}
               data-date={date}
+              data-past-week={Boolean(
+                min &&
+                  format(endOfWeek(day, { weekStartsOn: 1 }), "yyyy-MM-dd") <
+                    min,
+              )}
               tabIndex={date === activeDate ? 0 : -1}
               disabled={!isCalendarDate(date) || Boolean(min && date < min)}
               onFocus={() => setActiveDate(date)}

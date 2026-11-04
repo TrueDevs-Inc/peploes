@@ -1,0 +1,19 @@
+.index::details-content {
+  opacity: 0;
+  transform: translateY(-8px);
+  transition:
+    opacity var(--duration-base) ease,
+    transform var(--duration-base) ease,
+    content-visibility var(--duration-base) allow-discrete;
+}
+
+.index[open]::details-content {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .index::details-content {
+    transition: none;
+  }
+}

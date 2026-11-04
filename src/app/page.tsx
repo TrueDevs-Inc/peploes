@@ -3,6 +3,7 @@ import { GroupsOccasions } from "@/components/app/compounds/groups-occasions";
 import { Hero } from "@/components/app/compounds/hero";
 import { HumanHospitality } from "@/components/app/compounds/human-hospitality";
 import { Menus } from "@/components/app/compounds/menus";
+import { NewsletterPopup } from "@/components/app/compounds/newsletter-popup";
 import { RestaurantFeatures } from "@/components/app/compounds/restaurant-features";
 import { Stories } from "@/components/app/compounds/stories";
 import { WhatsOn } from "@/components/app/compounds/whats-on";
@@ -44,6 +45,7 @@ export default async function Home() {
       <GroupsOccasions />
       <HumanHospitality />
       <BookingBanner />
+      <NewsletterPopup />
     </main>
   );
 }

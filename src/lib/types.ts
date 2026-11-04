@@ -1426,6 +1426,7 @@ export interface IFooterContent {
     description: string;
     emailLabel: string;
     submitLabel: string;
+    loadingLabel: string;
     pendingLabel: string;
     unavailableError: string;
     rateLimitError: string;
@@ -2045,10 +2046,6 @@ export interface IBookingAnalyticsContext {
 
 export interface IJournalRouteProps {
   params: Promise<{ slug: string }>;
-}
-
-export interface IJournalHubRouteProps {
-  searchParams: Promise<{ category?: string | string[] }>;
 }
 
 export type TJournalCategory = InferSchema<typeof journalCategorySchema>;

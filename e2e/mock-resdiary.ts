@@ -109,7 +109,12 @@ async function availableTimes(body: string): Promise<Response> {
   return Response.json({
     StandardAvailabilityMayRequireCreditCard: false,
     TimeSlots: free
-      ? FAKE_TIMES.map((slot) => ({
+      ? [
+          ...FAKE_TIMES,
+          ...(search.PartySize === 1
+            ? [{ time: "00:15", leave: "01:45", required: false }]
+            : []),
+        ].map((slot) => ({
           TimeSlot: `${date}T${slot.time}:00`,
           ServiceId: slot.time < "17:30" ? 1 : 2,
           HasStandardAvailability: true,
