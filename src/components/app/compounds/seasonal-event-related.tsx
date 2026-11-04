@@ -88,7 +88,7 @@ export function SeasonalEventRelated({ content }: ISeasonalEventRelatedProps) {
         <ul
           ref={listRef}
           id="event-related-items"
-          className={styles.relatedCards}
+          className={cn(styles.relatedCards, cardStyles.cards)}
         >
           {content.cards.map((card) => (
             <li

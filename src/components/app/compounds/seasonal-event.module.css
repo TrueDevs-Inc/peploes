@@ -652,7 +652,7 @@
   }
 
   .relatedCard {
-    flex-basis: calc((100% - 56px) / 3);
+    flex-basis: var(--card-track-width);
   }
 
   .story .storyContent {

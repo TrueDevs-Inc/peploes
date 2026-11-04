@@ -93,6 +93,13 @@
 }
 
 @media (width >= 80rem) {
+  .cards {
+    --card-gap: 28px;
+    --card-track-width: round(down, (100% - 2 * var(--card-gap)) / 3, 4px);
+    grid-template-columns: repeat(3, minmax(0, var(--card-track-width)));
+    column-gap: var(--card-gap);
+  }
+
   .image {
     height: 185px;
   }
