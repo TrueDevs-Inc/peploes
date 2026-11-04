@@ -160,7 +160,10 @@ test("reloading the details check finds the booked table without holding or send
   const held = await page.evaluate(() =>
     JSON.parse(sessionStorage.getItem("peploes:booking-hold") ?? "{}"),
   );
-  await page.route("**/api/bookings/hold-status?**", () => undefined);
+  let statusCheckStarted = false;
+  await page.route("**/api/bookings/hold-status?**", () => {
+    statusCheckStarted = true;
+  });
   await dropPosts(page, true);
   await confirm.click();
   await expect(
@@ -172,6 +175,7 @@ test("reloading the details check finds the booked table without holding or send
   expect(new Set(actions).size).toBe(2);
   expect(actions).not.toContain("");
   const sentActions = [...actions];
+  await expect.poll(() => statusCheckStarted).toBe(true);
   await page.unroute("**/api/bookings/hold-status?**");
   await page.unroute("**/book-a-table");
   await page.reload();
