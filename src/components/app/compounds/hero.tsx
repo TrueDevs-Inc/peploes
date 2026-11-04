@@ -91,7 +91,7 @@ export function Hero() {
               asChild
               variant="brand-secondary-inverse"
               size="cta"
-              className="w-full sm:w-[136px]"
+              className="w-full sm:w-[156px]"
             >
               <TrackedAnchor
                 href={`tel:${RESTAURANT_CONTACT.phone}`}

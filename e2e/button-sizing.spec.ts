@@ -11,13 +11,21 @@ test("homepage boxed actions use Figma medium sizing and fit phone layouts", asy
   await page.evaluate(() => document.fonts.ready);
 
   const hero = page.getByRole("region", { name: /Good food, fine wine/ });
+  const booking = hero.getByRole("link", { name: "Book a Table", exact: true });
+  const call = hero.getByRole("link", { name: "Call Peploe's", exact: true });
+  const bookingBounds = await booking.boundingBox();
+  const callBounds = await call.boundingBox();
+  expect(bookingBounds).not.toBeNull();
+  expect(callBounds).not.toBeNull();
+  expect(callBounds?.width).toBe(bookingBounds?.width);
+  expect(callBounds?.height).toBe(bookingBounds?.height);
   if (!isMobile) {
     await expect(
       hero.getByRole("link", { name: "Book a Table", exact: true }),
     ).toHaveCSS("width", "156px");
     await expect(
       hero.getByRole("link", { name: "Call Peploe's", exact: true }),
-    ).toHaveCSS("width", "136px");
+    ).toHaveCSS("width", "156px");
   }
 
   const actions = [
