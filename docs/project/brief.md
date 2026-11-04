@@ -52,11 +52,9 @@ opens the same preview. Group enquiry links keep their existing destinations.
 
 ## Visit & Contact
 
-The general contact form sends one restaurant notification through the selected
-transactional email provider. It shows success only after provider acceptance,
-keeps the visitor's entries on definite failure, and directs uncertain outcomes
-to the published phone or email contact. The private-dining form remains a
-separate enquiry flow.
+General questions use the published phone and email links. Private-dining
+enquiries and newsletter subscriptions keep their separate forms and delivery
+flows.
 
 `/visit-contact` follows the Final Pages Visit & Contact frame (`3602:4457`).
 At the 1440px reference, its section heights are 604, 236, 698, 302, 419, 366

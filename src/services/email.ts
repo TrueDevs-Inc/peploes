@@ -42,7 +42,7 @@ const EMAIL_ERROR = {
 
 const emailMessageSchema = z.object({
   notificationId: z.uuid(),
-  template: z.enum(["enquiry-admin", "enquiry-guest", "contact-admin"]),
+  template: z.enum(["enquiry-admin", "enquiry-guest"]),
   version: z.number().int().positive(),
   to: z.array(z.email()).min(1).max(5),
   cc: z.array(z.email()).max(5).optional(),

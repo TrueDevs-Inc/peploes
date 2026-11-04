@@ -1,8 +1,7 @@
 # Transactional email
 
-Issue #100 owns application email delivery. The private-dining enquiry and
-general Visit & Contact form are callers. Reservation messages belong to
-ResDiary until #97 confirms a gap;
+Issue #100 owns application email delivery. The private-dining enquiry is a
+caller. Reservation messages belong to ResDiary until #97 confirms a gap;
 newsletter subscriptions belong to #88.
 
 ## Owners and configuration

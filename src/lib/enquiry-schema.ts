@@ -14,14 +14,3 @@ export const privateDiningEnquirySchema = z.object({
 });
 
 export type TPrivateDiningEnquiry = z.infer<typeof privateDiningEnquirySchema>;
-
-export const contactEnquirySchema = z.object({
-  notificationId: z.uuid(),
-  name: z.string().trim().min(1).max(120),
-  email: z.email().max(254),
-  message: z.string().trim().min(1).max(5_000),
-  consent: z.literal(true),
-  website: z.string().max(200).optional(),
-});
-
-export type TContactEnquiry = z.infer<typeof contactEnquirySchema>;

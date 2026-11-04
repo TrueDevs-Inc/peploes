@@ -8,7 +8,6 @@ const emailTestIgnore =
     ? []
     : [
         "**/enquiry-delivery.spec.ts",
-        "**/contact-delivery.spec.ts",
         "**/newsletter-delivery.spec.ts",
         "**/newsletter-popup-delivery.spec.ts",
       ];

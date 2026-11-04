@@ -1,7 +1,4 @@
-import type {
-  TContactEnquiry,
-  TPrivateDiningEnquiry,
-} from "@/lib/enquiry-schema";
+import type { TPrivateDiningEnquiry } from "@/lib/enquiry-schema";
 import type { IEmailMessage } from "@/lib/types";
 
 function escapeHtml(value: string): string {
@@ -82,28 +79,5 @@ export function renderEnquiryGuest(
       contact,
     ),
     text: `Dear ${enquiry.name},\n\nThank you for getting in touch about private dining at Peploe's. Our team has received your enquiry and will be in touch.\n\nYour preferred date: ${enquiry.date}\nNumber of guests: ${enquiry.guests}\n\nExplore private dining: ${url}\n\nQuestions? Reply to ${contact}.`,
-  };
-}
-
-export function renderContactAdmin(
-  enquiry: TContactEnquiry,
-  recipient: string,
-  contact: string,
-): IEmailMessage {
-  const lines = [
-    `Name: ${enquiry.name}`,
-    `Email: ${enquiry.email}`,
-    `Message: ${enquiry.message}`,
-  ];
-  const content = `<h1 style="font-size:28px;line-height:1.2">New contact message</h1>${lines.map((line) => `<p style="margin:0 0 12px;white-space:pre-wrap">${escapeHtml(line)}</p>`).join("")}`;
-  return {
-    notificationId: enquiry.notificationId,
-    template: "contact-admin",
-    version: 1,
-    to: [recipient],
-    replyTo: enquiry.email,
-    subject: "New contact message",
-    html: layout("A guest has contacted Peploe's.", content, contact),
-    text: `New contact message\n\n${lines.join("\n")}\n\nReply to ${contact}.`,
   };
 }
