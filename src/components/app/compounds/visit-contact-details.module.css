@@ -385,7 +385,15 @@
   .diningIntro {
     grid-template-columns: minmax(0, 654fr) minmax(0, 578fr);
     align-items: center;
-    gap: 64px;
+    gap: 0 64px;
+  }
+
+  .diningIntro > div {
+    display: contents;
+  }
+
+  .diningIntro .eyebrow {
+    grid-column: 1 / -1;
   }
 
   .services {
