@@ -69,9 +69,7 @@ export function createEventHistory(storageKey: string) {
           typeof navigator !== "undefined" &&
           navigator.locks
         ) {
-          void navigator.locks
-            .request(`${storageKey}:${key}`, send)
-            .catch(send);
+          void navigator.locks.request(storageKey, send).catch(send);
         } else send();
       } catch {
         send();
