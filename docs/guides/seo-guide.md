@@ -158,7 +158,6 @@ is better than a large graph of invented facts.
 - [Common Crawl CCBot controls](https://commoncrawl.org/ccbot)
 - [`llms.txt` proposal](https://llmstxt.org/)
 
-
 ## Release verification for #80 on 4 November 2026
 
 Source revision: `a3b3b8d99f0660ae75c907e1ba731612983e30cd` on integrated
@@ -183,16 +182,23 @@ Public staging responses from `https://peploes-fork.vercel.app/` returned HTTP
 Its robots file permits crawling, so crawlers can read the noindex directive.
 Its sitemap returned 19 entries, excluded Book a Table, and used
 `https://peploes-fork-staging-msf.vercel.app` throughout. The home canonical and
-absolute social-image URL also use that older staging alias. This is consistent with
-a hosted `NEXT_PUBLIC_SITE_URL` discrepancy with the intended staging URL;
-it does not establish a hardcoded production-origin defect. Correct the value
-in the owning hosting project and rebuild before checking the rendered URLs
-again. Gina's production project must use her approved production origin,
-never either staging alias. The audit corrected only the Preview `NEXT_PUBLIC_SITE_URL` in Salman's
+absolute social-image URL also used that older staging alias. This was consistent
+with a hosted `NEXT_PUBLIC_SITE_URL` discrepancy with the intended staging URL;
+it did not establish a hardcoded production-origin defect. Gina's production
+project must use her approved production origin, never either staging alias.
+The audit corrected only the Preview `NEXT_PUBLIC_SITE_URL` in Salman's
 `msf-projects/peploes-fork` project to `https://peploes-fork.vercel.app`.
-No local environment file or other hosted setting changed. A rebuild of the
-existing staging snapshot is being checked separately; this does not deploy
-the integrated `dev` revision or establish its Git production-branch setting.
+No local environment file changed. The only other hosted change was the staging
+alias assignment below. The existing manual staging snapshot was rebuilt as
+`dpl_8TW3hJEVBuFAEDUtUtZ4JSkH43eH`, READY in `dub1`, from
+`dpl_6oAt3T8i8BbSt3d9W2uWbWq8MT4r`. The stable staging alias was then
+assigned to that replacement and its mapping verified through Vercel. Public
+GETs returned 200 for home, robots, sitemap and the social PNG. The canonical,
+social image and all 19 sitemap entries now use `https://peploes-fork.vercel.app`;
+noindex headers remain present. This is a rebuild of the same manual source
+snapshot, not deployment of the integrated `dev` revision. The project Git
+connection actually targets `salman-farooqi/peploes-fork` on `main`, not the
+organization repository on `dev`. That connection was not changed.
 
 The application emits linked Organization and WebSite data, not Restaurant or
 Event claims. Event location has no confirmed CMS field. Keep those richer
@@ -218,3 +224,7 @@ the www redirect. They do not prove Search Console receipt or social rendering.
 Standards and spec reviews found no remaining issue in this documentation
 change after adding the check results and qualifying the inferred configuration
 cause. Owner and hosted acceptance gaps remain as stated above.
+
+`bun run type-check` initially failed because this new checkout lacked Studio
+dependencies. After installing both committed lockfiles, it passed for the
+application and Studio. No checks were disabled.
