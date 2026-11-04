@@ -124,8 +124,9 @@ confirmed venue), an Organization logo asset, Sanity SEO fields for menus and
 private dining, IndexNow and Search Console, and FAQ content. The footer and
 Visit opening-hours table already share `RESTAURANT_OPENING_HOURS`. Dining-service
 times remain separate from building opening hours. The footer social profiles
-are recorded in the project brief; crawler policy is implemented above. Menu
-breadcrumbs are already visible.
+are recorded in the project brief; crawler policy is implemented above, but its
+mixed-use choice still needs product-owner review. Menu breadcrumbs are already
+visible.
 
 ## Social images
 
