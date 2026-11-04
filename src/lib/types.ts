@@ -681,6 +681,22 @@ export type THoldInput = z.infer<typeof holdInputSchema>;
 
 export type THoldToken = z.infer<typeof holdTokenSchema>;
 
+export type TBookingObservation =
+  | "hold_created"
+  | "hold_changed"
+  | "details_submitted"
+  | "confirmed"
+  | "payment_required"
+  | "card_required"
+  | "details_rejected"
+  | "outcome_unknown"
+  | "status_confirmed"
+  | "status_failed"
+  | "status_cancelled"
+  | "status_pending"
+  | "status_unknown"
+  | "status_unavailable";
+
 export type TGuestDetails = z.infer<typeof guestDetailsSchema>;
 
 export type TBookingField =

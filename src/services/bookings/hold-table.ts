@@ -39,6 +39,10 @@ import {
   tooManyHolds,
   unavailable,
 } from "@/services/bookings/errors";
+import {
+  recordBookingObservation,
+  requestBookingHold,
+} from "@/services/bookings/reconciliation";
 import { bookableTimes } from "@/services/bookings/times";
 import { checkVisit } from "@/services/bookings/visit";
 
@@ -257,6 +261,7 @@ async function movedHold(
     rev: hold.rev + 1,
     detailsSent: false,
   };
+  recordBookingObservation(token, secret, "hold_changed");
   return ok(holdResult(signHold(token, secret), token, now));
 }
 
@@ -275,10 +280,11 @@ async function newHold(
   if (!(await mayHoldAnother())) {
     return err(tooManyHolds());
   }
-  const hold = await provider.createHold(
-    { date: choice.searchDate, time: choice.time, partySize: choice.partySize },
-    { deadlineAt: Date.now() + BOOKING_BUDGET_MS.holdCreate },
-  );
+  const hold = await requestBookingHold(provider, {
+    date: choice.searchDate,
+    time: choice.time,
+    partySize: choice.partySize,
+  });
   if (hold.isErr()) {
     return err(await afterFailedHold(provider, choice, visit, hold.error));
   }
@@ -297,6 +303,7 @@ async function newHold(
     rev: 1,
     detailsSent: false,
   };
+  recordBookingObservation(token, secret, "hold_created");
   return ok(holdResult(signHold(token, secret), token, now));
 }
 
@@ -316,6 +323,7 @@ export async function holdTable(
   if (existingToken && existing && isSameChoice(existing, choice)) {
     const status = await currentStatus(provider, existing);
     if (status === "confirmed") {
+      recordBookingObservation(existing, secret, "status_confirmed");
       return err(alreadyBooked(existing.reference));
     }
     const now = Date.now();

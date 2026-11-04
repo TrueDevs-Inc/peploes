@@ -127,6 +127,9 @@ Not yet verified:
 
 ### Resolving an unknown outcome
 
+Follow the [booking reconciliation runbook](../guides/booking-reconciliation-guide.md)
+for restricted server evidence, payment checks, escalation and release verification.
+
 - **The guest** has the reference on screen and the confirmation email if one
   is sent, and can call the restaurant.
 - **Staff** find the reference in the ResDiary diary, which shows the booking's

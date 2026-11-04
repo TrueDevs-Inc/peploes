@@ -34,6 +34,12 @@ describe("Sentry URL scrubbing", function sentryScrubTests() {
           category: "navigation",
           data: { to: "/book-a-table?token=guest-token" },
         },
+        {
+          category: "http",
+          data: {
+            url: "https://api.example.test/TableHoldBookingStatus/425742?token=guest-token",
+          },
+        },
       ],
       tags: { operation: "hold-table" },
     });
@@ -45,6 +51,8 @@ describe("Sentry URL scrubbing", function sentryScrubTests() {
     expect(envelopes[0]).not.toContain("guest-token");
     expect(envelopes[0]).not.toContain("guest@example.test");
     expect(envelopes[0]).not.toContain("signed-cookie");
+    expect(envelopes[0]).not.toContain("425742");
+    expect(envelopes[0]).toContain("TableHoldBookingStatus/[redacted]");
     await client.close(2000);
   });
   it("removes booking request data while retaining diagnostic tags", function scrubsEvent() {
@@ -93,18 +101,19 @@ describe("Sentry URL scrubbing", function sentryScrubTests() {
       trace_id: "b",
       start_timestamp: 1,
       description:
-        "GET https://api.example.test/api/Booking/B9GX?authenticationToken=guest-token",
+        "GET https://api.example.test/TableHoldBookingStatus/425742?authenticationToken=guest-token",
       data: {
         "url.full":
-          "https://api.example.test/api/Booking/B9GX?authenticationToken=guest-token",
+          "https://api.example.test/TableHoldBookingStatus/425742?authenticationToken=guest-token",
         "url.query": "authenticationToken=guest-token",
         "http.request.method": "GET",
       },
     });
 
     expect(JSON.stringify(span)).not.toContain("guest-token");
+    expect(JSON.stringify(span)).not.toContain("425742");
     expect(span.data["url.full"]).toBe(
-      "https://api.example.test/api/Booking/B9GX",
+      "https://api.example.test/TableHoldBookingStatus/[redacted]",
     );
     expect(span.data["http.request.method"]).toBe("GET");
   });

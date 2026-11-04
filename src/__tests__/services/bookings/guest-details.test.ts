@@ -140,7 +140,7 @@ describe("submitGuestDetails", function submitGuestDetailsTests() {
     expect(provider.submitHoldGuest.mock.calls[0]?.[0].specialRequests).toBe(
       specialRequests,
     );
-    expect(logged()).toContain("B9GXWPLY");
+    expect(logged()).not.toContain("B9GXWPLY");
     expect(logged()).not.toContain("Call me");
   });
 
@@ -830,7 +830,7 @@ describe("submitGuestDetails", function submitGuestDetailsTests() {
       },
     );
 
-    it("never calls an unknown outcome a failure, and logs only the reference", async function stillConfirming() {
+    it("never calls an unknown outcome a failure, and keeps the reference out of logs", async function stillConfirming() {
       const { provider, token } = await held();
       provider.submitHoldGuest.mockResolvedValue(err(unclear()));
 
@@ -842,7 +842,7 @@ describe("submitGuestDetails", function submitGuestDetailsTests() {
       expect(result._unsafeUnwrapErr().message).toBe(
         "We're still confirming your booking. You'll get an email when it's confirmed. If nothing arrives within a few minutes, please call us on +353 1 676 3144.",
       );
-      expect(logged()).toContain("B9GXWPLY");
+      expect(logged()).not.toContain("B9GXWPLY");
       for (const value of [
         "Test",
         "Guest",

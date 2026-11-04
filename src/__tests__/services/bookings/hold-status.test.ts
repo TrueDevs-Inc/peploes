@@ -135,6 +135,7 @@ describe("getHoldStatus", function getHoldStatusTests() {
 
   it("logs nothing on a normal poll", async function quietPoll() {
     const { provider, token } = await held();
+    vi.mocked(console.log).mockClear();
 
     await service(provider).getHoldStatus(HOLD_QUERY, token);
 
