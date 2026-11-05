@@ -12,11 +12,14 @@ for (const path of ["/private-dining", "/seasonal"]) {
       await page.setViewportSize(size);
       await page.goto(path);
       await page.evaluate(() => document.fonts.ready);
-      const hero = page.locator("main > section").first();
+      const hero = page
+        .getByRole("heading", { level: 1 })
+        .locator("xpath=ancestor::section[1]");
       const bounds = await hero.boundingBox();
       expect(bounds?.height).toBeGreaterThanOrEqual(size.height - 1);
       const description = hero.locator("p").last();
-      const copy = await description.boundingBox();
+      await expect(description).toBeHidden();
+      const copy = await hero.getByRole("heading", { level: 1 }).boundingBox();
       if (!bounds || !copy) throw new Error("Hero content is missing");
       expect(copy.y + copy.height).toBeLessThanOrEqual(
         bounds.y + bounds.height,

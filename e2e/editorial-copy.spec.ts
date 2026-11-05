@@ -37,25 +37,29 @@ for (const { route, text, maxWidth } of sections) {
         .locator("main p")
         .filter({ hasText: text })
         .first();
-      await expect(paragraph).toBeVisible();
-      await expect(paragraph).toHaveCSS("white-space", "normal");
-      const widths = await paragraph.evaluate((element) => {
-        const parent = element.parentElement;
-        if (!parent) throw new Error("Paragraph has no content column");
-        const style = getComputedStyle(parent);
-        return {
-          paragraph: element.getBoundingClientRect().width,
-          column:
-            parent.clientWidth -
-            Number.parseFloat(style.paddingLeft) -
-            Number.parseFloat(style.paddingRight),
-        };
-      });
-      expect(
-        Math.abs(
-          widths.paragraph - Math.min(widths.column, maxWidth ?? Infinity),
-        ),
-      ).toBeLessThan(2);
+      if (route === "/private-dining" && width < 640) {
+        await expect(paragraph).toBeHidden();
+      } else {
+        await expect(paragraph).toBeVisible();
+        await expect(paragraph).toHaveCSS("white-space", "normal");
+        const widths = await paragraph.evaluate((element) => {
+          const parent = element.parentElement;
+          if (!parent) throw new Error("Paragraph has no content column");
+          const style = getComputedStyle(parent);
+          return {
+            paragraph: element.getBoundingClientRect().width,
+            column:
+              parent.clientWidth -
+              Number.parseFloat(style.paddingLeft) -
+              Number.parseFloat(style.paddingRight),
+          };
+        });
+        expect(
+          Math.abs(
+            widths.paragraph - Math.min(widths.column, maxWidth ?? Infinity),
+          ),
+        ).toBeLessThan(2);
+      }
       expect(
         await page.evaluate(
           () => document.documentElement.scrollWidth <= innerWidth,

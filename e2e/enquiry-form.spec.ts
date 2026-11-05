@@ -863,7 +863,7 @@ test("private dining enquiry keeps guest input when delivery is unavailable", as
   const form = page.locator("#enquire").getByRole("form");
   await form.getByLabel("Occasion type").selectOption("Wedding");
   await form.getByLabel("Preferred date", { exact: true }).fill("2027-06-18");
-  await form.getByLabel("Number of guests").fill("80");
+  await form.getByLabel("Number of guests", { exact: true }).fill("80");
   await form.getByLabel("Your name").fill("Example Guest");
   await form.getByLabel("Email address").fill("guest@example.test");
   await form
@@ -913,7 +913,7 @@ test("private dining enquiry blocks retry when the action response is lost", asy
   const form = page.locator("#enquire").getByRole("form");
   await form.getByLabel("Occasion type").selectOption("Wedding");
   await form.getByLabel("Preferred date", { exact: true }).fill("2027-06-18");
-  await form.getByLabel("Number of guests").fill("80");
+  await form.getByLabel("Number of guests", { exact: true }).fill("80");
   await form.getByLabel("Your name").fill("Example Guest");
   await form.getByLabel("Email address").fill("guest@example.test");
   await form
