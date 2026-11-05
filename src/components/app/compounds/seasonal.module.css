@@ -235,6 +235,7 @@
 }
 
 @media (width < 40rem) {
+  .heroCopy .description,
   .joinCopy .description {
     display: none;
   }

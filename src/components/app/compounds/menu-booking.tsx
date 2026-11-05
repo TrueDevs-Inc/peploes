@@ -71,7 +71,7 @@ export function MenuBooking({
           <p
             className={cn(
               ebGaramond.className,
-              "-mt-1 max-w-full text-right text-base leading-[21px] xl:w-(--menu-booking-content-width) xl:leading-5 xl:[text-align:var(--menu-booking-text-align)]",
+              "-mt-1 hidden max-w-full text-right text-base leading-[21px] sm:block xl:w-(--menu-booking-content-width) xl:leading-5 xl:[text-align:var(--menu-booking-text-align)]",
               booking.fullWidthOnMobile && "mt-0 leading-[22px] xl:-mt-1",
             )}
           >
