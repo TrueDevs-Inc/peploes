@@ -32,7 +32,7 @@ export function PrivateDiningClosing({
         <h2 className={cn(ebGaramond.className, styles.heading)}>
           {content.heading}
         </h2>
-        <p>{content.description}</p>
+        <p className="hidden sm:block">{content.description}</p>
         {content.contacts && <PrivateDiningContacts />}
       </div>
     </section>

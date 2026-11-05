@@ -210,8 +210,12 @@
 }
 
 @media (width < 40rem) {
+  .heroCopy .description {
+    display: none;
+  }
+
   .heroCopy {
-    gap: 14px;
+    gap: 20px;
     min-height: 520px;
     padding-block: 72px 48px;
   }

@@ -51,7 +51,7 @@ export function Hero() {
               {HERO_CONTENT.eyebrow}
             </p>
 
-            <div className="flex flex-col gap-[14px] sm:gap-4">
+            <div className="flex flex-col gap-5">
               <h1
                 id="hero-heading"
                 className={cn(

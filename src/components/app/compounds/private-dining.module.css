@@ -142,7 +142,7 @@
   padding-block: 40px;
 }
 .overview .heroTitle {
-  margin-block: 16px;
+  margin-block: 16px 20px;
 }
 .overview .eyebrow::before {
   display: none;
@@ -1280,7 +1280,7 @@
   .overview .heroTitle {
     font-size: 62px;
     line-height: 61px;
-    margin-block: 16px;
+    margin-block: 16px 20px;
   }
   .overview .heroDescription {
     line-height: 24px;
@@ -1478,7 +1478,7 @@
     line-height: 44px;
   }
   .menuDescription {
-    margin-top: 16px;
+    margin-top: 20px;
     font-size: 20px;
     line-height: 24px;
   }
@@ -1900,7 +1900,7 @@
   .overviewClosing p {
     font-size: 18px;
     line-height: 24px;
-    margin-top: 14px;
+    margin-top: 20px;
   }
   .overviewClosing .heroRule {
     margin-bottom: 14px;

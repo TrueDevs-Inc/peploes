@@ -316,6 +316,10 @@
 }
 
 @media (width < 40rem) {
+  .invitationCopy > p {
+    display: none;
+  }
+
   .page .eyebrow {
     font-size: 12px;
   }

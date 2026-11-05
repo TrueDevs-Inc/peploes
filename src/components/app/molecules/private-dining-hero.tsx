@@ -34,7 +34,14 @@ export function PrivateDiningHero({ hero, variant }: IPrivateDiningHeroProps) {
           >
             {hero.heading}
           </h1>
-          <p className={styles.heroDescription}>{hero.description}</p>
+          <p
+            className={cn(
+              styles.heroDescription,
+              variant === "overview" && "hidden sm:block",
+            )}
+          >
+            {hero.description}
+          </p>
           {hero.action ? (
             <Button asChild variant="brand-primary" className={styles.action}>
               <a href="#enquire">
