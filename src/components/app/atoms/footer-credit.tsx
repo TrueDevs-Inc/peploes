@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 export function FooterCredit() {
   return (
-    <p
+    <div
       className={cn(
         inter.className,
         "mt-[clamp(16px,1.5vw,18px)] text-center text-[clamp(12px,1.125vw,13.5px)] leading-[clamp(16px,1.5vw,18px)] text-ink/80",
@@ -22,6 +22,6 @@ export function FooterCredit() {
         </span>
         <span className="font-light">{FOOTER_CREDIT.brandSuffix}</span>
       </a>
-    </p>
+    </div>
   );
 }
