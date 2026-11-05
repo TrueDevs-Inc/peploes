@@ -63,7 +63,9 @@ HTML emails embed the Peploe's PNG wordmark as an inline Content-ID attachment
 through both SMTP and Resend. The logo does not need a public image URL or a
 running local server. `/email-preview` displays the same attachment bytes as a
 data URL because browsers do not resolve email Content-IDs. Text alternatives
-remain available when a mail client suppresses images.
+remain available when a mail client suppresses images. The header PNG includes
+its opaque cream background so a client darkening HTML backgrounds cannot hide
+the dark wordmark against a recolored background.
 
 The `email_deliveries` table stores an opaque ID, payload hash, template,
 selected provider, status, and provider ID. It stores no recipient or message
