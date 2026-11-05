@@ -16,10 +16,7 @@ export function SetMenuCollection({ menu }: ISetMenuCollectionProps) {
         <MenuEditorialIntro menu={menu} compact />
       </SetMenuSelection>
       <MenuNotes menu={menu} collection />
-      <MenuBooking
-        booking={menu.booking}
-        alignLeft={menu.slug === "group-set-menu"}
-      />
+      <MenuBooking booking={menu.booking} />
     </article>
   );
 }

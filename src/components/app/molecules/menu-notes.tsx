@@ -1,6 +1,5 @@
-import { ChevronDown, Info } from "lucide-react";
+import { Info } from "lucide-react";
 
-import { FOCUS_RING } from "@/lib/constants";
 import { ebGaramond, ebGaramondItalic } from "@/lib/fonts";
 import type { IMenuNotesProps } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -101,11 +100,10 @@ function MenuAllergenInformation({
   if (!menu.allergens) return null;
   const hasNotes = Boolean(menu.offer) || menu.notes.length > 0;
   return (
-    <details
+    <div
       data-scroll-reveal
-      open
       className={cn(
-        "group relative min-h-11",
+        "relative min-h-11",
         !compact && "xl:content-center",
         compact && "xl:pl-[190px]",
         hasNotes &&
@@ -113,11 +111,10 @@ function MenuAllergenInformation({
           "border-t border-warm-cream/40 pt-6 xl:border-t-0 xl:border-l xl:pt-0 xl:pl-16",
       )}
     >
-      <summary
+      <h3
         className={cn(
           ebGaramond.className,
-          FOCUS_RING,
-          "flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 text-xl leading-6 text-[#f1f1f1] focus-visible:ring-warm-cream [&::-webkit-details-marker]:hidden xl:justify-start xl:min-h-6 xl:gap-3 xl:text-lg",
+          "flex min-h-11 items-center gap-4 text-xl leading-6 text-[#f1f1f1] xl:min-h-6 xl:gap-3 xl:text-lg",
           compact &&
             "gap-[14px] xl:absolute xl:top-0 xl:left-0 xl:gap-3 xl:text-base",
           collection && "xl:text-[19px]",
@@ -128,14 +125,7 @@ function MenuAllergenInformation({
         <span className={compact ? "flex-1" : undefined}>
           {menu.allergens.heading}
         </span>
-        <ChevronDown
-          aria-hidden="true"
-          className={cn(
-            "size-4 shrink-0 -rotate-90 group-open:rotate-0",
-            compact && "xl:hidden",
-          )}
-        />
-      </summary>
+      </h3>
       <p
         className={cn(
           "mt-1 whitespace-pre-line text-sm leading-[21px] xl:mt-[18px] xl:max-w-[540px]",
@@ -145,6 +135,6 @@ function MenuAllergenInformation({
       >
         {menu.allergens.description}
       </p>
-    </details>
+    </div>
   );
 }

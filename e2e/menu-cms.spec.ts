@@ -7,46 +7,40 @@ for (const menu of [
   "group-set-menu",
   "seasonal",
 ]) {
-  test(`${menu} allergens stay vertically centered on desktop and remain expandable`, async ({
+  test(`${menu} allergens remain visible without a dropdown and centered on desktop`, async ({
     page,
     viewport,
   }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto(`/menus?menu=${menu}`);
-    const information = page.locator("details").filter({
-      has: page.getByText("Allergen Information", { exact: true }),
+    const heading = page.getByRole("heading", {
+      name: "Allergen Information",
+      exact: true,
     });
+    const information = heading.locator("..");
     const description = information.locator("p");
     await expect(description).toBeVisible();
-    for (const open of [true, false]) {
-      if (!open) await information.locator("summary").click();
-      await expect(information).toHaveJSProperty("open", open);
-      if ((viewport?.width ?? 1440) >= 1280) {
-        await expect
-          .poll(() =>
-            information.evaluate((element) => {
-              const panel = element.closest(".site-container");
-              const summary = element.querySelector("summary");
-              const last = element.hasAttribute("open")
-                ? element.querySelector("p")
-                : summary;
-              if (!panel || !summary || !last) {
-                throw new Error("The menu allergen panel is incomplete.");
-              }
-              const bounds = panel.getBoundingClientRect();
-              const top = summary.getBoundingClientRect().top - bounds.top;
-              const bottom =
-                bounds.bottom - last.getBoundingClientRect().bottom;
-              return Math.abs(top - bottom);
-            }),
-          )
-          .toBeLessThanOrEqual(1);
-      }
-    }
-    await expect(description).toBeHidden();
-    await information.locator("summary").focus();
-    await page.keyboard.press("Enter");
+    await heading.click();
     await expect(description).toBeVisible();
+    await expect(information.locator("summary")).toHaveCount(0);
+    if ((viewport?.width ?? 1440) >= 1280) {
+      await expect
+        .poll(() =>
+          information.evaluate((element) => {
+            const panel = element.closest(".site-container");
+            const heading = element.querySelector("h3");
+            const last = element.querySelector("p");
+            if (!panel || !heading || !last) {
+              throw new Error("The menu allergen panel is incomplete.");
+            }
+            const bounds = panel.getBoundingClientRect();
+            const top = heading.getBoundingClientRect().top - bounds.top;
+            const bottom = bounds.bottom - last.getBoundingClientRect().bottom;
+            return Math.abs(top - bottom);
+          }),
+        )
+        .toBeLessThanOrEqual(1);
+    }
   });
 }
 

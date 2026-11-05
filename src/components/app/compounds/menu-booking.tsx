@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 export function MenuBooking({
   booking = MENU_PAGE_CONTENT.booking,
-  alignLeft = false,
+  alignLeft = true,
 }: IMenuBookingProps) {
   const actionContent = (
     <>

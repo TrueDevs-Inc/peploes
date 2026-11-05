@@ -25,8 +25,8 @@ Each menu supplies its closing photograph and copy. The site header
 and footer remain shared with the homepage, including the footer's spacing,
 gutters and mobile section order.
 The Group Set Menu enquiry action opens the private-dining enquiry section.
-Its closing banner heading, description and enquiry button share a left edge
-on desktop and mobile; the desktop content keeps its existing position.
+Every menu's closing banner heading, description and action button share a left
+edge on desktop and mobile; the desktop content keeps its existing position.
 Book a Table actions open the [booking page](brief.md#book-a-table).
 Enquiry submission remains inactive until its integration exists.
 
@@ -57,7 +57,8 @@ removing prices do not apply to Dinner. Dinner has no set-menu offer.
   their menu rows meet the panel border without an extra strip.
   Desktop retains its existing row layout.
 - The CMS note calls for editable headings, dishes, descriptions, prices, service
-  times and notes. The allergen note calls for optional, editable expanding content.
+  times and notes. Allergen information is optional and editable; when present, its heading and
+  description remain visible without a dropdown on every screen size.
 - Comment #17 removes individual starter and main-course prices from Lunch.
   Small bites and sides retain prices. The offer is two courses for €42 or three
   for €48. Optional prices allow future individual pricing without changing the UI.
@@ -406,7 +407,7 @@ production content. Development documents do not automatically appear in
 production. Client access and hosting are separate release steps.
 
 Verify desktop and phone image crops, sticky navigation, keyboard access,
-allergen expansion and narrow-screen overflow with published content. Check
+allergen visibility and narrow-screen overflow with published content. Check
 Wine index targets and Group/Seasonal dropdowns after adding, hiding and
 reordering entries.
 
