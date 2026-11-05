@@ -83,7 +83,7 @@ own application authorization and DTOs. Route handlers may call its protocol
 handler when the library requires an HTTP endpoint.
 
 Pure validation and formatting helpers can use installed libraries directly.
-Existing framework integrations keep the boundaries in their owning guides.
+Existing framework integrations keep the boundaries in their owning skills.
 
 Add an interface or backend registry only when a second implementation needs it. Add concrete SDK import restrictions when adopting a provider.
 Keep imports at the top of the file. Catch external exceptions at this boundary,
@@ -236,7 +236,7 @@ paths, not every possible transitive dependency. Review the actual dependency
 chain as well.
 
 Verification, suppression rules and CI ownership live in the
-[quality guide](guides/quality-guide.md).
+[verification skill](../.agents/skills/verification/SKILL.md).
 
 Types enforce shared DTOs and exhaustive locale/event mappings. Review still
 owns semantic duplication, unnecessary abstractions and repeated queries.
@@ -246,5 +246,5 @@ need not become application-domain types in the shared registry.
 ## Cross-cutting modules
 
 Logging, Sentry, analytics, SEO, testing, and performance each have one owner in
-`docs/guides/`. Those guides describe their current implementation and
-project-specific replacement points. Do not restate their policies here.
+[repository skills](../.agents/skills/). Those skills own reusable workflows;
+code and configuration own implementation facts. Do not restate their policies here.
