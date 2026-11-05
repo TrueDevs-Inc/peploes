@@ -215,6 +215,6 @@ test("mobile footer address opens the restaurant location", async ({
     exact: true,
   });
   await address.click();
-  await expect(page).toHaveURL("/visit-contact#find-us");
+  await expect(page).toHaveURL("/contact#find-us");
   await expect(page.locator("#find-us")).toBeInViewport();
 });
