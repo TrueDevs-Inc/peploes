@@ -59,6 +59,9 @@ for (const path of enquiryPaths) {
     });
     await expect(summary).toBeVisible();
     await expect(form.getByRole("alert")).toHaveCount(1);
+    await expectFocusedControl(
+      form.locator("input:invalid, select:invalid, textarea:invalid").first(),
+    );
 
     const summaryBounds = await summary.boundingBox();
     const submitBounds = await submit.boundingBox();
@@ -100,6 +103,7 @@ for (const path of enquiryPaths) {
         messages[(await control.getAttribute("name")) ?? ""],
       );
 
+      await expectFocusedControl(control);
       await expect(control).toHaveAttribute("aria-invalid", "true");
       await expect(control).toHaveAttribute(
         "aria-describedby",
@@ -125,6 +129,9 @@ for (const path of enquiryPaths) {
     await email.fill("invalid-email");
     await submit.click();
     await expect(form.getByRole("alert")).toHaveCount(1);
+    await expectFocusedControl(
+      form.locator("input:invalid, select:invalid, textarea:invalid").first(),
+    );
     await expect(form.getByRole("alert")).toHaveText(
       "Please enter a valid email address.",
     );

@@ -74,7 +74,14 @@ export function PrivateDiningEnquiryFields({
     )
       return;
     validationAttempted.current = true;
-    if (!validateFields()) return;
+    if (!validateFields()) {
+      event.currentTarget
+        .querySelector<HTMLElement>(
+          "input:invalid, select:invalid, textarea:invalid",
+        )
+        ?.focus();
+      return;
+    }
     submittingRef.current = true;
     const data = new FormData(event.currentTarget);
     startTransition(async () => {
