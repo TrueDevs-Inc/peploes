@@ -4,6 +4,7 @@ import "server-only";
 
 import { err, ok } from "neverthrow";
 import { cookies, headers } from "next/headers";
+import { after } from "next/server";
 
 import { createPublicAction } from "@/actions/base";
 import {
@@ -13,7 +14,10 @@ import {
   storeHoldToken,
 } from "@/lib/booking-cookie";
 import { toBookingResponse } from "@/lib/booking-response";
+import { guestDetailsSchema } from "@/lib/booking-schema";
 import { BOOKING_HOLD_LIMITS } from "@/lib/constants/booking";
+import { LogContext } from "@/lib/enums";
+import { logger } from "@/lib/logger";
 import { allowHold } from "@/lib/rate-limit-provider";
 import type {
   TBookingErrorCode,
@@ -23,6 +27,7 @@ import type {
   THeldTable,
 } from "@/lib/types";
 import { bookings } from "@/services/bookings";
+import { subscribeNewsletter } from "@/services/newsletter";
 
 const holdTableAction = createPublicAction<THeldTable, TBookingErrorCode>({
   handler: async ({ input }) => {
@@ -99,6 +104,32 @@ const submitGuestDetailsAction = createPublicAction<
         holdCookie.token,
         holdCookie.maxAgeSeconds,
       );
+    }
+    if (result.isOk()) {
+      const details = guestDetailsSchema.safeParse(input);
+      if (details.success && details.data.newsletterOptIn) {
+        const { email } = details.data;
+        try {
+          const forwardedFor = (await headers()).get(
+            BOOKING_HOLD_LIMITS.visitorHeader,
+          );
+          after(async () => {
+            try {
+              await subscribeNewsletter({ email }, forwardedFor);
+            } catch {
+              logger.error(
+                LogContext.Api,
+                "Booking newsletter subscription failed unexpectedly",
+              );
+            }
+          });
+        } catch {
+          logger.error(
+            LogContext.Api,
+            "Booking newsletter subscription could not be scheduled",
+          );
+        }
+      }
     }
     return result.map(guestDetailsView);
   },

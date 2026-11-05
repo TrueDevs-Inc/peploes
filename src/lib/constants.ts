@@ -471,6 +471,20 @@ export const ANALYTICS_CONTACT_DESTINATIONS = ["phone", "email"] as const;
  * The only events and properties that may reach an analytics provider. A
  * closed list is an allowlist of values; a string names a sanitised URL part.
  */
+export const ANALYTICS_ATTEMPT_ID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+const BOOKING_ANALYTICS_PARAMS = {
+  attempt_id: "attempt",
+  error_code: [
+    "NONE",
+    "NETWORK",
+    "STRIPE",
+    "STORAGE",
+    ...Object.values(ErrorCode),
+  ],
+} as const;
+
 export const ANALYTICS_EVENT_PARAMS = {
   [GA4Event.PageView]: {
     page_location: "url",
@@ -478,6 +492,35 @@ export const ANALYTICS_EVENT_PARAMS = {
     page_referrer: "referrer",
   },
   [GA4Event.BookingClick]: { placement: ANALYTICS_PLACEMENTS },
+  [GA4Event.BookingSearch]: {
+    ...BOOKING_ANALYTICS_PARAMS,
+    result: ["submitted"],
+  },
+  [GA4Event.BookingAvailability]: {
+    ...BOOKING_ANALYTICS_PARAMS,
+    result: ["available", "empty", "failed"],
+  },
+  [GA4Event.BookingHold]: {
+    ...BOOKING_ANALYTICS_PARAMS,
+    result: ["succeeded", "failed", "unknown", "expired"],
+  },
+  [GA4Event.BookingDetails]: {
+    ...BOOKING_ANALYTICS_PARAMS,
+    result: ["submitted", "succeeded", "failed", "unknown"],
+  },
+  [GA4Event.BookingPayment]: {
+    ...BOOKING_ANALYTICS_PARAMS,
+    result: ["started", "accepted", "declined", "unknown", "load_failed"],
+    payment_kind: ["deposit", "guarantee", "none"],
+  },
+  [GA4Event.BookingConfirmed]: {
+    ...BOOKING_ANALYTICS_PARAMS,
+    result: ["confirmed"],
+  },
+  [GA4Event.BookingRecovery]: {
+    ...BOOKING_ANALYTICS_PARAMS,
+    result: ["started", "confirmed", "pending", "failed", "unknown"],
+  },
   [GA4Event.MenuView]: { menu: MENU_SLUGS },
   [GA4Event.ContactClick]: {
     placement: ANALYTICS_PLACEMENTS,
@@ -576,4 +619,9 @@ export const NEWSLETTER_LIMITS = {
   rateLimitTimeoutMs: 2_000,
   providerTimeoutMs: 10_000,
   redisPrefix: "peploes-newsletter",
+} as const;
+
+export const NEWSLETTER_SUBSCRIPTION = {
+  subscribedKey: "peploes:newsletter:subscribed",
+  acceptedEvent: "peploes:newsletter:accepted",
 } as const;

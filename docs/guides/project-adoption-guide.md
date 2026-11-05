@@ -26,7 +26,7 @@ check existing URLs, user journeys, providers and conflicting public facts.
 
 ## Environments
 
-Preserve an existing `.env.local`. The inherited demo reads PostgreSQL and the
+Preserve an existing `.env`. The inherited demo reads PostgreSQL and the
 environment schema requires a database URL. Use a disposable local database;
 follow the permission rules in `AGENTS.md` before running database commands.
 

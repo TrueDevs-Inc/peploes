@@ -20,6 +20,7 @@
       "!**/src/db/migrations",
       "!**/playwright-report",
       "!**/test-results",
+      "!**/sandbox-test-results",
       "!**/.sanity",
       "!studio/dist"
     ]

@@ -195,7 +195,7 @@ visitor IP or Redis errors or times out (an error log each time). While the
 limit cannot check, nothing caps how many holds one visitor makes; each hold
 without guest details still ends at its ResDiary expiry. The booking checks
 still run on every request: party size, dates, the signed hold token, guest
-details and the live-site Stripe key check. Do not reuse `createPublicAction`
+details and the provider response validation. Do not reuse `createPublicAction`
 for a flow that is unsafe without a working limit.
 
 The hold limit keys on the first `x-forwarded-for` address. That is safe only
@@ -266,9 +266,10 @@ inline content. It allows `unsafe-eval` only in development and adds monitoring
 or analytics origins only when their public configuration exists. A configured
 public Mapbox token adds Mapbox connections and blob workers to the shared policy
 because client navigation to Visit retains the original document's CSP. Mapbox
-loads automatically on Visit, matching the Samsu reference. The booking
-page (`/book-a-table`) gets the same policy plus Stripe.js and its 3-D Secure
-frames, from a later header rule that replaces the site-wide one on that path. Projects that
+loads automatically on Visit, matching the Samsu reference. The shared policy
+allows Stripe.js, its frames including 3-D Secure, and api.stripe.com on every
+page. Client navigation to Book a Table keeps the original document's CSP.
+Projects that
 need nonce-based CSP must accept dynamic rendering as described in the
 [Next.js CSP guide](https://nextjs.org/docs/app/guides/content-security-policy).
 

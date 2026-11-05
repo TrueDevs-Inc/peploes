@@ -1,17 +1,30 @@
 "use client";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import Link from "next/link";
-import { useState } from "react";
+import { useId, useRef, useState } from "react";
 import { z } from "zod";
 import styles from "@/components/app/compounds/table-booking-panel.module.css";
 import { Button } from "@/components/ui/button";
-import { ROUTES } from "@/lib/constants";
+import {
+  BOOKING_GUEST_LIMITS,
+  BOOKING_MESSAGES,
+} from "@/lib/constants/booking";
 import { TABLE_BOOKING_CONTENT } from "@/lib/constants/table-booking";
 import type {
   ITableBookingDetailsProps,
   ITableBookingFieldProps,
   ITableBookingGuestDetails,
+  TTableBookingDetailsErrors,
 } from "@/lib/types";
+
+function phoneError(phone: string): string {
+  if (phone.trim().startsWith("+")) return BOOKING_MESSAGES.mobileWithoutCode;
+  const digits = phone.replace(/\D/g, "").length;
+  return /^[\d\s()-]+$/.test(phone) &&
+    digits >= BOOKING_GUEST_LIMITS.mobileMinDigits &&
+    digits <= BOOKING_GUEST_LIMITS.mobileMaxDigits
+    ? ""
+    : TABLE_BOOKING_CONTENT.details.phoneError;
+}
 
 function getDetailsErrors(details: ITableBookingGuestDetails) {
   const copy = TABLE_BOOKING_CONTENT.details;
@@ -21,11 +34,7 @@ function getDetailsErrors(details: ITableBookingGuestDetails) {
     email: z.string().email().safeParse(details.email.trim()).success
       ? ""
       : copy.emailError,
-    phone:
-      /^[+\d\s()-]+$/.test(details.phone) &&
-      details.phone.replace(/\D/g, "").length >= 7
-        ? ""
-        : copy.phoneError,
+    phone: phoneError(details.phone),
     terms: details.terms ? "" : copy.termsError,
   };
 }
@@ -34,20 +43,31 @@ function BookingField({
   error,
   id,
   className,
+  children,
   ...props
 }: ITableBookingFieldProps) {
   const errorId = `${id}-error`;
+  const input = (
+    <input
+      {...props}
+      id={id}
+      aria-invalid={!!error}
+      aria-describedby={error ? errorId : undefined}
+    />
+  );
   return (
-    <label className={className}>
+    <label htmlFor={id} className={className}>
       <span>
         {label} <span className={styles.required}>*</span>
       </span>
-      <input
-        {...props}
-        id={id}
-        aria-invalid={!!error}
-        aria-describedby={error ? errorId : undefined}
-      />
+      {children ? (
+        <span className={styles.phoneRow}>
+          {children}
+          {input}
+        </span>
+      ) : (
+        input
+      )}
       {error && (
         <span id={errorId} className={styles.error}>
           {error}
@@ -58,17 +78,29 @@ function BookingField({
 }
 export function TableBookingDetails({
   details,
+  terms,
+  sending,
+  serverErrors,
+  formError,
   onChange,
   onBack,
   onContinue,
 }: ITableBookingDetailsProps) {
   const [attempted, setAttempted] = useState(false);
+  const termsDialog = useRef<HTMLDialogElement>(null);
+  const termsButton = useRef<HTMLButtonElement>(null);
+  const termsHeading = useRef<HTMLHeadingElement>(null);
+  const termsId = useId();
+  const paragraphOccurrences = new Map<string, number>();
   const copy = TABLE_BOOKING_CONTENT.details;
   const fullName = details.surname
     ? `${details.firstName} ${details.surname}`
     : details.firstName;
   const invalid = getDetailsErrors(details);
-  const errors: Partial<typeof invalid> = attempted ? invalid : {};
+  const errors: TTableBookingDetailsErrors = {
+    ...(attempted ? invalid : {}),
+    ...serverErrors,
+  };
   function update(
     field: keyof ITableBookingGuestDetails,
     value: string | boolean,
@@ -146,22 +178,38 @@ export function TableBookingDetails({
           error={errors.firstName || errors.surname}
           onChange={(event) => updateFullName(event.target.value)}
         />
-        <BookingField
-          id="booking-phone"
-          className={styles.phoneField}
-          label={
-            <>
-              <span className={styles.desktopOnly}>Mobile number</span>
-              <span className={styles.mobileOnly}>Telephone number</span>
-            </>
-          }
-          type="tel"
-          autoComplete="tel"
-          value={details.phone}
-          placeholder="e.g. 01 123 4567"
-          error={errors.phone}
-          onChange={(event) => update("phone", event.target.value)}
-        />
+        <div className={styles.phoneField}>
+          <BookingField
+            id="booking-phone"
+            className={styles.phoneNumber}
+            label={
+              <>
+                <span className={styles.desktopOnly}>Mobile number</span>
+                <span className={styles.mobileOnly}>Telephone number</span>
+              </>
+            }
+            type="tel"
+            autoComplete="tel-national"
+            value={details.phone}
+            placeholder="e.g. 087 123 4567"
+            error={errors.phone || errors.countryCode}
+            onChange={(event) => update("phone", event.target.value)}
+          >
+            <select
+              aria-label={copy.countryCode}
+              autoComplete="tel-country-code"
+              className={styles.countryCode}
+              value={details.countryCode}
+              onChange={(event) => update("countryCode", event.target.value)}
+            >
+              {TABLE_BOOKING_CONTENT.countryCodes.map((country) => (
+                <option key={country.code} value={country.code}>
+                  {country.label}
+                </option>
+              ))}
+            </select>
+          </BookingField>
+        </div>
         <BookingField
           id="booking-email"
           className={styles.emailField}
@@ -183,26 +231,75 @@ export function TableBookingDetails({
           />
         </label>
       </div>
-      <label className={styles.terms}>
+      <div className={styles.terms}>
         <input
+          id={`${termsId}-agreement`}
           type="checkbox"
+          aria-labelledby={`${termsId}-label ${termsId}-button`}
           checked={details.terms}
           aria-invalid={!!errors.terms}
           aria-describedby={errors.terms ? "booking-terms-error" : undefined}
           onChange={(event) => update("terms", event.target.checked)}
         />
         <span>
-          By confirming, you agree to{" "}
-          <Link
-            href={ROUTES.BOOKING_CANCELLATION_TERMS}
-            target="_blank"
-            rel="noopener noreferrer"
+          <label htmlFor={`${termsId}-agreement`} id={`${termsId}-label`}>
+            {copy.termsAgreement}
+          </label>{" "}
+          <button
+            id={`${termsId}-button`}
+            ref={termsButton}
+            type="button"
             className={styles.termsName}
+            onClick={() => {
+              termsDialog.current?.showModal();
+              termsHeading.current?.focus();
+            }}
           >
-            Peploe’s Booking &amp; Cancellation Terms.
-          </Link>
+            {copy.termsName}
+          </button>
         </span>
-      </label>
+      </div>
+      <dialog
+        ref={termsDialog}
+        closedby="closerequest"
+        aria-labelledby={`${termsId}-title`}
+        className={`${styles.changeDialog} ${styles.termsDialog}`}
+        onCancel={(event) => {
+          event.preventDefault();
+          event.currentTarget.close();
+        }}
+        onClose={(event) => {
+          if (!event.currentTarget.open) termsButton.current?.focus();
+        }}
+      >
+        <h2
+          ref={termsHeading}
+          id={`${termsId}-title`}
+          className={styles.flowHeading}
+          tabIndex={-1}
+        >
+          {copy.termsHeading}
+        </h2>
+        <section
+          aria-labelledby={`${termsId}-title`}
+          className={styles.termsText}
+        >
+          {terms.map((paragraph) => {
+            const occurrence = (paragraphOccurrences.get(paragraph) ?? 0) + 1;
+            paragraphOccurrences.set(paragraph, occurrence);
+            return <p key={`${paragraph}-${occurrence}`}>{paragraph}</p>;
+          })}
+        </section>
+        <div className={styles.changeActions}>
+          <Button
+            type="button"
+            variant="brand-contact"
+            onClick={() => termsDialog.current?.close()}
+          >
+            {copy.termsClose}
+          </Button>
+        </div>
+      </dialog>
       {errors.terms && (
         <p id="booking-terms-error" className={styles.error}>
           {errors.terms}
@@ -216,16 +313,27 @@ export function TableBookingDetails({
         />
         <span>{copy.newsletterLabel}</span>
       </label>
+      {formError && (
+        <p role="alert" className={styles.formError}>
+          {formError}
+        </p>
+      )}
       <div className={styles.flowActions}>
-        <button type="button" className={styles.backAction} onClick={onBack}>
+        <button
+          type="button"
+          className={styles.backAction}
+          disabled={sending}
+          onClick={onBack}
+        >
           <ArrowLeft aria-hidden="true" /> Back to times
         </button>
         <Button
           type="submit"
           variant="brand-primary"
           className={styles.continueAction}
+          disabled={sending}
         >
-          {copy.action}
+          {sending ? copy.sending : copy.action}
           <ArrowRight aria-hidden="true" />
         </Button>
       </div>

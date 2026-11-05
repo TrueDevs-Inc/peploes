@@ -175,6 +175,7 @@ describe("guestDetailsSchema", function guestDetailsTests() {
       mobile: "0871234567",
       specialRequests: "Window seat please",
       termsAccepted: true,
+      newsletterOptIn: false,
     });
   });
 

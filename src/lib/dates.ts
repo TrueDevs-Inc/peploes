@@ -1,4 +1,14 @@
-import { formatDistanceToNow } from "date-fns";
+import {
+  addMonths,
+  eachDayOfInterval,
+  endOfMonth,
+  endOfWeek,
+  format,
+  formatDistanceToNow,
+  parseISO,
+  startOfMonth,
+  startOfWeek,
+} from "date-fns";
 
 import {
   CALENDAR_FORMAT,
@@ -7,7 +17,13 @@ import {
   MILLISECONDS_PER_DAY,
   RESTAURANT_TIME_ZONE,
 } from "@/lib/constants";
-import type { IDatePeriod, IRestaurantNow } from "@/lib/types";
+import type {
+  IDatePeriod,
+  IFindTableData,
+  IResDiaryClosedDates,
+  IRestaurantNow,
+  TOpenDates,
+} from "@/lib/types";
 
 export function formatDate(isoDate: string): string {
   return new Date(isoDate).toLocaleDateString("en-IE", {
@@ -94,6 +110,49 @@ export function weekdayOf(date: string): number {
 
 export function isInPeriod(date: string, period: IDatePeriod): boolean {
   return period.from <= date && date <= period.to;
+}
+
+export function isClosed(date: string, closed: IResDiaryClosedDates): boolean {
+  return (
+    closed.closedWeekdays.includes(weekdayOf(date)) ||
+    closed.closedPeriods.some((period) => isInPeriod(date, period))
+  );
+}
+
+export function monthGrid(month: Date): Date[] {
+  return eachDayOfInterval({
+    start: startOfWeek(startOfMonth(month), { weekStartsOn: 1 }),
+    end: endOfWeek(endOfMonth(month), { weekStartsOn: 1 }),
+  });
+}
+
+export function isBookableDay(
+  date: string,
+  calendar: IFindTableData["calendar"],
+): boolean {
+  return (
+    date >= calendar.today &&
+    (calendar.lastDate === null || date <= calendar.lastDate) &&
+    !isClosed(date, calendar)
+  );
+}
+
+export function firstFreeBookingDate(
+  date: string,
+  calendar: IFindTableData["calendar"],
+  months: (TOpenDates | undefined)[],
+): string | undefined {
+  const lastMonthDay = format(
+    endOfMonth(addMonths(parseISO(date), 1)),
+    "yyyy-MM-dd",
+  );
+  return months
+    .flatMap((days) => (Array.isArray(days) ? days : []))
+    .sort()
+    .find(
+      (day) =>
+        day >= date && day <= lastMonthDay && isBookableDay(day, calendar),
+    );
 }
 
 export function timeLabel(time: string): string {

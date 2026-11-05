@@ -1,11 +1,54 @@
 import { defineConfig } from "@playwright/test";
+import { FAKE_RESDIARY } from "./e2e/booking-fixtures";
+import { E2E_ENVIRONMENT } from "./e2e/environment";
 import { E2E_SANITY_WEBHOOK_SECRET } from "./e2e/sanity-webhook";
+import { NEWSLETTER_POPUP } from "./src/lib/constants/newsletter-popup";
 
 const baseURL = "http://127.0.0.1:3107";
+const resDiaryDownURL = "http://127.0.0.1:3108";
+const unavailableSpec = /booking-unavailable\.spec\.ts/;
+const sandboxSpec = /booking-sandbox\.spec\.ts/;
 const emailTestIgnore =
   process.env.EMAIL_E2E_BUILD === "1"
     ? []
-    : ["**/enquiry-delivery.spec.ts", "**/contact-delivery.spec.ts"];
+    : [
+        "**/enquiry-delivery.spec.ts",
+        "**/contact-delivery.spec.ts",
+        "**/newsletter-delivery.spec.ts",
+        "**/newsletter-popup-delivery.spec.ts",
+      ];
+
+export function newsletterDismissedState(origin: string) {
+  return {
+    cookies: [],
+    origins: [
+      {
+        origin,
+        localStorage: [{ name: NEWSLETTER_POPUP.dismissedKey, value: "true" }],
+      },
+    ],
+  };
+}
+
+const preloads =
+  "bun build e2e/mock-sanity.ts e2e/mock-resdiary.ts --target=node --outdir=.next/e2e --entry-naming='[name].mjs'";
+const startServer = (port: number) =>
+  `node --import ./.next/e2e/mock-sanity.mjs --import ./.next/e2e/mock-resdiary.mjs node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port ${port}`;
+
+function serverEnv(resDiaryUrl: string): Record<string, string> {
+  return Object.fromEntries([
+    ...Object.entries(E2E_ENVIRONMENT),
+    ["RESDIARY_API_URL", resDiaryUrl],
+    ["RESDIARY_MICROSITE_NAME", FAKE_RESDIARY.micrositeName],
+    ["RESDIARY_CHANNEL_CODE", "ONLINE"],
+    ["RESDIARY_USERNAME", "e2e-user"],
+    ["RESDIARY_PASSWORD", "e2e-password"],
+    ["BOOKING_HOLD_SECRET", "e2e-only-hold-secret-0123456789abcdef"],
+    ["SANITY_WEBHOOK_SECRET", E2E_SANITY_WEBHOOK_SECRET],
+    ["KLAVIYO_PRIVATE_KEY", ""],
+    ["KLAVIYO_LIST_ID_NEWSLETTER", ""],
+  ]);
+}
 
 export default defineConfig({
   testDir: "./e2e",
@@ -13,6 +56,7 @@ export default defineConfig({
   workers: 1,
   use: {
     baseURL,
+    storageState: newsletterDismissedState(baseURL),
     browserName: "chromium",
     launchOptions: { args: ["--font-render-hinting=none"] },
     trace: "retain-on-failure",
@@ -20,15 +64,27 @@ export default defineConfig({
   projects: [
     {
       name: "desktop",
-      // Needs its own build; see playwright.analytics.config.ts.
-      testIgnore: ["**/analytics.spec.ts", ...emailTestIgnore],
+      testIgnore: [
+        unavailableSpec,
+        sandboxSpec,
+        "**/analytics.spec.ts",
+        "**/booking-analytics.spec.ts",
+        "**/sentry.spec.ts",
+        "**/seo.spec.ts",
+        ...emailTestIgnore,
+      ],
       use: { viewport: { width: 1440, height: 900 } },
     },
     {
       name: "phone",
       testIgnore: [
+        unavailableSpec,
+        sandboxSpec,
         "**/desktop-navigation.spec.ts",
         "**/analytics.spec.ts",
+        "**/booking-analytics.spec.ts",
+        "**/sentry.spec.ts",
+        "**/seo.spec.ts",
         ...emailTestIgnore,
       ],
       use: {
@@ -40,8 +96,13 @@ export default defineConfig({
     {
       name: "small-phone",
       testIgnore: [
+        unavailableSpec,
+        sandboxSpec,
         "**/desktop-navigation.spec.ts",
         "**/analytics.spec.ts",
+        "**/booking-analytics.spec.ts",
+        "**/sentry.spec.ts",
+        "**/seo.spec.ts",
         ...emailTestIgnore,
       ],
       use: {
@@ -50,20 +111,27 @@ export default defineConfig({
         hasTouch: true,
       },
     },
+    {
+      name: "resdiary-down",
+      testMatch: unavailableSpec,
+      use: {
+        baseURL: resDiaryDownURL,
+        viewport: { width: 1440, height: 900 },
+      },
+    },
   ],
-  webServer: {
-    command:
-      "bun build e2e/mock-sanity.ts --target=node --outfile=.next/e2e/mock-sanity.mjs && node --import ./.next/e2e/mock-sanity.mjs node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3107",
-    env: Object.fromEntries([
-      ["KLAVIYO_PRIVATE_KEY", ""],
-      ["KLAVIYO_LIST_ID_NEWSLETTER", ""],
-      ["NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN", "pk.e2e-only"],
-      ["SANITY_PROJECT_ID", "testproject"],
-      ["SANITY_DATASET", "development"],
-      ["SANITY_API_VERSION", "2026-10-06"],
-      ["SANITY_WEBHOOK_SECRET", E2E_SANITY_WEBHOOK_SECRET],
-    ]),
-    url: baseURL,
-    reuseExistingServer: false,
-  },
+  webServer: [
+    {
+      command: `${preloads} && ${startServer(3107)}`,
+      env: serverEnv(FAKE_RESDIARY.url),
+      url: baseURL,
+      reuseExistingServer: false,
+    },
+    {
+      command: startServer(3108),
+      env: serverEnv(FAKE_RESDIARY.downUrl),
+      url: resDiaryDownURL,
+      reuseExistingServer: false,
+    },
+  ],
 });

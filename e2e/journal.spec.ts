@@ -877,9 +877,9 @@ for (const path of ["/journal", "/journal/growers-we-work-with"]) {
     await expect(main.getByRole("heading", { level: 1 })).toBeVisible();
     await page.evaluate(() => document.fonts.ready);
     const photographs = main.getByRole("img");
-    expect(await photographs.count()).toBeGreaterThanOrEqual(
-      path === "/journal" ? 8 : 4,
-    );
+    await expect
+      .poll(() => photographs.count())
+      .toBeGreaterThanOrEqual(path === "/journal" ? 8 : 4);
     for (const photograph of await photographs.all()) {
       await photograph.scrollIntoViewIfNeeded();
       await expect(photograph).toBeVisible();

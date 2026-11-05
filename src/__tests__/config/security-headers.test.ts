@@ -45,24 +45,13 @@ describe("security headers", function securityHeaderTests() {
     vi.unstubAllEnvs();
   });
 
-  it("marks every response noindex on preview and local deployments", async function nonLiveNoindexTest() {
-    vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("VERCEL_ENV", "preview");
-    expect((await getGlobalHeaders()).get("X-Robots-Tag")).toBe("noindex");
-
-    vi.stubEnv("NODE_ENV", "development");
-    vi.stubEnv("VERCEL_ENV", "");
-    expect((await getGlobalHeaders()).get("X-Robots-Tag")).toBe("noindex");
-  });
-
-  it("leaves the live site indexable", async function liveIndexableTest() {
-    vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("VERCEL_ENV", "production");
-    expect((await getGlobalHeaders()).has("X-Robots-Tag")).toBe(false);
-
-    vi.stubEnv("VERCEL_ENV", "");
-    expect((await getGlobalHeaders()).has("X-Robots-Tag")).toBe(false);
-  });
+  it.each(["production", "preview", "development", ""])(
+    "does not add an indexing override for deployment %s",
+    async (deployment) => {
+      vi.stubEnv("VERCEL_ENV", deployment);
+      expect((await getGlobalHeaders()).has("X-Robots-Tag")).toBe(false);
+    },
+  );
 
   it("allows configured Mapbox across documents for client navigation", async function mapboxPolicyTest() {
     vi.stubEnv("NODE_ENV", "production");
@@ -203,16 +192,20 @@ describe("security headers", function securityHeaderTests() {
     expect(policy).not.toContain("posthog.com");
   });
 
-  it("keeps Stripe and PostHog together on the booking page", async function bookingWithPostHogTest() {
+  it("keeps Stripe and PostHog together across documents", async function stripeWithPostHogTest() {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "phc_test");
     vi.stubEnv("NEXT_PUBLIC_POSTHOG_HOST", "https://us.i.posthog.com");
 
-    const policy = await getBookingPagePolicy();
-
-    expect(policy).toContain("https://js.stripe.com");
-    expect(policy).toContain("https://api.stripe.com");
-    expect(policy).toContain("https://*.posthog.com");
+    const globalPolicy = (await getGlobalHeaders()).get(
+      "Content-Security-Policy",
+    );
+    const bookingPolicy = await getBookingPagePolicy();
+    for (const policy of [globalPolicy, bookingPolicy]) {
+      expect(policy).toContain("https://js.stripe.com");
+      expect(policy).toContain("https://api.stripe.com");
+      expect(policy).toContain("https://*.posthog.com");
+    }
   });
 
   it("uses development-only script and transport settings", async function developmentPolicyTest() {
@@ -224,7 +217,7 @@ describe("security headers", function securityHeaderTests() {
     expect(headers.has("Strict-Transport-Security")).toBe(false);
   });
 
-  it("allows Stripe.js only on the booking page, with 3-D Secure frames", async function stripeOnBookingPageTest() {
+  it("allows Stripe.js across documents for client navigation, with 3-D Secure frames", async function stripePolicyTest() {
     vi.stubEnv("NODE_ENV", "production");
 
     const globalPolicy = (await getGlobalHeaders()).get(
@@ -232,18 +225,18 @@ describe("security headers", function securityHeaderTests() {
     );
     const bookingPolicy = await getBookingPagePolicy();
 
-    expect(globalPolicy).not.toContain("stripe.com");
-    expect(bookingPolicy).toContain(
-      "script-src 'self' 'unsafe-inline' https://js.stripe.com https://*.js.stripe.com",
-    );
-    expect(bookingPolicy).toContain(
-      "frame-src https://js.stripe.com https://*.js.stripe.com https://hooks.stripe.com",
-    );
-    expect(bookingPolicy).toContain(
-      "connect-src 'self' https://api.stripe.com",
-    );
-    expect(bookingPolicy).toContain("frame-ancestors 'none'");
-    expect(bookingPolicy).toContain("object-src 'none'");
+    expect(bookingPolicy).toBe(globalPolicy);
+    for (const policy of [globalPolicy, bookingPolicy]) {
+      expect(policy).toContain(
+        "script-src 'self' 'unsafe-inline' https://js.stripe.com https://*.js.stripe.com",
+      );
+      expect(policy).toContain(
+        "frame-src https://js.stripe.com https://*.js.stripe.com https://hooks.stripe.com",
+      );
+      expect(policy).toContain("connect-src 'self' https://api.stripe.com");
+      expect(policy).toContain("frame-ancestors 'none'");
+      expect(policy).toContain("object-src 'none'");
+    }
   });
 
   it("keeps Next's default HTML-limited bots and adds AI fetchers", function htmlLimitedBotsTest() {

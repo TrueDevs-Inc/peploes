@@ -9,9 +9,12 @@ import type { ITableBookingPartySizeProps } from "@/lib/types";
 
 export function TableBookingPartySize({
   value,
+  min,
+  max,
   onChange,
 }: ITableBookingPartySizeProps) {
-  const { label, options } = TABLE_BOOKING_CONTENT.partySize;
+  const { label } = TABLE_BOOKING_CONTENT.partySize;
+  const options = Array.from({ length: max - min + 1 }, (_, i) => min + i);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(value);
   const field = useRef<HTMLFieldSetElement>(null);

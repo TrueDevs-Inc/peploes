@@ -10,7 +10,7 @@ import {
   BOOKING_LOG,
   BOOKING_MESSAGES,
 } from "@/lib/constants/booking";
-import { dublinToday, utcMidnight } from "@/lib/dates";
+import { dublinToday, isClosed, utcMidnight } from "@/lib/dates";
 import { LogContext } from "@/lib/enums";
 import { logger } from "@/lib/logger";
 import type {
@@ -19,11 +19,7 @@ import type {
   TBookingResult,
 } from "@/lib/types";
 import { invalid, invalidInput, unavailable } from "@/services/bookings/errors";
-import {
-  isClosed,
-  loadWindow,
-  siteLimitError,
-} from "@/services/bookings/visit";
+import { loadWindow, siteLimitError } from "@/services/bookings/visit";
 
 export async function findCalendarDays(
   provider: TBookingProvider,

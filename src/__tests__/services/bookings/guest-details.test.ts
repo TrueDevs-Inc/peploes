@@ -17,6 +17,7 @@ import {
   setUpBookingTests,
 } from "@/__tests__/services/bookings/fixtures";
 import { readHold, signHold } from "@/lib/booking-token";
+import { BOOKING_LOG } from "@/lib/constants/booking";
 import { ErrorCode } from "@/lib/enums";
 import { logToSentry } from "@/lib/error-handler";
 import type {
@@ -617,6 +618,63 @@ describe("submitGuestDetails", function submitGuestDetailsTests() {
 
   describe("the restaurant's form settings", function settingsTests() {
     it.each([
+      ["payment", false],
+      ["card", false],
+      ["payment", true],
+      ["card", true],
+    ] as const)(
+      "accepts the configured test key in a %s reply when Setup has no Stripe settings (retried: %s)",
+      async function replyTestKey(kind, retried) {
+        const { provider, token } = await held();
+        provider.submitHoldGuest.mockResolvedValue(
+          answered({
+            kind,
+            amountCents: 2000,
+            amountText: "€20.00",
+            stripe: STRIPE_STEP,
+          }),
+        );
+        if (retried) {
+          provider.submitHoldGuest.mockResolvedValueOnce(err(unclear()));
+        }
+
+        const result = await createBookingService({
+          provider,
+          holdSecret: HOLD_SECRET,
+        }).submitGuestDetails(GUEST_DETAILS, token);
+
+        expect(result._unsafeUnwrap()).toMatchObject({
+          kind,
+          stripe: STRIPE_STEP,
+        });
+        expect(errorLogs()).not.toContain(BOOKING_LOG.formUnsupported);
+        expect(logged()).not.toContain(STRIPE_STEP.clientSecret);
+      },
+    );
+
+    it.each(["payment", "card"] as const)(
+      "accepts the configured live key in a %s reply when Setup has no Stripe settings",
+      async function replyLiveKey(kind) {
+        const { provider, token } = await held();
+        const outcome = {
+          kind,
+          amountCents: 2000,
+          amountText: "€20.00",
+          stripe: { ...STRIPE_STEP, publishableKey: "pk_live_fixture" },
+        };
+        provider.submitHoldGuest.mockResolvedValue(answered(outcome));
+
+        const result = await createBookingService({
+          provider,
+          holdSecret: HOLD_SECRET,
+        }).submitGuestDetails(GUEST_DETAILS, token);
+
+        expect(result._unsafeUnwrap()).toMatchObject(outcome);
+        expect(console.error).not.toHaveBeenCalled();
+      },
+    );
+
+    it.each([
       [
         "a membership id",
         { membership: { label: "Member number", required: true } },
@@ -648,10 +706,10 @@ describe("submitGuestDetails", function submitGuestDetailsTests() {
     );
 
     it.each([
-      [false, false],
+      [false, true],
       [true, true],
     ])(
-      "on the live site, refuses a Stripe test key (live %s sends: %s)",
+      "accepts the configured Stripe settings (live %s sends: %s)",
       async function stripeKey(live, sends) {
         const { provider, token } = await held();
         provider.getRules.mockResolvedValue(
@@ -668,7 +726,6 @@ describe("submitGuestDetails", function submitGuestDetailsTests() {
         const result = await createBookingService({
           provider,
           holdSecret: "test-only-hold-secret-0123456789abcdef",
-          liveSite: true,
         }).submitGuestDetails(GUEST_DETAILS, token);
 
         expect(result.isOk()).toBe(sends);
@@ -676,13 +733,9 @@ describe("submitGuestDetails", function submitGuestDetailsTests() {
       },
     );
 
-    it.each([
-      ["a Vercel preview", "preview", true],
-      ["Vercel's production", "production", false],
-      ["a production build off Vercel", "", false],
-    ])(
-      "on %s, follows the live site for a Stripe test key",
-      async function liveSite(_case, vercelEnv, sends) {
+    it.each(["production", "preview", ""])(
+      "accepts configured test payments regardless of deployment %s",
+      async (deployment) => {
         const { provider, token } = await held();
         provider.getRules.mockResolvedValue(
           ok({
@@ -695,7 +748,7 @@ describe("submitGuestDetails", function submitGuestDetailsTests() {
           }),
         );
         vi.stubEnv("NODE_ENV", "production");
-        vi.stubEnv("VERCEL_ENV", vercelEnv);
+        vi.stubEnv("VERCEL_ENV", deployment);
         vi.resetModules();
         const { createBookingService: deployedService } = await import(
           "@/services/bookings"
@@ -706,7 +759,7 @@ describe("submitGuestDetails", function submitGuestDetailsTests() {
           holdSecret: HOLD_SECRET,
         }).submitGuestDetails(GUEST_DETAILS, token);
 
-        expect(result.isOk()).toBe(sends);
+        expect(result.isOk()).toBe(true);
       },
     );
 

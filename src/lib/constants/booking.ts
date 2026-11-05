@@ -17,6 +17,8 @@ export const BOOKING_BUDGET_MS = {
   guestStatus: 3000,
   guestResendMin: 3000,
   guestTotal: 15_000,
+  stripeLoad: 15_000,
+  stripeCheck: 5000,
 } as const;
 
 export const BOOKING_LOST_REPLY_STATUSES: ReadonlySet<number> = new Set([
@@ -46,6 +48,17 @@ export const BOOKING_GUEST_LIMITS = {
 } as const;
 
 export const BOOKING_CALENDAR_MAX_DAYS = 42;
+
+export const BOOKING_STATUS_CHECK = {
+  everyMs: 2000,
+  giveUpMs: 60_000,
+} as const;
+
+export const BOOKING_API = {
+  calendar: "/api/bookings/calendar",
+  times: "/api/bookings/times",
+  holdStatus: "/api/bookings/hold-status",
+} as const;
 
 export const BOOKING_DEFAULT_DATE_SEARCH_DAYS = 31;
 
@@ -136,7 +149,6 @@ export const BOOKING_SKIP_REASONS = {
 export const BOOKING_UNSUPPORTED_SETTINGS = {
   membership: "membershipId",
   customField: "customField",
-  stripeTestKey: "stripeTestKey",
 } as const;
 
 export const BOOKING_HOLD_LIMITS = {
@@ -158,3 +170,13 @@ export const BOOKING_HOLD_COOKIE = {
   sameSite: "lax",
   path: "/",
 } as const;
+
+export const BOOKING_RETURN_PARAMS = {
+  reference: "holdReference",
+  revision: "holdRevision",
+} as const;
+
+export const BOOKING_BANK_REFUSED_STATUSES: ReadonlySet<string> = new Set([
+  "failed",
+  "requires_payment_method",
+]);

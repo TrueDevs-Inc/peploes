@@ -1,94 +1,164 @@
+import type { ITimesData, TBookingResponse } from "../src/lib/types";
+
+import {
+  addDays,
+  dayLabel,
+  dublinToday,
+  freeDates,
+  openDates,
+  shortDayLabel,
+} from "./booking-fixtures";
+import {
+  chooseDate,
+  chooseGuests,
+  findTable,
+  laterFreeDate,
+  openBooking,
+} from "./booking-page";
 import { expect, test } from "./menu-test";
 
-test("booking starts on today's Dublin date and prevents past date selection", async ({
+test("accepting another time's required deadline replaces the previous acceptance", async ({
   page,
 }) => {
-  await page.clock.setFixedTime(new Date("2026-07-02T23:30:00Z"));
-  await page.goto("/book-a-table");
-  const reservations = page.getByRole("region", { name: "Table reservations" });
-  const date = reservations.getByRole("button", { name: /^Date / });
-  await expect(date).toHaveText("Fri, 3 Jul 2026");
-  await date.click();
-  const calendar = reservations.getByRole("group", {
-    name: "Choose date",
+  await page.route("**/api/bookings/times?**", async (route) => {
+    const response = await route.fetch();
+    const reply: TBookingResponse<ITimesData> = await response.json();
+    if (!reply.ok) throw new Error("Expected available booking times");
+    await route.fulfill({
+      response,
+      json: {
+        ...reply,
+        data: {
+          ...reply.data,
+          times: reply.data.times
+            .filter((slot) => ["18:00", "19:00"].includes(slot.time))
+            .map((slot) => ({
+              ...slot,
+              offers: slot.offers.map((offer) => ({
+                ...offer,
+                returnBy: offer.returnBy && {
+                  ...offer.returnBy,
+                  required: true,
+                },
+              })),
+            })),
+        },
+      },
+    });
+  });
+  const reservations = await openBooking(page);
+  await chooseDate(reservations, laterFreeDate());
+  await findTable(reservations);
+  const first = reservations.getByRole("button", {
+    name: "7:00 pm",
     exact: true,
   });
-  await expect(calendar.getByText("July 2026", { exact: true })).toBeVisible();
-  await expect(
-    calendar.getByRole("button", { name: "Previous month" }),
-  ).toBeDisabled();
-  await expect(
-    calendar.getByRole("button", {
-      name: "Thursday, 2 July 2026",
-      exact: true,
-    }),
-  ).toBeDisabled();
-  await expect(
-    calendar.getByRole("button", { name: "Friday, 3 July 2026", exact: true }),
-  ).toBeEnabled();
-  await calendar
-    .getByRole("button", { name: "Friday, 3 July 2026", exact: true })
-    .focus();
-  await page.keyboard.press("ArrowLeft");
-  await expect(
-    calendar.getByRole("button", { name: "Friday, 3 July 2026", exact: true }),
-  ).toBeFocused();
-  await calendar
-    .getByRole("button", { name: "Saturday, 4 July 2026", exact: true })
-    .click();
-  await expect(date).toHaveText("Sat, 4 Jul 2026");
+  const second = reservations.getByRole("button", {
+    name: "6:00 pm",
+    exact: true,
+  });
+  const firstDeadline = reservations.getByRole("checkbox", {
+    name: "I understand the table is required back by 9:00 pm",
+    exact: true,
+  });
+  const secondDeadline = reservations.getByRole("checkbox", {
+    name: "I understand the table is required back by 8:00 pm",
+    exact: true,
+  });
+  const continueButton = reservations.getByRole("button", {
+    name: "Continue",
+    exact: true,
+  });
+
+  await first.click();
+  await expect(firstDeadline).not.toBeChecked();
+  await expect(continueButton).toBeDisabled();
+  await firstDeadline.check();
+  await expect(continueButton).toBeEnabled();
+  await second.click();
+  await expect(secondDeadline).not.toBeChecked();
+  await expect(continueButton).toBeDisabled();
+  await secondDeadline.check();
+  await expect(continueButton).toBeEnabled();
+  await first.click();
+  await expect(firstDeadline).not.toBeChecked();
+  await expect(continueButton).toBeDisabled();
 });
 
-test("booking refreshes expired dates across midnight and keeps future choices", async ({
+for (const restored of [false, true]) {
+  test(`a ${restored ? "restored" : "new"} optional-deadline hold does not accept another time's required deadline`, async ({
+    page,
+  }) => {
+    const reservations = await openBooking(page);
+    await chooseDate(reservations, laterFreeDate());
+    await findTable(reservations);
+    await reservations
+      .getByRole("button", { name: "6:00 pm", exact: true })
+      .click();
+    await expect(
+      reservations.getByText("Table until 8:00 pm", { exact: true }),
+    ).toBeVisible();
+    await reservations
+      .getByRole("button", { name: "Continue", exact: true })
+      .click();
+    await expect(reservations.getByRole("timer")).toBeVisible();
+    if (restored) {
+      await page.reload();
+      await expect(reservations.getByRole("timer")).toBeVisible();
+    }
+    await reservations
+      .getByRole("button", { name: "Back to times", exact: true })
+      .click();
+    await reservations
+      .getByRole("button", { name: "7:00 pm", exact: true })
+      .click();
+    const deadline = reservations.getByRole("checkbox", {
+      name: "I understand the table is required back by 9:00 pm",
+      exact: true,
+    });
+    const continueButton = reservations.getByRole("button", {
+      name: "Continue",
+      exact: true,
+    });
+    await expect(deadline).not.toBeChecked();
+    await expect(continueButton).toBeDisabled();
+    await deadline.check();
+    await expect(continueButton).toBeEnabled();
+  });
+}
+
+test("an after-midnight hold shows its calendar day and restores the same reservation", async ({
   page,
 }) => {
-  await page.clock.setFixedTime(new Date("2026-12-31T23:30:00Z"));
-  await page.goto("/book-a-table");
-  const reservations = page.getByRole("region", { name: "Table reservations" });
-  const date = reservations.getByRole("button", { name: /^Date / });
-  await expect(date).toHaveText("Thu, 31 Dec 2026");
-  await page.clock.setFixedTime(new Date("2027-01-01T00:30:00Z"));
-  await reservations
-    .getByRole("button", { name: "Find a Table", exact: true })
+  const panel = await openBooking(page);
+  await chooseGuests(panel, 1);
+  const evening = laterFreeDate(1);
+  const visit = addDays(evening, 1);
+  await chooseDate(panel, evening);
+  await findTable(panel);
+  await panel
+    .getByRole("button", { name: "12:15 am (next day)", exact: true })
     .click();
-  await expect(date).toHaveText("Fri, 1 Jan 2027");
-  await date.click();
-  const calendar = reservations.getByRole("group", {
-    name: "Choose date",
-    exact: true,
-  });
+  await panel.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(panel.getByRole("timer")).toBeVisible();
   await expect(
-    calendar.getByText("January 2027", { exact: true }),
+    panel.getByText(shortDayLabel(visit), { exact: false }),
   ).toBeVisible();
+  await page.reload();
+  await expect(panel.getByRole("timer")).toBeVisible();
   await expect(
-    calendar.getByRole("button", {
-      name: "Thursday, 31 December 2026",
-      exact: true,
-    }),
-  ).toBeDisabled();
-  await calendar
-    .getByRole("button", { name: "Tuesday, 5 January 2027", exact: true })
+    panel.getByText(shortDayLabel(visit), { exact: false }),
+  ).toBeVisible();
+  await panel
+    .getByRole("button", { name: "Edit date & guests", exact: true })
     .click();
-  await page.clock.setFixedTime(new Date("2027-01-02T00:30:00Z"));
-  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
-  await expect(date).toHaveText("Tue, 5 Jan 2027");
-  await page.clock.setFixedTime(new Date("2027-01-06T00:30:00Z"));
-  await page.evaluate(() =>
-    document.dispatchEvent(new Event("visibilitychange")),
-  );
-  await expect(date).toHaveText("Wed, 6 Jan 2027");
-  await date.click();
+  await chooseGuests(panel, 2);
   await expect(
-    calendar.getByRole("button", {
-      name: "Tuesday, 5 January 2027",
-      exact: true,
-    }),
-  ).toBeDisabled();
-  await page.clock.setFixedTime(new Date("2027-01-07T00:30:00Z"));
-  await calendar
-    .getByRole("button", { name: "Wednesday, 6 January 2027", exact: true })
-    .click();
-  await expect(date).toHaveText("Thu, 7 Jan 2027");
+    panel.getByText(
+      `No tables for 2 guests on ${shortDayLabel(evening)}. Please choose another day.`,
+      { exact: true },
+    ),
+  ).toBeVisible();
 });
 
 test("desktop booking keeps the panel in place when opening available times", async ({
@@ -117,52 +187,93 @@ test("desktop booking keeps the panel in place when opening available times", as
   }
 });
 
-test("desktop booking calendar has shorter rows without changing the booking box", async ({
+test("desktop booking calendar keeps compact day rows and hides elapsed weeks", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.clock.setFixedTime(new Date("2026-11-03T12:00:00Z"));
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/book-a-table");
+  const panel = await openBooking(page);
+  const field = panel.getByRole("button", { name: /^Date / });
+  await expect(field).toBeVisible();
   await page.evaluate(() => document.fonts.ready);
-  const panel = page.getByRole("region", { name: "Table reservations" });
   const closedBounds = await panel.boundingBox();
-  await panel.getByRole("button", { name: /^Date / }).click();
+  await field.click();
   const calendar = panel.getByRole("group", {
     name: "Choose date",
     exact: true,
   });
-  const calendarBounds = await calendar.boundingBox();
   const openBounds = await panel.boundingBox();
-  if (!closedBounds || !openBounds || !calendarBounds)
-    throw new Error("Calendar and booking box must be visible");
+  if (!closedBounds || !openBounds)
+    throw new Error("Booking box must be visible");
   expect(openBounds.height).toBeCloseTo(closedBounds.height, 0);
-  expect(calendarBounds.height).toBeLessThanOrEqual(370);
-  expect(calendarBounds.height).toBeGreaterThanOrEqual(340);
-  await expect(calendar.locator("[data-date]:visible")).toHaveCount(35);
+  const days = calendar.getByRole("button", { name: /, \d+ / });
+  const first = await days.nth(0).boundingBox();
+  const nextRow = await days.nth(7).boundingBox();
+  if (!first || !nextRow) throw new Error("Calendar days must be visible");
+  expect(first.width).toBeCloseTo(36, 0);
+  expect(first.height).toBeCloseTo(36, 0);
+  expect(nextRow.y - first.y - first.height).toBeCloseTo(10, 0);
+  const today = dublinToday();
+  const weekday = new Date(`${today}T12:00:00Z`).getUTCDay();
+  const previousSunday = addDays(today, -(weekday || 7));
   await expect(
     calendar.getByRole("button", {
-      name: "Sunday, 1 November 2026",
+      name: dayLabel(previousSunday),
       exact: true,
     }),
   ).toHaveCount(0);
-  await expect(
-    calendar.getByRole("button", {
-      name: "Monday, 2 November 2026",
-      exact: true,
-    }),
-  ).toBeDisabled();
   expect(
     await calendar.evaluate(
       (element) => element.scrollHeight <= element.clientHeight,
     ),
   ).toBe(true);
+  const chosen = laterFreeDate();
   await calendar
-    .getByRole("button", { name: "Monday, 30 November 2026", exact: true })
+    .getByRole("button", { name: dayLabel(chosen), exact: true })
     .click();
-  await expect(panel.getByRole("button", { name: /^Date / })).toHaveText(
-    "Mon, 30 Nov 2026",
+  await expect(field).toHaveText(shortDayLabel(chosen));
+});
+
+test("booking refreshes expired dates on search, focus and visibility while keeping future choices", async ({
+  page,
+}) => {
+  const panel = await openBooking(page);
+  const date = panel.getByRole("button", { name: /^Date / });
+  const chosen = laterFreeDate();
+  await chooseDate(panel, chosen);
+  await page.clock.setFixedTime(new Date(`${addDays(chosen, 1)}T12:00:00Z`));
+  await panel
+    .getByRole("button", { name: "Find a Table", exact: true })
+    .click();
+  await expect(date).toHaveText(shortDayLabel(addDays(chosen, 1)));
+  await expect(
+    panel.getByRole("button", { name: "Find a Table", exact: true }),
+  ).toBeVisible();
+  await date.click();
+  const calendar = panel.getByRole("group", {
+    name: "Choose date",
+    exact: true,
+  });
+  await expect(
+    calendar.getByRole("button", { name: dayLabel(chosen), exact: true }),
+  ).toBeDisabled();
+  const future = freeDates(dublinToday(), 4).find(
+    (day) => day > addDays(chosen, 3),
   );
+  if (!future) throw new Error("Fixture needs a future open date");
+  await calendar
+    .getByRole("button", { name: dayLabel(future), exact: true })
+    .click();
+  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await expect(date).toHaveText(shortDayLabel(future));
+  await page.clock.setFixedTime(new Date(`${addDays(future, 1)}T12:00:00Z`));
+  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await expect(date).toHaveText(shortDayLabel(addDays(future, 1)));
+  await page.clock.setFixedTime(new Date(`${addDays(future, 2)}T12:00:00Z`));
+  await page.evaluate(() =>
+    document.dispatchEvent(new Event("visibilitychange")),
+  );
+  await expect(date).toHaveText(shortDayLabel(addDays(future, 2)));
 });
 
 test("booking brings hidden step controls back into view on forward and back navigation", async ({
@@ -170,6 +281,7 @@ test("booking brings hidden step controls back into view on forward and back nav
 }) => {
   await page.goto("/book-a-table");
   const reservations = page.getByRole("region", { name: "Table reservations" });
+  await chooseDate(reservations, laterFreeDate());
   await reservations
     .getByRole("button", { name: "Find a Table", exact: true })
     .click();
@@ -193,48 +305,105 @@ test("booking brings hidden step controls back into view on forward and back nav
   }
 });
 
-test("booking terms open the policy without changing agreement or leaving the form", async ({
-  page,
-}) => {
-  await page.goto("/book-a-table");
-  const reservations = page.getByRole("region", { name: "Table reservations" });
-  await reservations
-    .getByRole("button", { name: "Find a Table", exact: true })
-    .click();
-  await reservations
-    .getByRole("button", { name: "6:00 pm", exact: true })
-    .click();
-  await reservations
-    .getByRole("button", { name: "Continue", exact: true })
-    .click();
-  const agreement = reservations.getByRole("checkbox", {
-    name: /By confirming/,
-  });
-  const terms = reservations.getByRole("link", {
-    name: "Peploe’s Booking & Cancellation Terms.",
-    exact: true,
-  });
-  await expect(terms).toHaveAttribute("href", "/booking-cancellation-terms");
+for (const activation of ["click", "Enter", "Space"]) {
+  test(`booking terms open by ${activation} without changing agreement or leaving the form`, async ({
+    page,
+    context,
+  }) => {
+    let popups = 0;
+    page.on("popup", () => {
+      popups += 1;
+    });
+    await page.goto("/book-a-table");
+    const reservations = page.getByRole("region", {
+      name: "Table reservations",
+    });
+    await chooseDate(reservations, laterFreeDate());
+    await reservations
+      .getByRole("button", { name: "Find a Table", exact: true })
+      .click();
+    await reservations
+      .getByRole("button", { name: "6:00 pm", exact: true })
+      .click();
+    await reservations
+      .getByRole("button", { name: "Continue", exact: true })
+      .click();
+    const agreement = reservations.getByRole("checkbox", {
+      name: /By confirming/,
+    });
+    const terms = reservations.getByRole("button", {
+      name: "Peploe’s Booking & Cancellation Terms.",
+      exact: true,
+    });
+    const dialog = page.getByRole("dialog", {
+      name: "Booking & Cancellation Terms",
+      exact: true,
+    });
+    const close = dialog.getByRole("button", { name: "Close", exact: true });
+    const tabs = context.pages().length;
+    await expect(terms).toHaveAttribute("type", "button");
+    await expect(agreement).toHaveAccessibleName(
+      "By confirming, you agree to Peploe’s Booking & Cancellation Terms.",
+    );
+    const agreementLabel = reservations.getByText(
+      "By confirming, you agree to",
+      {
+        exact: true,
+      },
+    );
+    await agreementLabel.click();
+    await expect(agreement).toBeChecked();
+    await expect(dialog).toBeHidden();
+    await agreementLabel.click();
+    await expect(agreement).not.toBeChecked();
+    await expect(dialog).toBeHidden();
 
-  for (const accepted of [false, true]) {
-    await agreement.setChecked(accepted);
-    const opened = page.waitForEvent("popup");
-    if (accepted) {
-      await terms.focus();
-      await terms.press("Enter");
-    } else {
-      await terms.click();
+    for (const accepted of [false, true]) {
+      await agreement.setChecked(accepted);
+      for (const dismissal of ["Close", "Escape"]) {
+        if (activation === "click") {
+          await terms.click();
+        } else {
+          await terms.focus();
+          await terms.press(activation);
+        }
+        await expect(dialog).toBeVisible();
+        const paragraphs = dialog.getByText("Browser test booking terms.", {
+          exact: true,
+        });
+        await expect(paragraphs).toHaveCount(2);
+        await expect(paragraphs.nth(0)).toBeVisible();
+        await expect(paragraphs.nth(1)).toBeVisible();
+        await expect(
+          dialog.getByRole("heading", {
+            name: "Booking & Cancellation Terms",
+            exact: true,
+          }),
+        ).toBeFocused();
+        await expect(agreement).toBeChecked({ checked: accepted });
+        await expect(page.locator("body")).toHaveCSS("overflow", "hidden");
+        if (dismissal === "Close") {
+          await close.click();
+        } else {
+          await page.keyboard.press("Escape");
+        }
+        await expect(dialog).not.toBeVisible();
+        await expect(terms).toBeFocused();
+        await expect(agreement).toBeChecked({ checked: accepted });
+        await expect(page.locator("body")).not.toHaveCSS("overflow", "hidden");
+        await expect(page).toHaveURL("/book-a-table");
+        await expect(
+          reservations.getByRole("button", {
+            name: "Confirm Reservation",
+            exact: true,
+          }),
+        ).toBeVisible();
+        expect(popups).toBe(0);
+        expect(context.pages()).toHaveLength(tabs);
+      }
     }
-    const policy = await opened;
-    await expect(policy).toHaveURL(/\/booking-cancellation-terms$/);
-    await expect(
-      policy.getByRole("heading", { name: "Before you book.", level: 1 }),
-    ).toBeVisible();
-    await expect(page).toHaveURL("/book-a-table");
-    await expect(agreement).toBeChecked({ checked: accepted });
-    await policy.close();
-  }
-});
+  });
+}
 
 test("navbar booking navigation works and closes the mobile drawer", async ({
   page,
@@ -276,7 +445,7 @@ test("navbar booking navigation works and closes the mobile drawer", async ({
   }
 });
 for (const newsletterOptIn of [false, true]) {
-  test(`booking preview completes with newsletter opt-in ${newsletterOptIn} without submitting`, async ({
+  test(`connected booking completes with newsletter opt-in ${newsletterOptIn}`, async ({
     page,
     isMobile,
   }) => {
@@ -288,12 +457,16 @@ for (const newsletterOptIn of [false, true]) {
     const reservations = page.getByRole("region", {
       name: "Table reservations",
     });
-    await expect(reservations.getByText(/Design preview/)).toBeVisible();
+    const previewNotice = reservations.getByText(
+      /Booking preview|no reservation (?:is|was) made/i,
+    );
+    await expect(previewNotice).toHaveCount(0);
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
       "content",
       /noindex/,
     );
 
+    await chooseDate(reservations, laterFreeDate());
     await reservations
       .getByRole("button", { name: "Find a Table", exact: true })
       .click();
@@ -303,6 +476,7 @@ for (const newsletterOptIn of [false, true]) {
         exact: true,
       }),
     ).toBeVisible();
+    await expect(previewNotice).toHaveCount(0);
     await expect(
       reservations.getByRole("button", { name: "Continue", exact: true }),
     ).toBeDisabled();
@@ -310,7 +484,7 @@ for (const newsletterOptIn of [false, true]) {
       .getByRole("button", { name: "7:00 pm", exact: true })
       .click();
     await reservations
-      .getByLabel("I understand the table is required back by 9:00pm")
+      .getByLabel("I understand the table is required back by 9:00 pm")
       .check();
     await reservations
       .getByRole("button", { name: "Continue", exact: true })
@@ -325,6 +499,7 @@ for (const newsletterOptIn of [false, true]) {
         .filter({ visible: true })
         .first(),
     ).toBeVisible();
+    await expect(previewNotice).toHaveCount(0);
     await expect(
       reservations.getByRole("heading", {
         name: "Your table is booked.",
@@ -349,7 +524,7 @@ for (const newsletterOptIn of [false, true]) {
       .getByLabel(isMobile ? "Telephone number" : "Mobile number", {
         exact: false,
       })
-      .fill("+353 87 123 4567");
+      .fill("087 123 4567");
     await reservations
       .getByLabel("Special requests (optional)")
       .fill("Preview only");
@@ -370,14 +545,7 @@ for (const newsletterOptIn of [false, true]) {
       .getByRole("button", { name: "Continue", exact: true })
       .click();
     await expect(newsletter).toBeChecked();
-    await newsletter.uncheck();
-    await expect(newsletter).not.toBeChecked();
     await newsletter.setChecked(newsletterOptIn);
-    await expect(
-      reservations.getByText(
-        "No newsletter subscription will be made in this preview.",
-      ),
-    ).toHaveCount(0);
     await reservations.getByRole("checkbox", { name: /By confirming/ }).check();
     await reservations
       .getByRole("button", { name: "Confirm Reservation", exact: true })
@@ -390,11 +558,11 @@ for (const newsletterOptIn of [false, true]) {
       }),
     ).toBeVisible();
     await expect(
-      reservations.getByText(
-        "No table has been reserved and no confirmation email has been sent.",
-        { exact: true },
-      ),
-    ).toBeVisible();
+      reservations
+        .locator("p", { hasText: "Booking reference" })
+        .locator("strong"),
+    ).toHaveText(/^E2EBK\d{4}$/);
+    await expect(previewNotice).toHaveCount(0);
     await expect(
       reservations.getByRole("button", {
         name: "Add to Calendar",
@@ -407,10 +575,11 @@ for (const newsletterOptIn of [false, true]) {
     await expect(
       reservations.getByRole("link", { name: "Plan Your Visit", exact: true }),
     ).toHaveAttribute("href", "/visit-contact");
-    expect(submissions).toEqual([]);
+    expect(submissions).toHaveLength(3);
     await reservations
       .getByRole("button", { name: "Start again", exact: true })
       .click();
+    await chooseDate(reservations, laterFreeDate());
     await reservations
       .getByRole("button", { name: "Find a Table", exact: true })
       .click();
@@ -436,36 +605,25 @@ for (const newsletterOptIn of [false, true]) {
 test("booking preview preserves selections on back navigation and resets time when the search changes", async ({
   page,
 }) => {
-  await page.clock.setFixedTime(new Date("2025-04-24T12:00:00Z"));
+  const date = openDates(dublinToday())[1] ?? "";
   await page.goto("/book-a-table");
   const reservations = page.getByRole("region", { name: "Table reservations" });
   await reservations.getByRole("combobox", { name: "Party size" }).click();
   await reservations
-    .getByRole("option", { name: "4 guests", exact: true })
+    .getByRole("option", { name: "3 guests", exact: true })
     .click();
-  await reservations.getByRole("button", { name: /^Date / }).click();
-  await reservations
-    .getByRole("button", { name: "Friday, 25 April 2025", exact: true })
-    .click();
+  await chooseDate(reservations, date);
   await reservations
     .getByRole("button", { name: "Find a Table", exact: true })
     .click();
   await expect(
-    reservations.getByText(
-      "Showing times for Friday, 25 April 2025 · 4 guests",
-    ),
-  ).toBeVisible();
-  await reservations
-    .getByRole("button", { name: "Show more times (6 more)", exact: true })
-    .click();
-  await expect(
-    reservations.getByRole("button", { name: "3:00 pm", exact: true }),
+    reservations.getByText(`Showing times for ${dayLabel(date)} · 3 guests`),
   ).toBeVisible();
   await reservations
     .getByRole("button", { name: "7:00 pm", exact: true })
     .click();
   await reservations
-    .getByLabel("I understand the table is required back by 9:00pm")
+    .getByLabel("I understand the table is required back by 9:00 pm")
     .check();
   await reservations
     .getByRole("button", { name: "Continue", exact: true })
@@ -476,22 +634,35 @@ test("booking preview preserves selections on back navigation and resets time wh
   await expect(
     reservations.getByRole("button", { name: "7:00 pm", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    reservations.getByLabel(
+      "I understand the table is required back by 9:00 pm",
+    ),
+  ).toBeChecked();
   await reservations
     .getByRole("button", { name: "Edit date & guests", exact: true })
     .click();
   await expect(
     reservations.getByRole("combobox", { name: "Party size" }),
-  ).toHaveText("4 guests");
+  ).toHaveText("3 guests");
   await reservations
     .getByRole("button", { name: "Find a Table", exact: true })
     .click();
+  await reservations
+    .getByRole("button", { name: "7:00 pm", exact: true })
+    .click();
+  await expect(
+    reservations.getByLabel(
+      "I understand the table is required back by 9:00 pm",
+    ),
+  ).not.toBeChecked();
   await expect(
     reservations.getByRole("button", { name: "Continue", exact: true }),
   ).toBeDisabled();
   await page.reload();
-  await expect(
-    reservations.getByRole("button", { name: "Find a Table", exact: true }),
-  ).toBeVisible();
+  await expect(reservations.getByRole("timer")).toHaveText(
+    /^Table held for \d:\d{2}$/,
+  );
 });
 test("multiword guest names survive typing, back navigation and responsive changes", async ({
   page,
@@ -499,6 +670,7 @@ test("multiword guest names survive typing, back navigation and responsive chang
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/book-a-table");
   const reservations = page.getByRole("region", { name: "Table reservations" });
+  await chooseDate(reservations, laterFreeDate());
   await reservations
     .getByRole("button", { name: "Find a Table", exact: true })
     .click();
@@ -551,38 +723,6 @@ test("multiword guest names survive typing, back navigation and responsive chang
   await page.setViewportSize({ width: 1440, height: 900 });
   await expect(firstName).toHaveValue("Mary Jane");
   await expect(surname).toHaveValue("Smith");
-});
-
-test("extra time selections stay visible after returning from guest details", async ({
-  page,
-}) => {
-  await page.goto("/book-a-table");
-  const reservations = page.getByRole("region", { name: "Table reservations" });
-  await reservations
-    .getByRole("button", { name: "Find a Table", exact: true })
-    .click();
-  await reservations
-    .getByRole("button", { name: "Show more times (6 more)", exact: true })
-    .click();
-  const noon = reservations.getByRole("button", {
-    name: "12:00 pm",
-    exact: true,
-  });
-  await noon.click();
-  await reservations
-    .getByRole("button", { name: "Continue", exact: true })
-    .click();
-  await reservations
-    .getByRole("button", { name: "Back to times", exact: true })
-    .click();
-  await expect(noon).toBeVisible();
-  await expect(noon).toHaveAttribute("aria-pressed", "true");
-  await expect(
-    reservations.getByRole("button", { name: "Show fewer times", exact: true }),
-  ).toHaveAttribute("aria-expanded", "true");
-  await expect(
-    reservations.getByRole("button", { name: "Continue", exact: true }),
-  ).toBeEnabled();
 });
 
 test("booking help offers the restaurant's contact and group dining destinations", async ({
@@ -649,9 +789,9 @@ test("party size menu fits the field and supports keyboard selection and dismiss
   const options = reservations.getByRole("listbox", { name: "Party size" });
   await partySize.click();
   await expect(options).toBeVisible();
-  await expect(options.getByRole("option")).toHaveCount(7);
+  await expect(options.getByRole("option")).toHaveCount(6);
   await expect(
-    options.getByRole("option", { name: "2 guests", exact: true }),
+    options.getByRole("option", { name: "4 guests", exact: true }),
   ).toHaveAttribute("aria-selected", "true");
   const fieldBounds = await partySize.boundingBox();
   const menuBounds = await options.boundingBox();
@@ -669,22 +809,22 @@ test("party size menu fits the field and supports keyboard selection and dismiss
   }
   await partySize.press("ArrowDown");
   await partySize.press("Enter");
-  await expect(partySize).toHaveText("3 guests");
+  await expect(partySize).toHaveText("5 guests");
   await expect(partySize).toBeFocused();
   await expect(options).not.toBeVisible();
   await partySize.press("Space");
   await partySize.press("End");
   await partySize.press("Escape");
-  await expect(partySize).toHaveText("3 guests");
+  await expect(partySize).toHaveText("5 guests");
   await expect(options).not.toBeVisible();
   await partySize.press("ArrowDown");
   await partySize.press("Home");
   await partySize.press("Enter");
   await expect(partySize).toHaveText("1 guest");
   await partySize.click();
-  await partySize.press("7");
+  await partySize.press("6");
   await partySize.press("Enter");
-  await expect(partySize).toHaveText("7 guests");
+  await expect(partySize).toHaveText("6 guests");
   await partySize.click();
   const fourGuests = options.getByRole("option", {
     name: "4 guests",
@@ -694,7 +834,7 @@ test("party size menu fits the field and supports keyboard selection and dismiss
   else await fourGuests.click();
   await expect(partySize).toHaveText("4 guests");
   await partySize.click();
-  await reservations.getByText("Design preview", { exact: false }).click();
+  await reservations.getByRole("list", { name: "Booking progress" }).click();
   await expect(options).not.toBeVisible();
   await partySize.click();
   await partySize.press("Tab");
