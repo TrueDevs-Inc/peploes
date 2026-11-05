@@ -1524,7 +1524,6 @@
   }
   .fiveFeatures > li:last-child .featureHeading {
     max-width: none;
-    white-space: nowrap;
   }
   .celebrationOccasions {
     min-height: 456px;
