@@ -36,7 +36,7 @@ export function BookingBanner() {
               id="booking-banner-heading"
               className={cn(
                 ebGaramond.className,
-                "text-[38px] leading-[41px] font-normal sm:text-[48px] sm:leading-[54px]",
+                "text-[36px] leading-[40px] font-normal sm:text-[48px] sm:leading-[54px]",
               )}
             >
               {BOOKING_BANNER_CONTENT.heading}{" "}

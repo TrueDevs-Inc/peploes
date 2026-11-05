@@ -51,7 +51,7 @@ export function Wine() {
             id="wine-heading"
             className={cn(
               ebGaramond.className,
-              "text-[42px] leading-[42px] font-medium sm:text-[52px] sm:leading-[58px] sm:tracking-[-0.5px] lg:text-[60px] lg:leading-[66px]",
+              "text-[36px] leading-[40px] font-medium sm:text-[52px] sm:leading-[58px] sm:tracking-[-0.5px] lg:text-[60px] lg:leading-[66px]",
             )}
           >
             {WINE_CONTENT.heading}

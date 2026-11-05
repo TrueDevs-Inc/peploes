@@ -67,7 +67,7 @@ function StoryTimeline() {
         <h2
           data-scroll-reveal
           id="story-philosophy"
-          className="text-[38px] leading-[42px] after:mt-6 after:block after:h-0.5 after:w-12 after:bg-peploe-burgundy max-[360px]:text-[35px] max-[360px]:leading-10 sm:leading-10 lg:text-[46px] lg:leading-[48px] xl:text-[clamp(46px,calc(5vw_-_18px),54px)] xl:leading-[clamp(48px,3.75vw,54px)] xl:whitespace-pre-line"
+          className="text-[38px] leading-[42px] after:mt-6 after:block after:h-0.5 after:w-12 after:bg-peploe-burgundy max-sm:text-[34px] max-[360px]:leading-10 sm:leading-10 lg:text-[46px] lg:leading-[48px] xl:text-[clamp(46px,calc(5vw_-_18px),54px)] xl:leading-[clamp(48px,3.75vw,54px)] xl:whitespace-pre-line"
         >
           {philosophy.heading}
         </h2>
@@ -120,7 +120,7 @@ function StoryBuilding() {
           </p>
           <h2
             id="story-building"
-            className="mt-4 text-[38px] leading-[42px] text-balance max-[360px]:text-[35px] max-[360px]:leading-10 sm:text-[52px] sm:leading-[52px] lg:text-[48px] lg:leading-[48px] lg:text-wrap lg:whitespace-pre-line xl:text-[clamp(52px,4.166667vw,60px)] xl:leading-[52px] xl:whitespace-pre"
+            className="mt-4 text-[38px] leading-[42px] text-balance max-sm:text-[36px] max-[360px]:leading-10 sm:text-[52px] sm:leading-[52px] lg:text-[48px] lg:leading-[48px] lg:text-wrap lg:whitespace-pre-line xl:text-[clamp(52px,4.166667vw,60px)] xl:leading-[52px] xl:whitespace-pre"
           >
             {building.heading}
           </h2>
@@ -192,7 +192,7 @@ function StoryFounder() {
           </p>
           <h2
             id="story-founder"
-            className="mt-4 text-[38px] leading-[42px] text-balance max-[360px]:text-[35px] max-[360px]:leading-10 sm:text-[52px] sm:leading-[52px] lg:text-[60px] lg:leading-[50px] lg:text-wrap lg:whitespace-pre-line"
+            className="mt-4 text-[38px] leading-[42px] text-balance max-sm:text-[36px] max-[360px]:leading-10 sm:text-[52px] sm:leading-[52px] lg:text-[60px] lg:leading-[50px] lg:text-wrap lg:whitespace-pre-line"
           >
             {founder.heading}
           </h2>
@@ -280,7 +280,7 @@ function StoryArchive() {
           </p>
           <h2
             id="story-archive"
-            className="mt-4 text-[38px] leading-[42px] text-balance max-[360px]:text-[35px] max-[360px]:leading-10 sm:text-[52px] sm:leading-[52px] lg:text-[60px] lg:leading-[50px] lg:text-wrap lg:whitespace-pre-line"
+            className="mt-4 text-[38px] leading-[42px] text-balance max-sm:text-[36px] max-[360px]:leading-10 sm:text-[52px] sm:leading-[52px] lg:text-[60px] lg:leading-[50px] lg:text-wrap lg:whitespace-pre-line"
           >
             {archive.heading}
           </h2>
@@ -369,7 +369,7 @@ function StoryToday() {
           </p>
           <h2
             id="story-today"
-            className="mt-4 text-[38px] leading-[42px] text-balance max-[360px]:text-[35px] max-[360px]:leading-10 sm:text-[52px] sm:leading-[52px] lg:text-[60px] lg:text-wrap lg:whitespace-pre-line"
+            className="mt-4 text-[38px] leading-[42px] text-balance max-sm:text-[36px] max-[360px]:leading-10 sm:text-[52px] sm:leading-[52px] lg:text-[60px] lg:text-wrap lg:whitespace-pre-line"
           >
             {today.heading}
           </h2>

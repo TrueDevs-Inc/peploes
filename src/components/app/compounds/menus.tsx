@@ -48,7 +48,7 @@ export function Menus() {
             id="menus-heading"
             className={cn(
               ebGaramond.className,
-              "text-[38px] leading-10 font-medium tracking-[-0.4px] text-balance text-peploe-burgundy max-[360px]:text-[34px] max-[360px]:leading-[38px] sm:text-[52px] sm:text-wrap sm:leading-[56px] sm:tracking-normal lg:text-[60px] lg:leading-[48px]",
+              "text-[36px] leading-10 font-medium tracking-[-0.4px] text-balance text-peploe-burgundy sm:text-[52px] sm:text-wrap sm:leading-[56px] sm:tracking-normal lg:text-[60px] lg:leading-[48px]",
             )}
           >
             {MENUS_CONTENT.heading}

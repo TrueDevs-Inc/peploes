@@ -515,3 +515,17 @@
     transform-origin: left 60%;
   }
 }
+
+@media (width < 40rem) {
+  .heroCopy {
+    min-height: calc(100dvh - 72px);
+    padding-block: 40px 80px;
+  }
+
+  .heroCopy h1,
+  .terraceCopy h2,
+  .joinCopy h2 {
+    font-size: 36px;
+    line-height: 40px;
+  }
+}

@@ -56,7 +56,7 @@ export function Hero() {
                 id="hero-heading"
                 className={cn(
                   ebGaramond.className,
-                  "text-[46px] leading-[44px] font-medium tracking-[-1px] sm:text-[clamp(40px,5.278vw,76px)] sm:leading-[1.079] sm:tracking-normal lg:text-[76px] lg:leading-[82px]",
+                  "text-[36px] leading-[40px] font-medium tracking-[-1px] sm:text-[clamp(40px,5.278vw,76px)] sm:leading-[1.079] sm:tracking-normal lg:text-[76px] lg:leading-[82px]",
                 )}
               >
                 <span className="lg:block">{HERO_CONTENT.headingLines[0]}</span>{" "}

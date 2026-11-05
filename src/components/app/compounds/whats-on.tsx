@@ -91,7 +91,7 @@ function EventCard({ event, featured = false }: IEventCardProps) {
           className={cn(
             ebGaramond.className,
             featured
-              ? "text-[34px] leading-9 font-normal sm:text-[42px] sm:leading-[48px]"
+              ? "text-[28px] leading-8 font-normal sm:text-[42px] sm:leading-[48px]"
               : "text-[28px] leading-[29px] font-normal sm:text-2xl sm:leading-[30px] sm:font-medium",
           )}
         >

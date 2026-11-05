@@ -34,7 +34,7 @@ export function HumanHospitality() {
                 id="human-hospitality-heading"
                 className={cn(
                   ebGaramond.className,
-                  "text-[42px] leading-[42px] font-medium text-peploe-burgundy sm:text-[52px] sm:leading-[58px] xl:text-[60px] xl:leading-[66px]",
+                  "text-[36px] leading-[40px] font-medium text-peploe-burgundy sm:text-[52px] sm:leading-[58px] xl:text-[60px] xl:leading-[66px]",
                 )}
               >
                 {HUMAN_HOSPITALITY_CONTENT.heading}

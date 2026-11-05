@@ -57,7 +57,7 @@ export function Stories() {
             id="stories-heading"
             className={cn(
               ebGaramond.className,
-              "text-[42px] leading-[42px] font-medium sm:text-[52px] sm:leading-[58px] lg:text-[60px] lg:leading-[66px]",
+              "text-[36px] leading-[40px] font-medium sm:text-[52px] sm:leading-[58px] lg:text-[60px] lg:leading-[66px]",
             )}
           >
             {STORIES_CONTENT.headingLines[0]}

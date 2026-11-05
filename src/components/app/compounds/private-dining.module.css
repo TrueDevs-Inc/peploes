@@ -2652,3 +2652,23 @@
     outline-offset: 2px;
   }
 }
+
+@media (width < 40rem) {
+  .celebrationClosing .heading {
+    font-size: 34px;
+    line-height: 40px;
+    white-space: normal;
+  }
+
+  .celebrations .heroTitle {
+    font-size: 40px;
+    line-height: 44px;
+  }
+
+  .corporate .heroTitle,
+  .weddings .heroTitle,
+  .celebrationOccasions .heading {
+    font-size: 36px;
+    line-height: 40px;
+  }
+}
