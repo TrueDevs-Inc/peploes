@@ -2,7 +2,7 @@ import "server-only";
 
 import { err } from "neverthrow";
 
-import { env, isLiveSite } from "@/lib/env";
+import { env } from "@/lib/env";
 import { resdiary } from "@/lib/resdiary-provider";
 import type {
   IBookingError,
@@ -30,7 +30,6 @@ export function createBookingService(deps: IBookingServiceDeps = {}) {
     deps.holdSecret === undefined
       ? (env.BOOKING_HOLD_SECRET ?? null)
       : deps.holdSecret;
-  const liveSite = deps.liveSite ?? isLiveSite();
 
   async function guarded<T>(
     operation: TBookingOperation,
@@ -73,8 +72,7 @@ export function createBookingService(deps: IBookingServiceDeps = {}) {
     submitGuestDetails: (input: unknown, holdToken?: string) =>
       guarded(
         "submitGuestDetails",
-        (secret) =>
-          submitGuestDetails({ provider, secret, liveSite }, input, holdToken),
+        (secret) => submitGuestDetails({ provider, secret }, input, holdToken),
         stillConfirming,
       ),
   };

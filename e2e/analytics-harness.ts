@@ -118,7 +118,6 @@ function decodePostHogBody(buffer: Buffer | null): IPostHogEvent[] {
 export class AnalyticsRecorder {
   readonly traffic: ITraffic[] = [];
   readonly errors: string[] = [];
-  /** While set, gtag.js and lazy Next chunks wait for `release()`. */
   private gate: { promise: Promise<void>; open: () => void } | null = null;
   private blocked = new Set<TProvider>();
 
@@ -284,11 +283,6 @@ async function installRoutes(
       });
     },
   );
-  // Lazy application chunks (the posthog-js import) wait while the gate is held.
-  await context.route("**/_next/static/chunks/**", async (route) => {
-    await recorder.waitGate();
-    await route.continue();
-  });
 }
 
 function watchPage(page: Page, recorder: AnalyticsRecorder): void {
@@ -304,6 +298,17 @@ function watchPage(page: Page, recorder: AnalyticsRecorder): void {
 
 export const test = base.extend<{ analytics: AnalyticsRecorder }>({
   analytics: async ({ context }, use, testInfo) => {
+    await context.route("https://sentry.e2e.test/**", (route) =>
+      route.fulfill({ status: 200, body: "{}" }),
+    );
+    await context.route("**/_next/image?**", async (route) => {
+      const request = new URL(route.request().url());
+      const source = request.searchParams.get("url");
+      const prefix = "https://cdn.sanity.io/images/testproject/development/";
+      if (source?.startsWith(prefix))
+        request.searchParams.set("url", `/${source.slice(prefix.length)}`);
+      await route.continue({ url: request.href });
+    });
     const recorder = new AnalyticsRecorder();
     // posthog-js treats webdriver and HeadlessChrome brand browsers as bots and
     // drops their events, which would hide real SDK delivery from this suite.

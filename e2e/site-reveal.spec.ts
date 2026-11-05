@@ -285,6 +285,7 @@ test("client navigation and streamed content retain reveal behavior", async ({
       behavior: "instant",
     }),
   );
+  await expect(streamed).toHaveAttribute("data-scroll-reveal-state", "visible");
   await expect(streamed).toHaveCSS("opacity", "1");
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
   await expect(streamed).toHaveAttribute("data-scroll-reveal-state", "visible");

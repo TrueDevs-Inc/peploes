@@ -9,7 +9,7 @@ import {
   BOOKING_LOG,
   BOOKING_MESSAGES,
 } from "@/lib/constants/booking";
-import { addDays, dublinToday } from "@/lib/dates";
+import { addDays, dublinToday, isClosed } from "@/lib/dates";
 import { LogContext } from "@/lib/enums";
 import { logger } from "@/lib/logger";
 import type {
@@ -23,7 +23,6 @@ import { unavailable } from "@/services/bookings/errors";
 import {
   flagPartyCapConflict,
   impossibleLimits,
-  isClosed,
   loadWindow,
   partyLimits,
 } from "@/services/bookings/visit";

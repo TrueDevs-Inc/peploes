@@ -14,7 +14,6 @@ test("public content pages reuse rendered HTML", async ({ request }) => {
     "/private-dining/corporate-events",
     "/private-dining/weddings",
     "/contact",
-    "/book-a-table",
     "/journal",
     "/seasonal",
     "/privacy-cookies",
@@ -39,6 +38,13 @@ test("public content pages reuse rendered HTML", async ({ request }) => {
         .toBe("HIT");
     });
   }
+});
+
+test("live booking responses remain uncached", async ({ request }) => {
+  const response = await request.get("/book-a-table");
+  expect(response.status()).toBe(200);
+  expect(response.headers()["cache-control"]).toContain("no-store");
+  expect(response.headers()["x-nextjs-cache"]).toBeUndefined();
 });
 
 function destinationPath(url: URL) {
@@ -118,6 +124,8 @@ for (const destination of [
       if (
         destinationPath(url) !== destination.href ||
         !url.searchParams.has("_rsc") ||
+        response.request().headers()["next-router-segment-prefetch"] ===
+          "/_tree" ||
         !response.ok()
       )
         return;

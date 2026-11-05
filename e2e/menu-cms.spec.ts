@@ -476,6 +476,7 @@ for (const [index, slug, title] of [
 
     for (const reducedMotion of ["no-preference", "reduce"] as const) {
       await page.emulateMedia({ reducedMotion });
+      await expectIntroduction();
       await page
         .getByRole("navigation", { name: `${title} sections` })
         .evaluate((element) => element.scrollIntoView({ behavior: "instant" }));

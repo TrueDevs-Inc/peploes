@@ -260,3 +260,28 @@ test("contact and map links point to the restaurant's public destinations", asyn
     "https://www.google.com/maps/dir/?api=1&destination=Peploe%27s%2C%2016%20St%20Stephen%27s%20Green%2C%20Dublin%202",
   );
 });
+
+test("Contact keeps its only enquiry form immediately before the closing section", async ({
+  page,
+}) => {
+  await page.goto("/contact");
+  const main = page.getByRole("main");
+  await expect(
+    main.getByRole("form", { name: "Plan your gathering" }),
+  ).toBeVisible();
+  await expect(
+    main.getByRole("form", { name: "General contact message" }),
+  ).toHaveCount(0);
+  await expect(main.getByRole("form")).toHaveCount(1);
+  const sections = await main
+    .locator(":scope > section")
+    .evaluateAll((elements) =>
+      elements.map((section) => ({
+        id: section.id,
+        hasForm: Boolean(section.querySelector("form")),
+      })),
+    );
+  expect(sections.at(-2)).toEqual({ id: "enquire", hasForm: true });
+  expect(sections.filter((section) => section.hasForm)).toHaveLength(1);
+  expect(sections[0]?.hasForm).toBe(false);
+});

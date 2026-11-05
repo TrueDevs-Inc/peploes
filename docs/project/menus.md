@@ -27,7 +27,7 @@ gutters and mobile section order.
 The Group Set Menu enquiry action opens the private-dining enquiry section.
 Its closing banner heading, description and enquiry button share a left edge
 on desktop and mobile; the desktop content keeps its existing position.
-Book a Table actions open the [booking design preview](brief.md#book-a-table-design-preview).
+Book a Table actions open the [booking page](brief.md#book-a-table).
 Enquiry submission remains inactive until its integration exists.
 
 ## Design and approved comments
@@ -283,7 +283,7 @@ the repository and `bun install --cwd studio` once. Log into Studio with your
 own Sanity account. Access is controlled by Sanity project membership.
 
 The website uses `SANITY_PROJECT_ID`, `SANITY_DATASET` and
-`SANITY_API_VERSION` in the root `.env.local`; copy the names from
+`SANITY_API_VERSION` in the root `.env`; copy the names from
 `.env.example`. Studio uses `SANITY_STUDIO_PROJECT_ID` and
 `SANITY_STUDIO_DATASET`; its defaults point to the development project above.
 Keep the API version pinned to `2026-10-06`. Studio auto-updates are disabled so

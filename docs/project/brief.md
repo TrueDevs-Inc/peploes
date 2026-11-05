@@ -6,12 +6,12 @@ content contract are documented in [Menu pages](menus.md).
 Dedicated occasion pages, their Figma references and enquiry preview are
 documented in [Private dining and events](private-dining.md).
 
-## Book a Table design preview
+## Book a Table
 
-The date field starts on today's date in Dublin after hydration. Past dates and
+The date field starts on ResDiary's first open date. Past dates in Dublin and
 earlier months cannot be selected, including through keyboard navigation. The
 date refreshes when the search step regains focus or visibility; future choices
-are kept. Find a Table checks the date again before opening sample times.
+are kept. Find a Table checks the date again before fetching available times.
 Desktop booking calendars use 36px day cells and 10px row gaps; the booking
 card dimensions and mobile day-cell sizes stay the same.
 Fully elapsed weeks are hidden from the booking calendar. Earlier dates in the
@@ -20,9 +20,11 @@ current week stay disabled so weekday alignment is preserved.
 The /book-a-table page follows the desktop and mobile booking frames in Figma.
 Its server contract, hold timer and failure behaviour are documented in
 [Booking page and the table hold](booking-page.md).
-Its four steps run in browser memory: choose a date and party size, select a
-sample time, enter guest details, and view the confirmation layout. The page
-stays noindex. A visible notice identifies the flow as a design preview.
+Its four steps connect to ResDiary: choose a date and party size, select an
+available time, enter guest details, and view the confirmed reservation. Some
+bookings require a Stripe deposit or card guarantee before confirmation.
+The page stays noindex. A reservation is confirmed only after ResDiary returns
+its confirmation and booking reference.
 
 The booking layout and colours retain the Figma structure. Its controls and
 typography use the site's smaller scale: desktop actions are 48px tall with
@@ -30,25 +32,24 @@ typography use the site's smaller scale: desktop actions are 48px tall with
 existing card width, column counts and responsive arrangement. Let each step
 fit its content instead of retaining the design artboard's fixed minimum height.
 
-This preview does not query ResDiary, create reservations, send email, store
-guest details, or export calendar entries. The confirmation explicitly says no
-reservation was made. Refreshing the page resets the preview. Menu, Visit &
-Contact, telephone and email links use the existing destinations.
+Availability, table holds and guest details use the booking service. Reloading
+restores the tab's held table or payment step from session storage. Add to
+Calendar remains disabled. Menu, Visit & Contact, telephone and email links use
+the existing destinations. Confirmation email behaviour depends on the connected
+ResDiary account, as documented in the booking contract.
 
-The available-times frame includes the two-hour return-time acknowledgement for
-the sample 7pm slot. Changing the date or party size clears the previous time
-selection. Guest fields validate before advancing; back navigation preserves
+ResDiary supplies return times; guests must acknowledge those marked as required.
+Changing the date or party size clears the previous time selection. Guest fields
+validate before advancing; back navigation preserves
 the entered details. First name and surname are stored independently, including
 spaces within either part. Mobile displays them together in one field; switching
-widths does not reinterpret the name. Returning from guest details reopens the
-extra time slots when the retained selection is in that list. Booking terms remain placeholder
-copy until the restaurant supplies the final terms and ResDiary is integrated.
+widths does not reinterpret the name. Booking terms come from ResDiary.
 
 Verify the forward and back journey, invalid guest details, contact destinations,
 image loading and overflow at 1440px, 390px and 320px. Every Book a Table link,
 including the homepage hero and closing banner, menu banners, and Visit &
 Contact buttons, opens `/book-a-table`. Visit's Check Online Availability action
-opens the same preview. Group enquiry links keep their existing destinations.
+opens the same booking page. Group enquiry links keep their existing destinations.
 
 ## Visit & Contact
 
@@ -99,7 +100,7 @@ Set `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN` to a public development token locally and
 replace it with the client's URL-restricted public token for production.
 Mapbox attribution stays visible. Zoom, fullscreen and recenter controls are
 available; scroll-wheel zoom is disabled so the page remains easy to scroll.
-Booking controls open the [Book a Table design preview](#book-a-table-design-preview).
+Booking controls open the [Book a Table page](#book-a-table).
 Main navigation opening-hours and location links point to this page, using its
 `#opening-hours` and `#find-us` anchors. The mobile footer's address button
 opens `#find-us`; its opening hours appear without a separate link.
@@ -228,8 +229,24 @@ Compare section positions, line breaks, crops and overlays at 390px, then check
 narrow phones, tablet and desktop for overflow. Book a Table opens its design
 preview. Homepage telephone actions use the shared restaurant contact. Event
 buttons open the existing seasonal event templates; menu, story, private dining
-and contact links open their matching pages. Unbuilt editorial pages, Gift
-Vouchers and newsletter subscription remain inactive.
+and contact links open their matching pages. Unbuilt editorial pages and Gift Vouchers remain inactive. Newsletter signup
+uses the shared provider-backed form described below.
+
+## Booking newsletter opt-in
+
+Issue #120 adds an optional newsletter checkbox beneath the booking terms on
+the guest-details step. It starts unchecked, remains independent of the required
+terms, keeps its choice when going back to times, and resets on Start again.
+Both choices allow the connected booking to proceed. The checkbox rows have an
+8px gap. After ResDiary accepts the guest details (confirmation, deposit or card
+guarantee), an explicit opt-in requests a subscription through the existing
+newsletter service after the booking response. Subscription failure never
+changes the booking result or retries the booking. Consent and email are not
+stored for recovery. If the booking outcome remains unclear and is only resolved
+later by status polling, no newsletter request is made; guests can use the footer
+signup instead. Newsletter delivery still needs the configured Klaviyo list,
+credentials and rate limiter. No subscription success is promised by the booking
+confirmation.
 
 ## Homepage interaction previews
 
@@ -240,8 +257,9 @@ button (issue #27). Text-entry fields retain their text cursor.
 Remaining placeholder actions use inert `type="button"` controls with `aria-disabled="true"`
 and no click handlers. They remain focusable and show the Figma hover styles
 without navigating, booking or submitting. The newsletter form validates email
-on Enter or Subscribe, then explains that signup is unavailable. It does not
-send or store the entered address.
+on Enter or Subscribe and submits to the configured newsletter provider. It
+shows acceptance only after the provider accepts the request and reports
+unavailability when the provider is not configured.
 
 The existing shared button owns the homepage's brand variants: primary,
 primary inverse, secondary inverse, editorial text, navigation and contact.
@@ -410,7 +428,8 @@ addresses show the inline error below the field and focus the input.
 Focus colours the 1px bottom border burgundy and thickens it by 1px downward
 without moving the text. Enter and Subscribe show an error for empty
 or malformed addresses, including addresses without a dotted domain. Valid input
-shows that signup is unavailable pending integration; no email is sent or saved.
+uses the shared newsletter action. Accepted requests show confirmation; failures
+retain the entered address for correction or retry.
 Opening hours and contact details follow the design and should be confirmed by
 the restaurant before launch.
 
@@ -873,14 +892,14 @@ the banner is 318px tall with 72px vertical padding.
 On narrow screens the text wraps, margins reduce and the illustration fades
 to keep the copy readable.
 
-Book a Table opens the [booking design preview](#book-a-table-design-preview).
+Book a Table opens the [booking page](#book-a-table).
 The nearby Booking fallback note (`3131:11704`) requires
 working phone and email options when online availability is missing. The
-footer retains those active links; ResDiary integration remains future work.
+footer retains those active links alongside the connected ResDiary booking flow.
 
 When changing the banner, compare the italic text, botanical crop, background,
 spacing and button with Figma. Check artwork and font loading, narrow-screen
-wrapping, horizontal overflow and navigation to the booking preview.
+wrapping, horizontal overflow and navigation to the booking page.
 
 ## Journal implementation
 
@@ -1029,3 +1048,19 @@ catalogues; the detail-only fixtures preserve those separate design scenarios.
 Additional stories and body blocks are labelled synthetic and exercise
 pagination, rendering and related-story exclusion. Never publish that synthetic
 copy as restaurant editorial content.
+
+## Homepage newsletter popup
+
+Issue #115 adapts Samsu's section-exit trigger. Samsu observes `#reviews`
+and opens once the section has scrolled fully above the viewport. Peploe's has
+no reviews section, so the approved equivalent is the existing `#wine` section.
+The popup uses the footer's approved "A Letter from Gina" copy and shared signup
+form. It adds no offer or discount.
+
+As in Samsu, a display starts a seven-day cooldown. Closing or subscribing
+suppresses future displays indefinitely in that browser. Storage contains only
+markers and a display timestamp. When storage is blocked, suppression lasts for
+the current visit. Another open dialog, a focused booking link, or an active
+summary or form control skips the opening opportunity. Escape, the close button
+and a backdrop click dismiss it and restore focus without scrolling. The accepted
+message stays visible until dismissal.

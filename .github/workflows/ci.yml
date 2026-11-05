@@ -82,8 +82,8 @@ jobs:
         env:
           NODE_ENV: production
 
-      - name: Build and browser-test analytics delivery
-        run: bun run test:e2e:analytics
+      - name: Build and browser-test reporting and SEO
+        run: bun run test:e2e:reporting
         env:
           NODE_ENV: production
 

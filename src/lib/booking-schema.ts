@@ -124,4 +124,5 @@ export const guestDetailsSchema = z.object({
     .optional()
     .transform((value) => value || undefined),
   termsAccepted: z.literal(true, { error: BOOKING_MESSAGES.acceptTerms }),
+  newsletterOptIn: z.boolean().optional().default(false),
 });

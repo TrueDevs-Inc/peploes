@@ -8,10 +8,9 @@ const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN || "";
 try {
   Sentry.init({
     dsn,
-    enabled:
-      Boolean(dsn) &&
-      process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT === "production",
+    enabled: isProd && Boolean(dsn),
     environment: process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT || "development",
+    release: process.env.NEXT_PUBLIC_SENTRY_RELEASE || undefined,
     sendDefaultPii: false,
     tracesSampleRate: isProd ? 0.15 : 1.0,
     profilesSampleRate: 0,

@@ -72,7 +72,12 @@ export function GroupsOccasions() {
       </div>
 
       <div className="site-container">
-        <ul className="grid items-center gap-10 py-8 sm:gap-8 sm:py-12 xl:w-[calc(100%+59px)] xl:max-w-[1355px] xl:grid-cols-3 xl:items-stretch xl:gap-7">
+        <ul
+          className={cn(
+            styles.cards,
+            "grid items-center gap-10 py-8 sm:gap-8 sm:py-12 xl:w-[calc(100%+59px)] xl:max-w-[1355px] xl:grid-cols-3 xl:items-stretch",
+          )}
+        >
           {GROUPS_OCCASIONS_CONTENT.occasions.map((occasion) => (
             <li key={occasion.title} className={styles.card} data-image-card>
               <Link

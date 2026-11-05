@@ -18,6 +18,7 @@ const envState = vi.hoisted(() => ({
   phHost: "https://eu.i.posthog.com" as string | undefined,
 }));
 vi.mock("@/lib/env", () => ({
+  isProduction: () => true,
   env: {
     get NEXT_PUBLIC_GA_MEASUREMENT_ID() {
       return envState.gaId;
@@ -29,7 +30,6 @@ vi.mock("@/lib/env", () => ({
       return envState.phHost;
     },
   },
-  isLiveSiteClient: () => true,
 }));
 
 const ACCEPTED = { analytics: true, performance: true, marketing: true };
@@ -80,7 +80,8 @@ async function start() {
   const lifecycle = await import("@/lib/analytics/lifecycle");
   const consent = await import("@/lib/cookie-consent");
   const client = await import("@/lib/analytics/client");
-  return { lifecycle, consent, client };
+  const posthog = await import("@/lib/analytics/posthog");
+  return { lifecycle, consent, client, posthog };
 }
 
 async function settle() {
@@ -104,21 +105,21 @@ describe("pending SDK delivery on withdrawal", () => {
     expect(sentEvents().map((e) => e.event)).toEqual(["$pageview"]);
   });
 
-  it("sends each event at once and nothing after consent is withdrawn", async () => {
-    const { lifecycle, consent } = await start();
+  it("sends each event at once and stops after explicit provider teardown", async () => {
+    const { lifecycle, posthog } = await start();
     browser.grantAnalytics();
     lifecycle.startAnalytics();
     lifecycle.recordNavigation("/menus");
     await settle();
     expect(network.requests).toHaveLength(1);
-    consent.saveCookiePreferences(DENIED);
+    posthog.deactivatePostHog();
     lifecycle.recordNavigation("/visit");
     await vi.advanceTimersByTimeAsync(60_000);
     expect(network.requests).toHaveLength(1);
   });
 
-  it("does not retry a failed request after withdrawal, nor resend it after re-consent", async () => {
-    const { lifecycle, consent } = await start();
+  it("does not retry an aborted instance and starts a fresh one after explicit activation", async () => {
+    const { lifecycle, posthog } = await start();
     network.status = 500;
     browser.grantAnalytics();
     lifecycle.startAnalytics();
@@ -127,12 +128,13 @@ describe("pending SDK delivery on withdrawal", () => {
     // The page view was sent and rejected; withdrawal lands before any retry.
     expect(network.requests).toHaveLength(1);
 
-    consent.saveCookiePreferences(DENIED);
+    posthog.deactivatePostHog();
     await vi.advanceTimersByTimeAsync(120_000);
     expect(network.requests).toHaveLength(1);
 
     network.status = 200;
-    consent.saveCookiePreferences(ACCEPTED);
+    await posthog.activatePostHog();
+    lifecycle.startAnalytics();
     await settle();
     await vi.advanceTimersByTimeAsync(120_000);
     const urls = sentEvents().map((e) => e.event);
@@ -237,8 +239,8 @@ describe("request timeout and instance cost", () => {
     expect(network.requests.length).toBeGreaterThan(1);
   });
 
-  it("still aborts a hanging request on withdrawal", async () => {
-    const { lifecycle, consent } = await start();
+  it("still aborts a hanging request on explicit provider teardown", async () => {
+    const { lifecycle, posthog } = await start();
     browser.grantAnalytics();
     lifecycle.startAnalytics();
     network.hang = true;
@@ -246,7 +248,7 @@ describe("request timeout and instance cost", () => {
     await settle();
     await vi.advanceTimersByTimeAsync(3_500);
     expect(network.signals.every((signal) => !signal.aborted)).toBe(true);
-    consent.saveCookiePreferences(DENIED);
+    posthog.deactivatePostHog();
     expect(network.signals.every((signal) => signal.aborted)).toBe(true);
     await vi.advanceTimersByTimeAsync(120_000);
     expect(network.requests).toHaveLength(1);

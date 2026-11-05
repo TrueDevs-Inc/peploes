@@ -1,13 +1,10 @@
 # Sentry
 
-Sentry is optional. The app runs without a DSN. Reporting requires a configured
-DSN and an environment label of exactly `production`. Node and Edge read
-`VERCEL_ENV`; the browser uses the label derived from it at build time. This
-checks an environment variable, not whether the application is hosted on
-Vercel. Local builds normally leave `VERCEL_ENV` unset and previews use
-`preview`, so neither sends events, even when `NODE_ENV=production`. Setting
-`VERCEL_ENV=production` deliberately enables reporting on any host.
-Initialization lives in the framework entry points required by the Next.js SDK.
+Sentry reporting and source-map uploads require `NODE_ENV=production`.
+A DSN is required for reporting. There is no separate enable flag.
+Deployment labels do not control reporting. Each hosting project's environment
+values select its Sentry account. `SENTRY_ENVIRONMENT` labels the events; it does
+not enable or disable them.
 
 ## Files
 
@@ -30,27 +27,34 @@ Initialization lives in the framework entry points required by the Next.js SDK.
 
 ```dotenv
 SENTRY_DSN=
+SENTRY_ENVIRONMENT=
+SENTRY_RELEASE=
 NEXT_PUBLIC_SENTRY_DSN=
 SENTRY_AUTH_TOKEN=
 SENTRY_ORG=
 SENTRY_PROJECT=
 ```
 
-Use a Next.js project in the `truedevs-rn` organization for the initial setup.
-Configure the same project's DSN in `SENTRY_DSN` and `NEXT_PUBLIC_SENTRY_DSN`.
-The browser reads only the public DSN. Keep these values in the deployment
-platform so a later move to TrueDevs requires no source change.
+Use separate staging and production projects. The approved staging project is
+`truedevs-jw/peploes-staging`; configure its same DSN on the server and browser.
+Keep the upload token private. Browser values are compiled at build time.
 
-`next.config.ts` derives `NEXT_PUBLIC_SENTRY_ENVIRONMENT` from `VERCEL_ENV` at
-build time. Do not set the public environment manually. All runtimes report
-only when their environment label is exactly `production`; missing or
-unrecognized environments stay silent. Rebuild after changing any public value.
-Review this gate before changing hosting platforms.
+```dotenv
+SENTRY_ENVIRONMENT=staging
+SENTRY_ORG=truedevs-jw
+SENTRY_PROJECT=peploes-staging
+```
 
-The auth token, organization, and project enable the build-time Sentry wrapper
-and source-map upload when `VERCEL_ENV=production`. Keep the auth token in the
-deployment build environment or ignored local settings. No auth token belongs
-in a public variable.
+`next.config.ts` derives `NEXT_PUBLIC_SENTRY_ENVIRONMENT` from these server build settings. Do not set
+those derived values manually. `NEXT_PUBLIC_SENTRY_RELEASE` is also derived from
+`SENTRY_RELEASE`, falling back to the Vercel commit SHA. The upload wrapper and
+all SDKs share that release. Leave `SENTRY_RELEASE` unset for normal Git
+deployments; fixed verification release names below are historical evidence.
+Use an explicit identifier on a host without Git metadata. Ensure the runtime server uses matching settings.
+`NODE_ENV` sampling remains unchanged. The deployment label does not affect payment mode or reporting.
+
+The upload wrapper requires `NODE_ENV=production` and `SENTRY_AUTH_TOKEN`,
+`SENTRY_ORG` and `SENTRY_PROJECT`. A DSN enables ingestion, not source-map upload.
 
 The CSP permits Sentry browser ingestion only when `NEXT_PUBLIC_SENTRY_DSN` is
 configured.
@@ -86,7 +90,7 @@ One event with useful context is easier to investigate than four copies.
 
 ## Source maps
 
-The Next config enables the Sentry build wrapper when `VERCEL_ENV=production`
+The Next config enables the Sentry build wrapper when reporting is enabled
 and all upload variables exist, regardless of hosting provider. It passes
 organization, project and auth token explicitly and requests source-map deletion
 after upload with the installed SDK's `sourcemaps.deleteSourcemapsAfterUpload`
@@ -103,11 +107,11 @@ build wrapper supplies its release/debug-ID integration.
 
 - Run the scrubber tests, which inspect an SDK envelope through a recording
   transport and await flush without making a network request.
-- Verify the deployment gate for local production builds, previews and live
+- Verify the `NODE_ENV` requirement for local production builds, previews and live
   deployments, including missing DSNs.
 - With an authorized project, trigger a controlled local verification error
   through the application initialization, then confirm its issue in Sentry.
-  Keep any temporary test enablement out of the final production-only setup.
+  Use a production build and a separate test project for verification.
 - Verify browser capture separately; a Node transport test does not prove that
   browser initialization, CSP or client rendering capture works.
 - Confirm release, environment, tags, and readable stack frames.
@@ -116,7 +120,66 @@ build wrapper supplies its release/debug-ID integration.
 - Do not inject a deliberate error into the live site. Delete test events only
   when that operation is explicitly requested.
 
-### Verified on 2026-10-27
+### Staging implementation verification on 2026-11-02
+
+A separate Next.js project, `truedevs-jw/peploes-staging`, was created in the
+user-supplied organization. The existing `prs-td` project was left unchanged.
+The current ignored `.env` contains matching server/browser staging DSNs,
+independent reporting flags and a local-verification release label.
+
+The real Node configuration sent a controlled synthetic exception, received as
+[PEPLOES-STAGING-1](https://truedevs-jw.sentry.io/issues/7824269979/), with
+`environment=staging` and `release=peploes-staging-local-2026-11-02`. This proves
+local server ingestion and release association, not a deployed request hook.
+
+The real browser SDK also reported an unhandled synthetic timer exception as
+[PEPLOES-STAGING-2](https://truedevs-jw.sentry.io/issues/7824316858/), with the same
+staging environment and release. Browser transport, preview indexing and URL
+scrubbing also pass the intercepted staging test. These local receipts do not
+verify the hosted candidate, owner alerts or a deployed request hook. A separately approved organization token, `peploes-staging-build`, was created
+with `org:ci` and saved only in the ignored worktree environment. This permission
+is organization-wide; build settings target only `peploes-staging`. The normal
+checkout and hosting settings were not changed by local setup.
+
+A credentialed preview build uploaded artifact bundles containing 416 and 60
+files for release `peploes-staging-uncommitted-2026-11-02-227359b`. No `.map` files
+remain in `.next/static`. A temporary external fault driver, using simulated
+ResDiary, triggered an error inside the compiled booking provider without adding
+a route or changing production source. Sentry resolved its frames to
+`src/lib/resdiary-provider.ts` lines 303 and 483 in
+[PEPLOES-STAGING-4](https://truedevs-jw.sentry.io/issues/7824400239/).
+This establishes local upload and server symbolication, not hosted or browser
+symbolication. Existing SDK 10 build warnings about the deprecated wrapper import,
+`disableLogger` and the optional router-transition tracing hook remain; the build
+and source-map upload succeeded. Review those before a future SDK 11 upgrade.
+
+The existing [high-priority alert](https://truedevs-jw.sentry.io/monitors/alerts/6276568/)
+now targets Salman directly and filters `environment=staging` in this project.
+The controlled owner-alert exception was received as
+[PEPLOES-STAGING-3](https://truedevs-jw.sentry.io/issues/7824396043/), and its email
+arrived in the owner's browser Gmail inbox. The connected Gmail tool uses a
+different account and was not used as receipt evidence. Hosted candidate and
+browser source-map verification remained open at that point. No credential
+values are included in source or evidence.
+
+The later hosted preview `dpl_3CJfahiCdq8Ehwaq1vfaqWVYXGoC` reports to this same
+staging project. Its controlled browser exception arrived as
+[PEPLOES-STAGING-5](https://truedevs-jw.sentry.io/issues/7824419763/), with
+`environment=staging`, release `peploes-staging-preview-2026-11-02-227359b` and
+the preview's `/book-a-table` URL. The hosted build log confirms artifact upload.
+This first browser exception originated in a temporary test driver. A later
+browser-only fault during calendar rendering arrived as
+[PEPLOES-STAGING-6](https://truedevs-jw.sentry.io/issues/7824430457/), with the
+same hosted release. Sentry resolved application frames to `src/lib/dates.ts:125`
+and `src/components/app/molecules/table-booking-date.tsx:43`. The fault was
+limited to a disposable browser context; no repository source or hosted
+configuration was changed. This establishes deployed application browser-frame
+symbolication. Four hosted map requests returned 403, which does not establish
+map removal. Hosted server exception capture remains a verification item under
+#78. See the [hosted handoff](testing-guide.md#hosted-staging-handoff-on-2026-11-02)
+for the exact candidate and configuration boundaries.
+
+### Historical verification on 2026-10-27
 
 The `javascript-nextjs` project `truedevs-rn/peploes` was created in Sentry's US
 region under the existing `truedevs` team. Local ignored environment settings
@@ -145,7 +208,7 @@ check failed for local and preview delivery when the gate was removed, then the
 restored gate passed. Edge settings were tested under Bun's Node resolution;
 actual Edge execution and browser delivery were verified separately below.
 
-### Local release verification on 2026-10-27
+### Historical local release verification on 2026-10-27
 
 A disposable copy ran the application's production build and Sentry upload
 wrapper using the locally configured organization token. Its reporting gate
@@ -174,7 +237,7 @@ production-only reporting policy. No production deployment was made.
   both high-severity dependency audits. Standards and spec review found no
   blocking code defects.
 
-The token stays in ignored `.env.local`; it is not a public variable or a PR
+The token stays in ignored `.env`; it is not a public variable or a PR
 artifact. Sentry's event rendering still showed geolocation metadata, so these
 checks do not establish a complete stored-payload privacy audit. Authenticated
 upload and symbolication must still be checked against the build that is

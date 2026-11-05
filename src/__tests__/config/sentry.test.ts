@@ -22,7 +22,7 @@ const runtimeCheck = `
   });
   client.captureException(new Error("Synthetic deployment gate check"));
   await client.flush(2000);
-  console.log(JSON.stringify({ deliveries, environment: options.environment }));
+  console.log(JSON.stringify({ deliveries, environment: options.environment, release: options.release }));
   await client.close(2000);
   await Sentry.close(2000);
 `;
@@ -38,24 +38,56 @@ describe("Sentry deployment policy", function sentryDeploymentTests() {
       {
         deployment: "preview",
         dsn: "https://public@o0.ingest.sentry.io/1",
-        deliveries: 0,
+        deliveries: 1,
       },
       {
         deployment: "",
         dsn: "https://public@o0.ingest.sentry.io/1",
-        deliveries: 0,
+        deliveries: 1,
       },
       { deployment: "production", dsn: "", deliveries: 0 },
-    ])(
+      {
+        deployment: "production",
+        dsn: "https://public@o0.ingest.sentry.io/1",
+        nodeEnv: "development",
+        deliveries: 0,
+      },
+      {
+        deployment: "production",
+        dsn: "https://public@o0.ingest.sentry.io/1",
+        nodeEnv: "test",
+        deliveries: 0,
+      },
+      {
+        deployment: "preview",
+        dsn: "https://public@o0.ingest.sentry.io/1",
+        environment: "staging",
+        deliveries: 1,
+      },
+    ] satisfies {
+      deployment: string;
+      dsn: string;
+      deliveries: number;
+      nodeEnv?: "production" | "development" | "test";
+      environment?: string;
+    }[])(
       `${runtime}: sends $deliveries events for deployment=$deployment`,
-      function checksDelivery({ deployment, dsn, deliveries }) {
+      function checksDelivery({
+        deployment,
+        dsn,
+        deliveries,
+        environment = "",
+        nodeEnv = "production" as const,
+      }) {
         const result = spawnSync("bun", ["--eval", runtimeCheck], {
           cwd: process.cwd(),
           env: {
             ...process.env,
-            NODE_ENV: "production",
+            NODE_ENV: nodeEnv,
             VERCEL_ENV: deployment,
             SENTRY_DSN: dsn,
+            SENTRY_ENVIRONMENT: environment,
+            SENTRY_RELEASE: "staging-release-test",
             NEXT_PUBLIC_SENTRY_DSN: "",
             SENTRY_TEST_CONFIG: `./sentry.${runtime}.config.ts`,
           },
@@ -67,7 +99,8 @@ describe("Sentry deployment policy", function sentryDeploymentTests() {
         expect(result.status, result.stderr).toBe(0);
         expect(JSON.parse(result.stdout.trim())).toEqual({
           deliveries,
-          environment: deployment || "development",
+          environment: environment || deployment || "development",
+          release: "staging-release-test",
         });
       },
     );
@@ -92,6 +125,7 @@ describe("Sentry deployment policy", function sentryDeploymentTests() {
             NODE_ENV: "production",
             VERCEL_ENV: deployment,
             SENTRY_AUTH_TOKEN: "",
+            SENTRY_ENVIRONMENT: "",
             NEXT_PUBLIC_SENTRY_ENVIRONMENT: "production",
           },
           encoding: "utf8",

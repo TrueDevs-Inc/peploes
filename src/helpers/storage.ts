@@ -49,14 +49,16 @@ export function getSessionStorage<T>(key: string): T | null {
   }
 }
 
-export function setSessionStorage(key: string, value: unknown): void {
-  if (!isBrowser()) return;
+export function setSessionStorage(key: string, value: unknown): boolean {
+  if (!isBrowser()) return false;
 
   try {
     const serializedValue = JSON.stringify(value);
     sessionStorage.setItem(key, serializedValue);
+    return sessionStorage.getItem(key) === serializedValue;
   } catch (error) {
     console.error("Error setting item in sessionStorage", error);
+    return false;
   }
 }
 

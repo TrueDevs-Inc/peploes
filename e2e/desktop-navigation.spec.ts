@@ -127,24 +127,33 @@ test("desktop Menus opens Lunch by pointer and keyboard", async ({ page }) => {
   ).toBeVisible();
 });
 
-for (const [name, href] of [
-  ["Menus", "/menus"],
-  ["Private Dining & Events", "/private-dining"],
+for (const destination of [
+  { label: "Menus", href: "/menus", heading: "Lunch Menu" },
+  {
+    label: "Private Dining & Events",
+    href: "/private-dining",
+    heading: "Life tastes better together.",
+  },
 ]) {
-  test(`${name} stays a direct link on hover and keyboard focus`, async ({
+  test(`${destination.label} navigates directly without a hover or keyboard shelf`, async ({
     page,
   }) => {
     const navigation = page.getByRole("navigation", {
       name: "Main navigation",
       exact: true,
     });
-    const link = navigation.getByRole("link", { name, exact: true });
-    await expect(link).toHaveAttribute("href", href);
+    const link = navigation.getByRole("link", {
+      name: destination.label,
+      exact: true,
+    });
+    await expect(link).toHaveAttribute("href", destination.href);
     await link.hover();
+    await expect(navigation.locator("[data-navigation-panel]")).toHaveCount(0);
     await expect(link).not.toHaveAttribute("aria-expanded");
     await expect(link).not.toHaveAttribute("aria-controls");
     await link.focus();
     await link.press("ArrowDown");
+    await expect(navigation.locator("[data-navigation-panel]")).toHaveCount(0);
     await expect(
       navigation.getByRole("link", { name: "Explore", exact: true }),
     ).toHaveCount(0);
@@ -152,6 +161,13 @@ for (const [name, href] of [
       navigation.getByRole("link", { name: "Lunch", exact: true }),
     ).toHaveCount(0);
     await link.press("Enter");
-    await expect(page).toHaveURL(href);
+    await expect(page).toHaveURL(destination.href);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+      destination.heading,
+    );
+    await expect(link).toHaveAttribute("aria-current", "page");
+    await page.goto("/");
+    await link.click();
+    await expect(page).toHaveURL(destination.href);
   });
 }

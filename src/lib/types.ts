@@ -1,3 +1,4 @@
+import type { Stripe, StripeElements } from "@stripe/stripe-js";
 import type { VariantProps } from "class-variance-authority";
 import type { Result as NeverthrowResult } from "neverthrow";
 import type { Route } from "next";
@@ -628,7 +629,6 @@ export type TResDiaryClosedDatesReply = z.infer<typeof closedDatesReplySchema>;
 export type TResDiaryHoldReply = z.infer<typeof holdReplySchema>;
 export type TResDiaryGuestReply = z.infer<typeof guestReplySchema>;
 export type TResDiaryHoldStatusReply = z.infer<typeof holdStatusReplySchema>;
-
 export type TBookingProvider = Pick<
   TResDiaryProvider,
   | "getRules"
@@ -664,7 +664,6 @@ export type TUnsupportedSetting =
 export interface IBookingServiceDeps {
   provider?: TBookingProvider;
   holdSecret?: string | null;
-  liveSite?: boolean;
 }
 
 export type TBookingErrorCode =
@@ -764,7 +763,6 @@ export interface ICurrentOffer {
 export interface IBookingGuestContext {
   provider: TBookingProvider;
   secret: string;
-  liveSite: boolean;
 }
 
 export interface IBookingTime {
@@ -1428,6 +1426,7 @@ export interface IFooterContent {
     description: string;
     emailLabel: string;
     submitLabel: string;
+    loadingLabel: string;
     pendingLabel: string;
     unavailableError: string;
     rateLimitError: string;
@@ -1750,20 +1749,72 @@ export interface ITableBookingGuestDetails {
   firstName: string;
   surname: string;
   email: string;
+  countryCode: string;
   phone: string;
   requests: string;
   terms: boolean;
+  newsletterOptIn: boolean;
 }
 
+export type TTableBookingDetailsErrors = Partial<
+  Record<keyof ITableBookingGuestDetails, string>
+>;
+
 export interface ITableBookingDetailsProps {
+  terms: IFindTableData["terms"];
   details: ITableBookingGuestDetails;
+  sending: boolean;
+  serverErrors: TTableBookingDetailsErrors;
+  formError: string | null;
   onChange: (details: ITableBookingGuestDetails) => void;
   onBack: () => void;
   onContinue: () => void;
 }
 
+export interface IGuestDetailsAttempt {
+  hold: IActiveHold;
+  startedAt: number;
+}
+
+export interface IGuestDetailsSending {
+  sending: boolean;
+  formError: string | null;
+  fieldErrors: TTableBookingDetailsErrors;
+  unsure: IHoldSummary | null;
+  pendingFrom: number;
+  restore: (attempt: IGuestDetailsAttempt) => void;
+  send: (
+    details: ITableBookingGuestDetails,
+    active: IActiveHold,
+    onReply: (reply: TGuestDetailsView) => void,
+  ) => void;
+  settle: (check: TBookingStatusCheck) => void;
+}
+
+export interface ITableBookPageProps {
+  booking: Promise<TBookingResponse<IFindTableData>>;
+}
+
+export interface ITableBookingPanelProps {
+  findTable: IFindTableData;
+}
+
+export interface ITableBookingNoticeProps {
+  message: string;
+  loading?: boolean;
+}
+
+export type TOpenDates = string[] | "loading" | "failed";
+
+export interface IOpenDates {
+  load: (month: Date) => void;
+  datesFor: (month: Date) => TOpenDates | undefined;
+}
+
 export interface ITableBookingDateProps {
   value: string;
+  calendar: IFindTableData["calendar"];
+  availability: IOpenDates;
   onChange: (value: string) => void;
 }
 
@@ -1777,6 +1828,8 @@ export interface IDateCalendarProps {
 
 export interface ITableBookingPartySizeProps {
   value: string;
+  min: number;
+  max: number;
   onChange: (value: string) => void;
 }
 
@@ -1792,16 +1845,136 @@ export interface ITableBookingFieldProps extends ComponentProps<"input"> {
   error?: string;
 }
 
+export type TBookingTimes =
+  | { status: "loading" }
+  | { status: "ready"; data: ITimesData }
+  | { status: "failed"; message: string };
+
+export interface IHoldChoice {
+  searchDate: string;
+  time: string;
+  partySize: number;
+}
+
+export interface IStoredHold {
+  choice: IHoldChoice;
+  holdReference: string;
+  holdRevision: number;
+}
+
+export interface IActiveHold {
+  summary: IHoldSummary;
+  endsAt: number;
+}
+
+export interface ITableHold {
+  resume: (active: IActiveHold) => void;
+  active: IActiveHold | null;
+  pending: boolean;
+  error: string | null;
+  place: (choice: IHoldChoice, onHeld: (summary: IHoldSummary) => void) => void;
+  forgetHold: () => void;
+}
+
+export type TPaymentStep = Exclude<TGuestDetailsView, { kind: "confirmed" }>;
+
+export type TBookingStatusCheck =
+  | { kind: "checking" }
+  | { kind: "pending"; summary: IHoldSummary }
+  | { kind: "confirmed"; reference: string; summary: IHoldSummary }
+  | { kind: "failed" }
+  | { kind: "unknown"; notFound?: boolean };
+
+export interface IBookingBankReturn {
+  reference: string;
+  revision: number;
+  status: string;
+}
+
+export interface ITableBookingReturnProps {
+  returned: IBookingBankReturn;
+  onPaid: (summary: IHoldSummary) => void;
+  onConfirmed: (booked: ITableBookingConfirmationProps) => void;
+  onStartAgain: () => void;
+}
+
+export interface IStripeReady {
+  stripe: Stripe;
+  elements: StripeElements;
+  amount: string;
+}
+
+export interface ITableBookingChangeProps {
+  busy: boolean;
+  payment: TPaymentStep | null;
+  onEdit: () => void;
+  onStartOver: () => void;
+  onConfirmed: (booked: ITableBookingConfirmationProps) => void;
+}
+
+export interface ITableBookingPaymentProps {
+  step: TPaymentStep;
+  storageBlocked?: boolean;
+  initialError: string | null;
+  onConfirmed: (booked: ITableBookingConfirmationProps) => void;
+  onPaid: () => void;
+  onExpired: () => void;
+  onStartAgain: () => void;
+  onBusyChange: (busy: boolean) => void;
+}
+
+export interface IPaymentFormProps extends ITableBookingPaymentProps {
+  onRetry: () => void;
+}
+
+export interface ITableBookingHeldStepProps {
+  terms: IFindTableData["terms"];
+  hold: ITableHold;
+  details: ITableBookingGuestDetails;
+  guest: IGuestDetailsSending;
+  payment: TPaymentStep | null;
+  paymentError: string | null;
+  paymentSaved: boolean;
+  paid: IHoldSummary | null;
+  onPaid: () => void;
+  onExpired: () => void;
+  onBusyChange: (busy: boolean) => void;
+  onConfirmed: (booked: ITableBookingConfirmationProps) => void;
+  onDetailsChange: (details: ITableBookingGuestDetails) => void;
+  onBack: () => void;
+  onContinue: () => void;
+  onStartAgain: () => void;
+  onCheckAgain: () => void;
+}
+
+export interface ITableBookingHoldTimerProps {
+  endsAt: number;
+  onExpire: () => void;
+}
+
 export interface ITableBookingTimesProps {
   longDate: string;
   guests: string;
-  time: string;
+  times: TBookingTimes;
+  time: IBookingTime | null;
+  holding: boolean;
+  holdError: string | null;
   returnAccepted: boolean;
-  onTimeChange: (time: string) => void;
+  onTimeChange: (time: IBookingTime) => void;
   onReturnChange: (accepted: boolean) => void;
   onBack: () => void;
   onContinue: () => void;
 }
+
+export interface ITableBookingConfirmationProps {
+  reference: string;
+  summary: IHoldSummary;
+}
+
+export type TTableBookingTimesListProps = Pick<
+  ITableBookingTimesProps,
+  "times" | "time" | "onTimeChange"
+>;
 
 export type TMenuSlug = (typeof MENU_SLUGS)[number];
 export type TCmsMenu = InferSchema<typeof cmsMenuSchema>;
@@ -1845,6 +2018,35 @@ export interface ISeasonalEventProps {
 }
 export interface ISeasonalRouteProps {
   params: Promise<{ slug: string }>;
+}
+
+export type TBookingAnalyticsEvent =
+  | GA4Event.BookingSearch
+  | GA4Event.BookingAvailability
+  | GA4Event.BookingHold
+  | GA4Event.BookingDetails
+  | GA4Event.BookingPayment
+  | GA4Event.BookingConfirmed
+  | GA4Event.BookingRecovery;
+export type TBookingAnalyticsResult =
+  | "submitted"
+  | "available"
+  | "empty"
+  | "succeeded"
+  | "failed"
+  | "unknown"
+  | "started"
+  | "accepted"
+  | "declined"
+  | "load_failed"
+  | "confirmed"
+  | "pending"
+  | "expired";
+export interface IBookingAnalyticsContext {
+  attemptId?: string;
+  reference?: string;
+  errorCode?: ErrorCode | "NETWORK" | "STRIPE" | "STORAGE";
+  paymentKind?: "deposit" | "guarantee" | "none";
 }
 
 export interface IJournalRouteProps {

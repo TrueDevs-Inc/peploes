@@ -27,8 +27,24 @@ const edges = vi.hoisted(() => ({
   cookieStore: null as IHoldCookieStore | null,
   forwardedFor: "203.0.113.7" as string | null,
   allowHold: null as ((forwardedFor: string | null) => Promise<boolean>) | null,
+  after: [] as Array<() => Promise<void>>,
+  scheduleFails: false,
+  subscribe: vi.fn(),
+  log: vi.fn(),
 }));
 
+vi.mock("next/server", () => ({
+  after: (callback: () => Promise<void>) => {
+    if (edges.scheduleFails) throw new Error("scheduler unavailable");
+    edges.after.push(callback);
+  },
+}));
+vi.mock("@/services/newsletter", () => ({
+  subscribeNewsletter: (...args: unknown[]) => edges.subscribe(...args),
+}));
+vi.mock("@/lib/logger", () => ({
+  logger: { error: edges.log, warning: edges.log },
+}));
 vi.mock("next/headers", () => ({
   cookies: () =>
     edges.cookieStore
@@ -77,6 +93,10 @@ beforeEach(function resetEdges() {
   edges.provider = null;
   edges.cookieStore = null;
   edges.allowHold = null;
+  edges.after = [];
+  edges.scheduleFails = false;
+  edges.subscribe.mockReset().mockResolvedValue(ok(undefined));
+  edges.log.mockReset();
   edges.forwardedFor = "203.0.113.7";
 });
 
@@ -301,6 +321,193 @@ describe("the submitGuestDetails action", function guestDetailsActionTests() {
     await actions.holdTable(DINNER);
     return { ...edgesSetUp, actions };
   }
+
+  it.each([
+    { kind: "confirmed", reference: "B9GXWPLY" },
+    {
+      kind: "payment",
+      amountCents: 2000,
+      amountText: "€20.00",
+      stripe: STRIPE_STEP,
+    },
+    { kind: "card", amountText: "€0.00", stripe: STRIPE_STEP },
+  ] satisfies TResDiaryGuestOutcome[])(
+    "schedules opted-in signup after accepting $kind details",
+    async (outcome) => {
+      const { provider, cookies, actions } = await held();
+      provider.submitHoldGuest.mockResolvedValue(ok(outcome));
+      const response = await actions.submitGuestDetails({
+        ...GUEST_DETAILS,
+        newsletterOptIn: true,
+      });
+      expect(response).toMatchObject({
+        ok: true,
+        data: { kind: outcome.kind },
+      });
+      expect(cookies.has(COOKIE)).toBe(outcome.kind !== "confirmed");
+      expect(edges.subscribe).not.toHaveBeenCalled();
+      expect(edges.after).toHaveLength(1);
+      await edges.after[0]?.();
+      expect(edges.subscribe).toHaveBeenCalledExactlyOnceWith(
+        { email: GUEST_DETAILS.email },
+        edges.forwardedFor,
+      );
+      expect(provider.submitHoldGuest).toHaveBeenCalledTimes(1);
+      expect(provider.submitHoldGuest.mock.calls[0]?.[0]).not.toHaveProperty(
+        "newsletterOptIn",
+      );
+    },
+  );
+
+  it.each([false, undefined])(
+    "does not subscribe without explicit opt-in (%s)",
+    async (newsletterOptIn) => {
+      const { actions } = await held();
+      expect(
+        await actions.submitGuestDetails({ ...GUEST_DETAILS, newsletterOptIn }),
+      ).toMatchObject({ ok: true });
+      expect(edges.after).toHaveLength(0);
+      expect(edges.subscribe).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["true", 1, null])(
+    "rejects non-boolean newsletter consent (%s)",
+    async (newsletterOptIn) => {
+      const { provider, cookies, actions } = await held();
+      expect(
+        await actions.submitGuestDetails({ ...GUEST_DETAILS, newsletterOptIn }),
+      ).toMatchObject({
+        ok: false,
+        error: { code: ErrorCode.ValidationError },
+      });
+      expect(provider.submitHoldGuest).not.toHaveBeenCalled();
+      expect(cookies.has(COOKIE)).toBe(true);
+      expect(edges.after).toHaveLength(0);
+    },
+  );
+
+  it("does not subscribe when booking details are refused", async () => {
+    const { provider, cookies, actions } = await held();
+    provider.submitHoldGuest.mockResolvedValue(ok({ kind: "guest_blocked" }));
+    expect(
+      await actions.submitGuestDetails({
+        ...GUEST_DETAILS,
+        newsletterOptIn: true,
+      }),
+    ).toMatchObject({ ok: false });
+    expect(cookies.has(COOKIE)).toBe(false);
+    expect(edges.after).toHaveLength(0);
+    expect(edges.subscribe).not.toHaveBeenCalled();
+  });
+
+  it("does not subscribe while the booking outcome remains unknown", async () => {
+    const { provider, cookies, actions } = await held();
+    provider.submitHoldGuest.mockResolvedValue(
+      err({
+        kind: "outcome_unknown",
+        operation: "submitHoldGuest",
+        detail: "timeout",
+      }),
+    );
+    const response = await actions.submitGuestDetails({
+      ...GUEST_DETAILS,
+      newsletterOptIn: true,
+    });
+    expect(response).toMatchObject({
+      ok: false,
+      error: { code: ErrorCode.OutcomeUnknown },
+    });
+    expect(cookies.has(COOKIE)).toBe(true);
+    expect(edges.after).toHaveLength(0);
+    expect(edges.subscribe).not.toHaveBeenCalled();
+  });
+
+  it("passes a missing visitor header to the existing newsletter limiter", async () => {
+    const { actions } = await held();
+    edges.forwardedFor = null;
+    expect(
+      await actions.submitGuestDetails({
+        ...GUEST_DETAILS,
+        newsletterOptIn: true,
+      }),
+    ).toMatchObject({ ok: true });
+    expect(edges.after).toHaveLength(1);
+    await edges.after[0]?.();
+    expect(edges.subscribe).toHaveBeenCalledExactlyOnceWith(
+      { email: GUEST_DETAILS.email },
+      null,
+    );
+  });
+
+  it.each(["rejected", "threw", "unknown"])(
+    "keeps confirmation and never retries booking when signup %s",
+    async (failure) => {
+      const { provider, cookies, actions } = await held();
+      if (failure === "threw")
+        edges.subscribe.mockRejectedValue(new Error("private provider detail"));
+      else
+        edges.subscribe.mockResolvedValue(
+          err({
+            code:
+              failure === "unknown"
+                ? ErrorCode.OutcomeUnknown
+                : ErrorCode.ServiceUnavailable,
+            message: "private provider detail",
+          }),
+        );
+      const response = await actions.submitGuestDetails({
+        ...GUEST_DETAILS,
+        newsletterOptIn: true,
+      });
+      expect(edges.after).toHaveLength(1);
+      await expect(edges.after[0]?.()).resolves.toBeUndefined();
+      expect(response).toMatchObject({ ok: true, data: { kind: "confirmed" } });
+      expect(cookies.has(COOKIE)).toBe(false);
+      expect(provider.submitHoldGuest).toHaveBeenCalledTimes(1);
+      expect(edges.subscribe).toHaveBeenCalledTimes(1);
+      if (failure === "threw") expect(edges.log).toHaveBeenCalledTimes(1);
+      else expect(edges.log).not.toHaveBeenCalled();
+      expect(JSON.stringify(edges.log.mock.calls)).not.toContain(
+        GUEST_DETAILS.email,
+      );
+      expect(JSON.stringify(edges.log.mock.calls)).not.toContain(
+        "private provider detail",
+      );
+    },
+  );
+
+  it("returns confirmation even if scheduling signup throws", async () => {
+    const { provider, cookies, actions } = await held();
+    edges.scheduleFails = true;
+    expect(
+      await actions.submitGuestDetails({
+        ...GUEST_DETAILS,
+        newsletterOptIn: true,
+      }),
+    ).toMatchObject({ ok: true, data: { kind: "confirmed" } });
+    expect(cookies.has(COOKIE)).toBe(false);
+    expect(provider.submitHoldGuest).toHaveBeenCalledTimes(1);
+    expect(edges.subscribe).not.toHaveBeenCalled();
+    expect(edges.log).toHaveBeenCalled();
+  });
+
+  it("does not block booking confirmation on a pending newsletter provider", async () => {
+    const { actions } = await held();
+    const signup = Promise.withResolvers<ReturnType<typeof ok<undefined>>>();
+    edges.subscribe.mockReturnValue(signup.promise);
+    expect(
+      await actions.submitGuestDetails({
+        ...GUEST_DETAILS,
+        newsletterOptIn: true,
+      }),
+    ).toMatchObject({ ok: true, data: { kind: "confirmed" } });
+    expect(edges.after).toHaveLength(1);
+    const pending = edges.after[0]?.();
+    expect(edges.subscribe).toHaveBeenCalledTimes(1);
+    signup.resolve(ok(undefined));
+    await pending;
+  });
 
   it("books the table, forgets the hold and sends the confirmation", async function confirms() {
     const { cookies, actions } = await held();

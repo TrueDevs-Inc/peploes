@@ -9,9 +9,8 @@ import {
   suppressNavigationOfLinks,
   test,
 } from "./analytics-harness";
+import { chooseDate, laterFreeDate } from "./booking-page";
 
-// Needs the production build made with the synthetic provider configuration in
-// playwright.analytics.config.ts. Provider hosts are intercepted at the context.
 test.setTimeout(90_000);
 
 const SDK_OPT_OUT_FLAG = /^__ph_opt_in_out_/;
@@ -26,20 +25,20 @@ function path(url: unknown): string {
   return new URL(String(url)).pathname;
 }
 
-test.describe("before and without consent", () => {
-  test("no provider traffic or storage before a choice", async ({
+test.describe("before and after placeholder choices", () => {
+  test("collects pageviews before any placeholder choice", async ({
     page,
     analytics,
   }) => {
     await page.goto("/");
+    await expectPageViews(page, analytics, 1);
     await page.locator('a[href="/our-story"]:visible').first().click();
     await expect(page).toHaveURL("/our-story");
-    await settle(page);
-    expect(analytics.providerRequests).toEqual([]);
-    expect(await providerStorage(page)).toEqual([]);
+    await expectPageViews(page, analytics, 2);
+    expect((await ownedStorage(page)).length).toBeGreaterThan(0);
   });
 
-  test("rejecting keeps providers silent across navigation and reload", async ({
+  test("rejection does not stop pageviews across navigation and reload", async ({
     page,
     analytics,
   }) => {
@@ -47,50 +46,42 @@ test.describe("before and without consent", () => {
     await rejectAll(page);
     await page.locator('a[href="/our-story"]:visible').first().click();
     await expect(page).toHaveURL("/our-story");
+    await expectPageViews(page, analytics, 2);
     await page.reload();
-    await settle(page);
-    expect(analytics.providerRequests).toEqual([]);
-    expect(await providerStorage(page)).toEqual([]);
+    await expectPageViews(page, analytics, 3);
   });
 
-  test("blocked storage leaves the site usable with no collection", async ({
+  test("blocked preference and attribution storage leaves collection and navigation usable", async ({
     page,
     analytics,
   }) => {
     await page.addInitScript(() => {
-      for (const name of ["localStorage", "sessionStorage"]) {
+      for (const name of ["localStorage", "sessionStorage"])
         Object.defineProperty(window, name, {
-          get: () => {
-            throw new Error("Storage blocked");
+          get() {
+            throw new Error("blocked");
           },
         });
-      }
-      Object.defineProperty(document, "cookie", {
-        get: () => {
-          throw new Error("Cookies blocked");
-        },
-        set: () => {
-          throw new Error("Cookies blocked");
-        },
-      });
     });
     await page.goto("/");
-    await expect(page.getByRole("main")).toBeVisible();
+    await expectPageViews(page, analytics, 1);
     await page.locator('a[href="/our-story"]:visible').first().click();
     await expect(page).toHaveURL("/our-story");
-    await settle(page);
-    expect(analytics.providerRequests).toEqual([]);
+    await expectPageViews(page, analytics, 2);
   });
 });
 
 test.describe("grant and navigation", () => {
-  test("granting sends exactly one initial pageview per provider with safe fields", async ({
+  test("saving placeholder preferences keeps one initial pageview per provider with safe fields", async ({
     page,
     analytics,
   }) => {
     await page.goto("/");
-    await acceptAll(page);
     await expectPageViews(page, analytics, 1);
+    await acceptAll(page);
+    await settle(page);
+    expect(analytics.gaPageViews()).toHaveLength(1);
+    expect(analytics.posthogPageViews()).toHaveLength(1);
 
     const origin = new URL(page.url()).origin;
     expect(analytics.gaPageViews()[0]?.location).toBe(`${origin}/`);
@@ -193,131 +184,83 @@ test.describe("grant and navigation", () => {
   });
 });
 
-test.describe("withdrawal and re-consent", () => {
-  test("withdrawal stops every send and clears provider storage and timers", async ({
+test.describe("placeholder preference changes", () => {
+  test("rejection keeps optional interactions, attribution and pageviews active", async ({
     page,
     analytics,
   }) => {
-    await page.goto("/");
-    await acceptAll(page);
+    await page.goto("/?utm_source=newsletter");
     await expectPageViews(page, analytics, 1);
-    expect((await ownedStorage(page)).length).toBeGreaterThan(0);
-
-    // Interaction events leave at once, so this one is sent while consented.
+    await rejectAll(page);
     await suppressNavigationOfLinks(page);
     await page.locator('footer a[href^="tel:"]:visible').first().click();
     await expect
       .poll(() => analytics.posthogNamed("contact_click").length)
       .toBe(1);
-    await rejectAll(page);
-    const before = analytics.traffic.length;
-    await expect.poll(() => ownedStorage(page)).toEqual([]);
-
     await page.locator('a[href="/our-story"]:visible').first().click();
     await expect(page).toHaveURL("/our-story");
-    await page.locator('footer a[href^="mailto:"]:visible').first().click();
-    await settle(page);
-    expect(analytics.traffic.length).toBe(before);
-    expect(analytics.posthogNamed("contact_click")).toHaveLength(1);
-    expect(analytics.gaPageViews()).toHaveLength(1);
-    expect(await ownedStorage(page)).toEqual([]);
+    await expectPageViews(page, analytics, 2);
+    expect(analytics.posthogPageViews()[1]?.properties.utm_source).toBe(
+      "newsletter",
+    );
   });
 
-  test("withdrawing while providers are still loading leaves no init, traffic or storage", async ({
+  test("changing preferences during GA4 loading does not suppress or duplicate the initial events", async ({
     page,
     analytics,
   }) => {
-    await page.goto("/");
-    const dialog = await openPreferences(page);
-    const analyticsSwitch = dialog.getByRole("switch", {
-      name: "Analytics",
-      exact: true,
-    });
     analytics.hold();
-    await analyticsSwitch.check();
-    await page.waitForTimeout(500);
-    await analyticsSwitch.uncheck();
-    await expect(analyticsSwitch).not.toBeChecked();
-    analytics.release();
-    await settle(page);
-
-    expect(analytics.ga).toEqual([]);
-    expect(analytics.posthogEvents).toEqual([]);
-    expect(
-      analytics.traffic.filter(
-        (t) =>
-          t.provider === "posthog" ||
-          t.provider === "posthog-asset" ||
-          t.provider === "ga",
-      ),
-    ).toEqual([]);
-    expect(await ownedStorage(page)).toEqual([]);
-  });
-
-  test("a late provider load after withdrawal sends nothing", async ({
-    page,
-    analytics,
-  }) => {
-    await page.goto("/");
-    analytics.hold();
-    await acceptAll(page);
-    await page.waitForTimeout(500);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
     await rejectAll(page);
     analytics.release();
-    await page.locator('a[href="/our-story"]:visible').first().click();
-    await settle(page);
-    expect(analytics.ga).toEqual([]);
-    expect(analytics.posthogEvents).toEqual([]);
-    expect(await ownedStorage(page)).toEqual([]);
+    await expectPageViews(page, analytics, 1);
+    expect(analytics.posthogPageViews()).toHaveLength(1);
   });
 
-  test("re-consent after withdrawal resumes with one pageview and no replay", async ({
+  test("a late GA4 load after rejection sends the current page once", async ({
+    page,
+    analytics,
+  }) => {
+    analytics.hold();
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await rejectAll(page);
+    analytics.release();
+    await expectPageViews(page, analytics, 1);
+    await acceptAll(page);
+    await settle(page);
+    expect(analytics.gaPageViews()).toHaveLength(1);
+    expect(analytics.posthogPageViews()).toHaveLength(1);
+  });
+
+  test("repeated preference changes do not reload providers or replay events", async ({
     page,
     analytics,
   }) => {
     await page.goto("/");
-    await acceptAll(page);
     await expectPageViews(page, analytics, 1);
     await rejectAll(page);
-    await page.locator('a[href="/our-story"]:visible').first().click();
-    await expect(page).toHaveURL("/our-story");
+    await acceptAll(page);
+    await rejectAll(page);
+    await acceptAll(page);
     await settle(page);
     expect(analytics.gaPageViews()).toHaveLength(1);
-
-    await acceptAll(page);
-    await expectPageViews(page, analytics, 2);
-    // The page viewed while denied is not replayed; only the current page counts.
-    expect(analytics.gaPageViews().map((h) => path(h.location))).toEqual([
-      "/",
-      "/our-story",
-    ]);
-    expect(
-      analytics.posthogPageViews().map((e) => path(e.properties.$current_url)),
-    ).toEqual(["/", "/our-story"]);
+    expect(analytics.posthogPageViews()).toHaveLength(1);
   });
 
-  test("withdrawal in a second tab stops the first tab", async ({
+  test("a second tab's rejection does not stop the first tab", async ({
     page,
     context,
     analytics,
   }) => {
     await page.goto("/");
-    await acceptAll(page);
     await expectPageViews(page, analytics, 1);
-
     const other = await context.newPage();
     await other.goto("/contact");
-    await expectPageViews(other, analytics, 2);
+    await expectPageViews(page, analytics, 2);
     await rejectAll(other);
-
-    await expect.poll(() => ownedStorage(page)).toEqual([]);
-    const before = analytics.traffic.length;
-    await suppressNavigationOfLinks(page);
-    await page.locator('footer a[href^="tel:"]:visible').first().click();
     await page.locator('a[href="/our-story"]:visible').first().click();
     await expect(page).toHaveURL("/our-story");
-    await settle(page);
-    expect(analytics.traffic.length).toBe(before);
+    await expectPageViews(page, analytics, 3);
     await other.close();
   });
 });
@@ -494,7 +437,7 @@ test.describe("interaction events", () => {
     }
   });
 
-  test("the booking preview never reports a booking, purchase or personal details", async ({
+  test("the booking journey reports provider-confirmed funnel stages without guest details", async ({
     page,
     analytics,
   }) => {
@@ -505,6 +448,7 @@ test.describe("interaction events", () => {
     const reservations = page.getByRole("region", {
       name: "Table reservations",
     });
+    await chooseDate(reservations, laterFreeDate());
     await reservations
       .getByRole("button", { name: "Find a Table", exact: true })
       .click();
@@ -512,7 +456,7 @@ test.describe("interaction events", () => {
       .getByRole("button", { name: "7:00 pm", exact: true })
       .click();
     await reservations
-      .getByLabel("I understand the table is required back by 9:00pm")
+      .getByLabel("I understand the table is required back by 9:00 pm")
       .check();
     await reservations
       .getByRole("button", { name: "Continue", exact: true })
@@ -526,7 +470,7 @@ test.describe("interaction events", () => {
       .fill("preview@example.com");
     await reservations
       .getByLabel("Mobile number", { exact: false })
-      .fill("+353 87 123 4567");
+      .fill("087 123 4567");
     await reservations.getByRole("checkbox", { name: /By confirming/ }).check();
     await reservations
       .getByRole("button", { name: "Confirm Reservation", exact: true })
@@ -536,14 +480,30 @@ test.describe("interaction events", () => {
     ).toBeVisible();
     await settle(page);
 
-    expect(analytics.ga.map((h) => h.event)).toEqual(["page_view"]);
-    expect(analytics.posthogEvents.map((e) => e.event)).toEqual(["$pageview"]);
+    const expected = [
+      "page_view",
+      "booking_search",
+      "booking_availability",
+      "booking_hold",
+      "booking_details",
+      "booking_details",
+      "booking_confirmed",
+    ];
+    expect(analytics.ga.map((h) => h.event)).toEqual(expected);
+    expect(analytics.posthogEvents.map((e) => e.event)).toEqual([
+      "$pageview",
+      ...expected.slice(1),
+    ]);
+    const stages = analytics.ga.filter((hit) =>
+      hit.event.startsWith("booking_"),
+    );
+    expect(new Set(stages.map((hit) => hit.params.attempt_id)).size).toBe(1);
     const everything = JSON.stringify([analytics.ga, analytics.posthogEvents]);
     for (const personal of [
       "preview@example.com",
       "Preview",
       "Guest",
-      "353",
+      "087 123 4567",
       "purchase",
       "booking_complete",
     ]) {

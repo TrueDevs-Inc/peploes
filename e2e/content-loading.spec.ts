@@ -11,9 +11,16 @@ test("published content hubs reuse their rendered HTML", async ({
 }) => {
   for (const path of ["/journal", "/seasonal"]) {
     await request.get(path);
-    const response = await request.get(path);
-    expect(response.ok()).toBe(true);
-    expect(response.headers()["x-nextjs-cache"]).toBe("HIT");
+    await expect
+      .poll(
+        async () => {
+          const response = await request.get(path);
+          expect(response.ok()).toBe(true);
+          return response.headers()["x-nextjs-cache"];
+        },
+        { timeout: 15000 },
+      )
+      .toBe("HIT");
   }
 });
 

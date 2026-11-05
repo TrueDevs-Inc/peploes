@@ -1,4 +1,8 @@
-import { ANALYTICS, ANALYTICS_EVENT_PARAMS } from "@/lib/constants";
+import {
+  ANALYTICS,
+  ANALYTICS_ATTEMPT_ID_PATTERN,
+  ANALYTICS_EVENT_PARAMS,
+} from "@/lib/constants";
 import type { ISanitizedAnalyticsEvent, TUrlPart } from "@/lib/types";
 
 const EMAIL_LIKE = /[^/\s]+@[^/\s]+/;
@@ -84,10 +88,23 @@ export function sanitizeUrlPart(
   return URL_SANITIZERS[part](value);
 }
 
-/**
- * Returns the event with only allowlisted, sanitised properties, or null when
- * the event is unknown or an identifier falls outside its closed set.
- */
+function sanitizeScalar(
+  rule: TUrlPart | "attempt",
+  value: unknown,
+): string | undefined | null {
+  if (rule === "attempt")
+    return typeof value === "string" && ANALYTICS_ATTEMPT_ID_PATTERN.test(value)
+      ? value
+      : null;
+  return sanitizeUrlPart(rule, value);
+}
+
+function sanitizeProperty(rule: string | readonly string[], value: unknown) {
+  if (typeof rule === "string")
+    return sanitizeScalar(rule as TUrlPart | "attempt", value);
+  return typeof value === "string" && rule.includes(value) ? value : null;
+}
+
 export function sanitizeAnalyticsEvent(
   name: string,
   params: unknown,
@@ -101,13 +118,9 @@ export function sanitizeAnalyticsEvent(
 
   for (const [key, rule] of Object.entries(spec)) {
     const value = raw[key];
-    if (typeof rule === "string") {
-      const clean = sanitizeUrlPart(rule as TUrlPart, value);
-      if (clean !== undefined) safe[key] = clean;
-      continue;
-    }
-    if (typeof value !== "string" || !rule.includes(value)) return null;
-    safe[key] = value;
+    const clean = sanitizeProperty(rule, value);
+    if (clean === null) return null;
+    if (clean !== undefined) safe[key] = clean;
   }
 
   for (const key of ANALYTICS.UTM_KEYS) {

@@ -12,35 +12,18 @@ afterEach(function resetEnv() {
   vi.unstubAllEnvs();
 });
 
-describe("robots route", function robotsRouteTests() {
-  it("allows search crawlers on the Vercel production deployment", async function productionTest() {
-    const result = await robotsFor({
-      nodeEnv: "production",
-      vercelEnv: "production",
-    });
-
-    expect(result.sitemap).toBe("http://localhost:3000/sitemap.xml");
-    expect(result.rules).toContainEqual({ userAgent: "*", allow: "/" });
-  });
-
-  it("lets crawlers fetch Vercel previews so their noindex signals are seen", async function previewTest() {
-    const result = await robotsFor({
-      nodeEnv: "production",
-      vercelEnv: "preview",
-    });
-
-    expect(result).toEqual({ rules: { userAgent: "*", allow: "/" } });
-  });
-
-  it("lets crawlers fetch local development, which is also noindex", async function localTest() {
-    const result = await robotsFor({ nodeEnv: "development" });
-
-    expect(result).toEqual({ rules: { userAgent: "*", allow: "/" } });
-  });
-
-  it("treats a production build outside Vercel as live", async function selfHostedTest() {
-    const result = await robotsFor({ nodeEnv: "production" });
-
-    expect(result.rules).toContainEqual({ userAgent: "*", allow: "/" });
-  });
+describe("robots route", () => {
+  it.each([
+    ["production", "production"],
+    ["production", "preview"],
+    ["development", ""],
+    ["production", ""],
+  ])(
+    "uses the shared crawler policy with Node %s and Vercel %s",
+    async (nodeEnv, vercelEnv) => {
+      const result = await robotsFor({ nodeEnv, vercelEnv });
+      expect(result.sitemap).toBe("http://localhost:3000/sitemap.xml");
+      expect(result.rules).toContainEqual({ userAgent: "*", allow: "/" });
+    },
+  );
 });

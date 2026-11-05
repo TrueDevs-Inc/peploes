@@ -3,16 +3,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { installFakeBrowser } from "../helpers/browser";
 
 const envState = vi.hoisted(() => ({
-  live: true,
+  production: true,
   gaId: "G-TEST" as string | undefined,
 }));
 vi.mock("@/lib/env", () => ({
+  isProduction: () => envState.production,
   env: {
     get NEXT_PUBLIC_GA_MEASUREMENT_ID() {
       return envState.gaId;
     },
   },
-  isLiveSiteClient: () => envState.live,
 }));
 
 type TBrowser = ReturnType<typeof installFakeBrowser>;
@@ -37,53 +37,57 @@ function calls(browser: TBrowser) {
 }
 
 beforeEach(() => {
-  envState.live = true;
+  envState.production = true;
   envState.gaId = "G-TEST";
 });
 afterEach(() => vi.unstubAllGlobals());
 
-describe("consent and deployment gate", () => {
-  it("sends nothing and stores nothing without consent", async () => {
+describe("analytics configuration", () => {
+  it("sends page and optional click events before a preference choice", async () => {
     const { browser, client } = await load({ href: UTM_URL });
     client.trackPageView();
     client.trackCustomEvent("booking_click", { placement: "hero" });
-    expect(browser.gtag).not.toHaveBeenCalled();
-    expect(browser.session.size).toBe(0);
+    expect(calls(browser).map(([name]) => name)).toEqual([
+      "page_view",
+      "booking_click",
+    ]);
+    expect(browser.session.has(STORAGE_KEY)).toBe(true);
   });
 
   it.each([
     ["broken JSON", "{nope"],
     ["wrong shape", '{"analytics":"true"}'],
-  ])("denies malformed consent: %s", async (_label, raw) => {
-    const { browser, client } = await load({ href: UTM_URL });
-    browser.storeRawConsent(raw);
-    client.trackPageView();
-    expect(browser.gtag).not.toHaveBeenCalled();
-    expect(browser.session.size).toBe(0);
-  });
+  ])(
+    "malformed placeholder preferences do not stop collection: %s",
+    async (_label, raw) => {
+      const { browser, client } = await load({ href: UTM_URL });
+      browser.storeRawConsent(raw);
+      client.trackPageView();
+      expect(browser.gtag).toHaveBeenCalledOnce();
+    },
+  );
 
-  it("denies when consent storage is unreadable", async () => {
+  it("collects when placeholder storage is unreadable", async () => {
     const { browser, client } = await load({ href: UTM_URL });
     vi.stubGlobal("window", {
       ...window,
-      get localStorage(): never {
+      get localStorage() {
         throw new Error("blocked");
       },
     });
     client.trackPageView();
-    expect(browser.gtag).not.toHaveBeenCalled();
-    expect(browser.session.size).toBe(0);
+    expect(browser.gtag).toHaveBeenCalledOnce();
   });
 
-  it("collects nothing outside the live site or without a measurement ID", async () => {
+  it("collects nothing in development or without a measurement ID", async () => {
     const { browser, client } = await load({ href: UTM_URL });
     browser.grantAnalytics();
-    envState.live = false;
+    envState.production = false;
     client.trackPageView();
     expect(browser.gtag).not.toHaveBeenCalled();
     expect(browser.session.size).toBe(0);
     vi.resetModules();
-    envState.live = true;
+    envState.production = true;
     envState.gaId = undefined;
     const fresh = await import("@/lib/analytics/client");
     fresh.trackPageView();
@@ -267,80 +271,52 @@ describe("dispatch readiness and withdrawal", () => {
     ]);
   });
 
-  it("never queues events that were denied, so later consent does not replay them", async () => {
+  it("queues optional events before a choice and flushes each once", async () => {
     const { browser, client, ga4 } = await load();
     browser.removeGtag();
     client.trackCustomEvent("booking_click", { placement: "hero" });
     browser.grantAnalytics();
     vi.stubGlobal("window", { ...window, gtag: browser.gtag });
     ga4.flushAnalyticsQueue();
-    expect(browser.gtag).not.toHaveBeenCalled();
+    ga4.flushAnalyticsQueue();
+    expect(calls(browser).map(([name]) => name)).toEqual(["booking_click"]);
   });
 
-  it("discards queued events and attribution when consent is withdrawn", async () => {
-    const { browser, client, ga4, lifecycle, consent } = await load({
-      href: UTM_URL,
-    });
-    lifecycle.startAnalytics();
-    consent.saveCookiePreferences({
-      analytics: true,
-      performance: false,
-      marketing: false,
-    });
+  it("keeps queued events and attribution after placeholder rejection", async () => {
+    const { browser, client, ga4, consent } = await load({ href: UTM_URL });
     browser.removeGtag();
     client.trackPageView();
-    expect(browser.session.has(STORAGE_KEY)).toBe(true);
     consent.saveCookiePreferences({
       analytics: false,
       performance: false,
       marketing: false,
     });
-    expect(browser.session.has(STORAGE_KEY)).toBe(false);
-    consent.saveCookiePreferences({
-      analytics: true,
-      performance: false,
-      marketing: false,
-    });
+    expect(browser.session.has(STORAGE_KEY)).toBe(true);
     vi.stubGlobal("window", { ...window, gtag: browser.gtag });
     ga4.flushAnalyticsQueue();
-    expect(browser.gtag).not.toHaveBeenCalled();
+    expect(browser.gtag).toHaveBeenCalledOnce();
   });
 
-  it("drops queued events when another tab withdraws consent", async () => {
-    const { browser, client, ga4, lifecycle } = await load();
-    browser.grantAnalytics();
-    lifecycle.startAnalytics();
+  it("keeps queued events when another tab changes placeholder preferences", async () => {
+    const { browser, client, ga4 } = await load();
     browser.removeGtag();
     client.trackCustomEvent("menu_view", { menu: "wine" });
     browser.storeRawConsent(null);
     browser.fireStorageEvent("peploes.cookie-preferences.v1");
-    browser.grantAnalytics();
     vi.stubGlobal("window", { ...window, gtag: browser.gtag });
     ga4.flushAnalyticsQueue();
-    expect(browser.gtag).not.toHaveBeenCalled();
+    expect(calls(browser).map(([name]) => name)).toEqual(["menu_view"]);
   });
 
-  it("sends nothing when consent is withdrawn while the provider import is pending", async () => {
-    vi.useFakeTimers();
-    try {
-      const { browser, client, ga4 } = await load();
-      browser.grantAnalytics();
-      browser.removeGtag();
-      client.trackPageView({ dedupeKey: "nav-1" });
-      const providerLoaded = new Promise<void>((resolve) => {
-        setTimeout(() => {
-          vi.stubGlobal("window", { ...window, gtag: browser.gtag });
-          ga4.flushAnalyticsQueue();
-          resolve();
-        }, 1_000);
-      });
-      browser.storeRawConsent(null);
-      vi.advanceTimersByTime(1_000);
-      await providerLoaded;
-      expect(browser.gtag).not.toHaveBeenCalled();
-    } finally {
-      vi.useRealTimers();
-    }
+  it("a preference change during provider loading does not discard the navigation", async () => {
+    const { browser, client, ga4 } = await load();
+    browser.removeGtag();
+    client.trackPageView({ dedupeKey: "nav-1" });
+    browser.storeRawConsent(null);
+    vi.stubGlobal("window", { ...window, gtag: browser.gtag });
+    ga4.flushAnalyticsQueue();
+    ga4.flushAnalyticsQueue();
+    expect(browser.gtag).toHaveBeenCalledOnce();
   });
 
   it("bounds the pending queue", async () => {

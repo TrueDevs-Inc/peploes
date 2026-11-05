@@ -371,9 +371,8 @@ preferred-date field at every screen width. Autofilled fields keep their cream b
 Narrow calendars use compact headings and day controls to keep dates separate.
 
 The shared form calls the enquiry action connected in issue #100.
-Send Enquiry is enabled once the form is interactive. Clicking it with missing
-or invalid fields shows the browser's validation message and focuses the first
-invalid control. No enquiry variant includes an agreement checkbox. A valid enquiry shows a
+Send Enquiry is enabled once the form is interactive. Clicking it with several missing required fields shows a required-fields warning.
+Individual invalid fields show inline validation messages. No enquiry variant includes an agreement checkbox. A valid enquiry shows a
 spinner while delivery is pending, then an animated check and Complete label
 only after the server confirms acceptance. Reduced motion keeps both icons static.
 A live status announces the server's result. The form has no simulated completion timer.

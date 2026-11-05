@@ -73,18 +73,12 @@ function guestInput(
   };
 }
 
-function unsupportedSetting(
-  rules: IResDiaryRules,
-  liveSite: boolean,
-): TUnsupportedSetting | null {
+function unsupportedSetting(rules: IResDiaryRules): TUnsupportedSetting | null {
   if (rules.membership?.required) {
     return BOOKING_UNSUPPORTED_SETTINGS.membership;
   }
   if (rules.customField?.required) {
     return BOOKING_UNSUPPORTED_SETTINGS.customField;
-  }
-  if (liveSite && rules.stripe && !rules.stripe.live) {
-    return BOOKING_UNSUPPORTED_SETTINGS.stripeTestKey;
   }
   return null;
 }
@@ -202,7 +196,7 @@ export async function submitGuestDetails(
   input: unknown,
   holdToken: string | undefined,
 ): TBookingResult<TGuestDetailsResult> {
-  const { provider, secret, liveSite } = context;
+  const { provider, secret } = context;
   const startedAt = Date.now();
   const hold = holdToken ? readHold(holdToken, secret) : null;
   if (!hold) {
@@ -231,7 +225,7 @@ export async function submitGuestDetails(
   if (rules.isErr()) {
     return err(unavailable());
   }
-  const setting = unsupportedSetting(rules.value, liveSite);
+  const setting = unsupportedSetting(rules.value);
   if (setting) {
     logger.error(LogContext.Api, BOOKING_LOG.formUnsupported, { setting });
     return err(unavailable());

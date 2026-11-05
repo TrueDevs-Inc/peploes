@@ -349,8 +349,10 @@ for (const path of enquiryPaths) {
     await expect(submit).toBeEnabled();
     await submit.click();
     await expect(
-      form.locator("input:invalid, select:invalid, textarea:invalid").first(),
-    ).toBeFocused();
+      form
+        .getByRole("alert")
+        .filter({ hasText: "Please complete all required fields." }),
+    ).toBeVisible();
     expect(
       await form
         .locator("input:invalid, select:invalid, textarea:invalid")
