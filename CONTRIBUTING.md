@@ -8,11 +8,11 @@ sentence.
 1. Follow the local setup in [`README.md`](README.md).
 2. Read [`AGENTS.md`](AGENTS.md) for agent authorization, then
    [`docs/architecture.md`](docs/architecture.md) for every production code change.
-3. Read the ticket's acceptance criteria, linked decisions and matching guide.
+3. Read the ticket's acceptance criteria, linked decisions and matching skill.
    Identify the behavior, affected callers and failure paths before editing.
 4. Add only tests that protect the changed behavior, following the
-   [testing guide](docs/guides/testing-guide.md).
-5. Follow the [quality gate](docs/guides/quality-guide.md), inspect the final
+   [test-quality skill](.agents/skills/test-quality/SKILL.md).
+5. Follow the [quality gate](.agents/skills/verification/SKILL.md), inspect the final
    diff and report any incomplete acceptance criteria before requesting review.
 
 Use a disposable local database. Never commit credentials. Review generated SQL
@@ -28,7 +28,7 @@ in `.husky/pre-push` if the project adopts different branch names.
 Keep the starter's fail-closed authentication until the project implements its
 chosen session and authorization policy. Choose real site metadata, origins,
 languages, data handling and deployment settings before launch. Follow the
-[issue-tracker adapter](docs/agents/issue-tracker.md) for the project's tracker.
+[issue-tracker skill](.agents/skills/issue-tracker/SKILL.md) for the project's tracker.
 The template does not create live tracker configuration or enable GitHub rules.
 
 ## Ticket isolation and shipping
@@ -152,7 +152,7 @@ integration and permission for real-world activation distinct.
 ### Review and merge
 
 Review standards and acceptance criteria separately using the
-[quality guide](docs/guides/quality-guide.md#review-evidence). Address correctness,
+[verification skill](.agents/skills/verification/SKILL.md#review-evidence). Address correctness,
 security, data-loss and missing-test findings before merge. Explain a disputed
 finding with evidence from the relevant code or decision; an agent's confident
 answer or a green CI run is not evidence of compliance by itself.
@@ -190,7 +190,7 @@ Write rules as a trigger, a concrete action and a checkable completion condition
 Use `must` for requirements and `prefer` for defaults with legitimate tradeoffs.
 Give a non-obvious rule its reason. Add a new guide only when it has a distinct
 owner and a route from an existing document. Remove stale rules when changing
-the workflow. See the [quality guide](docs/guides/quality-guide.md) for enforcement
+the workflow. See the [verification skill](.agents/skills/verification/SKILL.md) for enforcement
 and exceptions.
 
 ## Review checklist
