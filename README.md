@@ -24,9 +24,9 @@ remain disabled until a verified session is implemented.
 
 ## Verification
 
-Follow the [verification skill](.agents/skills/verification/SKILL.md#local-verification)
-for checks appropriate to the change. Database integration tests require a migrated
-disposable database. The GitHub workflow provisions its own database for that check.
+Run `bun run format`, then `bun run ci`. Database integration tests run separately
+with `bun run test:integration` against a migrated disposable database.
+The GitHub workflow provisions its own database for that check.
 
 ## Documentation
 
@@ -35,8 +35,8 @@ disposable database. The GitHub workflow provisions its own database for that ch
 | [`docs/architecture.md`](docs/architecture.md) | Module placement, dependency direction, and source conventions |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Branch, commit, review, and contribution workflow |
 | [`AGENTS.md`](AGENTS.md) | Agent authorization and repository-specific operating rules |
-| [verification skill](.agents/skills/verification/SKILL.md) | Verification, CI, hooks and review |
-| [html-reports skill](.agents/skills/html-reports/SKILL.md) | Standalone HTML reports |
-| [project-adoption skill](.agents/skills/project-adoption/SKILL.md) | Replacing inherited template defaults |
-| [test-quality skill](.agents/skills/test-quality/SKILL.md) | Test selection and test-suite policy |
-| [`.agents/skills/`](.agents/skills) | Error handling, logging, analytics, Sentry, performance, and SEO |
+| [`docs/guides/quality-guide.md`](docs/guides/quality-guide.md) | Verification, CI, hooks and review |
+| [`docs/guides/html-report-guide.md`](docs/guides/html-report-guide.md) | Standalone HTML reports |
+| [`docs/guides/project-adoption-guide.md`](docs/guides/project-adoption-guide.md) | Replacing inherited template defaults |
+| [`docs/guides/testing-guide.md`](docs/guides/testing-guide.md) | Test selection and test-suite policy |
+| [`docs/guides/`](docs/guides) | Error handling, logging, analytics, Sentry, performance, and SEO |
