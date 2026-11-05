@@ -1,7 +1,7 @@
 # Repository agent guide
 
 This file contains agent-specific constraints. Technical conventions belong in
-the linked owner documents, not here.
+the linked owner documents and skills, not here.
 
 ## Authorization
 
@@ -27,10 +27,10 @@ the linked owner documents, not here.
 2. Read the owning code, its callers, and its tests. Read `docs/architecture.md`
    for every production code change, including small fixes.
 3. Use the smallest relevant document from the routing table below. For
-   implementation and tooling changes, follow `docs/guides/quality-guide.md`.
+   implementation and tooling changes, follow `.agents/skills/verification/SKILL.md`.
 4. Make the smallest change that solves the requested problem.
 5. Update the owning test or document when behavior changes.
-6. Run the checks required by the quality guide and report their actual results.
+6. Run the checks required by the verification skill and report their actual results.
 7. Inspect the final diff for unrelated edits, secrets, generated files, and
    disabled checks. Check shared definitions, dependency direction, duplicate
    work and failure states against the owning rules.
@@ -46,15 +46,15 @@ instead of weakening a check.
 | --- | --- |
 | Peploe's brand, content, booking, or CMS requirements | [`docs/project/brief.md`](docs/project/brief.md) |
 | Module placement, dependency direction, naming, server/client boundaries, environment access | [`docs/architecture.md`](docs/architecture.md) |
-| Tests, mocks, coverage, browser tests, or database tests | [`docs/guides/testing-guide.md`](docs/guides/testing-guide.md) |
-| Results, error mapping, retries, or action failures | [`docs/guides/error-handling-guide.md`](docs/guides/error-handling-guide.md) |
-| Log levels, context, or metadata | [`docs/guides/logging-guide.md`](docs/guides/logging-guide.md) |
-| Analytics, consent, attribution, or Web Vitals events | [`docs/guides/ga4-guide.md`](docs/guides/ga4-guide.md) |
-| Error capture, source maps, or Sentry privacy | [`docs/guides/sentry-guide.md`](docs/guides/sentry-guide.md) |
-| Rendering cost, images, fonts, streaming, or motion | [`docs/guides/performance-guide.md`](docs/guides/performance-guide.md) |
-| Standalone HTML reports, dossiers, or review artifacts | [`docs/guides/html-report-guide.md`](docs/guides/html-report-guide.md) |
-| Metadata, JSON-LD, robots, sitemap, or `llms.txt` | [`docs/guides/seo-guide.md`](docs/guides/seo-guide.md) |
-| Quality gates, lint/CI/hooks, exceptions, or final review | [`docs/guides/quality-guide.md`](docs/guides/quality-guide.md) |
+| Tests, mocks, coverage, browser tests, or database tests | [test-quality skill](.agents/skills/test-quality/SKILL.md) |
+| Results, error mapping, retries, or action failures | [error-handling skill](.agents/skills/error-handling/SKILL.md) |
+| Log levels, context, or metadata | [logging skill](.agents/skills/logging/SKILL.md) |
+| Analytics, consent, attribution, or Web Vitals events | [analytics skill](.agents/skills/analytics/SKILL.md) |
+| Error capture, source maps, or Sentry privacy | [sentry skill](.agents/skills/sentry/SKILL.md) |
+| Rendering cost, images, fonts, streaming, or motion | [performance skill](.agents/skills/performance/SKILL.md) |
+| Standalone HTML reports, dossiers, or review artifacts | [html-reports skill](.agents/skills/html-reports/SKILL.md) |
+| Metadata, JSON-LD, robots, sitemap, or `llms.txt` | [seo skill](.agents/skills/seo/SKILL.md) |
+| Quality gates, lint/CI/hooks, exceptions, or final review | [verification skill](.agents/skills/verification/SKILL.md) |
 | Branches, commits, PR descriptions, integration, or issue closure | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
 
 The architecture review is historical evidence. Do not treat its roadmap or
@@ -86,7 +86,7 @@ request take precedence over a skill's default commit or publishing steps.
 ### Issue tracker
 
 Use the project's configured tracker through
-[`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md). When a task names a
+[issue-tracker skill](.agents/skills/issue-tracker/SKILL.md). When a task names a
 spec or ticket, read its acceptance criteria and linked decisions before editing.
 
 ### Framework documentation
