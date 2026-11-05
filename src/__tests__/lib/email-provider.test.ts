@@ -44,6 +44,35 @@ afterEach(() => {
 });
 
 describe("SMTP adapter", () => {
+  it("embeds the logo bytes in the MIME message when HTML references its CID", async () => {
+    const actual =
+      await vi.importActual<typeof import("nodemailer")>("nodemailer");
+    const composer = actual.default.createTransport({
+      streamTransport: true,
+      buffer: true,
+    });
+    let mime = "";
+    transport.sendMail.mockImplementation(async (options) => {
+      const result = await composer.sendMail(options);
+      mime = result.message.toString();
+      return {
+        accepted: MESSAGE.to,
+        rejected: [],
+        messageId: "inline-logo-test",
+      };
+    });
+
+    await sendSmtp({
+      ...MESSAGE,
+      html: '<img src="cid:peploes-logo" alt="Peploe\'s">',
+    });
+
+    expect(mime).toContain("Content-ID: <peploes-logo>");
+    expect(mime).toContain("Content-Type: image/png");
+    expect(mime).toContain("Content-Disposition: inline");
+    expect(mime).toContain("iVBORw0KGgo");
+  });
+
   it("records full SMTP acceptance", async () => {
     transport.sendMail.mockResolvedValue({
       accepted: ["guest@example.test"],
@@ -128,6 +157,35 @@ describe("SMTP adapter", () => {
 });
 
 describe("Resend adapter", () => {
+  it("includes PNG bytes with the matching content ID in the Resend request", async () => {
+    let body: unknown;
+    vi.stubGlobal("fetch", (_url: string, options: RequestInit) => {
+      body = JSON.parse(String(options.body));
+      return Promise.resolve(
+        new Response(JSON.stringify({ id: "inline-logo-test" }), {
+          status: 200,
+        }),
+      );
+    });
+
+    await sendResend({
+      ...MESSAGE,
+      html: '<img src="cid:peploes-logo" alt="Peploe\'s">',
+    });
+
+    expect(body).toEqual(
+      expect.objectContaining({
+        attachments: [
+          expect.objectContaining({
+            filename: "peploes-logo.png",
+            content_id: "peploes-logo",
+            content: expect.stringMatching(/^iVBORw0KGgo/),
+          }),
+        ],
+      }),
+    );
+  });
+
   it("fails before submission when selected Resend credentials are absent", async () => {
     settings.EMAIL_RESEND_API_KEY = "";
     const request = vi.fn();

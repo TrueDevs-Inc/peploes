@@ -1,8 +1,8 @@
+import emailLogo from "@/lib/email-logo.json";
 import type {
   TContactEnquiry,
   TPrivateDiningEnquiry,
 } from "@/lib/enquiry-schema";
-import { env } from "@/lib/env";
 import type { IEmailMessage } from "@/lib/types";
 
 function escapeHtml(value: string): string {
@@ -26,10 +26,8 @@ function escapeHtml(value: string): string {
 
 function layout(preheader: string, content: string, contact: string): string {
   const safeContact = escapeHtml(contact);
-  const logoUrl = escapeHtml(
-    new URL("/peploes-email-logo.png", env.NEXT_PUBLIC_SITE_URL).toString(),
-  );
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;background:#f8f4ed;color:#271f1c;font-family:Georgia,serif"><div style="display:none;max-height:0;overflow:hidden;opacity:0">${escapeHtml(preheader)}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#fff;border:1px solid #ded6cb"><tr><td align="center" style="padding:24px 28px;background:#6f2637"><img src="${logoUrl}" alt="Peploe's" width="180" height="96" style="display:block;width:180px;max-width:100%;height:auto;border:0;color:#fff;font-size:26px"></td></tr><tr><td style="padding:16px 28px 28px;font-size:16px;line-height:1.6;overflow-wrap:anywhere">${content}<p style="margin:28px 0 0;font-size:14px">Questions? <a style="color:#6f2637" href="mailto:${safeContact}">Reply to ${safeContact}</a>.</p></td></tr></table></td></tr></table></body></html>`;
+  const logoUrl = `cid:${emailLogo.contentId}`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;background:#f8f4ed;color:#271f1c;font-family:Georgia,serif"><div style="display:none;max-height:0;overflow:hidden;opacity:0">${escapeHtml(preheader)}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#fff;border:1px solid #ded6cb"><tr><td align="center" style="padding:24px 28px;background:#f8f4ed;border-top:6px solid #6f2637"><img src="${logoUrl}" alt="Peploe's" width="180" height="96" style="display:block;width:180px;max-width:100%;height:auto;border:0;color:#271f1c;font-size:26px"></td></tr><tr><td style="padding:16px 28px 28px;font-size:16px;line-height:1.6;overflow-wrap:anywhere">${content}<p style="margin:28px 0 0;font-size:14px">Questions? <a style="color:#6f2637" href="mailto:${safeContact}">Reply to ${safeContact}</a>.</p></td></tr></table></td></tr></table></body></html>`;
 }
 
 function details(enquiry: TPrivateDiningEnquiry): string[] {
@@ -54,7 +52,7 @@ export function renderEnquiryAdmin(
   return {
     notificationId: enquiry.notificationId,
     template: "enquiry-admin",
-    version: 1,
+    version: 2,
     to: [recipient],
     replyTo: enquiry.email,
     subject: "New private dining enquiry",
@@ -77,7 +75,7 @@ export function renderEnquiryGuest(
   return {
     notificationId: enquiry.notificationId,
     template: "enquiry-guest",
-    version: 1,
+    version: 2,
     to: [enquiry.email],
     subject: "Your Peploe's private dining enquiry",
     html: layout(
@@ -103,7 +101,7 @@ export function renderContactAdmin(
   return {
     notificationId: enquiry.notificationId,
     template: "contact-admin",
-    version: 1,
+    version: 2,
     to: [recipient],
     replyTo: enquiry.email,
     subject: "New contact message",

@@ -59,10 +59,11 @@ quota is an expected refusal and does not emit an error event.
 
 ## Delivery records and recovery
 
-HTML emails use the PNG logo served at `/peploes-email-logo.png` on
-`NEXT_PUBLIC_SITE_URL`. Set that origin to the public HTTPS deployment before
-testing images in real inboxes; recipients cannot load a localhost image URL.
-The image has a text alternative for clients that block remote images.
+HTML emails embed the Peploe's PNG wordmark as an inline Content-ID attachment
+through both SMTP and Resend. The logo does not need a public image URL or a
+running local server. `/email-preview` displays the same attachment bytes as a
+data URL because browsers do not resolve email Content-IDs. Text alternatives
+remain available when a mail client suppresses images.
 
 The `email_deliveries` table stores an opaque ID, payload hash, template,
 selected provider, status, and provider ID. It stores no recipient or message
