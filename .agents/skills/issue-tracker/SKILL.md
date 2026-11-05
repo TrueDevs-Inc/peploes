@@ -9,7 +9,7 @@ Resolve the actual repository and configured tracker before acting. Read the nam
 
 For nested GitHub reviews, comments or relationships, use GraphQL with verified fields, variables and deliberate pagination. Use the installed github-graphql-first skill when available. Simple high-level CLI reads are sufficient for flat issue lookup.
 
-Keep task status and dependencies in the tracker, unique architectural reasons in their owner record, and implementation facts in code. Do not create another tracked report to repeat issue history.
+Keep task status and dependencies in the tracker, unique architectural reasons in the owning repository document, and implementation facts in code. Do not create another tracked report to repeat issue history.
 
 Before an authorized write, verify the exact repository, target and requested operation. Use a structured body or body file for multiline content. Preserve newlines and quote untrusted identifiers safely. Review approval does not authorize publication, merging or closure.
 

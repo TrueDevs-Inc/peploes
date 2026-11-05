@@ -9,7 +9,7 @@ Start from approved public facts and actual canonical URLs. Metadata must descri
 
 Keep structured data beside the feature it describes and use the existing metadata helpers. Escape serialized content at the script boundary. Emit a small accurate graph rather than every available schema type.
 
-Treat indexing as a product decision. Check page-specific noindex settings, CMS publication rules and the intended deployment origin. Keep preview deployments non-indexable. Define preview indexing independently of NODE_ENV and verify the deployed robots and metadata responses. Private content needs server authorization; robots rules and noindex do not protect it.
+Treat indexing as a product decision. Check page-specific noindex settings, CMS publication rules and the intended deployment origin. Keep preview deployments non-indexable. Define preview indexing independently of NODE_ENV and verify the deployed robots and metadata responses. Authenticated routes also need private/no-store cache controls so shared caches cannot replay protected responses. Private content needs server authorization; robots rules and noindex do not protect it.
 
 Search-only, training-only and mixed-use crawlers involve different owner choices. Blocking a mixed-use token can affect discovery as well as training. Do not infer the owner's choice from an existing constant.
 

@@ -11,7 +11,7 @@ Use semantic headings, meaningful anchors and a skip link. Long reports need a p
 
 Use CSS variables, one main accent, system font fallbacks and WCAG AA text contrast. Default to soft dark with a complete light alternative. Controls need visible keyboard focus, at least 44px height and labels naming their next action. Storage failure must not break controls. Honor reduced motion and avoid ornamental entrance effects.
 
-Keep content, essential diagrams and evidence usable offline and without JavaScript. Inline SVG or semantic HTML is enough for small diagrams; libraries need readable fallbacks. Use scoped table headers. Wide comparisons need labeled keyboard-accessible scrolling regions; the page must not overflow or shrink table text to fit.
+Keep content, essential diagrams and evidence usable offline and without JavaScript. Inline SVG or semantic HTML is enough for small diagrams; libraries need readable fallbacks. Use scoped table headers. On narrow screens, display labels for individually assessable rows so their context survives the layout change. Wide comparisons need labeled keyboard-accessible scrolling regions; the page must not overflow or shrink table text to fit.
 
 Print in a light palette without navigation or controls, expose disclosures and preserve the reader's disclosure state afterward. Before delivery inspect desktop, narrow mobile, both themes, 200% zoom, keyboard navigation, anchors, wide tables, theme switching, reduced motion, offline/no-JavaScript reading and print. Check console errors and document overflow. Report limits, not an accessibility certification.
 

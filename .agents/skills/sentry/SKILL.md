@@ -14,4 +14,4 @@ Keep guest details, credentials, tokens and user-entered text out of custom exce
 Keep upload tokens private. Runtime release identity and uploaded artifacts must match. Verify source-map upload, public-map removal and readable frames on the actual deployed candidate; a local build without credentials establishes none of these.
 
 Use synthetic errors and isolated accounts for authorized receipt checks. Never
-introduce deliberate faults into the live production site. Local envelopes and intercepted browser requests prove payload handling, not external ingestion, owner alerts or deployed symbolication. Record evidence in the tracker without private event payloads or credentials.
+introduce deliberate faults into the live production site. Local envelopes and intercepted browser requests prove payload handling, not external ingestion, owner alerts or deployed symbolication. Inspect received synthetic events for redaction and remove them after verification. Record evidence in the tracker without private event payloads or credentials.

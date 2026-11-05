@@ -11,6 +11,6 @@ A log must help an operator diagnose an actual problem. Keep messages stable and
 
 Log a failure once at its owning boundary. A caller mapping the same failure to a guest message does not need another log. Distinguish operational logging from exception capture; neither is required for every expected refusal.
 
-Never attach passwords, tokens, cookies, authorization headers, full form bodies, guest text or payment data. Review arbitrary error messages as well as metadata; a typed wrapper does not make its contents safe.
+Never attach passwords, tokens, cookies, session IDs, authorization headers, full form bodies, guest text, payment data or other private values. Review arbitrary error messages as well as metadata; a typed wrapper does not make its contents safe.
 
 Use only identifiers permitted by the product's privacy policy. Bootstrap exceptions to the logger must remain narrow and have a concrete initialization reason. Verify that changed logs retain useful context without exposing sensitive values.

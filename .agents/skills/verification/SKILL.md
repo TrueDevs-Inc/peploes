@@ -24,7 +24,7 @@ push is needed. Never expose secrets to untrusted PR execution. Check script
 and hook behavior as well as syntax; hooks must not format, stage or rewrite
 files. A local hook bypass grants no permission to publish. Keep declared tool versions and frozen installs; review upgrade behavior and configuration together. Preserve the Verify job name and checks for stacked bases, dev and main. Do not weaken strict typing, warnings, tests, builds or audits to obtain a pass.
 
-Owners should require PRs, Verify, resolved conversations and independent approval when available, dismiss stale approvals, and block force pushes and deletions on integration/release branches. These are intended settings, not enforcement installed by documentation. Verify live rules before claiming them.
+Owners should require PRs, Verify, resolved conversations and independent approval when available, dismiss stale approvals, and block force pushes and deletions on integration/release branches. When independent approval is unavailable, require explicit maintainer review and CI; self-review is not independent approval. These are intended settings, not enforcement installed by documentation. Verify live rules before claiming them.
 
 ## Review evidence
 

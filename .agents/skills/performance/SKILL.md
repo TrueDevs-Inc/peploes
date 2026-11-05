@@ -7,7 +7,7 @@ description: Investigate measured rendering, loading, image, data-fetching or mo
 
 Start with a production build and a named slow user action. Measure its bottleneck before proposing a dependency, cache or abstraction. An empty local page or a warm cache is not representative evidence.
 
-Trace related requests and callers. Start independent work together, keep dependent work sequential, and eliminate duplicate work only where the operations share meaning. Caching needs an acceptable stale window and an invalidation owner; do not invent either from framework defaults.
+Trace related requests and callers. Start independent work together, keep dependent work sequential, and eliminate duplicate work only where the operations share meaning. Caching needs an acceptable stale window and an invalidation owner; do not invent either from framework defaults. After a successful mutation, revalidate the affected cached paths or tags so subsequent reads reflect the write.
 
 Keep the smallest interactive boundary on the client. Reserve loading and image space so delayed content does not expose a footer or move controls unexpectedly. Load only genuinely costly optional features later; avoid splitting tiny components for its own sake.
 
