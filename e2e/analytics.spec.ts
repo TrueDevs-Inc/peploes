@@ -306,7 +306,7 @@ test.describe("withdrawal and re-consent", () => {
     await expectPageViews(page, analytics, 1);
 
     const other = await context.newPage();
-    await other.goto("/visit-contact");
+    await other.goto("/contact");
     await expectPageViews(other, analytics, 2);
     await rejectAll(other);
 
@@ -416,12 +416,12 @@ test.describe("interaction events", () => {
     await expect
       .poll(() => analytics.posthogNamed("contact_click").length)
       .toBe(2);
-    await page.goto("/visit-contact");
+    await page.goto("/contact");
     await expect
       .poll(() =>
         analytics
           .posthogPageViews()
-          .some((e) => e.properties.$pathname === "/visit-contact"),
+          .some((e) => e.properties.$pathname === "/contact"),
       )
       .toBe(true);
     await page.context().route("https://www.google.com/maps/**", (route) =>

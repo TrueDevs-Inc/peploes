@@ -1,9 +1,117 @@
 import { expect, test } from "@playwright/test";
 
+test("location sections keep the page background and the map has a shadow", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/contact");
+  const section = page.locator("#find-us");
+  const desktopBackground = await page
+    .getByRole("main")
+    .evaluate((element) => getComputedStyle(element).backgroundColor);
+  for (const width of [320, 390, 639, 768, 1280, 1440]) {
+    await page.setViewportSize({ width, height: 844 });
+    await expect(section).toHaveCSS("background-color", desktopBackground);
+    for (const content of await section.locator(":scope > div").all()) {
+      await expect(content).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+    }
+    const map = section.locator("[aria-busy]");
+    await expect(map).toHaveCSS("border-top-style", "solid");
+    const borderWidth = await map.evaluate((element) =>
+      Number.parseFloat(getComputedStyle(element).borderTopWidth),
+    );
+    expect(borderWidth).toBeGreaterThan(0);
+    expect(borderWidth).toBeLessThanOrEqual(1);
+    await expect(map).not.toHaveCSS("box-shadow", "none");
+  }
+});
+
+test("contact information has aligned mobile headings and compact details", async ({
+  page,
+  isMobile,
+}) => {
+  await page.goto("/contact");
+  await page.evaluate(() => document.fonts.ready);
+  const information = page.getByRole("region", {
+    name: "Opening hours, address and contact",
+  });
+  const sizes = isMobile
+    ? { heading: "27px", icon: "47px", detail: "15px" }
+    : { heading: "30px", icon: "48px", detail: "18px" };
+  for (const heading of await information.getByRole("heading").all()) {
+    await expect(heading).toHaveCSS("font-size", sizes.heading);
+    if (isMobile) {
+      const offset = await heading.evaluate((element) => {
+        const icon = element.parentElement?.parentElement?.querySelector("img");
+        if (!icon) throw new Error("Contact information icon is missing");
+        return (
+          element.getBoundingClientRect().top - icon.getBoundingClientRect().top
+        );
+      });
+      expect(Math.abs(offset)).toBeLessThan(1);
+    }
+  }
+  for (const icon of await information.locator("img").all()) {
+    await expect(icon).toHaveCSS("width", sizes.icon);
+    await expect(icon).toHaveCSS("height", sizes.icon);
+  }
+  for (const selector of ["dl", "address"]) {
+    await expect(information.locator(selector)).toHaveCSS(
+      "font-size",
+      sizes.detail,
+    );
+  }
+  if (isMobile) {
+    const links = information.getByRole("link");
+    const phone = await links.nth(0).boundingBox();
+    const email = await links.nth(1).boundingBox();
+    if (!phone || !email) throw new Error("Contact links are missing");
+    expect(email.y - phone.y - phone.height).toBeLessThan(1);
+    const labelGap = await links.evaluateAll((elements) => {
+      const bounds = elements.map((element) => {
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        return range.getBoundingClientRect();
+      });
+      return bounds[1].top - bounds[0].bottom;
+    });
+    expect(labelGap).toBeLessThan(6);
+  }
+});
+
+test("the former Visit URL redirects permanently to Contact", async ({
+  page,
+  request,
+}) => {
+  const response = await request.get("/visit-contact?source=bookmark", {
+    maxRedirects: 0,
+  });
+  expect(response.status()).toBe(308);
+  expect(response.headers().location).toBe("/contact?source=bookmark");
+  await page.goto("/visit-contact#find-us");
+  await expect(page).toHaveURL("/contact#find-us");
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    "href",
+    /\/contact$/,
+  );
+});
+
 test("Visit loads its image and contact information without horizontal overflow", async ({
   page,
 }) => {
-  await page.goto("/visit-contact");
+  await page.goto("/contact");
+
+  await expect(
+    page.getByRole("form", { name: "General contact message" }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "Send us a message." }),
+  ).toHaveCount(0);
+  const enquiry = page.locator("#enquire");
+  await expect(
+    enquiry.getByRole("form", { name: "Plan your gathering" }),
+  ).toBeVisible();
+  await expect(enquiry.locator("+ section")).toContainText("The city fades.");
 
   await expect(
     page.getByRole("heading", { name: "Step down from the city.", level: 1 }),
@@ -46,7 +154,7 @@ test("navigation reaches Visit, closes the mobile menu and shows the desktop act
     await menu
       .getByRole("link", { name: "Visit & Contact", exact: true })
       .click();
-    await expect(page).toHaveURL(/\/visit-contact$/);
+    await expect(page).toHaveURL(/\/contact$/);
     await expect(menu).not.toBeVisible();
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
   } else {
@@ -56,7 +164,7 @@ test("navigation reaches Visit, closes the mobile menu and shows the desktop act
     });
     await visit.click();
     await page.mouse.move(0, 0);
-    await expect(page).toHaveURL(/\/visit-contact$/);
+    await expect(page).toHaveURL(/\/contact$/);
     await expect(visit).toHaveCSS("color", "rgb(122, 30, 36)");
     const underline = navigation.locator("[data-navbar-indicator]");
     await expect(underline).toHaveCSS("opacity", "1");
@@ -77,7 +185,7 @@ for (const destination of [{ id: "opening-hours" }, { id: "find-us" }]) {
     page,
     isMobile,
   }) => {
-    const path = `/visit-contact#${destination.id}`;
+    const path = `/contact#${destination.id}`;
     if (isMobile && destination.id === "find-us") {
       await page.goto("/");
       const link = page.getByRole("contentinfo").getByRole("link", {
@@ -118,7 +226,7 @@ for (const targetId of ["opening-hours", "find-us"]) {
   }) => {
     const session = await page.context().newCDPSession(page);
     await session.send("Emulation.setCPUThrottlingRate", { rate: 6 });
-    await page.goto(`/visit-contact#${targetId}`);
+    await page.goto(`/contact#${targetId}`);
     await expect
       .poll(async () => (await page.locator(`#${targetId}`).boundingBox())?.y)
       .toBeCloseTo(100, 0);
@@ -128,7 +236,7 @@ for (const targetId of ["opening-hours", "find-us"]) {
 test("contact and map links point to the restaurant's public destinations", async ({
   page,
 }) => {
-  await page.goto("/visit-contact");
+  await page.goto("/contact");
   const main = page.getByRole("main");
   for (const label of ["+353 1 676 3144", "Call +353 1 676 3144"]) {
     await expect(

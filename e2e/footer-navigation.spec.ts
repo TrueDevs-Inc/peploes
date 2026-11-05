@@ -134,7 +134,7 @@ test("mobile footer uses one address button without redundant hours or Direction
     exact: true,
   });
   await expect(address).toBeVisible();
-  await expect(address).toHaveAttribute("href", "/visit-contact#find-us");
+  await expect(address).toHaveAttribute("href", "/contact#find-us");
   await expect(address).toHaveCSS("border-top-width", "1px");
   await expect(
     footer.getByRole("link", { name: "Directions", exact: true }),
@@ -149,7 +149,7 @@ test("mobile footer legal links share one row with comfortable touch targets", a
     await page.setViewportSize({ width: 390, height: 844 });
   }
 
-  for (const path of ["/", "/visit-contact"]) {
+  for (const path of ["/", "/contact"]) {
     await page.goto(path);
     const footer = page.getByRole("contentinfo");
     const legal = footer.getByRole("navigation", {
@@ -157,13 +157,12 @@ test("mobile footer legal links share one row with comfortable touch targets", a
     });
     const controls = legal.getByRole("link").or(legal.getByRole("button"));
     await page.evaluate(() => document.fonts.ready);
-    await expect(controls).toHaveCount(5);
+    await expect(controls).toHaveCount(4);
     for (const [index, name] of [
       "Privacy Policy",
       "Terms",
       "Accessibility",
       "Booking & Cancellation",
-      "Cookie Settings",
     ].entries()) {
       await expect(controls.nth(index)).toHaveAccessibleName(name);
     }
@@ -171,13 +170,7 @@ test("mobile footer legal links share one row with comfortable touch targets", a
       await controls.evaluateAll((elements) =>
         elements.map((element) => (element as HTMLElement).innerText),
       ),
-    ).toEqual([
-      "Privacy",
-      "Terms",
-      "Accessibility",
-      "Booking",
-      "Cookie Settings",
-    ]);
+    ).toEqual(["Privacy", "Terms", "Accessibility", "Booking"]);
     const positions = await controls.evaluateAll((elements) =>
       elements.map((element) => {
         const bounds = element.getBoundingClientRect();
@@ -205,14 +198,12 @@ test("mobile footer legal links share one row with comfortable touch targets", a
     await expect(
       legal.getByRole("link", { name: "Privacy Policy", exact: true }),
     ).toHaveAttribute("href", "/privacy-policy");
-    await legal.getByRole("button", { name: "Cookie Settings" }).click();
     await expect(
-      page.getByRole("dialog", { name: "Cookie Preferences" }),
-    ).toBeVisible();
-    await page.keyboard.press("Escape");
-    await expect(
-      legal.getByRole("button", { name: "Cookie Settings" }),
-    ).toBeFocused();
+      legal.getByRole("button", {
+        name: "Cookie Settings",
+        includeHidden: true,
+      }),
+    ).toBeHidden();
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,
@@ -320,7 +311,7 @@ test("footer Explore matches desktop links and keeps them reachable", async ({
   await page.keyboard.press("Space");
   await expect(story).toBeVisible();
   await contact.click();
-  await expect(page).toHaveURL("/visit-contact");
+  await expect(page).toHaveURL("/contact");
 });
 
 test("mobile Explore has a bottom border and equal contact spacing", async ({

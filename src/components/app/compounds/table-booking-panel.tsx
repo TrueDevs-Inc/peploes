@@ -149,7 +149,8 @@ export function TableBookingPanel() {
                 <small>Table until {content.returnTime.end}</small>
               )}
             </p>
-            <button
+            <Button
+              variant="plain"
               type="button"
               className={styles.editAction}
               aria-label="Edit date & guests"
@@ -158,7 +159,7 @@ export function TableBookingPanel() {
               <Pencil aria-hidden="true" />
               <span className={styles.desktopOnly}>Edit date &amp; guests</span>
               <span className={styles.mobileOnly}>Edit</span>
-            </button>
+            </Button>
           </div>
           {step === 1 ? (
             <BookingTimes
@@ -232,7 +233,8 @@ export function TableBookingPanel() {
             </div>
           </div>
           <TableBookingSupport confirmation />
-          <button
+          <Button
+            variant="plain"
             type="button"
             className={cn(styles.backAction, styles.restart)}
             onClick={() => {
@@ -251,7 +253,7 @@ export function TableBookingPanel() {
           >
             <ArrowLeft aria-hidden="true" />
             Start again
-          </button>
+          </Button>
         </>
       )}
     </section>
@@ -308,7 +310,8 @@ function BookingTimes({
       <fieldset className={styles.timeGrid} aria-label="Sample available times">
         {[...content.times, ...(showMore ? content.moreTimes : [])].map(
           (slot) => (
-            <button
+            <Button
+              variant="plain"
               type="button"
               key={slot}
               aria-pressed={time === slot}
@@ -319,11 +322,12 @@ function BookingTimes({
               }}
             >
               {slot}
-            </button>
+            </Button>
           ),
         )}
       </fieldset>
-      <button
+      <Button
+        variant="plain"
         type="button"
         className={styles.moreTimes}
         aria-expanded={showMore}
@@ -331,7 +335,7 @@ function BookingTimes({
       >
         <ChevronDown aria-hidden="true" />
         {showMore ? "Show fewer times" : "Show more times (6 more)"}
-      </button>
+      </Button>
       {requiresReturn && (
         <div className={styles.returnNotice}>
           <strong>This table has a return time</strong>
@@ -351,10 +355,15 @@ function BookingTimes({
         </div>
       )}
       <div className={styles.flowActions}>
-        <button type="button" className={styles.backAction} onClick={onBack}>
+        <Button
+          variant="plain"
+          type="button"
+          className={styles.backAction}
+          onClick={onBack}
+        >
           <ArrowLeft aria-hidden="true" />
           Back to search
-        </button>
+        </Button>
         <Button
           type="button"
           variant="brand-primary"

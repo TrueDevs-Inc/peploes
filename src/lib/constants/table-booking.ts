@@ -51,6 +51,7 @@ export const TABLE_BOOKING_CONTENT = {
     phoneError: "Please enter a valid telephone number.",
     termsError: "Please acknowledge the booking terms for this preview.",
     action: "Confirm Reservation",
+    pendingLabel: "Confirming…",
   },
   support: {
     heading: "Can’t find your preferred date?",

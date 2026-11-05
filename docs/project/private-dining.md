@@ -13,6 +13,12 @@ Only the overview has a separate mobile frame. The three detail pages use its
 24px phone gutters, stacked content, type scale and full-width controls.
 Desktop references are 1440px wide; the overview phone reference is 390px.
 Sections can grow at narrower widths and with enlarged text.
+Below 640px, the overview hero has a minimum height of one small viewport
+(`100svh`) and grows when its copy needs more room.
+
+The desktop Private Dining & Events navigation shelf links each occasion image
+and its title to the matching detail page. Image links support keyboard focus
+and activation.
 
 Below 640px, Every Reason to Gather and Good to Know use 48px icons beside
 their text, a 16px column gap and horizontal Soft Stone separators. Their item
@@ -33,16 +39,19 @@ The column stops growing on wider screens and remains fluid on smaller desktops.
 The celebrations occasion categories use medium-weight EB Garamond at 22/23px
 on desktop and DM Sans at 16/23px for their lists. Their text measures stop at
 226.4px, preserving the reference wrapping on wider screens. The last list keeps
-the design's break before “and family occasions”. Five equal content columns
-share the remaining width after padding and 1px dividers; the eyebrow rule is 2px.
+the design's break before “and family occasions”. The final desktop column has
+extra width to keep “Seasonal & personal occasions” on one line. Columns share
+the remaining width after padding and 1px dividers; the eyebrow rule is 2px.
+Each occasion list item has 8px vertical padding, with Soft Stone dividers between
+items to keep individual occasions distinct at every screen width.
 
 The celebrations “Made personal” section follows [Personal touches in Figma](https://www.figma.com/design/0fEgisdlNBr23CuWHJOTNC/Peploe-s?node-id=3526-11891).
 At 1440px, its columns are 580px and 668px with a 48px gap and 48px vertical
 padding. The eyebrow rule is 2px; the title is regular EB Garamond at 48px
 with 104% line height. Introductory copy is 18px DM Sans with 140% line height.
 The details start 14px below the left column and have 24px between them.
-Their medium-weight EB Garamond titles use 22px type, 100% line height and
-29px text frames, followed by an 8px gap and 16px DM Sans at 140% line height.
+Their medium-weight EB Garamond titles use 23px type, 100% line height and
+29px text frames, followed by an 8px gap and 15px DM Sans at 140% line height.
 Each detail has a 1px inset Soft Stone divider and 24px left padding.
 Desktop text measures stay capped at the reference widths on wider screens.
 The section keeps its responsive stacked layout below 1024px.
@@ -69,10 +78,10 @@ Its desktop columns are 598px and 650px with a 48px gap. The form's inset
 divider spans the full 603px section, including its 48px vertical padding.
 The left and right headings use 44/46px and 34/35px EB Garamond respectively.
 Fields use secondary-colour 16/24px DM Sans and 38px desktop control heights.
-All enquiry variants use 4px field corners, pointer cursors for date, select and
-consent controls, and an inset neutral focus indicator without an outer outline.
-Forced-colors mode retains a distinct keyboard outline. Both occasion and guest
-selects use the styled native picker where supported, with native fallbacks.
+All enquiry variants use 4px field corners, pointer cursors for date and select
+controls, and an inset neutral focus indicator without an outer outline.
+Forced-colors mode retains a distinct keyboard outline. Occasion selects use
+the styled native picker where supported, with native fallbacks.
 Picker placeholders are excluded from the menu. Hovered and selected options use
 the same pale background; keyboard focus uses an outline. Pickers prefer opening below the
 field with a small gap and retain browser positioning fallbacks near screen edges.
@@ -101,8 +110,8 @@ disables the image zoom and the retained layer.
 Occasion typography uses EB Garamond for headings and descriptions, and DM Sans
 for labels, numbers and links. Desktop section titles are 50/52px, card titles
 32/34px and descriptions 18px with 130% line height. Descriptions use the secondary
-text colour and a 72px minimum height. Their width is capped at 368px to preserve
-the reference's line breaks on wider desktops; dividers do not reduce this width.
+text colour and a 72px minimum height. Descriptions fill their card's content
+column and wrap naturally on wider desktops.
 On mobile, section titles are 36/44px, card titles 28/34px and descriptions
 18/28px. Mobile numbers are 14/16px, medium weight, with 10% letter spacing;
 desktop numbers are 12/16px, regular weight, without added spacing. Links use
@@ -116,7 +125,7 @@ and 22/28px on mobile. Their desktop columns have 40px gaps; centred label width
 are capped at 294px to preserve the Figma line breaks on wider screens. The menu
 description uses secondary text at 20/24px on desktop and 18/28px on mobile. The compact
 enquiry description is 580px wide at most, with 18px DM Sans and 23px line height
-on desktop. Its mobile fields keep their labels near the top of the 88px controls.
+on desktop. Its mobile date placeholder uses the shared vertical-centering rule, without a fixed top offset. Empty, unfocused date fields hide the browser date text so it cannot overlap the placeholder; focused and valid dates remain readable.
 
 All private-dining pages use the shared homepage footer, including its desktop
 columns, spacing, gutters and mobile reading order. Footer content remains
@@ -134,7 +143,7 @@ The celebrations closing banner keeps the gathering photograph at its original
 proportions. At the 1440px reference width, its 250px frame crops the 960px-high
 image by 611.13px from the top (`object-position: center 86.075%`).
 The [closing section in Figma](https://www.figma.com/design/0fEgisdlNBr23CuWHJOTNC/Peploe-s?node-id=3526-12019)
-uses 48px vertical padding, a 740px heading width and 470px body width.
+uses 48px vertical padding. The heading and body now share a 740px maximum width.
 The warm-ink overlay fades from full opacity on the left to 60% at 53% of
 the banner width, then becomes transparent at 73%.
 
@@ -177,12 +186,13 @@ The enquiry has 598px and 650px columns separated by
 The privacy-policy link points to `/privacy-cookies` and retains the design's
 underline.
 
+On phones, the corporate Location Matters heading, eyebrow, icons and card text are centered. Card headings use 23px type and descriptions use 15px type.
 The corporate Location Matters section uses 36px top and 40px bottom padding,
 a 48/50px regular heading, 48px icons and 1px inset Soft Stone dividers.
 At desktop widths, card titles use 22/25px regular EB Garamond and descriptions
 use 16/22px DM Sans, separated by 6px. Text stops at 201.75px (200.75px in the
 first card), retaining the reference's line breaks on wider screens. Descriptions
-preserve the design's explicit line breaks on desktop. The final
+wrap naturally within those columns on desktop. The final
 card's divider is 137px high; the other dividers are 140px. Cards grow when
 wrapped content needs more space.
 
@@ -229,6 +239,9 @@ Each detail page has its own enquiry copy and relevant fields. Corporate
 enquiries include a company field; wedding enquiries do not ask for an occasion
 type. The overview note `3482:6834` supplies its five occasion choices: Groups &
 Celebrations, Corporate Event, Exclusive Hire, Wedding and Other.
+
+Textarea resize grips use burgundy diagonal lines in browsers that support styling the native grip. On phones, a visible 24px touch handle provides vertical dragging; keyboard users can use arrow keys or activate the handle to add a line. The handle preserves message text and does not submit the form. Below 640px, compact-form dropdown arrows align with
+the first line of the field text.
 
 Resolved comments on the overview ask for cleaner sections with less text
 (#38 and #40), and copy without dashes (#39). The current frame is the visual
@@ -286,8 +299,8 @@ section height. Headings use 40/42px and 34/35px EB Garamond. The introduction
 uses 18/24px DM Sans, with 48px before the two 262 × 48px contact buttons.
 The 602px form has 38px fields, a 68px message field and 4px corners on inputs
 and selects. Its first row uses 294px and 296px controls with a
-12px gap. Secondary-colour field text uses 16/24px DM Sans; consent has a 22px
-checkbox and underlined burgundy policy text. Send Enquiry is 161 × 44px.
+12px gap. Secondary-colour field text uses 16/24px DM Sans.
+Send Enquiry is 161 × 44px.
 The pale background mixes 6% burgundy over Warm Cream. The responsive layout
 keeps stacked columns and larger controls below 1024px; the enquiry
 behaviour is described below.
@@ -329,12 +342,17 @@ link. Escape closes the shelf and restores focus to the label. On mobile, the
 entire row toggles the submenu, including the label, empty space and plus/minus.
 The first submenu link, Overview, opens `/private-dining`.
 
+Enquiry select fields use maroon outline chevrons, centered at the right edge with space reserved beside the text. Decorative icons do not intercept clicks.
+
 ## Enquiry submission
 
-The shared guest-count dropdown offers 1–7 guests, using the same constant as
-Book a Table and the booking service's site limit. Restaurant capacity and group
-menu eligibility remain separate content.
-Supporting browsers show a styled picker capped at 310px (or 40% of the
+Shared enquiry fields, message areas and form wrappers have no minimum-height constraints at any breakpoint. Existing desktop height and padding rules remain in place. On phones, all shared enquiry forms use natural field heights. Inputs and selects use 10px vertical padding and 22px line height, giving 44px controls. The three-row message field uses 12px vertical padding for a 92px initial height and remains vertically resizable. Fields share 8px gaps, Soft Stone borders and 4px corners.
+
+The shared guest-count field accepts a custom positive whole number, including 80 or more.
+Maroon outlined chevron up/down buttons sit beside the guest count; typing and keyboard adjustment remain available. The submit button has an additional 16px of space above it.
+Set `NEXT_PUBLIC_ENQUIRY_MAX_GUESTS` to a positive whole number to cap enquiries in both the form and server validation. Leave it empty for no fixed capacity cap. This public setting requires a rebuild after changes. Book a Table keeps its separate online booking limit.
+Restaurant capacity and group menu eligibility remain separate content.
+For occasion selects, supporting browsers show a styled picker capped at 310px (or 40% of the
 viewport height), with scrolling inside the list. It retains native keyboard
 selection and required-field validation. Other browsers use their native picker.
 Option text aligns with the field value, selected checks sit on the right, and
@@ -344,6 +362,9 @@ scrollbar CSS, with only its colour changed to Peploe's burgundy at 40% opacity.
 The preferred date allows today or a later date in the restaurant's Dublin
 time zone. Past dates are disabled in the picker and fail validation when typed.
 The minimum date refreshes on interaction and submission for pages left open overnight.
+The shared calendar hides fully elapsed weeks and keeps earlier dates in the
+current week disabled. Enquiry sections stack above following content so the
+calendar stays visible when it extends over the closing banner.
 The calendar uses the site's warm cream, burgundy and typography, with month
 navigation and keyboard date selection. Its left and right edges match the
 preferred-date field at every screen width. Autofilled fields keep their cream background.
@@ -352,7 +373,7 @@ Narrow calendars use compact headings and day controls to keep dates separate.
 The shared form calls the enquiry action connected in issue #100.
 Send Enquiry is enabled once the form is interactive. Clicking it with missing
 or invalid fields shows the browser's validation message and focuses the first
-invalid control, including consent on the detail pages. A valid enquiry shows a
+invalid control. No enquiry variant includes an agreement checkbox. A valid enquiry shows a
 spinner while delivery is pending, then an animated check and Complete label
 only after the server confirms acceptance. Reduced motion keeps both icons static.
 A live status announces the server's result. The form has no simulated completion timer.
@@ -385,6 +406,5 @@ the full row toggles by tap, Enter and Space, and the Overview submenu link
 opens the overview and closes the menu. Confirm refactored sections retain
 their desktop and phone dimensions.
 In forced-colors mode, check that corporate, celebration and wedding enquiry
-fields and contact links retain visible outlines, consent checkboxes retain
-native appearance, and keyboard focus remains distinct.
+fields and contact links retain visible outlines and keyboard focus remains distinct.
 Run the gates in the [quality guide](../guides/quality-guide.md).

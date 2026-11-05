@@ -24,7 +24,7 @@ export function TableBookingSupport({
           <p className={styles.supportDescription}>{support.description}</p>
         </div>
       </div>
-      <div className={styles.contactActions}>
+      <div data-button-pair className={styles.contactActions}>
         <Button
           asChild
           variant="brand-contact"

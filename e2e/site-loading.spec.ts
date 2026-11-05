@@ -13,7 +13,7 @@ test("public content pages reuse rendered HTML", async ({ request }) => {
     "/private-dining/groups-celebrations",
     "/private-dining/corporate-events",
     "/private-dining/weddings",
-    "/visit-contact",
+    "/contact",
     "/book-a-table",
     "/journal",
     "/seasonal",

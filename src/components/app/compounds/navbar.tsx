@@ -2,8 +2,6 @@ import Link from "next/link";
 
 import { NavbarBookingButton } from "@/components/app/atoms/navbar-booking-button";
 import { NavbarBrand } from "@/components/app/atoms/navbar-brand";
-import { DesktopGroups } from "@/components/app/molecules/desktop-groups";
-import { DesktopMenus } from "@/components/app/molecules/desktop-menus";
 import { DesktopNavigation } from "@/components/app/molecules/desktop-navigation";
 import { MobileNavigation } from "@/components/app/molecules/mobile-navigation";
 import { Button } from "@/components/ui/button";
@@ -29,13 +27,11 @@ export function Navbar() {
               id: "menus",
               label: NAVBAR_CONTENT.menusLabel,
               href: ROUTES.MENUS,
-              content: <DesktopMenus />,
             },
             {
               id: NAVBAR_CONTENT.groupsId,
               label: NAVBAR_CONTENT.groupsLabel,
               href: ROUTES.PRIVATE_DINING,
-              content: <DesktopGroups />,
             },
             {
               id: "our-story",

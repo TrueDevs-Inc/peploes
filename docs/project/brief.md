@@ -52,17 +52,18 @@ opens the same preview. Group enquiry links keep their existing destinations.
 
 ## Visit & Contact
 
-The general contact form sends one restaurant notification through the selected
-transactional email provider. It shows success only after provider acceptance,
-keeps the visitor's entries on definite failure, and directs uncertain outcomes
-to the published phone or email contact. The private-dining form remains a
-separate enquiry flow.
+General enquiries use the published phone and email links. Visit & Contact also
+shows the shared private-dining gathering enquiry form directly above its
+closing banner. Private dining pages keep the same enquiry forms.
 
-`/visit-contact` follows the Final Pages Visit & Contact frame (`3602:4457`).
+`/contact` follows the Final Pages Visit & Contact frame (`3602:4457`).
 At the 1440px reference, its section heights are 604, 236, 698, 302, 419, 366
 and 480px, followed by the 468px production footer. Content uses the shared
 72px desktop gutters, DM Sans and EB Garamond, and the existing colour tokens.
 The contact strip and dining-hours background mix 6% burgundy into warm cream.
+Below 640px, contact-strip headings align with the top of their 47px icons and
+use 27px type. Opening hours and address details use 15px type. Phone and email
+links use adjoining 44px touch targets without an extra gap.
 
 Eyebrow rules are 48px wide and 2px high. Outlined buttons and section dividers
 use 1px strokes; button corners retain their individual Figma radii. Render
@@ -72,6 +73,11 @@ On desktop, transport paragraphs retain their 207.25–208.25px Figma widths so
 wider columns do not shorten the text or dividers.
 Reservation assistance keeps its 450px action column, 394px buttons and 782px
 paragraph maximum on desktop, with the original phone SVG and text arrows.
+Its availability and call buttons share their width, height and text size.
+The email text shows a 1px underline by default and a 1.5px underline on hover,
+with a 5px offset and its arrow clear. The underline uses the full text colour
+without transparency. The text colour stays the same on hover, and the action
+retains its focus outline.
 
 Use the original entrance photograph and illustrations exported from
 Figma. The closing photograph reuses `peploes-entrance-backdrop.png`. The desktop
@@ -98,7 +104,7 @@ Main navigation opening-hours and location links point to this page, using its
 `#opening-hours` and `#find-us` anchors. The mobile footer's address button
 opens `#find-us`; its opening hours appear without a separate link.
 The desktop Explore footer's Visit & Contact link uses
-the same-site `/visit-contact` route so it works on every deployment.
+the same-site `/contact` route so it works on every deployment.
 Direct anchor links recover a missed initial browser scroll after the document
 loads. Client navigation and history remain handled by the router.
 
@@ -337,6 +343,8 @@ menu open and closed.
 
 ## Footer implementation
 
+Footer content stays visible without scroll reveal animations.
+
 The shared footer uses Figma Footer / Production desktop (`3041:2359`) and the
 mobile homepage footer (`3395:17877`). Desktop has brand, Explore, Contact and
 newsletter columns. Mobile shows brand, newsletter, expanded Explore,
@@ -359,9 +367,9 @@ The navbar bottom edge and footer top edge have full-width Soft Stone dividers.
 The three burgundy heading underlines are 32px wide and 2px high, matching Figma.
 
 Telephone and email links are active. The footer lists Privacy Policy, Terms,
-Accessibility, Booking & Cancellation and Cookie Settings in that order. The first
-four open their policy pages; Cookie Settings opens the Cookie Preferences
-modal. Booking & Cancellation Terms retains its existing URL. Legal links may
+Accessibility and Booking & Cancellation in that order. These four links open
+their policy pages. Cookie Settings and its separator are hidden in the footer.
+Booking & Cancellation Terms retains its existing URL. Legal links may
 wrap on narrow screens and when text is enlarged.
 On mobile, legal links share a horizontal row with smaller text and shortened
 Privacy and Booking labels. Full accessible names remain available, links can
@@ -395,8 +403,10 @@ Privacy. The links share the contents disclosure on mobile.
 Footer Instagram and Facebook links use the restaurant
 profiles linked from [the official website](https://peploes.com/) and open in a
 new tab. Other unbuilt navigation destinations remain inactive. The newsletter
-email field has an accessible label without email-domain suggestions. Browser
-autocomplete and the native datalist are disabled.
+email field has an accessible label and enables native saved-email autofill.
+Custom email-domain suggestions and the native datalist are disabled. Tab moves to Subscribe
+without changing the address. Browser validation popups are disabled; invalid
+addresses show the inline error below the field and focus the input.
 Focus colours the 1px bottom border burgundy and thickens it by 1px downward
 without moving the text. Enter and Subscribe show an error for empty
 or malformed addresses, including addresses without a dotted domain. Valid input
@@ -451,6 +461,11 @@ with Figma. Check that every illustration loads and that text wraps without
 horizontal scrolling at narrow widths and enlarged text sizes.
 
 ## Menus introduction implementation
+
+Descriptive paragraphs use the available width of their heading's content column
+and wrap naturally. Avoid preserving manual line breaks or adding a narrower
+paragraph-only width limit. Addresses, menu notes and structured lists retain
+their meaningful line breaks; shared reading-column limits still apply.
 
 The homepage menus introduction follows Final Pages `3131:11245`. It uses the
 dining-room photograph exported with Figma's crop, a 370px desktop image band,
@@ -610,7 +625,8 @@ No separate mobile frame is supplied. Below
 640px, follow the homepage and menu pages: 16px gutters, 48px hero type, 42px
 section headings, 16px body copy and stacked full-width invitation buttons.
 Photo banners use vertical overlays with room above the text; their height grows
-with the content. The diary retains its date column, 1px horizontal row dividers
+with the content. Below 640px, the hub hero has a minimum height of `100svh`.
+The diary retains its date column, 1px horizontal row dividers
 and a 1px Soft Stone vertical rule beside each date. Use compact month headings
 and 44px minimum action targets. The terrace photo uses a 3:2 crop.
 The shared invitation follows these phone styles on individual events too;
@@ -784,25 +800,28 @@ production footer. Desktop section minimum heights at 1440px are 546, 457, 600,
 48px top and bottom padding (issue #28), growing beyond their minimum heights
 as needed. Narrow layouts stack the content with 16px gutters,
 a vertical timeline and readable overlays; Figma has no separate mobile frame.
-Main headings use 38px type on phones and 35px below 360px, with 42px and
-40px line heights respectively. Smaller timeline titles retain their existing
-scale. Tablet and desktop typography and image crops remain
+The Building heading uses two lines on phones: “From Georgian Dublin” and
+“to the dining room below.” Its font scales from 26px to 32px to keep both lines within the mobile gutters.
+Other main headings use 38px type on phones and 35px below 360px, with 42px and
+40px line heights respectively. Timeline titles stay on one line, with smaller
+type in narrow columns and equal gaps before their descriptions. Other tablet
+and desktop typography and image crops remain
 unchanged. The hero, building, founder, mural, archive and closing service
 sections use a 24px gap between their heading and description at every width.
 Page styling lives in Tailwind classes in the Our Story component.
 At the 1440px reference width and above, the philosophy column stays 525px
 wide beside a flexible timeline, with a 100px gap. The timeline has 22px top
 padding, so its dates and divider do not move when the descriptions reflow.
-The desktop descriptions keep Figma's 199.667px text width and 4/5/4 line
-breaks even when the timeline columns grow. Mobile paragraphs remain fluid.
+The horizontal timeline's 1px line passes through the centre of its 14px dots.
+Timeline descriptions fill their columns and wrap naturally at every width.
 From 1280px, the founder section keeps a 490px copy column and a 68px gap
 beside the portrait. The portrait fills the remaining width beside a minimum
 390px copy area, with 48px of space above and below the desktop image and copy.
-The paragraph retains its five authored desktop lines.
+The paragraph wraps naturally within that copy column.
 The next-generation section also keeps its 527px copy column, 16px portrait
-gap and five authored lines from 1280px, with 48px vertical padding inside
+gap from 1280px, with naturally wrapping copy and 48px vertical padding inside
 the 340px section. A 47px desktop gap below it matches the archive image's
-bottom inset above it. Its paragraph wraps naturally on smaller screens.
+bottom inset above it.
 The closing banner retains its 60px heading and 20px body text on desktop.
 From 1440px, anchor the photograph to the wrist beneath
 “dining” on the third body line. Scale the image uniformly around that point

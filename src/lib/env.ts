@@ -76,6 +76,11 @@ export const env = createEnv({
   clientPrefix: "NEXT_PUBLIC_",
 
   client: {
+    NEXT_PUBLIC_ENQUIRY_MAX_GUESTS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .optional(),
     NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: z.string().startsWith("pk.").optional(),
     NEXT_PUBLIC_MAPBOX_STYLE_URL: z
       .string()
@@ -104,6 +109,7 @@ export const env = createEnv({
 
   runtimeEnv: {
     ...process.env,
+    NEXT_PUBLIC_ENQUIRY_MAX_GUESTS: process.env.NEXT_PUBLIC_ENQUIRY_MAX_GUESTS,
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,

@@ -80,6 +80,10 @@
   color: var(--booking-muted, var(--text-secondary));
 }
 
+.grid [data-past-week="true"] {
+  display: none;
+}
+
 .grid [aria-pressed="true"] {
   background: var(--booking-accent, var(--peploe-burgundy));
   color: var(--booking-surface, var(--warm-cream));

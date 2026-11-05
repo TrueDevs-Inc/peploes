@@ -4,8 +4,8 @@ import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-
 import styles from "@/components/app/molecules/menu-navigation.module.css";
+import { Button } from "@/components/ui/button";
 import { FOCUS_RING, MENU_ROUTES } from "@/lib/constants";
 import { getSelectedMenu, selectMenuSection } from "@/lib/menu-selection";
 import type { IMenuNavigationProps } from "@/lib/types";
@@ -139,7 +139,8 @@ export function MenuNavigation({
                 )}
               >
                 {item.children?.length ? (
-                  <button
+                  <Button
+                    variant="plain"
                     type="button"
                     aria-expanded={isOpen}
                     aria-controls={controlsId}
@@ -159,7 +160,7 @@ export function MenuNavigation({
                       aria-hidden="true"
                       className={cn("size-4", isOpen && "rotate-180")}
                     />
-                  </button>
+                  </Button>
                 ) : item.href ? (
                   <Link
                     href={item.href}

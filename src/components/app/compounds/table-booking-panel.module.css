@@ -501,9 +501,6 @@
   min-width: 0;
   gap: 4px;
 }
-.bookingCalendar [data-past-week="true"] {
-  display: none;
-}
 .selection:not(:disabled),
 .timeSlot {
   cursor: pointer;

@@ -46,7 +46,8 @@ export function HumanHospitality() {
 
             <div
               data-scroll-reveal
-              className="flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row sm:flex-wrap sm:gap-4"
+              data-button-pair
+              className="gap-2.5 sm:gap-4"
             >
               <Button
                 asChild

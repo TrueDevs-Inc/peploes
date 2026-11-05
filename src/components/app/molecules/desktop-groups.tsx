@@ -38,7 +38,12 @@ export function DesktopGroups() {
         {GROUPS_SHELF_CONTENT.destinations.map(
           ({ label, description, image, href }) => (
             <li key={label} className="flex min-w-0 flex-col gap-4">
-              <div className="relative h-[132px] w-full">
+              <Link
+                href={href}
+                prefetch={true}
+                aria-label={`View ${label}`}
+                className={cn(FOCUS_RING, "relative h-[132px] w-full")}
+              >
                 <Image
                   src={image}
                   alt=""
@@ -46,7 +51,7 @@ export function DesktopGroups() {
                   sizes="calc((100vw - 592px) / 3)"
                   className="object-cover"
                 />
-              </div>
+              </Link>
               <NavigationShelfLink
                 label={label}
                 description={description}

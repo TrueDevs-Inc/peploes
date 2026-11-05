@@ -1,6 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { ICloseButtonProps } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -10,7 +11,8 @@ export function CloseButton({
   ariaLabel = "Close",
 }: ICloseButtonProps) {
   return (
-    <button
+    <Button
+      variant="plain"
       type="button"
       onClick={onClick}
       aria-label={ariaLabel}
@@ -20,6 +22,6 @@ export function CloseButton({
       )}
     >
       <X className="size-4" />
-    </button>
+    </Button>
   );
 }

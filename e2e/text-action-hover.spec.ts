@@ -68,7 +68,7 @@ for (const route of [
   "/",
   "/private-dining",
   "/seasonal",
-  "/visit-contact",
+  "/contact",
   "/journal",
   "/privacy-cookies",
 ]) {

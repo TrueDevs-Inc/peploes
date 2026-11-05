@@ -7,49 +7,40 @@ for (const menu of [
   "group-set-menu",
   "seasonal",
 ]) {
-  test(`${menu} allergens stay vertically centered on desktop and remain expandable`, async ({
+  test(`${menu} allergens stay visible and vertically centered on desktop`, async ({
     page,
     viewport,
   }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto(`/menus?menu=${menu}`);
-    const information = page.locator("details").filter({
-      has: page.getByText("Allergen Information", { exact: true }),
+    const heading = page.getByRole("heading", {
+      name: "Allergen Information",
+      exact: true,
     });
-    const description = information.locator("p");
-    await expect(description).toBeVisible();
-    for (const open of [true, false]) {
-      if (!open) await information.locator("summary").click();
-      await expect(information).toHaveJSProperty("open", open);
-      if ((viewport?.width ?? 1440) >= 1280) {
-        await expect
-          .poll(() =>
-            information.evaluate((element) => {
-              const panel = element.closest(".site-container");
-              const summary = element.querySelector("summary");
-              const last = element.hasAttribute("open")
-                ? element.querySelector("p")
-                : summary;
-              if (!panel || !summary || !last) {
-                throw new Error("The menu allergen panel is incomplete.");
-              }
-              const bounds = panel.getBoundingClientRect();
-              const top = summary.getBoundingClientRect().top - bounds.top;
-              const bottom =
-                bounds.bottom - last.getBoundingClientRect().bottom;
-              return Math.abs(top - bottom);
-            }),
-          )
-          .toBeLessThanOrEqual(1);
-      }
+    const information = heading.locator("..");
+    await expect(heading).toBeVisible();
+    await expect(information.locator("p")).toBeVisible();
+    await expect(information.locator("summary, button")).toHaveCount(0);
+    if ((viewport?.width ?? 1440) >= 1280) {
+      await expect
+        .poll(() =>
+          information.evaluate((element) => {
+            const panel = element.closest(".site-container");
+            const title = element.querySelector("h2");
+            const description = element.querySelector("p");
+            if (!panel || !title || !description)
+              throw new Error("The menu allergen panel is incomplete.");
+            const bounds = panel.getBoundingClientRect();
+            const top = title.getBoundingClientRect().top - bounds.top;
+            const bottom =
+              bounds.bottom - description.getBoundingClientRect().bottom;
+            return Math.abs(top - bottom);
+          }),
+        )
+        .toBeLessThanOrEqual(1);
     }
-    await expect(description).toBeHidden();
-    await information.locator("summary").focus();
-    await page.keyboard.press("Enter");
-    await expect(description).toBeVisible();
   });
 }
-
 test("switching from deep Wine content keeps menu navigation visible", async ({
   page,
 }) => {

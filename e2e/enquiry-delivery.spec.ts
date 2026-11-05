@@ -19,7 +19,7 @@ async function fillEnquiry(
   const form = page.locator("#enquire").getByRole("form");
   await form.getByLabel("Occasion type").selectOption("Wedding");
   await form.getByLabel("Preferred date", { exact: true }).fill("2027-06-18");
-  await form.getByLabel("Number of guests").selectOption("7");
+  await form.getByLabel("Number of guests").fill("80");
   await form.getByLabel("Your name").fill("Example Guest");
   await form.getByLabel("Email address").fill("guest@example.test");
   await form.getByLabel("Tell us about your gathering").fill(message);

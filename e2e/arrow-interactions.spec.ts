@@ -9,7 +9,7 @@ test.use({
 test("arrows animate on actionable content and respect reduced motion", async ({
   page,
 }) => {
-  await page.goto("/visit-contact");
+  await page.goto("/contact");
   await page.emulateMedia({ reducedMotion: "no-preference" });
 
   const navigation = page.getByRole("navigation", { name: "Main navigation" });

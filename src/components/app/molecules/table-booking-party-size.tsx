@@ -2,8 +2,8 @@
 
 import { ChevronDown, UserRound, UsersRound } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-
 import styles from "@/components/app/compounds/table-booking-panel.module.css";
+import { Button } from "@/components/ui/button";
 import { TABLE_BOOKING_CONTENT } from "@/lib/constants/table-booking";
 import type { ITableBookingPartySizeProps } from "@/lib/types";
 
@@ -62,7 +62,8 @@ export function TableBookingPartySize({
         {label}
       </span>
       <div className={styles.selectWrapper}>
-        <button
+        <Button
+          variant="plain"
           ref={trigger}
           type="button"
           role="combobox"
@@ -130,7 +131,7 @@ export function TableBookingPartySize({
             {value} {value === "1" ? "guest" : "guests"}
           </span>
           <ChevronDown aria-hidden="true" className={styles.chevron} />
-        </button>
+        </Button>
         {open && (
           <div
             id="booking-party-options"
@@ -142,7 +143,8 @@ export function TableBookingPartySize({
               const option = String(count);
               const Icon = count > 2 ? UsersRound : UserRound;
               return (
-                <button
+                <Button
+                  variant="plain"
                   key={count}
                   ref={option === active ? activeOption : undefined}
                   id={`booking-party-option-${count}`}
@@ -159,7 +161,7 @@ export function TableBookingPartySize({
                   <span>
                     {count} {count === 1 ? "guest" : "guests"}
                   </span>
-                </button>
+                </Button>
               );
             })}
           </div>

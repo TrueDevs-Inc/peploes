@@ -3,9 +3,9 @@
 import { format, parseISO } from "date-fns";
 import { CalendarDays, ChevronDown } from "lucide-react";
 import { useRef, useState } from "react";
-
 import { DateCalendar } from "@/components/app/atoms/date-calendar";
 import styles from "@/components/app/compounds/table-booking-panel.module.css";
+import { Button } from "@/components/ui/button";
 import { TABLE_BOOKING_CONTENT } from "@/lib/constants/table-booking";
 import { dublinToday } from "@/lib/dates";
 import type { ITableBookingDateProps } from "@/lib/types";
@@ -32,7 +32,8 @@ export function TableBookingDate({ value, onChange }: ITableBookingDateProps) {
       <span id="booking-date-label" className={styles.fieldLabel}>
         {TABLE_BOOKING_CONTENT.date.label}
       </span>
-      <button
+      <Button
+        variant="plain"
         ref={trigger}
         type="button"
         aria-labelledby="booking-date-label booking-date-value"
@@ -52,7 +53,7 @@ export function TableBookingDate({ value, onChange }: ITableBookingDateProps) {
             : TABLE_BOOKING_CONTENT.date.placeholder}
         </span>
         <ChevronDown aria-hidden="true" className={styles.chevron} />
-      </button>
+      </Button>
       {open && (
         <DateCalendar
           key={minimum}

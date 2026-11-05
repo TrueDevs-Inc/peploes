@@ -126,7 +126,7 @@ export const ROUTES = {
   CELEBRATIONS: "/private-dining/groups-celebrations",
   CORPORATE_EVENTS: "/private-dining/corporate-events",
   WEDDINGS: "/private-dining/weddings",
-  VISIT_CONTACT: "/visit-contact",
+  VISIT_CONTACT: "/contact",
   PRIVACY_COOKIES: "/privacy-cookies",
   PRIVACY_POLICY: "/privacy-policy",
   ACCESSIBILITY_POLICY: "/accessibility-policy",

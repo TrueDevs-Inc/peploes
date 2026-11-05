@@ -1,4 +1,4 @@
-import { GUEST_COUNTS, ROUTES } from "@/lib/constants";
+import { ROUTES } from "@/lib/constants";
 import type {
   IPrivateDiningFeature,
   IPrivateDiningPageContent,
@@ -129,10 +129,18 @@ export const PRIVATE_DINING_FORM = {
   heading: "Tell us what you’re planning.",
   date: "Preferred date",
   guests: "Number of guests",
-  guestCounts: GUEST_COUNTS,
+  requiredWarning: "Please complete all required fields.",
+  invalidEmail: "Please enter a valid email address.",
+  invalidDate: "Please choose a valid date, today or later.",
+  invalidGuests: "Please enter a whole number of guests greater than zero.",
+  guestLimit: "The maximum number of guests is {maximum}.",
+  increaseGuests: "Increase number of guests",
+  decreaseGuests: "Decrease number of guests",
   name: "Your name",
   company: "Company",
   email: "Email address",
+  resizeMessage: "Resize message",
+  resizeMessageHint: "Drag or use the up and down arrow keys to resize",
   consent: {
     beforePolicy: "I agree to the ",
     policy: "privacy policy",
@@ -156,6 +164,17 @@ export const PRIVATE_DINING_FORM = {
       "We could not send your enquiry. Your details are still in the form; please try again or contact our team.",
   },
   emailAction: "Email Reception",
+};
+
+export const PRIVATE_DINING_REQUIRED_MESSAGES: Readonly<
+  Record<string, string>
+> = {
+  occasion: "Please select an occasion type.",
+  date: "Please choose a preferred date.",
+  guests: "Please enter the number of guests.",
+  name: "Please enter your name.",
+  email: "Please enter your email address.",
+  message: "Please enter your enquiry details.",
 };
 
 export const PRIVATE_DINING_MENU_LINKS = [

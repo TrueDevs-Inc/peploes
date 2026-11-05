@@ -3,6 +3,8 @@ import { expect, it, vi } from "vitest";
 
 import { DateCalendar } from "@/components/app/atoms/date-calendar";
 
+vi.mock("@/components/ui/button.module.css", () => ({ default: {} }));
+
 vi.mock("@/components/app/atoms/date-calendar.module.css", () => ({
   default: {},
 }));

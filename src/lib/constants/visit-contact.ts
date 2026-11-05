@@ -57,6 +57,7 @@ export const VISIT_CONTACT_CONTENT = {
       alt: "Map showing Peploe’s on the north side of St Stephen’s Green in central Dublin.",
       label: "Interactive map showing Peploe’s",
       unavailable: "Interactive map unavailable. You can still get directions.",
+      popupCloseLabel: "Close location details",
       recenterLabel: "Recenter map on Peploe’s",
       markerLabel: "Peploe’s, 16 St Stephen’s Green",
     },

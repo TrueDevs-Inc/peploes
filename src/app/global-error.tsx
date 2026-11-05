@@ -2,6 +2,7 @@
 
 import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
 import "./globals.css";
 
@@ -24,13 +25,14 @@ export default function GlobalError({
           <p className="text-sm text-muted-foreground">
             Please try again. If the issue persists, contact support.
           </p>
-          <button
+          <Button
+            variant="plain"
             type="button"
             className="mx-auto rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground"
             onClick={() => reset()}
           >
             Try again
-          </button>
+          </Button>
         </main>
       </body>
     </html>

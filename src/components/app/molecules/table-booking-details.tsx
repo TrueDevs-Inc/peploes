@@ -1,7 +1,7 @@
 "use client";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { z } from "zod";
 import styles from "@/components/app/compounds/table-booking-panel.module.css";
 import { Button } from "@/components/ui/button";
@@ -63,6 +63,7 @@ export function TableBookingDetails({
   onContinue,
 }: ITableBookingDetailsProps) {
   const [attempted, setAttempted] = useState(false);
+  const [pending, startTransition] = useTransition();
   const copy = TABLE_BOOKING_CONTENT.details;
   const fullName = details.surname
     ? `${details.firstName} ${details.surname}`
@@ -96,6 +97,7 @@ export function TableBookingDetails({
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
+        if (pending) return;
         const form = event.currentTarget;
         setAttempted(true);
         if (Object.values(invalid).some(Boolean)) {
@@ -108,7 +110,7 @@ export function TableBookingDetails({
           });
           return;
         }
-        onContinue();
+        startTransition(onContinue);
       }}
     >
       <div className={styles.detailsIntroduction}>
@@ -209,15 +211,22 @@ export function TableBookingDetails({
         </p>
       )}
       <div className={styles.flowActions}>
-        <button type="button" className={styles.backAction} onClick={onBack}>
+        <Button
+          variant="plain"
+          type="button"
+          className={styles.backAction}
+          onClick={onBack}
+        >
           <ArrowLeft aria-hidden="true" /> Back to times
-        </button>
+        </Button>
         <Button
           type="submit"
           variant="brand-primary"
           className={styles.continueAction}
+          disabled={pending}
+          aria-busy={pending}
         >
-          {copy.action}
+          {pending ? copy.pendingLabel : copy.action}
           <ArrowRight aria-hidden="true" />
         </Button>
       </div>

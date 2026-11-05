@@ -83,7 +83,9 @@ export function VisitContactDetails() {
                   destination: "email",
                 }}
               >
-                <span>{VISIT_CONTACT_DETAILS.reservation.emailLabel}</span>
+                <span className={styles.emailLabel}>
+                  {VISIT_CONTACT_DETAILS.reservation.emailLabel}
+                </span>
                 <ArrowRight aria-hidden="true" className="size-4" />
               </TrackedAnchor>
             </Button>

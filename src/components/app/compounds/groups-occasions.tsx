@@ -52,7 +52,7 @@ export function GroupsOccasions() {
               {GROUPS_OCCASIONS_CONTENT.heading}
             </h2>
 
-            <p className="max-w-[520px] text-base leading-6 text-warm-cream/90">
+            <p className="w-full text-base leading-6 text-warm-cream/90">
               {GROUPS_OCCASIONS_CONTENT.description}
             </p>
 

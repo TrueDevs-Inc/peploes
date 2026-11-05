@@ -5,6 +5,7 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
+        plain: "",
         default:
           "bg-primary text-primary-foreground shadow-xs hover:bg-primary/90",
         destructive:
@@ -15,16 +16,17 @@ export const buttonVariants = cva(
           "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
-        link: "text-primary underline-offset-4 hover:underline",
+        link: "text-primary underline underline-offset-4 decoration-transparent hover:decoration-current transition-[color,text-decoration-color] duration-(--duration-base) ease-(--ease-organic) motion-reduce:transition-none",
         "brand-primary":
           "bg-peploe-burgundy text-warm-cream shadow-none hover:bg-button-primary-hover",
         "brand-primary-inverse":
           "bg-warm-cream text-peploe-burgundy shadow-none hover:bg-warm-cream/90",
         "brand-secondary-inverse":
           "border border-warm-cream bg-transparent text-warm-cream shadow-none hover:border-warm-cream hover:bg-warm-cream/12",
-        "brand-text": "text-peploe-burgundy underline-offset-4 hover:underline",
+        "brand-text":
+          "text-peploe-burgundy underline underline-offset-4 decoration-transparent hover:decoration-current",
         "brand-nav":
-          "text-ink underline-offset-4 hover:text-peploe-burgundy hover:underline",
+          "text-ink underline underline-offset-4 decoration-transparent hover:text-peploe-burgundy hover:decoration-current",
         "brand-contact":
           "border border-peploe-burgundy/25 bg-transparent text-peploe-burgundy shadow-none hover:border-peploe-burgundy/60 hover:bg-peploe-burgundy/6",
       },
@@ -53,7 +55,7 @@ export const buttonVariants = cva(
           "brand-contact",
         ],
         className:
-          "cursor-pointer transition-colors duration-(--duration-interaction) motion-reduce:transition-none",
+          "cursor-pointer transition-[color,background-color,border-color,text-decoration-color] duration-(--duration-base) ease-(--ease-organic) motion-reduce:transition-none",
       },
     ],
     defaultVariants: {

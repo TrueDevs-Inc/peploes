@@ -8,7 +8,7 @@ import { GA4Event } from "@/lib/enums";
 
 export function PrivateDiningContacts() {
   return (
-    <div className={styles.contacts}>
+    <div data-button-pair className={styles.contacts}>
       <Button asChild variant="brand-contact">
         <TrackedAnchor
           href={`tel:${RESTAURANT_CONTACT.phone}`}

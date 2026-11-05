@@ -4,7 +4,7 @@ test("cookie preferences stay modal while fading closed through each dismissal",
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.goto("/visit-contact");
+  await page.goto("/contact");
   const trigger = page.getByRole("button", {
     name: "Cookie Settings",
     exact: true,
@@ -57,7 +57,7 @@ test("cookie preferences fade and slide open on every visit and respect reduced 
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.goto("/visit-contact");
+  await page.goto("/contact");
   await page.evaluate(() => {
     document.addEventListener("transitionrun", (event) => {
       if (
@@ -112,7 +112,7 @@ test("cookie preferences fade and slide open on every visit and respect reduced 
 test("footer opens preferences, retains choices and restores keyboard focus", async ({
   page,
 }) => {
-  await page.goto("/visit-contact");
+  await page.goto("/contact");
   const trigger = page.getByRole("button", {
     name: "Cookie Settings",
     exact: true,
@@ -173,7 +173,7 @@ test("footer opens preferences, retains choices and restores keyboard focus", as
 test("preferences remain usable in narrow viewports and link to the privacy policy", async ({
   page,
 }, testInfo) => {
-  await page.goto("/visit-contact");
+  await page.goto("/contact");
   await page
     .getByRole("button", { name: "Cookie Settings", exact: true })
     .click();
@@ -230,7 +230,7 @@ test("outside taps close preferences while touches inside keep them open", async
   page,
   isMobile,
 }) => {
-  await page.goto("/visit-contact");
+  await page.goto("/contact");
   const trigger = page.getByRole("button", {
     name: "Cookie Settings",
     exact: true,
@@ -271,7 +271,7 @@ test("blocked storage reports a failed save without pretending preferences were 
       },
     });
   });
-  await page.goto("/visit-contact");
+  await page.goto("/contact");
   await page
     .getByRole("button", { name: "Cookie Settings", exact: true })
     .click();
@@ -293,7 +293,7 @@ test("failed withdrawal stays denied across reloads and tabs until a successful 
   page,
   context,
 }) => {
-  await page.goto("/visit-contact");
+  await page.goto("/contact");
   const trigger = page.getByRole("button", {
     name: "Cookie Settings",
     exact: true,
@@ -315,7 +315,7 @@ test("failed withdrawal stays denied across reloads and tabs until a successful 
     .click();
   await expect(dialog.getByRole("alert")).toBeVisible();
   const otherTab = await context.newPage();
-  await otherTab.goto("/visit-contact");
+  await otherTab.goto("/contact");
   await otherTab
     .getByRole("button", { name: "Cookie Settings", exact: true })
     .click();

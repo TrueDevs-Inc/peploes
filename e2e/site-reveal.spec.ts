@@ -1,6 +1,24 @@
 import { VISIT_CONTACT_CONTENT } from "@/lib/constants/visit-contact";
 import { expect, test } from "./menu-test";
 
+test("footer content stays visible without scroll reveal", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/contact");
+  await expect(
+    page.locator("main [data-scroll-reveal-state]").first(),
+  ).toBeAttached();
+  const footer = page.getByRole("contentinfo");
+  await expect(footer.locator("[data-scroll-reveal-state]")).toHaveCount(0);
+  for (const section of await footer
+    .locator("[data-footer-section]:visible, [data-footer-meta]:visible")
+    .all()) {
+    await expect(section).toHaveCSS("opacity", "1");
+    await expect(section).toHaveCSS("transform", "none");
+  }
+  await footer.scrollIntoViewIfNeeded();
+  await expect(footer.locator("[data-scroll-reveal-state]")).toHaveCount(0);
+});
+
 test("removed reveal targets stop being observed during menu replacement", async ({
   page,
 }) => {
@@ -71,7 +89,7 @@ for (const path of [
   "/seasonal/lobster-season",
   "/seasonal/new-years-eve",
   "/book-a-table",
-  "/visit-contact",
+  "/contact",
   "/privacy-cookies",
   "/accessibility-policy",
   "/terms-conditions",
@@ -101,44 +119,49 @@ for (const path of [
     );
     expect(uncovered).toEqual([]);
 
-    // Short pages can have all main content in view before the first scroll.
-    const groups = page.locator("[data-scroll-reveal-state]:visible");
+    const groups = page.locator("main [data-scroll-reveal-state]:visible");
     const pendingIndex = await groups.evaluateAll((elements) =>
       elements.findIndex(
         (element) =>
           element.getAttribute("data-scroll-reveal-state") === "pending",
       ),
     );
-    expect(pendingIndex).toBeGreaterThanOrEqual(0);
-    const content = groups.nth(pendingIndex);
-    await expect(content).toHaveCSS("opacity", "0");
-    const height = (await content.boundingBox())?.height;
-    const [duration] = await Promise.all([
-      content.evaluate(
-        (element) =>
-          new Promise<number>((resolve) => {
-            element.addEventListener("transitionend", (event) => {
-              if (
-                event instanceof TransitionEvent &&
-                event.target === element &&
-                event.propertyName === "transform"
-              )
-                resolve(event.elapsedTime);
-            });
+    if (pendingIndex < 0) {
+      for (const group of await groups.all())
+        await expect(group).toBeInViewport();
+    } else {
+      const content = groups.nth(pendingIndex);
+      await expect(content).toHaveCSS("opacity", "0");
+      const height = (await content.boundingBox())?.height;
+      const [duration] = await Promise.all([
+        content.evaluate(
+          (element) =>
+            new Promise<number>((resolve) => {
+              element.addEventListener("transitionend", (event) => {
+                if (
+                  event instanceof TransitionEvent &&
+                  event.target === element &&
+                  event.propertyName === "transform"
+                )
+                  resolve(event.elapsedTime);
+              });
+            }),
+        ),
+        content.evaluate((element) =>
+          window.scrollTo({
+            top:
+              scrollY +
+              element.getBoundingClientRect().top -
+              innerHeight * 0.55,
+            behavior: "instant",
           }),
-      ),
-      content.evaluate((element) =>
-        window.scrollTo({
-          top:
-            scrollY + element.getBoundingClientRect().top - innerHeight * 0.55,
-          behavior: "instant",
-        }),
-      ),
-    ]);
-    expect(duration).toBeCloseTo(0.35);
-    await expect(content).toHaveCSS("opacity", "1");
-    await expect(content).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, 0)");
-    expect((await content.boundingBox())?.height).toBe(height);
+        ),
+      ]);
+      expect(duration).toBeCloseTo(0.35);
+      await expect(content).toHaveCSS("opacity", "1");
+      await expect(content).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, 0)");
+      expect((await content.boundingBox())?.height).toBe(height);
+    }
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,

@@ -30,7 +30,7 @@ function StoryAction({ label, filled = false, href }: IStoryActionProps) {
         "h-auto min-h-11 max-w-full self-start rounded-[4px] border border-warm-cream/70 px-4 has-[>svg]:px-4 text-base leading-6 font-medium whitespace-normal shadow-none sm:px-5 sm:has-[>svg]:px-5",
         filled
           ? "bg-warm-cream text-peploe-burgundy"
-          : "bg-transparent text-warm-cream max-sm:rounded-none max-sm:border-0 max-sm:px-0 max-sm:has-[>svg]:px-0 max-sm:hover:bg-transparent max-sm:hover:underline",
+          : "bg-transparent text-warm-cream max-sm:rounded-none max-sm:border-0 max-sm:px-0 max-sm:has-[>svg]:px-0 max-sm:hover:bg-transparent max-sm:underline max-sm:decoration-transparent max-sm:hover:decoration-current",
       )}
     >
       {href ? <Link href={href}>{content}</Link> : content}

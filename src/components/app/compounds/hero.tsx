@@ -69,7 +69,7 @@ export function Hero() {
             </div>
           </div>
 
-          <div className="flex flex-col items-center gap-2.5 sm:flex-row sm:flex-wrap sm:gap-4">
+          <div data-button-pair className="gap-2.5 sm:gap-4">
             <Button
               asChild
               variant="brand-primary"

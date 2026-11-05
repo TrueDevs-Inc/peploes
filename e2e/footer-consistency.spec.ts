@@ -54,7 +54,7 @@ test("every public page uses the homepage footer layout and content", async ({
     "/journal",
     "/journal/growers-we-work-with",
     "/book-a-table",
-    "/visit-contact",
+    "/contact",
     "/private-dining",
     "/private-dining/groups-celebrations",
     "/private-dining/corporate-events",
