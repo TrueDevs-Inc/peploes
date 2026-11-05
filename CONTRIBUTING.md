@@ -7,7 +7,7 @@ sentence.
 
 1. Follow the local setup in [`README.md`](README.md).
 2. Read [`AGENTS.md`](AGENTS.md) for agent authorization, then
-   [`docs/architecture.md`](docs/architecture.md) for every production code change.
+   [`docs/architecture.md`](docs/architecture.md) when changing module placement, dependencies or server/client boundaries.
 3. Read the ticket's acceptance criteria, linked decisions and matching guide.
    Identify the behavior, affected callers and failure paths before editing.
 4. Add only tests that protect the changed behavior, following the
@@ -179,9 +179,25 @@ branch or worktree only when requested and after checking for remaining work.
 
 ## Documentation
 
-Update the document that owns the changed subject. Link to that document from
+Update docs when setup, operations, lasting product requirements or a decision
+changes. A source edit alone does not require a documentation edit. Keep visual
+measurements in styles and Figma, and dated review evidence in the PR or tracker.
+Do not keep a prose copy of component structure or CSS. Link to the owner from
 other places only when a reader needs a route to it; do not copy its rules or
 inventories.
+
+`docs/project/` owns restaurant requirements and editorial operations that cannot
+be inferred from code: approved copy, unresolved owner decisions, CMS publishing
+and booking/payment recovery contracts. Keep those facts; remove duplicated
+implementation details and dated verification. Read only the relevant section,
+and update it only when those requirements or operations change.
+
+Record a meaningful architecture or data-flow decision through the
+[ADR skill](.agents/skills/adr/SKILL.md), invoked with `$adr`. Ask for the human's
+description first and preserve their wording with minimal grammar or context
+edits. `bun run adr --slug short-name --description-file /tmp/decision.md`
+creates `docs/adr/ADR-<next-number>-short-name.md`, starting at `001`. Routine code or style changes
+need no ADR. Update records only when the architectural decision changes.
 
 Code and configuration remain the source of truth for dependencies, scripts,
 environment keys, and file inventories.
@@ -201,6 +217,7 @@ and exceptions.
 - Every changed file follows the relevant owner document, or has a documented reason to change that rule.
 - Repeatable structural mistakes are covered by existing lint/type checks where practical.
 - Public behavior and failure paths are tested at the lowest useful layer.
+- Apply the [test-quality review](.agents/skills/test-quality/SKILL.md); remove implementation-coupled assertions and duplicate docs before approval.
 - The diff contains no secret, accidental generated output, or unrelated edit.
 - Any migration or deployment effect is called out for the reviewer.
 

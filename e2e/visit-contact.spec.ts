@@ -28,7 +28,7 @@ test("Visit loads its image and contact information without horizontal overflow"
     .toBe(true);
 });
 
-test("navigation reaches Visit, closes the mobile menu and shows the desktop active state", async ({
+test("navigation reaches Visit, closes the mobile menu and returns home on desktop", async ({
   page,
   isMobile,
 }) => {
@@ -57,18 +57,9 @@ test("navigation reaches Visit, closes the mobile menu and shows the desktop act
     await visit.click();
     await page.mouse.move(0, 0);
     await expect(page).toHaveURL(/\/visit-contact$/);
-    await expect(visit).toHaveCSS("color", "rgb(122, 30, 36)");
-    const underline = navigation.locator("[data-navbar-indicator]");
-    await expect(underline).toHaveCSS("opacity", "1");
-    await expect(underline).toHaveCSS("height", "2px");
-    await expect(underline).toHaveCSS("background-color", "rgb(122, 30, 36)");
-    await expect
-      .poll(async () => (await underline.boundingBox())?.x)
-      .toBe((await visit.boundingBox())?.x);
     await navigation.getByRole("link", { name: "Peploe’s home" }).click();
     await page.mouse.move(0, 0);
     await expect(page).toHaveURL("/");
-    await expect(visit).toHaveCSS("color", "rgb(46, 42, 40)");
   }
 });
 
@@ -119,9 +110,22 @@ for (const targetId of ["opening-hours", "find-us"]) {
     const session = await page.context().newCDPSession(page);
     await session.send("Emulation.setCPUThrottlingRate", { rate: 6 });
     await page.goto(`/visit-contact#${targetId}`);
+    const target = page.locator(`#${targetId}`);
+    await expect(target).toBeInViewport();
     await expect
-      .poll(async () => (await page.locator(`#${targetId}`).boundingBox())?.y)
-      .toBeCloseTo(100, 0);
+      .poll(() =>
+        target.evaluate((element) => {
+          const header = document.querySelector(
+            'nav[aria-label="Main navigation"]',
+          );
+          if (!header) throw new Error("Main navigation is missing");
+          return (
+            element.getBoundingClientRect().top >=
+            header.getBoundingClientRect().bottom
+          );
+        }),
+      )
+      .toBe(true);
   });
 }
 

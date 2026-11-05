@@ -21,18 +21,37 @@ code. Report unrelated findings separately.
 
 ## Required checks
 
-For production code, dependencies, scripts, hooks or CI configuration, run
-`bun run format`, then `bun run ci`. Run the relevant focused check during
-development. Run the full gate on the final implementation, then repeat affected
-checks after a later fix. Preserve other contributors' edits if formatting
-touches files outside the change.
+Choose checks from the changed behavior and failure risk. Format only changed
+supported files. Do not run `bun run ci`, the full unit suite or the full browser
+suite after every change.
 
-`bun run ci` checks formatting/lint, types, unit tests, the production build and
-high-severity dependency advisories. It does not run database integration or
-browser tests locally. Changes to SQL or persistence also need the relevant
-integration check. Visit & Contact navigation and responsive changes also need
-`bun run test:e2e`, which builds and tests the production application. Add browser
-coverage for new critical journeys as described in the [testing guide](testing-guide.md).
+| Change | Local verification |
+| --- | --- |
+| Prose or agent guidance | Changed links, consistency and diff review |
+| Ordinary CSS or visual-only changes | Inspect the affected view and widths; no automated tests by default |
+| Validation, mapping or business logic | Affected unit test files; types when signatures or callers change |
+| SQL, persistence or a provider boundary | Focused integration checks for the changed contract |
+| Critical visitor journey | Focused browser spec only when cheaper checks cannot prove it |
+| Dependencies, build configuration or shared infrastructure | Affected build, audit, tooling or broader checks based on the blast radius |
+
+Persistence checks require a migrated, disposable database. Verify the exact
+`DATABASE_URL` target before running them; never use a normal or shared database.
+
+For example, `bun run test src/__tests__/services/example.test.ts` runs one unit
+file. Browser entry points forward spec paths, such as
+`bun run test:e2e e2e/book-a-table.spec.ts`. They build the production app before
+running that subset. Browser and integration cases must earn their runtime as described
+in the [test-quality skill](../../.agents/skills/test-quality/SKILL.md).
+
+Expand checks only after a failure, an unresolved risk spanning modules, or an
+explicit request. The shared GitHub CI gate remains the full integration gate;
+local targeted verification does not weaken it. `bun run ci` is available for
+changes that warrant the whole gate and explicit full-verification requests.
+Do not duplicate it locally merely because CI will run it.
+
+Use the [test-quality skill](../../.agents/skills/test-quality/SKILL.md) during
+standards and spec review. Existing test patterns do not exempt a coupled test
+from removal. Keep review evidence in the PR or tracker, not a committed report.
 
 For prose-only changes, check changed Markdown links, rule consistency and the
 diff. Render HTML, PDF or other visual artifacts with their owning workflow.

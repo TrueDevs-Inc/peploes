@@ -25,12 +25,15 @@ the linked owner documents, not here.
    ticket branch by default. Direct work on `dev` or `main` requires the user
    to explicitly name that exception; it does not authorize committing or pushing.
 2. Read the owning code, its callers, and its tests. Read `docs/architecture.md`
-   for every production code change, including small fixes.
+   when changing module placement, dependencies or a server/client boundary.
 3. Use the smallest relevant document from the routing table below. For
    implementation and tooling changes, follow `docs/guides/quality-guide.md`.
 4. Make the smallest change that solves the requested problem.
-5. Update the owning test or document when behavior changes.
-6. Run the checks required by the quality guide and report their actual results.
+5. Reuse existing coverage when it proves the changed behavior. Add a test only
+   for a named failure. Update docs only for changed setup, operations, lasting
+   product requirements or a decision whose reason is absent from the code.
+6. Select affected checks using the quality guide and report actual results.
+   Ordinary CSS or prose edits need no test run; do not default to full suites.
 7. Inspect the final diff for unrelated edits, secrets, generated files, and
    disabled checks. Check shared definitions, dependency direction, duplicate
    work and failure states against the owning rules.
@@ -40,10 +43,9 @@ the linked owner documents, not here.
 Do not hide a lint, type, test, build, or audit failure. Report a genuine blocker
 instead of weakening a check.
 
-Write code without comments. Adding an inline, block or JSX comment is strictly
-not allowed; put the reason in a name, a test, the owning guide or the PR
-description. The only exceptions are listed under Comments in
-[`docs/architecture.md`](docs/architecture.md).
+Use clear names. Add a short comment when a non-obvious constraint or tradeoff
+cannot be expressed by the code. Do not create a test or guide just to explain
+a line of code. See Comments in [`docs/architecture.md`](docs/architecture.md).
 
 ## Context routing
 
@@ -58,13 +60,9 @@ description. The only exceptions are listed under Comments in
 | PostHog configuration, consent lifecycle, event scrubbing, or its CSP | [`docs/guides/posthog-guide.md`](docs/guides/posthog-guide.md) |
 | Error capture, source maps, or Sentry privacy | [`docs/guides/sentry-guide.md`](docs/guides/sentry-guide.md) |
 | Rendering cost, images, fonts, streaming, or motion | [`docs/guides/performance-guide.md`](docs/guides/performance-guide.md) |
-| Standalone HTML reports, dossiers, or review artifacts | [`docs/guides/html-report-guide.md`](docs/guides/html-report-guide.md) |
 | Metadata, JSON-LD, robots, sitemap, or `llms.txt` | [`docs/guides/seo-guide.md`](docs/guides/seo-guide.md) |
 | Quality gates, lint/CI/hooks, exceptions, or final review | [`docs/guides/quality-guide.md`](docs/guides/quality-guide.md) |
 | Branches, commits, PR descriptions, integration, or issue closure | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
-
-The architecture review is historical evidence. Do not treat its roadmap or
-skill inventory as current repository policy.
 
 ## Authorized Git work
 
@@ -76,6 +74,16 @@ Reply to or resolve review threads only after the fix is committed and pushed,
 and only when the user explicitly requests the review operation.
 
 ## Agent skills
+
+For tests and accompanying docs, apply the repository
+[test-quality skill](.agents/skills/test-quality/SKILL.md), including during
+`elhaam-review`. Flag coupled tests for removal from the PR and preserve their
+useful behavioral checks.
+
+Create or update architecture decision records only through the
+[ADR skill](.agents/skills/adr/SKILL.md) when the human invokes `$adr`.
+When a meaningful architecture or data-flow decision needs recording, ask them
+to invoke it and supply their description. Routine source edits need no ADR.
 
 For coding, apply the installed `ponytail` skill. For prose and UI copy, apply
 `unslop`. Use `codebase-design` when changing an interface or dependency

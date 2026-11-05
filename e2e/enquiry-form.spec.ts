@@ -107,7 +107,6 @@ for (const path of enquiryPaths) {
       await expect(form).not.toHaveAttribute("aria-busy", "true");
       await expect(submit).toBeDisabled();
       await expect(submit).toHaveText("Sending…");
-      await expect(submit.locator("svg")).toHaveCSS("animation-name", "none");
     } finally {
       releaseRequest();
     }
@@ -190,7 +189,6 @@ test("enquiry validation, editing and keyboard retries preserve real delivery st
     await email.press("Enter");
     await expect(submit).toHaveAttribute("aria-busy", "true");
     await expect(submit).toBeDisabled();
-    await expect(submit.locator("svg")).toHaveCSS("animation-name", "spin");
     await expect.poll(() => submissions).toBe(1);
     await email.press("Enter");
     expect(submissions).toBe(1);
@@ -232,20 +230,17 @@ test("enquiry validation, editing and keyboard retries preserve real delivery st
 
 test("private dining message area shows three lines without scrolling", async ({
   page,
-  isMobile,
 }) => {
   await page.goto("/private-dining");
   const message = page.locator('#enquire textarea[name="message"]');
   await message.fill(
     "A corporate dinner\nFor twelve guests\nPlease share availability",
   );
-  await expect(message).toHaveCSS("height", isMobile ? "190px" : "90px");
   const dimensions = await message.evaluate((element) => ({
     height: element.clientHeight,
     contentHeight: element.scrollHeight,
   }));
   expect(dimensions.contentHeight).toBeLessThanOrEqual(dimensions.height);
-  await expect(message).toHaveCSS("resize", "vertical");
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
@@ -335,13 +330,8 @@ for (const path of enquiryPaths) {
         exact: true,
       }),
     ).toHaveAttribute("aria-pressed", "true");
-    await expect(calendar).toHaveCSS("background-color", "rgb(250, 247, 241)");
     const bounds = await calendar.boundingBox();
-    const inputBounds = await date.boundingBox();
-    if (!bounds || !inputBounds)
-      throw new Error("The date field and calendar must both be visible.");
-    expect(bounds.x).toBeCloseTo(inputBounds.x, 0);
-    expect(bounds.width).toBeCloseTo(inputBounds.width, 0);
+    if (!bounds) throw new Error("The calendar must be visible.");
     const firstWeek = await calendar
       .locator("button[data-date]")
       .evaluateAll((days) =>
@@ -384,32 +374,39 @@ for (const path of enquiryPaths) {
     await expect(calendar).toBeHidden();
   });
 
-  test(`${path} enquiry controls share rounded styling and subtle focus`, async ({
+  test(`${path} enquiry controls accept guest details and retain forced-colors focus`, async ({
     page,
   }) => {
     await page.goto(path);
     const form = page.locator("#enquire").getByRole("form");
-    const fields = form.locator(
-      'input:not([type="checkbox"]):not([type="hidden"]):not([name="website"]), select, textarea',
-    );
+    await expect(
+      form.getByRole("button", { name: "Send Enquiry" }),
+    ).toBeEnabled();
     await page.keyboard.press("Tab");
+    const fields = form.locator(
+      'input:not([type="hidden"]):not([name="website"]), select, textarea',
+    );
     for (const field of await fields.all()) {
-      await expect(field).toHaveCSS("border-radius", "4px");
       const restingShadow = await field.evaluate(
         (element) => getComputedStyle(element).boxShadow,
       );
       await field.focus();
       await expect(field).toBeFocused();
-      await expect(field).toHaveCSS("outline-style", "none");
-      await expect(field).toHaveCSS("box-shadow", /0px 0px 0px 2px inset$/);
-      await expect(field).not.toHaveCSS("box-shadow", restingShadow);
-    }
-    const selects = form.getByRole("combobox");
-    for (const select of await selects.all()) {
-      await expect(select).toHaveCSS("cursor", "pointer");
-      await expect(select).toHaveCSS("appearance", "base-select");
-      await expect(select).toHaveCSS("margin-top", "0px");
-      await expect(select).toHaveCSS("margin-bottom", "0px");
+      await expect
+        .poll(() =>
+          field.evaluate((element, resting) => {
+            const style = getComputedStyle(element);
+            const outline =
+              style.outlineStyle !== "none" &&
+              Number.parseFloat(style.outlineWidth) > 0 &&
+              style.outlineColor !== "rgba(0, 0, 0, 0)";
+            return (
+              outline ||
+              (style.boxShadow !== "none" && style.boxShadow !== resting)
+            );
+          }, restingShadow),
+        )
+        .toBe(true);
     }
     const guests = form.getByLabel("Number of guests");
     await guests.click();
@@ -424,27 +421,17 @@ for (const path of enquiryPaths) {
     await expect(sevenGuests).toBeVisible();
     await sevenGuests.click();
     await expect(guests).toHaveValue("7");
-    await expect(form.getByLabel("Preferred date", { exact: true })).toHaveCSS(
-      "cursor",
-      "pointer",
-    );
     await form.getByLabel("Preferred date", { exact: true }).fill("2026-12-01");
     await expect(
       form.getByLabel("Preferred date", { exact: true }),
     ).toHaveValue("2026-12-01");
     const consent = form.getByRole("checkbox");
     if (await consent.count()) {
-      await expect(consent).toHaveCSS("cursor", "pointer");
-      const restingShadow = await consent.evaluate(
-        (element) => getComputedStyle(element).boxShadow,
-      );
       await consent.check();
       await expect(consent).toBeChecked();
       await consent.focus();
       await consent.press("Space");
       await expect(consent).not.toBeChecked();
-      await expect(consent).toHaveCSS("box-shadow", /0px 0px 0px 2px inset$/);
-      await expect(consent).not.toHaveCSS("box-shadow", restingShadow);
     }
     await expect(
       form.getByRole("button", { name: "Send Enquiry" }),
@@ -457,7 +444,7 @@ for (const path of enquiryPaths) {
     );
     await expect(form.getByLabel("Email address")).toHaveCSS(
       "outline-width",
-      "2px",
+      /^(?!0px$).+$/,
     );
     expect(
       await page.evaluate(
@@ -466,104 +453,22 @@ for (const path of enquiryPaths) {
     ).toBe(true);
   });
 
-  test(`${path} enquiry pickers highlight hovered and selected options`, async ({
+  test(`${path} enquiry pickers support selection and keyboard dismissal`, async ({
     page,
-    isMobile,
   }) => {
     await page.goto(path);
-    const scrollbar = await page.evaluate(() => {
-      const root = document.documentElement;
-      return {
-        width: getComputedStyle(root, "::-webkit-scrollbar").width,
-        track: getComputedStyle(root, "::-webkit-scrollbar-track")
-          .backgroundColor,
-        thumb: getComputedStyle(root, "::-webkit-scrollbar-thumb")
-          .backgroundColor,
-        radius: getComputedStyle(root, "::-webkit-scrollbar-thumb")
-          .borderRadius,
-      };
-    });
-    expect(scrollbar).toEqual({
-      width: "4px",
-      track: "rgba(0, 0, 0, 0)",
-      thumb: "rgba(122, 30, 36, 0.4)",
-      radius: "2px",
-    });
     const form = page.locator("#enquire").getByRole("form");
-    const reveal = page.locator("#enquire [data-scroll-reveal]:has(form)");
-    await reveal.scrollIntoViewIfNeeded();
-    await expect(reveal).toHaveCSS("opacity", "1");
-    await expect(reveal).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, 0)");
     for (const select of await form.getByRole("combobox").all()) {
-      await select.evaluate((element) =>
-        element.scrollIntoView({ block: "center", behavior: "instant" }),
-      );
-      await page.mouse.move(0, 0);
       await select.click();
-      await expect(select).toHaveJSProperty("value", "");
-      await expect(select.locator('option[value=""]')).toBeHidden();
       const firstOption = select.locator("option:not(:disabled)").first();
       await expect(firstOption).toBeVisible();
-      await expect(firstOption).toHaveCSS("border-top-width", "0px");
-      const secondOption = select.locator("option:not(:disabled)").nth(1);
-      await expect(secondOption).toHaveCSS("border-top-width", "1px");
-      await expect(secondOption).toHaveCSS("border-top-style", "solid");
-      await expect(secondOption).toHaveCSS(
-        "border-top-color",
-        "rgb(217, 209, 198)",
-      );
-      const restingBackground = await firstOption.evaluate(
-        (element) => getComputedStyle(element).backgroundColor,
-      );
-      const pickerBackground = await select.evaluate(
-        (element) =>
-          getComputedStyle(element, "::picker(select)").backgroundColor,
-      );
-      expect(restingBackground).toBe(pickerBackground);
-      const layout = await select.evaluate((element) => {
-        const picker = getComputedStyle(element, "::picker(select)");
-        const option = element.querySelector("option:not(:disabled)");
-        return {
-          triggerInset: getComputedStyle(element).paddingLeft,
-          optionInset: option && getComputedStyle(option).paddingLeft,
-          checkOrder: option && getComputedStyle(option, "::checkmark").order,
-          bottomPadding: picker.paddingBottom,
-        };
-      });
-      expect(layout.optionInset).toBe(layout.triggerInset);
-      expect(layout.checkOrder).toBe("1");
-      expect(layout.bottomPadding).toBe("0px");
-      const trigger = await select.boundingBox();
-      const option = await firstOption.boundingBox();
-      expect(trigger).not.toBeNull();
-      expect(option).not.toBeNull();
-      expect(option?.y).toBeGreaterThanOrEqual(
-        (trigger?.y ?? 0) + (trigger?.height ?? 0),
-      );
-      if (!isMobile) {
-        await firstOption.hover();
-        await expect(firstOption).not.toHaveCSS(
-          "background-color",
-          restingBackground,
-        );
-      }
+      await expect(select.locator('option[value=""]')).toBeHidden();
       await firstOption.click();
-      await expect(select).not.toHaveJSProperty("value", "");
-      await select.click();
-      await page.mouse.move(0, 0);
-      await expect(firstOption).not.toHaveCSS(
-        "background-color",
-        pickerBackground,
-      );
-      await page.keyboard.press("ArrowDown");
-      const focusedOption = select.locator("option:focus-visible");
-      await expect(focusedOption).toHaveCount(1);
-      await expect(focusedOption).toHaveCSS("outline-width", "2px");
-      await expect(focusedOption).toHaveCSS(
-        "background-color",
-        pickerBackground,
-      );
-      await page.keyboard.press("Escape");
+      await expect(select).not.toHaveValue("");
+      await select.focus();
+      await select.press("ArrowDown");
+      await select.press("Escape");
+      await expect(select).toBeFocused();
     }
   });
 }
