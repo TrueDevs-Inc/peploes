@@ -12,6 +12,7 @@ vi.mock("@/lib/enquiry-rate-limit", () => ({
   allowEnquiry: vi.fn(async () => true),
 }));
 const settings = vi.hoisted(() => ({
+  NEXT_PUBLIC_SITE_URL: "https://example.test",
   EMAIL_RESTAURANT_TO: "restaurant@example.test",
   EMAIL_REPLY_TO: "reply@example.test",
 }));
