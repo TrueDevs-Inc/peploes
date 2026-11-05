@@ -229,11 +229,12 @@ uses the shared provider-backed form described below.
 ## Booking newsletter opt-in
 
 Issue #120 adds an optional newsletter checkbox beneath the booking terms on
-the guest-details step. It starts unchecked, remains independent of the required
-terms, keeps its choice when going back to times, and resets on Start again.
+the guest-details step. It starts checked and can be unchecked, remains independent
+of the required terms, keeps its choice when going back to times, and resets to
+checked on Start again.
 Both choices allow the connected booking to proceed. The checkbox rows have an
 8px gap. After ResDiary accepts the guest details (confirmation, deposit or card
-guarantee), an explicit opt-in requests a subscription through the existing
+guarantee), a checked newsletter box requests a subscription through the existing
 newsletter service after the booking response. Subscription failure never
 changes the booking result or retries the booking. Consent and email are not
 stored for recovery. If the booking outcome remains unclear and is only resolved

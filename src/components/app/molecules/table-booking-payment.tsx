@@ -16,6 +16,8 @@ import {
 } from "react";
 
 import styles from "@/components/app/compounds/table-booking-panel.module.css";
+import { TableBookingProcessing } from "@/components/app/molecules/table-booking-processing";
+import { TableBookingPaymentSkeleton } from "@/components/app/molecules/table-booking-skeleton";
 import { Button } from "@/components/ui/button";
 import { fetcher } from "@/helpers/api";
 import { trackBooking } from "@/lib/analytics/booking";
@@ -387,10 +389,22 @@ function PaymentForm({
         </p>
       )}
       <div
-        ref={mountPoint}
-        className={styles.paymentElement}
+        className={styles.paymentElementContainer}
+        aria-busy={!ready && !loadFailed}
         hidden={loadFailed}
-      />
+      >
+        <div
+          ref={mountPoint}
+          className={styles.paymentElement}
+          inert={!ready}
+        />
+        {!ready && !loadFailed && (
+          <div className={styles.paymentLoading}>
+            <TableBookingPaymentSkeleton />
+          </div>
+        )}
+      </div>
+      {paying && <TableBookingProcessing>{copy.paying}</TableBookingProcessing>}
       {error && (
         <p role="alert" className={styles.formError}>
           {error}

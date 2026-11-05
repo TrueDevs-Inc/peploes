@@ -5,6 +5,8 @@ import type { TPaymentStep } from "../src/lib/types";
 import { FAKE_RESDIARY, FAKE_TIMES } from "./booking-fixtures";
 import {
   chooseDate,
+  chooseTime,
+  expectBookingAtTop,
   findTable,
   laterFreeDate,
   openBooking,
@@ -38,7 +40,7 @@ async function heldWithDetails(
     : await openBooking(page);
   await chooseDate(reservations, laterFreeDate());
   await findTable(reservations);
-  await reservations.getByRole("button", { name: time, exact: true }).click();
+  await chooseTime(reservations, time);
   if (time === "7:00 pm") {
     await reservations
       .getByLabel("I understand the table is required back by 9:00 pm")
@@ -175,6 +177,9 @@ test("reloading the details check finds the booked table without holding or send
   expect(new Set(actions).size).toBe(2);
   expect(actions).not.toContain("");
   const sentActions = [...actions];
+  await expect(
+    reservations.locator('[data-booking-skeleton="status"]:visible'),
+  ).toHaveCount(1);
   await expect.poll(() => statusCheckStarted).toBe(true);
   await page.unroute("**/api/bookings/hold-status?**");
   await page.unroute("**/book-a-table");
@@ -339,9 +344,7 @@ test("Back to search hides a hold error from the times step", async ({
   const reservations = await openBooking(page);
   await chooseDate(reservations, laterFreeDate());
   await findTable(reservations);
-  await reservations
-    .getByRole("button", { name: "8:00 pm", exact: true })
-    .click();
+  await chooseTime(reservations, "8:00 pm");
   await reservations
     .getByRole("button", { name: "Continue", exact: true })
     .click();
@@ -827,6 +830,7 @@ test("the card form loads after following Book from the home page and booking a 
       exact: true,
     }),
   ).toBeEnabled();
+  await expectBookingAtTop(reservations);
   await expect(
     reservations.getByText("We couldn't load the secure payment form.", {
       exact: false,
@@ -1213,6 +1217,9 @@ test("while the payment form is still loading, the guest can't edit the search",
   await expect(
     reservations.getByText("Loading secure payment…", { exact: true }),
   ).toBeVisible();
+  await expect(
+    reservations.locator('[data-booking-skeleton="payment"]'),
+  ).toBeVisible();
   await page.clock.fastForward(14_000);
   await expect(
     reservations.getByText("Loading secure payment…", { exact: true }),
@@ -1230,6 +1237,9 @@ test("while the payment form is still loading, the guest can't edit the search",
     exact: true,
   });
   await expect(retry).toBeVisible();
+  await expect(
+    reservations.locator('[data-booking-skeleton="payment"]'),
+  ).toHaveCount(0);
   await expect(
     reservations.getByRole("button", { name: "Edit date & guests" }),
   ).toBeEnabled();
@@ -1277,6 +1287,14 @@ test("if the hold time runs out while the details are sending and the reply is l
     reservations.getByRole("button", { name: "Confirming…", exact: true }),
   ).toBeVisible();
 
+  await expect(
+    reservations
+      .getByRole("status")
+      .filter({ hasText: "Confirming your reservation…" }),
+  ).toBeVisible();
+  await expect(
+    reservations.getByLabel("Email address", { exact: false }),
+  ).toHaveValue("preview@example.com");
   await page.clock.fastForward("05:00");
   await expect(reservations.getByRole("timer")).toHaveText(
     "Table held for 0:00",
@@ -1289,6 +1307,9 @@ test("if the hold time runs out while the details are sending and the reply is l
   ).toHaveCount(0);
   answer();
   await expect(booked).toBeVisible({ timeout: 10_000 });
+  await expect(
+    reservations.getByText("Confirming your reservation…", { exact: true }),
+  ).toHaveCount(0);
 });
 
 test("a restored payment with no access to the hold keeps its reference until Start Again", async ({

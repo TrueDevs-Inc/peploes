@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import styles from "@/components/app/compounds/table-booking-panel.module.css";
+import { TableBookingStatusSkeleton } from "@/components/app/molecules/table-booking-skeleton";
 import { Button } from "@/components/ui/button";
 import { useBookingStatus } from "@/hooks/use-booking-status";
 import { BOOKING_BANK_REFUSED_STATUSES } from "@/lib/constants/booking";
@@ -100,6 +101,7 @@ export function PaymentOutcome({
         <p role="status" className={styles.flowDescription}>
           {content.payment.checking}
         </p>
+        <TableBookingStatusSkeleton />
         <p className={styles.flowDescription}>
           {content.confirmation.referenceLabel}: <strong>{reference}</strong>
         </p>

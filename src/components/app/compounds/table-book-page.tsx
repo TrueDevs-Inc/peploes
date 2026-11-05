@@ -41,7 +41,7 @@ export function TableBookPage({ booking }: ITableBookPageProps) {
           </p>
         </div>
       </section>
-      <div data-scroll-reveal className={styles.bookingContainer}>
+      <div className={styles.bookingContainer}>
         <Suspense
           fallback={
             <TableBookingNotice

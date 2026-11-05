@@ -1,7 +1,13 @@
 "use client";
 
 import { addMonths, format, parseISO, startOfMonth } from "date-fns";
-import { ArrowLeft, ArrowRight, CalendarDays, Check } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CalendarDays,
+  Check,
+  ChevronDown,
+} from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -16,6 +22,12 @@ import {
   PaymentOutcome,
   TableBookingReturn,
 } from "@/components/app/molecules/table-booking-payment-outcome";
+import { TableBookingProcessing } from "@/components/app/molecules/table-booking-processing";
+import {
+  TableBookingFormSkeleton,
+  TableBookingStatusSkeleton,
+  TableBookingTimesSkeleton,
+} from "@/components/app/molecules/table-booking-skeleton";
 import { TableBookingSupport } from "@/components/app/molecules/table-booking-support";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,6 +42,7 @@ import {
   storedGuestDetails,
   useGuestDetails,
 } from "@/hooks/use-guest-details";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { useOpenDates } from "@/hooks/use-open-dates";
 import { storedHold, useTableHold } from "@/hooks/use-table-hold";
 import {
@@ -46,7 +59,11 @@ import {
   BOOKING_MESSAGES,
   BOOKING_RETURN_PARAMS,
 } from "@/lib/constants/booking";
-import { TABLE_BOOKING_CONTENT as content } from "@/lib/constants/table-booking";
+import {
+  TABLE_BOOKING_CONTENT as content,
+  TABLE_BOOKING_SCROLL_GAP_PX,
+  TABLE_BOOKING_TIMES,
+} from "@/lib/constants/table-booking";
 import { dublinToday, firstFreeBookingDate, guestsLabel } from "@/lib/dates";
 import { GA4Event } from "@/lib/enums";
 import type {
@@ -97,6 +114,7 @@ export function TableBookingNotice({
       <p role={loading ? "status" : undefined} className={styles.panelMessage}>
         {message}
       </p>
+      {loading && <TableBookingFormSkeleton />}
       <TableBookingSupport />
     </section>
   );
@@ -110,6 +128,7 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
     String(findTable.partySize.default),
   );
   const [time, setTime] = useState<IBookingTime | null>(null);
+  const [loadTimes, setLoadTimes] = useState(false);
   const [datePicked, setDatePicked] = useState(false);
   const availability = useOpenDates(partySize, findTable.calendar.lastDate);
   const { load } = availability;
@@ -128,7 +147,6 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [paymentBusy, setPaymentBusy] = useState(false);
   const panel = useRef<HTMLElement>(null);
-  const previousStep = useRef(0);
   const shortDate = format(
     parseISO(step === 2 && time?.date ? time.date : date),
     "EEE, d MMM yyyy",
@@ -136,9 +154,18 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
   const longDate = format(parseISO(date), "EEEE, d MMMM yyyy");
   const guests = guestsLabel(Number(partySize));
   const returnBy = returnByOf(time);
-  const times = useBookingTimes(date, partySize, step === 1 || step === 2);
+  const times = useBookingTimes(date, partySize, loadTimes && step !== 0);
   const hold = useTableHold();
   const { place, resume } = hold;
+  const view = [
+    step,
+    payment?.kind,
+    Boolean(returned),
+    Boolean(paid),
+    Boolean(guest.unsure),
+    Boolean(hold.active),
+  ].join(":");
+  const previousView = useRef(view);
   const restoring = useRef(true);
 
   const showHeld = useCallback((choice: IHoldChoice, summary: IHoldSummary) => {
@@ -299,22 +326,17 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
   }, [step]);
 
   useEffect(() => {
-    if (previousStep.current !== step) {
-      previousStep.current = step;
-      panel.current?.focus({ preventScroll: true });
-      if (
-        panel.current &&
-        panel.current.getBoundingClientRect().top <
-          Number.parseFloat(getComputedStyle(panel.current).scrollMarginTop)
-      ) {
-        panel.current.scrollIntoView({ block: "start", behavior: "instant" });
-      }
+    if (previousView.current !== view) {
+      previousView.current = view;
+      alignBookingPanel(panel.current);
     }
-  }, [step]);
+  }, [view]);
 
   if (returned) {
     return (
       <section
+        ref={panel}
+        tabIndex={-1}
         aria-label={content.label}
         className={cn(styles.panel, styles.flowPanel)}
       >
@@ -343,151 +365,177 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
     >
       <BookingProgress step={step} />
 
-      {step === 0 && (
-        <>
-          <div className={styles.availability}>
-            <div className={styles.fields}>
-              <TableBookingDate
-                value={date}
-                calendar={findTable.calendar}
-                availability={availability}
-                onChange={(value) => {
-                  setDate(value);
-                  setDatePicked(true);
+      <div key={step} className={styles.stepContent}>
+        {step === 0 && (
+          <>
+            <div className={styles.availability}>
+              <div className={styles.fields}>
+                <TableBookingDate
+                  value={date}
+                  calendar={findTable.calendar}
+                  availability={availability}
+                  onChange={(value) => {
+                    setDate(value);
+                    setDatePicked(true);
+                  }}
+                />
+                <TableBookingPartySize
+                  value={partySize}
+                  min={findTable.partySize.min}
+                  max={findTable.partySize.max}
+                  onChange={setPartySize}
+                />
+              </div>
+              <Button
+                type="button"
+                variant="brand-primary"
+                className={styles.findTable}
+                disabled={!date}
+                onClick={() => {
+                  const today = dublinToday();
+                  if (date < today) {
+                    setDate(today);
+                    return;
+                  }
+                  const attemptId = beginBookingSearch();
+                  trackBooking(GA4Event.BookingSearch, "submitted", {
+                    attemptId,
+                  });
+                  setLoadTimes(true);
+                  setShowRestoreError(false);
+                  setTime(null);
+                  setReturnAccepted(false);
+                  setStep(1);
                 }}
-              />
-              <TableBookingPartySize
-                value={partySize}
-                min={findTable.partySize.min}
-                max={findTable.partySize.max}
-                onChange={setPartySize}
+              >
+                {content.action}
+                <ArrowRight aria-hidden="true" className={styles.actionArrow} />
+              </Button>
+            </div>
+            <p role="status" className={styles.dateNote}>
+              {dateFull && !moveDate && content.fullDate(guests, shortDate)}
+            </p>
+            <HoldError message={hold.error} visible={showRestoreError} />
+            <div hidden={!hold.pending}>
+              <TableBookingProcessing>
+                {content.holdingMessage}
+              </TableBookingProcessing>
+            </div>
+            <TableBookingSupport />
+          </>
+        )}
+
+        {(step === 1 || step === 2) && (
+          <>
+            <div className={styles.summary}>
+              <CalendarDays aria-hidden="true" />
+              <p>
+                {shortDate}
+                <span aria-hidden="true"> | </span>
+                {step === 2 && time && (
+                  <>
+                    {time.label}
+                    <span aria-hidden="true"> | </span>
+                  </>
+                )}
+                {guests}
+                {step === 2 && returnBy && (
+                  <small>{content.tableUntil(returnBy.label)}</small>
+                )}
+              </p>
+              <TableBookingChange
+                busy={busy}
+                payment={payment}
+                onEdit={editSearch}
+                onStartOver={startOver}
+                onConfirmed={confirmBooking}
               />
             </div>
-            <Button
+            {step === 1 ? (
+              <BookingTimes
+                longDate={longDate}
+                guests={guests}
+                times={times}
+                time={time}
+                holding={hold.pending}
+                holdError={hold.error}
+                returnAccepted={returnAccepted}
+                onTimeChange={(selected) => {
+                  setTime(selected);
+                  setReturnAccepted(false);
+                }}
+                onReturnChange={setReturnAccepted}
+                onBack={() => setStep(0)}
+                onContinue={holdChosenTime}
+              />
+            ) : (
+              <HeldStep
+                terms={findTable.terms}
+                hold={hold}
+                details={details}
+                guest={guest}
+                payment={payment}
+                paymentError={paymentError}
+                paymentSaved={paymentSaved}
+                paid={paid}
+                onPaid={paymentAccepted}
+                onExpired={paymentExpired}
+                onBusyChange={setPaymentBusy}
+                onConfirmed={confirmBooking}
+                onDetailsChange={setDetails}
+                onBack={() => {
+                  setLoadTimes(true);
+                  setStep(1);
+                }}
+                onContinue={sendDetails}
+                onStartAgain={startOver}
+                onCheckAgain={() => setPaid(paid ? { ...paid } : null)}
+              />
+            )}
+          </>
+        )}
+
+        {step === 3 && booked && (
+          <>
+            <BookingConfirmation
+              reference={booked.reference}
+              summary={booked.summary}
+            />
+            <TableBookingSupport confirmation />
+            <button
               type="button"
-              variant="brand-primary"
-              className={styles.findTable}
-              disabled={!date}
+              className={cn(styles.backAction, styles.restart)}
               onClick={() => {
-                const today = dublinToday();
-                if (date < today) {
-                  setDate(today);
-                  return;
-                }
-                const attemptId = beginBookingSearch();
-                trackBooking(GA4Event.BookingSearch, "submitted", {
-                  attemptId,
-                });
-                setShowRestoreError(false);
+                setStep(0);
                 setTime(null);
                 setReturnAccepted(false);
-                setStep(1);
+                setDetails(emptyDetails());
+                setBooked(null);
               }}
             >
-              {content.action}
-              <ArrowRight aria-hidden="true" className={styles.actionArrow} />
-            </Button>
-          </div>
-          <p role="status" className={styles.dateNote}>
-            {dateFull && !moveDate && content.fullDate(guests, shortDate)}
-          </p>
-          <HoldError message={hold.error} visible={showRestoreError} />
-          <TableBookingSupport />
-        </>
-      )}
-
-      {(step === 1 || step === 2) && (
-        <>
-          <div className={styles.summary}>
-            <CalendarDays aria-hidden="true" />
-            <p>
-              {shortDate}
-              <span aria-hidden="true"> | </span>
-              {step === 2 && time && (
-                <>
-                  {time.label}
-                  <span aria-hidden="true"> | </span>
-                </>
-              )}
-              {guests}
-              {step === 2 && returnBy && (
-                <small>{content.tableUntil(returnBy.label)}</small>
-              )}
-            </p>
-            <TableBookingChange
-              busy={busy}
-              payment={payment}
-              onEdit={editSearch}
-              onStartOver={startOver}
-              onConfirmed={confirmBooking}
-            />
-          </div>
-          {step === 1 ? (
-            <BookingTimes
-              longDate={longDate}
-              guests={guests}
-              times={times}
-              time={time}
-              holding={hold.pending}
-              holdError={hold.error}
-              returnAccepted={returnAccepted}
-              onTimeChange={(selected) => {
-                setTime(selected);
-                setReturnAccepted(false);
-              }}
-              onReturnChange={setReturnAccepted}
-              onBack={() => setStep(0)}
-              onContinue={holdChosenTime}
-            />
-          ) : (
-            <HeldStep
-              terms={findTable.terms}
-              hold={hold}
-              details={details}
-              guest={guest}
-              payment={payment}
-              paymentError={paymentError}
-              paymentSaved={paymentSaved}
-              paid={paid}
-              onPaid={paymentAccepted}
-              onExpired={paymentExpired}
-              onBusyChange={setPaymentBusy}
-              onConfirmed={confirmBooking}
-              onDetailsChange={setDetails}
-              onBack={() => setStep(1)}
-              onContinue={sendDetails}
-              onStartAgain={startOver}
-              onCheckAgain={() => setPaid(paid ? { ...paid } : null)}
-            />
-          )}
-        </>
-      )}
-
-      {step === 3 && booked && (
-        <>
-          <BookingConfirmation
-            reference={booked.reference}
-            summary={booked.summary}
-          />
-          <TableBookingSupport confirmation />
-          <button
-            type="button"
-            className={cn(styles.backAction, styles.restart)}
-            onClick={() => {
-              setStep(0);
-              setTime(null);
-              setReturnAccepted(false);
-              setDetails(emptyDetails());
-              setBooked(null);
-            }}
-          >
-            <ArrowLeft aria-hidden="true" />
-            Start again
-          </button>
-        </>
-      )}
+              <ArrowLeft aria-hidden="true" />
+              Start again
+            </button>
+          </>
+        )}
+      </div>
     </section>
   );
+}
+
+export function alignBookingPanel(element: HTMLElement | null) {
+  if (!element) return;
+  if (!element.contains(document.activeElement))
+    element.focus({ preventScroll: true });
+  const headerHeight =
+    document.querySelector("header")?.getBoundingClientRect().height ?? 0;
+  element.style.scrollMarginTop = `${headerHeight + TABLE_BOOKING_SCROLL_GAP_PX}px`;
+  element.scrollIntoView({
+    block: "start",
+    behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ? "instant"
+      : "smooth",
+  });
 }
 
 function BookingConfirmation({
@@ -562,11 +610,14 @@ function DetailsCheck({ hold, pendingFrom, onSettled }: IDetailsCheckProps) {
   }, [check, onSettled]);
 
   return (
-    <p role="status" className={styles.flowDescription}>
-      {check.kind === "unknown"
-        ? content.details.stillConfirming(hold.reference)
-        : content.details.checking}
-    </p>
+    <div aria-busy={check.kind === "checking"}>
+      <p role="status" className={styles.flowDescription}>
+        {check.kind === "unknown"
+          ? content.details.stillConfirming(hold.reference)
+          : content.details.checking}
+      </p>
+      {check.kind === "checking" && <TableBookingStatusSkeleton />}
+    </div>
   );
 }
 
@@ -717,7 +768,7 @@ function emptyDetails(): ITableBookingGuestDetails {
     phone: "",
     requests: "",
     terms: false,
-    newsletterOptIn: false,
+    newsletterOptIn: true,
   };
 }
 
@@ -808,6 +859,11 @@ function BookingTimes({
         </div>
       )}
       <HoldError message={holdError} />
+      {holding && (
+        <TableBookingProcessing>
+          {content.holdingMessage}
+        </TableBookingProcessing>
+      )}
       <div className={styles.flowActions}>
         <button
           type="button"
@@ -951,25 +1007,76 @@ function HeldStep({
 }
 
 function TimesList({ times, time, onTimeChange }: TTableBookingTimesListProps) {
+  const desktop = useMediaQuery(TABLE_BOOKING_TIMES.desktopQuery);
+  const [expanded, setExpanded] = useState(time !== null);
+  const initialCount = desktop
+    ? TABLE_BOOKING_TIMES.initialDesktopCount
+    : TABLE_BOOKING_TIMES.initialMobileCount;
+  const slots = times.status === "ready" ? times.data.times : [];
+  const [previousInitialCount, setPreviousInitialCount] =
+    useState(initialCount);
+  if (previousInitialCount !== initialCount) {
+    setPreviousInitialCount(initialCount);
+    if (
+      slots
+        .slice(initialCount)
+        .some((slot) => slot.date === time?.date && slot.time === time.time)
+    ) {
+      setExpanded(true);
+    }
+  }
+  const remainingSlots = slots.slice(initialCount);
+  const renderSlot = (slot: IBookingTime) => (
+    <button
+      type="button"
+      key={`${slot.date} ${slot.time}`}
+      aria-pressed={time?.date === slot.date && time.time === slot.time}
+      className={styles.timeSlot}
+      onClick={() => onTimeChange(slot)}
+    >
+      {slot.label}
+    </button>
+  );
   return (
     <>
       <p role="status" className={styles.timesMessage}>
         {timesMessage(times)}
       </p>
-      {times.status === "ready" && times.data.times.length > 0 && (
-        <fieldset className={styles.timeGrid} aria-label={content.timesLabel}>
-          {times.data.times.map((slot) => (
-            <button
-              type="button"
-              key={`${slot.date} ${slot.time}`}
-              aria-pressed={time?.date === slot.date && time.time === slot.time}
-              className={styles.timeSlot}
-              onClick={() => onTimeChange(slot)}
+      {times.status === "loading" && <TableBookingTimesSkeleton />}
+      {slots.length > 0 && (
+        <fieldset id="booking-times" aria-label={content.timesLabel}>
+          <div className={styles.timeGrid}>
+            {slots.slice(0, initialCount).map(renderSlot)}
+          </div>
+          {remainingSlots.length > 0 && (
+            <div
+              id="booking-extra-times"
+              className={styles.extraTimes}
+              data-expanded={expanded}
+              inert={!expanded}
             >
-              {slot.label}
-            </button>
-          ))}
+              <div className={styles.extraTimesClip}>
+                <div className={cn(styles.timeGrid, styles.extraTimeGrid)}>
+                  {remainingSlots.map(renderSlot)}
+                </div>
+              </div>
+            </div>
+          )}
         </fieldset>
+      )}
+      {remainingSlots.length > 0 && (
+        <button
+          type="button"
+          className={styles.showMoreTimes}
+          aria-controls="booking-extra-times"
+          aria-expanded={expanded}
+          onClick={() => setExpanded(!expanded)}
+        >
+          <ChevronDown aria-hidden="true" />
+          {expanded
+            ? content.showFewerTimes
+            : content.showMoreTimes(remainingSlots.length)}
+        </button>
       )}
     </>
   );

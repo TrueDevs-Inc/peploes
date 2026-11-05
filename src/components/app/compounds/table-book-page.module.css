@@ -3,6 +3,10 @@
   background: var(--warm-cream);
 }
 
+body:has(.page) {
+  overflow-anchor: none;
+}
+
 .page :is(h1, h2) {
   font-family: var(--font-eb-garamond), serif;
   font-weight: 400;

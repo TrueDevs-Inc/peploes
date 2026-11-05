@@ -1,6 +1,8 @@
 import { FAKE_TIMES } from "./booking-fixtures";
 import {
   chooseDate,
+  chooseTime,
+  expectBookingAtTop,
   findTable,
   laterFreeDate,
   openBooking,
@@ -10,6 +12,28 @@ import { expect, test } from "./menu-test";
 function label(time: string): string {
   return FAKE_TIMES.find((slot) => slot.time === time)?.label ?? time;
 }
+
+test("an expired hold opens its notice below the navbar with reduced motion", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.clock.install();
+  const panel = await openBooking(page);
+  await chooseDate(panel, laterFreeDate());
+  await findTable(panel);
+  await chooseTime(panel, "6:00 pm");
+  await panel.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(panel.getByRole("timer")).toBeVisible();
+  await expectBookingAtTop(panel);
+  await panel
+    .getByRole("button", { name: "Confirm Reservation", exact: true })
+    .scrollIntoViewIfNeeded();
+  await page.clock.fastForward("06:00");
+  await expect(panel.getByRole("alert")).toHaveText(
+    "Your table hold ran out. Please choose a time again.",
+  );
+  await expectBookingAtTop(panel);
+});
 
 test("while the table is being held the button says so, and a second click holds nothing more", async ({
   page,
@@ -33,11 +57,19 @@ test("while the table is being held the button says so, and a second click holds
     exact: true,
   });
   await expect(holding).toBeDisabled();
+  await expect(
+    reservations
+      .getByRole("status")
+      .filter({ hasText: "Holding your table for you…" }),
+  ).toBeVisible();
   await holding.click({ force: true });
   await expect(reservations.getByRole("timer")).toBeVisible({
     timeout: 10_000,
   });
   expect(posts).toHaveLength(1);
+  await expect(
+    reservations.getByText("Holding your table for you…", { exact: true }),
+  ).toHaveCount(0);
 });
 
 test("a failed hold shows the server's message and lets the guest try another time", async ({
@@ -50,9 +82,7 @@ test("a failed hold shows the server's message and lets the guest try another ti
     name: "Continue",
     exact: true,
   });
-  await reservations
-    .getByRole("button", { name: label("20:00"), exact: true })
-    .click();
+  await chooseTime(reservations, label("20:00"));
   await next.click();
 
   await expect(reservations.getByRole("alert")).toHaveText(

@@ -3,7 +3,7 @@ export const TABLE_BOOK_PAGE_CONTENT = {
   description:
     "Plan your visit to Peploe’s on St Stephen’s Green. Contact our team for reservations, larger groups and private dining.",
   hero: {
-    eyebrow: "Book a Table",
+    eyebrow: "Book",
     heading: "A table at Peploe’s.",
     description:
       "Join us at 16 St Stephen’s Green for relaxed lunches, indulgent dinners and special occasions in our beautiful Georgian setting.",

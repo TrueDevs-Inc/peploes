@@ -1,0 +1,122 @@
+.form,
+.times,
+.status,
+.payment,
+.calendar {
+  display: grid;
+  pointer-events: none;
+  animation: booking-skeleton-pulse 1400ms ease-in-out infinite;
+}
+
+.form span,
+.times span,
+.status span,
+.payment span,
+.calendar {
+  display: block;
+  border-radius: 4px;
+  background: color-mix(
+    in srgb,
+    var(--booking-border) 75%,
+    var(--booking-surface)
+  );
+}
+
+.calendar {
+  display: block;
+  height: 6px;
+  margin-top: 6px;
+}
+
+.form {
+  gap: 24px;
+  margin-block: 24px;
+}
+.field {
+  display: grid;
+  gap: 8px;
+}
+.label {
+  width: 35%;
+  height: 16px;
+}
+.control {
+  height: 52px;
+}
+.action {
+  grid-column: 1 / -1;
+  height: 48px;
+}
+.times {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 24px;
+}
+.times span {
+  height: 46px;
+}
+.times span:nth-child(n + 9) {
+  display: none;
+}
+.status {
+  gap: 10px;
+  margin-block: 16px;
+}
+.status span {
+  height: 12px;
+}
+.status span:first-child {
+  width: 40%;
+}
+.status span:last-child {
+  width: 65%;
+}
+.payment {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.payment span {
+  height: 56px;
+}
+.payment span:first-child {
+  grid-column: 1 / -1;
+  width: 35%;
+  height: 16px;
+}
+.payment span:nth-child(2) {
+  grid-column: 1 / -1;
+}
+
+@keyframes booking-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+@media (min-width: 1024px) {
+  .form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .times {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px 16px;
+  }
+  .times span:nth-child(n) {
+    display: block;
+    height: 56px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .form,
+  .times,
+  .status,
+  .payment,
+  .calendar {
+    animation: none;
+  }
+}

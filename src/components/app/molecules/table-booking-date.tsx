@@ -16,6 +16,7 @@ import { ArrowLeft, ArrowRight, CalendarDays, ChevronDown } from "lucide-react";
 import { type KeyboardEvent, useEffect, useRef, useState } from "react";
 
 import styles from "@/components/app/compounds/table-booking-panel.module.css";
+import { TableBookingCalendarSkeleton } from "@/components/app/molecules/table-booking-skeleton";
 import { TABLE_BOOKING_CONTENT } from "@/lib/constants/table-booking";
 import { dublinToday, isBookableDay, monthGrid } from "@/lib/dates";
 import type { ITableBookingDateProps } from "@/lib/types";
@@ -221,6 +222,9 @@ export function TableBookingDate({
           </div>
           <p role="status" className={styles.calendarStatus}>
             {openDates === "loading" && TABLE_BOOKING_CONTENT.checkingDates}
+            <span hidden={openDates !== "loading"}>
+              <TableBookingCalendarSkeleton />
+            </span>
           </p>
         </fieldset>
       )}

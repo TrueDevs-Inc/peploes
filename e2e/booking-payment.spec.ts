@@ -51,6 +51,9 @@ test("when ResDiary stays pending after payment the page keeps calm and gives th
     reservations.getByText("Confirming your booking…", { exact: true }),
   ).toBeVisible();
   await expect(
+    reservations.locator('[data-booking-skeleton="status"]:visible'),
+  ).toHaveCount(1);
+  await expect(
     reservations.getByRole("button", { name: "Edit date & guests" }),
   ).toBeDisabled();
   await page.clock.fastForward("01:01");
@@ -60,6 +63,9 @@ test("when ResDiary stays pending after payment the page keeps calm and gives th
       { exact: true },
     ),
   ).toBeVisible({ timeout: 10_000 });
+  await expect(
+    reservations.locator('[data-booking-skeleton="status"]:visible'),
+  ).toHaveCount(0);
   await expect(reservations.getByRole("alert")).toHaveCount(0);
   await expect(reservations.getByRole("button", { name: /^Pay / })).toHaveCount(
     0,

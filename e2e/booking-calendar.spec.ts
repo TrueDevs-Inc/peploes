@@ -263,8 +263,14 @@ test("the calendar stays usable while availability loads and when it fails", asy
   await picker.open();
   await picker.showMonth(fullWhenLoaded);
   await expect(checking).toBeVisible();
+  await expect(
+    picker.calendar.locator('[data-booking-skeleton="calendar"]'),
+  ).toBeVisible();
   await expect(picker.day(fullWhenLoaded)).toBeEnabled();
   await expect(checking).toBeHidden({ timeout: 10_000 });
+  await expect(
+    picker.calendar.locator('[data-booking-skeleton="calendar"]'),
+  ).toBeHidden();
   await expect(picker.day(fullWhenLoaded)).toBeDisabled();
   await picker.close();
   await expect(picker.calendar).toBeHidden();

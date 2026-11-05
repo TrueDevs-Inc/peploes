@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useId, useRef, useState } from "react";
 import { z } from "zod";
 import styles from "@/components/app/compounds/table-booking-panel.module.css";
+import { TableBookingProcessing } from "@/components/app/molecules/table-booking-processing";
 import { Button } from "@/components/ui/button";
 import {
   BOOKING_GUEST_LIMITS,
@@ -313,6 +314,9 @@ export function TableBookingDetails({
         />
         <span>{copy.newsletterLabel}</span>
       </label>
+      {sending && (
+        <TableBookingProcessing>{copy.sendingMessage}</TableBookingProcessing>
+      )}
       {formError && (
         <p role="alert" className={styles.formError}>
           {formError}

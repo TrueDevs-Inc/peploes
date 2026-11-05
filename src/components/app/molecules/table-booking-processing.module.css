@@ -1,0 +1,32 @@
+.processing {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  margin-block: 16px;
+  text-align: center;
+}
+.processing p {
+  margin: 0;
+  color: var(--booking-label);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 24px;
+}
+.circle {
+  width: 36px;
+  height: 36px;
+  border: 3px solid color-mix(in srgb, var(--booking-accent) 25%, transparent);
+  border-top-color: var(--booking-accent);
+  border-radius: 50%;
+  animation: booking-processing-spin 800ms linear infinite;
+}
+@keyframes booking-processing-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .circle {
+    animation: none;
+  }
+}

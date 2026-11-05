@@ -8,6 +8,7 @@
   --booking-value: #221a17;
   --booking-emblem: #f1e4dd;
   --booking-shadow: rgb(64 55 43 / 4.70588%);
+  --booking-summary-inset: 10px;
   min-width: 0;
   min-height: 0;
   padding: 32px 23px;
@@ -21,8 +22,9 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
-  height: 53px;
+  height: 66px;
   margin: 0;
+  margin-inline: -12px;
   padding: 0;
   list-style: none;
 }
@@ -39,9 +41,9 @@
 .step:not(:last-child)::after {
   content: "";
   position: absolute;
-  top: 12px;
-  left: calc(50% + 12px);
-  width: calc(100% - 14px);
+  top: 18px;
+  left: calc(50% + 18px);
+  width: calc(100% - 26px);
   height: 1px;
   background: var(--booking-border);
   opacity: 0.55;
@@ -49,13 +51,13 @@
 
 .stepNumber {
   display: grid;
-  width: 24px;
-  height: 24px;
+  width: 36px;
+  height: 36px;
   place-items: center;
   border: 1px solid var(--booking-border);
   border-radius: 50%;
   background: var(--booking-surface);
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 400;
   line-height: 1;
 }
@@ -77,9 +79,9 @@
 
 .stepName {
   margin-top: 8px;
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 500;
-  line-height: 14px;
+  line-height: 20px;
   white-space: nowrap;
 }
 
@@ -250,6 +252,7 @@
 
 @media (min-width: 1024px) {
   .panel {
+    --booking-summary-inset: 16px;
     min-height: 0;
     padding: 32px clamp(47px, calc(25vw - 241px), 119px) 40px;
     border-radius: 6px;
@@ -259,6 +262,7 @@
   .progress {
     height: 48px;
     gap: 24px;
+    margin-inline: 0;
   }
 
   .step {
@@ -476,14 +480,34 @@
 .panel:focus {
   outline: none;
 }
+
+@media (prefers-reduced-motion: no-preference) {
+  .stepContent,
+  .payment,
+  .flowNotice,
+  .timeGrid,
+  .calendar,
+  .partyOptions {
+    animation: booking-open 180ms ease-out;
+  }
+}
+
+@keyframes booking-open {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
 .step[data-complete="true"] .stepNumber {
   background: var(--booking-label);
   color: var(--booking-surface);
   border-color: var(--booking-label);
 }
 .completedIcon {
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
 }
 .dateField {
   position: relative;
@@ -497,6 +521,7 @@
   cursor: pointer;
 }
 .selection:focus-visible,
+.showMoreTimes:focus-visible,
 .timeSlot:focus-visible,
 .calendar button:focus-visible,
 .editAction:focus-visible,
@@ -657,7 +682,7 @@
   align-items: center;
   gap: 8px;
   margin: 18px 0 24px;
-  padding: 12px 10px;
+  padding: 12px var(--booking-summary-inset);
   background: #f2eee8;
   font-size: 12px;
   line-height: 18px;
@@ -724,12 +749,71 @@
 .timeSlot:hover:not([aria-pressed="true"]) {
   background: var(--booking-emblem);
 }
+.showMoreTimes {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 44px;
+  margin: 16px auto 0;
+  color: var(--booking-accent);
+  font-size: 16px;
+  line-height: 24px;
+  cursor: pointer;
+}
+.showMoreTimes svg {
+  width: 14px;
+  height: 14px;
+}
+.extraTimes {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    grid-template-rows 220ms ease,
+    opacity 180ms ease,
+    visibility 0s linear 220ms;
+}
+.extraTimes[data-expanded="true"] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+.extraTimesClip {
+  min-height: 0;
+  overflow: hidden;
+}
+.extraTimeGrid {
+  margin-top: 10px;
+}
+@media (min-width: 1024px) {
+  .timeGrid.extraTimeGrid {
+    margin-top: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .extraTimes {
+    transition: none;
+  }
+}
 .payment {
   display: grid;
   gap: 16px;
 }
 .paymentElement {
   min-height: 200px;
+}
+.paymentElementContainer {
+  position: relative;
+}
+.paymentLoading {
+  position: absolute;
+  inset: 0;
+  padding-block: 16px;
+  background: var(--booking-surface);
+  pointer-events: none;
 }
 .phoneRow {
   display: grid;
@@ -748,10 +832,12 @@
 }
 .holdTimer {
   margin: 0 0 24px;
+  padding-inline: var(--booking-summary-inset);
   color: var(--booking-accent);
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 600;
-  line-height: 20px;
+  line-height: 26px;
+  text-align: right;
   font-variant-numeric: tabular-nums;
 }
 .flowNotice {
@@ -1039,7 +1125,7 @@
   .summary {
     gap: 12px;
     margin: 24px 0;
-    padding: 10px 16px;
+    padding: 10px var(--booking-summary-inset);
     font-size: 16px;
     line-height: 24px;
   }

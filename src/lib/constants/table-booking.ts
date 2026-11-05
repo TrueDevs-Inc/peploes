@@ -1,5 +1,13 @@
 import { RESTAURANT_CONTACT } from "@/lib/constants";
 
+export const TABLE_BOOKING_SCROLL_GAP_PX = 8;
+
+export const TABLE_BOOKING_TIMES = {
+  desktopQuery: "(min-width: 1024px)",
+  initialDesktopCount: 12,
+  initialMobileCount: 8,
+};
+
 export const TABLE_BOOKING_CONTENT = {
   label: "Table reservations",
   progressLabel: "Booking progress",
@@ -8,6 +16,7 @@ export const TABLE_BOOKING_CONTENT = {
   fullDate: (guests: string, date: string) =>
     `No tables for ${guests} on ${date}. Please choose another day.`,
   holding: "Holding Your Table…",
+  holdingMessage: "Holding your table for you…",
   heldFor: (time: string) => `Table held for ${time}`,
   chooseAgain: "Choose a Time Again",
   startAgain: "Start Again",
@@ -31,6 +40,8 @@ export const TABLE_BOOKING_CONTENT = {
   weekdays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
   action: "Find a Table",
   timesLabel: "Available times",
+  showMoreTimes: (remaining: number) => `Show more times (${remaining} more)`,
+  showFewerTimes: "Show fewer times",
   findingTimes: "Finding tables…",
   connectionLost: `We couldn't reach our booking system. Check your connection and try again, or call us on ${RESTAURANT_CONTACT.phoneLabel}.`,
   tableUntil: (time: string) => `Table until ${time}`,
@@ -61,6 +72,7 @@ export const TABLE_BOOKING_CONTENT = {
     termsClose: "Close",
     action: "Confirm Reservation",
     sending: "Confirming…",
+    sendingMessage: "Confirming your reservation…",
     countryCode: "Country code",
     checking: "Checking whether your booking went through…",
     resend:

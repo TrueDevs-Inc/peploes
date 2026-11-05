@@ -3,6 +3,7 @@ import { expect, test } from "./menu-test";
 test("when ResDiary is slow and then down the page shows at once and the booking panel offers phone and email", async ({
   page,
 }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/book-a-table", { waitUntil: "commit" });
 
   await expect(
@@ -13,11 +14,18 @@ test("when ResDiary is slow and then down the page shows at once and the booking
     reservations.getByRole("status").getByText("Loading available dates…"),
   ).toBeVisible();
   await expect(
+    reservations.locator('[data-booking-skeleton="form"]'),
+  ).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toBeInViewport();
+  await expect(
     reservations.getByText(
       "Online booking isn't available right now. Please call us on +353 1 676 3144 or email reception@peploes.com.",
       { exact: true },
     ),
   ).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("heading", { level: 1 })).toBeInViewport();
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  await expect(reservations.locator("[data-booking-skeleton]")).toHaveCount(0);
   await expect(
     reservations.getByRole("button", { name: /^Date / }),
   ).toHaveCount(0);
