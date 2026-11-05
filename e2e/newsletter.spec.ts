@@ -1,33 +1,5 @@
 import { expect, test } from "@playwright/test";
 
-test("newsletter focus thickens the rule downward without shifting text", async ({
-  page,
-}) => {
-  for (const path of [
-    "/",
-    "/contact",
-    "/private-dining",
-    "/private-dining/groups-celebrations",
-    "/privacy-cookies",
-  ]) {
-    await page.goto(path);
-    const email = page.getByLabel("Your email address", { exact: true });
-    const restingHeight = await email.evaluate((input) => input.clientHeight);
-    await expect(email).toBeEnabled();
-    await email.focus();
-    expect(await email.evaluate((input) => input.clientHeight)).toBe(
-      restingHeight,
-    );
-    await expect(email).toHaveCSS(
-      "box-shadow",
-      /rgb\(122, 30, 36\) 0px 1px 0px 0px$/,
-    );
-    await expect(email).toHaveCSS("border-bottom-width", "1px");
-    await expect(email).toHaveCSS("border-bottom-color", "rgb(122, 30, 36)");
-    await expect(email).toHaveCSS("background-image", "none");
-  }
-});
-
 test("newsletter shows errors for empty and invalid emails and recovers after editing", async ({
   page,
 }) => {

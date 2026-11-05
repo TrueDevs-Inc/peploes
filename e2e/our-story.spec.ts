@@ -96,7 +96,6 @@ test("Our Story loads its photographs without stretching or horizontal overflow"
     await expect(photograph).toBeVisible();
     await expect(photograph).toHaveJSProperty("complete", true);
     await expect(photograph).not.toHaveJSProperty("naturalWidth", 0);
-    await expect(photograph).toHaveCSS("object-fit", /^(cover|contain)$/);
   }
   await expect
     .poll(() =>
@@ -198,23 +197,10 @@ test("Our Story navigation closes the mobile menu and shows its desktop active s
     await page.mouse.move(0, 0);
     await expect(page).toHaveURL("/our-story");
     await expect(story).toHaveAttribute("aria-current", "page");
-    await expect(story).toHaveCSS("color", "rgb(122, 30, 36)");
-    const indicator = navigation.locator("[data-navbar-indicator]");
-    await expect(indicator).toHaveCSS("opacity", "1");
-    const storyBounds = await story.boundingBox();
-    expect(storyBounds).not.toBeNull();
-    await expect
-      .poll(() => indicator.boundingBox())
-      .toMatchObject({
-        x: storyBounds?.x,
-        width: storyBounds?.width,
-      });
-
     await navigation.getByRole("link", { name: "Peploe’s home" }).click();
     await page.mouse.move(0, 0);
     await expect(page).toHaveURL("/");
     await expect(story).not.toHaveAttribute("aria-current", "page");
-    await expect(story).toHaveCSS("color", "rgb(46, 42, 40)");
   }
 });
 

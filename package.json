@@ -39,7 +39,8 @@
     "validate": "bun run lint && bun run type-check && bun run test",
     "ci": "bun run validate && NODE_ENV=production bun run build && bun run --cwd studio build && bun audit --audit-level high && bun run --cwd studio audit",
     "studio:dev": "bun run --cwd studio dev",
-    "test:e2e:reporting": "bun e2e/run.ts reporting"
+    "test:e2e:reporting": "bun e2e/run.ts reporting",
+    "adr": "bun .agents/skills/adr/scripts/create.mjs"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",

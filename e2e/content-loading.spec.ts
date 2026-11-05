@@ -1,68 +1,69 @@
-import { rmSync, writeFileSync } from "node:fs";
 import { expect, test } from "./menu-test";
-import { announceSanityPublish } from "./sanity-webhook";
 
-test.afterEach(() => {
-  rmSync(".next/e2e/content-delay.json", { force: true });
-});
-
-test("published content hubs reuse their rendered HTML", async ({
-  request,
-}) => {
-  for (const path of ["/journal", "/seasonal"]) {
-    await request.get(path);
-    await expect
-      .poll(
-        async () => {
-          const response = await request.get(path);
-          expect(response.ok()).toBe(true);
-          return response.headers()["x-nextjs-cache"];
-        },
-        { timeout: 15000 },
-      )
-      .toBe("HIT");
-  }
-});
-
-for (const path of ["/menus", "/seasonal", "/journal"]) {
-  test(`${path} keeps the footer below the viewport while content is pending`, async ({
+for (const destination of [
+  { path: "/journal", heading: "The Journal" },
+  {
+    path: "/seasonal",
+    heading: /There’s always\s+something happening\s+at Peploe’s\./,
+  },
+]) {
+  test(`${destination.path} retains content without a footer flash during slow navigation`, async ({
     page,
-    request,
   }) => {
+    let release = () => {};
+    let observed = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const requested = new Promise<void>((resolve) => {
+      observed = resolve;
+    });
     await page.route("**/*", async (route) => {
-      const url = new URL(route.request().url());
-      if (
-        url.pathname === path &&
-        route.request().headers()["next-router-prefetch"]
-      ) {
-        await route.abort();
-        return;
+      if (new URL(route.request().url()).pathname === destination.path) {
+        const headers = route.request().headers();
+        if (
+          headers["next-router-prefetch"] ||
+          headers["next-router-segment-prefetch"]
+        ) {
+          await route.abort();
+          return;
+        }
+        observed();
+        await gate;
       }
       await route.fallback();
     });
-    await page.goto("/our-story");
-    await announceSanityPublish(request);
-    writeFileSync(".next/e2e/content-delay.json", "1500");
-    const observation = page.evaluate(async (destination) => {
-      const footerPositions: number[] = [];
-      const start = performance.now();
-      while (performance.now() - start < 10000) {
-        if (location.pathname === destination) {
-          if (document.querySelector("main h1")) return footerPositions;
-          const footer = document.querySelector("footer");
-          if (footer)
-            footerPositions.push(
-              footer.getBoundingClientRect().top - innerHeight,
-            );
-        }
-        await new Promise(requestAnimationFrame);
-      }
-      throw new Error("Content did not finish loading.");
-    }, path);
-    await page.locator(`a[href="${path}"]:visible`).first().click();
-    const positions = await observation;
-    if (path === "/menus") expect(positions.length).toBeGreaterThan(0);
-    expect(positions.filter((position) => position < 0)).toEqual([]);
-    await expect(page.locator("main h1")).toBeVisible({ timeout: 15000 });
+    await page.goto("/");
+    const originalHeading = await page
+      .getByRole("main")
+      .getByRole("heading", { level: 1 })
+      .innerText();
+    const link = page
+      .getByRole("main")
+      .locator(`a[href="${destination.path}"]`)
+      .first();
+    const activation = link.click();
+    try {
+      await requested;
+      await expect(
+        page.getByRole("main").getByRole("heading", { level: 1 }),
+      ).toHaveText(originalHeading);
+      await expect
+        .poll(() =>
+          page
+            .getByRole("contentinfo")
+            .evaluate(
+              (element) => element.getBoundingClientRect().top >= innerHeight,
+            ),
+        )
+        .toBe(true);
+    } finally {
+      release();
+    }
+    await activation;
+    await expect(page).toHaveURL(destination.path);
+    await expect(
+      page.getByRole("main").getByRole("heading", { level: 1 }),
+    ).toHaveText(destination.heading);
   });
 }

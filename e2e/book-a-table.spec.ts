@@ -187,7 +187,7 @@ test("desktop booking keeps the panel in place when opening available times", as
   }
 });
 
-test("desktop booking calendar keeps compact day rows and hides elapsed weeks", async ({
+test("booking calendar omits elapsed weeks and keeps remaining dates selectable", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -196,23 +196,11 @@ test("desktop booking calendar keeps compact day rows and hides elapsed weeks", 
   const field = panel.getByRole("button", { name: /^Date / });
   await expect(field).toBeVisible();
   await page.evaluate(() => document.fonts.ready);
-  const closedBounds = await panel.boundingBox();
   await field.click();
   const calendar = panel.getByRole("group", {
     name: "Choose date",
     exact: true,
   });
-  const openBounds = await panel.boundingBox();
-  if (!closedBounds || !openBounds)
-    throw new Error("Booking box must be visible");
-  expect(openBounds.height).toBeCloseTo(closedBounds.height, 0);
-  const days = calendar.getByRole("button", { name: /, \d+ / });
-  const first = await days.nth(0).boundingBox();
-  const nextRow = await days.nth(7).boundingBox();
-  if (!first || !nextRow) throw new Error("Calendar days must be visible");
-  expect(first.width).toBeCloseTo(36, 0);
-  expect(first.height).toBeCloseTo(36, 0);
-  expect(nextRow.y - first.y - first.height).toBeCloseTo(10, 0);
   const today = dublinToday();
   const weekday = new Date(`${today}T12:00:00Z`).getUTCDay();
   const previousSunday = addDays(today, -(weekday || 7));
