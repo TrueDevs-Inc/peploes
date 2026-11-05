@@ -235,7 +235,7 @@ function StoryMural() {
           >
             {mural.heading}
           </h2>
-          <p className="mt-6 text-lg leading-7 lg:whitespace-pre-line">
+          <p className="mt-6 hidden text-lg leading-7 sm:block lg:whitespace-pre-line">
             {mural.description}
           </p>
           <Button
@@ -373,7 +373,7 @@ function StoryToday() {
           >
             {today.heading}
           </h2>
-          <p className="mt-6 text-lg leading-7 lg:text-xl lg:whitespace-pre-line">
+          <p className="mt-6 hidden text-lg leading-7 sm:block lg:text-xl lg:whitespace-pre-line">
             {today.description}
           </p>
           <Button

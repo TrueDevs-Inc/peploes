@@ -4,7 +4,7 @@ import Link from "next/link";
 
 import styles from "@/components/app/compounds/wine.module.css";
 import { Button } from "@/components/ui/button";
-import { ROUTES, WINE_CONTENT } from "@/lib/constants";
+import { MOBILE_HOME_CONTENT, ROUTES, WINE_CONTENT } from "@/lib/constants";
 import { dmSans, ebGaramond } from "@/lib/fonts";
 import { getJournalCategoryPath } from "@/lib/journal-data";
 import { cn } from "@/lib/utils";
@@ -34,7 +34,7 @@ export function Wine() {
       />
 
       <div className="site-container relative">
-        <div className="flex min-h-[720px] w-full max-w-[748px] flex-col justify-end gap-[18px] pt-[210px] pb-[52px] sm:min-h-0 sm:justify-start sm:gap-8 sm:py-20">
+        <div className="flex min-h-[600px] w-full max-w-[748px] flex-col justify-end gap-5 pt-[210px] pb-[52px] sm:min-h-0 sm:justify-start sm:gap-8 sm:py-20">
           <p
             data-scroll-reveal
             className="flex items-center gap-2.5 text-sm leading-4 font-medium tracking-[0.1em] uppercase"
@@ -61,7 +61,10 @@ export function Wine() {
             data-scroll-reveal
             className="text-base leading-6 text-warm-cream/90 sm:text-lg sm:text-warm-cream/85"
           >
-            {WINE_CONTENT.description}
+            <span className="sm:hidden">
+              {MOBILE_HOME_CONTENT.wineDescription}
+            </span>
+            <span className="hidden sm:inline">{WINE_CONTENT.description}</span>
           </p>
 
           <div

@@ -235,6 +235,10 @@
 }
 
 @media (width < 40rem) {
+  .joinCopy .description {
+    display: none;
+  }
+
   .eyebrow {
     font-size: 12px;
   }

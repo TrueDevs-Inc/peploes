@@ -29,7 +29,7 @@ export function HumanHospitality() {
               {HUMAN_HOSPITALITY_CONTENT.eyebrow}
             </p>
 
-            <div data-scroll-reveal className="flex flex-col gap-5 sm:gap-4">
+            <div data-scroll-reveal className="flex flex-col gap-5">
               <h2
                 id="human-hospitality-heading"
                 className={cn(

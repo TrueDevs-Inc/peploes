@@ -43,7 +43,7 @@ export function Menus() {
           {MENUS_CONTENT.eyebrow}
         </p>
 
-        <div className="flex flex-col gap-3 sm:gap-4">
+        <div className="flex flex-col gap-5">
           <h2
             id="menus-heading"
             className={cn(

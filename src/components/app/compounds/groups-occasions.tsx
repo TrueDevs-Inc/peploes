@@ -4,7 +4,7 @@ import Link from "next/link";
 
 import styles from "@/components/app/compounds/groups-occasions.module.css";
 import { Button } from "@/components/ui/button";
-import { FOCUS_RING, ROUTES } from "@/lib/constants";
+import { FOCUS_RING, MOBILE_HOME_CONTENT, ROUTES } from "@/lib/constants";
 import { GROUPS_OCCASIONS_CONTENT } from "@/lib/constants/groups-occasions";
 import { dmSans, ebGaramond } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
@@ -32,7 +32,7 @@ export function GroupsOccasions() {
         <div className="site-container relative pt-[185px] pb-10 sm:pt-20 sm:pb-12 lg:py-12">
           <div
             data-scroll-reveal
-            className="flex max-w-[720px] flex-col items-start gap-4 sm:gap-7"
+            className="flex max-w-[720px] flex-col items-start gap-5 sm:gap-7"
           >
             <p className="flex items-center gap-2.5 text-sm leading-4 font-medium tracking-[0.1em] uppercase">
               <span
@@ -53,7 +53,12 @@ export function GroupsOccasions() {
             </h2>
 
             <p className="max-w-[520px] text-base leading-6 text-warm-cream/90">
-              {GROUPS_OCCASIONS_CONTENT.description}
+              <span className="sm:hidden">
+                {MOBILE_HOME_CONTENT.groupsDescription}
+              </span>
+              <span className="hidden sm:inline">
+                {GROUPS_OCCASIONS_CONTENT.description}
+              </span>
             </p>
 
             <Button

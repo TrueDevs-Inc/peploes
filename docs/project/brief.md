@@ -207,8 +207,9 @@ layouts for horizontal overflow and undistorted images after width changes.
 The 390px Final Pages mobile homepage (`3395:17700`) owns the phone layout.
 Below 640px, use 16px gutters with the reference type sizes, vertical spacing,
 image frames and stacked full-width actions. Keep the existing tablet and desktop layouts.
-At the reference width the page is 11,526px tall, including the 72px header.
-Sections may grow when narrower screens or enlarged text need more room.
+The original reference is 11,526px tall, including the 72px header; current
+content and the refinements below determine the rendered height. Sections may
+grow when narrower screens or enlarged text need more room.
 
 Use the mobile entrance and dining-room photographs exported from Figma.
 The reception artwork reproduces the mobile frame's image scaling. Photographs,
@@ -216,7 +217,14 @@ including the entrance, retain their aspect ratio and crop to their frames.
 Event and occasion copy variants live beside their desktop content in the local
 catalogs.
 Mobile Stories uses the From the cellar eyebrow over the “Wine things just
-happen.” heading and omits the art description.
+happen.” heading. Issues #175–#178 refine the phone layout: experience features
+use two equal columns, the menu introduction leaves 20px between its heading
+and paragraph, and wine and groups banners use concise mobile copy. Supporting
+paragraphs on the family and produce story cards, Our Story's mural and closing
+banners, the Journal hero and the seasonal closing banner appear from 640px.
+Keep headings, destinations and essential event or contact details available
+on phones. Story cards use stronger lower shading while keeping the upper
+photograph visible. These refinements preserve the tablet and desktop content.
 The closing booking heading is upright on mobile and retains its desktop italic.
 
 Compare section positions, line breaks, crops and overlays at 390px, then check

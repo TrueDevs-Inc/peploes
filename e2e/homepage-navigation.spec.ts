@@ -2,6 +2,57 @@ import { rm, writeFile } from "node:fs/promises";
 import { expect, test } from "./menu-test";
 import { announceSanityPublish } from "./sanity-webhook";
 
+test("experience features form two balanced columns on phones", async ({
+  page,
+  viewport,
+}) => {
+  await page.goto("/");
+  const features = page.getByRole("region", {
+    name: "The Peploe’s experience",
+  });
+  const items = features.getByRole("listitem");
+  await expect(items).toHaveCount(4);
+  await page.evaluate(() => document.fonts.ready);
+  const bounds = await items.evaluateAll((elements) =>
+    elements.map((element) => {
+      const { x, y, width } = element.getBoundingClientRect();
+      return { x, y, width };
+    }),
+  );
+  const [first, second, third, fourth] = bounds;
+  expect(first.y).toBe(second.y);
+  expect(first.width).toBeCloseTo(second.width, 0);
+  expect(second.x).toBeGreaterThan(first.x + first.width);
+  if ((viewport?.width ?? 1440) < 1280) {
+    expect(third.x).toBe(first.x);
+    expect(fourth.x).toBe(second.x);
+    expect(third.y).toBe(fourth.y);
+    expect(third.y).toBeGreaterThan(first.y);
+  } else {
+    expect(third.y).toBe(first.y);
+    expect(fourth.y).toBe(first.y);
+  }
+});
+
+test("menu introduction leaves room between its heading and paragraph", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const heading = page.getByRole("heading", {
+    name: "Good food brings people together.",
+    exact: true,
+  });
+  const gap = await heading.evaluate((element) => {
+    const description = element.nextElementSibling;
+    if (!description) throw new Error("Menu introduction is missing");
+    return (
+      description.getBoundingClientRect().top -
+      element.getBoundingClientRect().bottom
+    );
+  });
+  expect(gap).toBeGreaterThanOrEqual(20);
+});
+
 test("hero shading palette matches desktop on phones and tablets", async ({
   page,
 }) => {
