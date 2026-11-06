@@ -22,6 +22,54 @@ env:
   SANITY_API_VERSION: '2026-10-06'
 
 jobs:
+  performance-tooling:
+    name: Performance tooling
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Set up audit Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22.23.4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version-file: package.json
+
+      - name: Install locked dependencies
+        run: bun ci
+
+      - name: Check audit tooling and failure policies
+        run: |
+          test "$(node --version)" = v22.23.4
+          node node_modules/@lhci/cli/src/cli.js --version
+          bun run test performance
+
+      - name: Reject an unavailable production server
+        run: |
+          if bun run perf --origin http://127.0.0.1:3119 --phase diagnostic --evidence "$RUNNER_TEMP/performance-unavailable" --manifest performance/manifest.json; then
+            echo "Performance command incorrectly accepted an unavailable server" >&2
+            exit 1
+          fi
+          node -e 'const fs = require("node:fs"); const result = JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP + "/performance-unavailable/failure.json", "utf8")); if (!/connect|fetch/i.test(result.message)) throw new Error("Unexpected command failure: " + result.message);'
+
+      - name: Retain tooling failure evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: performance-tooling-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/performance-unavailable
+          if-no-files-found: error
+          retention-days: 14
+
   verify:
     name: Verify
     runs-on: ubuntu-latest
