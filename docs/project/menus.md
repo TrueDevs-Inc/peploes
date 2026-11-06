@@ -191,8 +191,13 @@ own Sanity account. Access is controlled by Sanity project membership.
 
 The website uses `SANITY_PROJECT_ID`, `SANITY_DATASET` and
 `SANITY_API_VERSION` in the root `.env`; copy the names from
-`.env.example`. Studio uses `SANITY_STUDIO_PROJECT_ID` and
-`SANITY_STUDIO_DATASET`; its defaults point to the development project above.
+`.env.example`. Studio automatically reuses `SANITY_PROJECT_ID` and
+`SANITY_DATASET` from its environment or the root `.env` when building, deploying
+or running locally. Optional `SANITY_STUDIO_PROJECT_ID` and
+`SANITY_STUDIO_DATASET` values override those settings. Remove existing Studio
+overrides to share the website settings; with neither pair configured, Studio
+defaults to the development project above. Verify the resolved project and
+dataset before deploying, and use the hostname for that environment.
 Keep the API version pinned to `2026-10-06`. Studio auto-updates are disabled so
 the installed version is the version tested and built.
 
