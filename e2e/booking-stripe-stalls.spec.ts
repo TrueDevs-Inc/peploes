@@ -108,6 +108,7 @@ test("a successful card-guarantee confirmation uses SetupIntent and checks ResDi
     }),
   ).toHaveCount(0);
   const calls = await page.evaluate(() => Reflect.get(window, "stripeCalls"));
+  expect(calls).toContain("setupIntent");
   expect(calls).toContain("confirmSetup");
   expect(calls).not.toContain("confirmPayment");
 });
