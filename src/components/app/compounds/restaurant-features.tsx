@@ -13,7 +13,7 @@ export function RestaurantFeatures() {
         "bg-warm-cream text-center text-ink shadow-[inset_0_1px_0_var(--soft-stone)]",
       )}
     >
-      <ul className="site-container grid grid-cols-1 gap-8 pt-[38px] pb-11 sm:grid-cols-2 sm:gap-10 sm:py-12 xl:grid-cols-4">
+      <ul className="site-container grid grid-cols-2 gap-x-4 gap-y-8 pt-[38px] pb-11 sm:gap-10 sm:py-12 xl:grid-cols-4">
         {RESTAURANT_FEATURES_CONTENT.items.map(
           ({ title, description, illustration }) => (
             <li
@@ -28,7 +28,7 @@ export function RestaurantFeatures() {
                 <h2
                   className={cn(
                     ebGaramond.className,
-                    "text-[22px] leading-[25px] font-medium sm:leading-[26px]",
+                    "text-xl leading-6 font-medium text-balance sm:text-[22px] sm:leading-[26px]",
                   )}
                 >
                   {title}

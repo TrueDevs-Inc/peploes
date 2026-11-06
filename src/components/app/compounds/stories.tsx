@@ -30,7 +30,7 @@ function StoryAction({ label, filled = false, href }: IStoryActionProps) {
         "h-auto min-h-11 max-w-full self-start rounded-[4px] border border-warm-cream/70 px-4 has-[>svg]:px-4 text-base leading-6 font-medium whitespace-normal shadow-none sm:px-5 sm:has-[>svg]:px-5",
         filled
           ? "bg-warm-cream text-peploe-burgundy"
-          : "bg-transparent text-warm-cream max-sm:rounded-none max-sm:border-0 max-sm:px-0 max-sm:has-[>svg]:px-0 max-sm:hover:bg-transparent max-sm:hover:underline",
+          : "bg-transparent text-warm-cream max-sm:rounded-none max-sm:border-0 max-sm:px-0 max-sm:has-[>svg]:px-0 max-sm:hover:bg-transparent max-sm:underline max-sm:decoration-transparent max-sm:hover:decoration-current",
       )}
     >
       {href ? <Link href={href}>{content}</Link> : content}
@@ -65,7 +65,7 @@ export function Stories() {
             <span className="lg:hidden"> </span>
             {STORIES_CONTENT.headingLines[1]}
           </h2>
-          <p className="text-base leading-6 text-text-secondary sm:text-lg">
+          <p className="mt-1 text-base leading-6 text-text-secondary sm:text-lg">
             {STORIES_CONTENT.description}
           </p>
           <Button
@@ -119,7 +119,7 @@ export function Stories() {
                 </span>
               </h3>
               <div id="family-story-details" data-story-details>
-                <p className="text-sm leading-5 text-warm-cream/90 sm:text-[15px] sm:leading-[22px]">
+                <p className="hidden text-sm leading-5 text-warm-cream/90 sm:block sm:text-[15px] sm:leading-[22px]">
                   <span data-story-text>
                     {STORIES_CONTENT.family.description}
                   </span>
@@ -170,7 +170,7 @@ export function Stories() {
                   <span data-story-text>{STORIES_CONTENT.produce.heading}</span>
                 </h3>
                 <div id="produce-story-details" data-story-details>
-                  <p className="text-sm leading-5">
+                  <p className="hidden text-sm leading-5 sm:block">
                     <span data-story-text>
                       {STORIES_CONTENT.produce.description}
                     </span>

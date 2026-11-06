@@ -28,9 +28,9 @@ The Group Set Menu enquiry action opens the private-dining enquiry section.
 Every menu's closing banner heading, description and action button share a left
 edge on desktop and mobile; the desktop content keeps its existing position.
 Book a Table actions open the [booking page](brief.md#book-a-table).
-Enquiry submission remains inactive until its integration exists.
+Enquiry delivery follows the [email guide](../guides/email-guide.md).
 
-## Design and approved comments
+## Design and content decisions
 
 Reference: [Peploe’s Figma, Lunch desktop](https://www.figma.com/design/0fEgisdlNBr23CuWHJOTNC/Peploe-s?node-id=3345-534)
 and [Lunch mobile](https://www.figma.com/design/0fEgisdlNBr23CuWHJOTNC/Peploe-s?node-id=3384-11229).
@@ -133,10 +133,11 @@ in Studio calls the signed webhook at `/api/webhooks/sanity`. It waits three
 seconds for Sanity's read API to catch up, as Sanity's own Next.js helper does,
 then expires that tag, so the next page view reads the new content. Without a working webhook the
 cache still expires after five minutes. A failed Sanity request is not cached.
-The `/seasonal/<slug>` existence check in `src/proxy.ts` is not cached, because
-Next does not cache `fetch` in Proxy. It returns 404 as soon as an entry is
-unpublished. If the webhook is not working, a newly published entry can show the
-not-found page for up to five minutes.
+Published content pages also reuse rendered HTML. Signed publication invalidates
+the content cache; time-based revalidation can serve the previous page while
+refreshing. Article and event detail pages resolve content before responding,
+so missing entries return HTTP 404. Booking requests bypass the Next data cache.
+Rules and closed dates are held in memory for five minutes.
 
 Each website environment needs its own webhook in Sanity (Manage, API,
 Webhooks):
@@ -176,10 +177,7 @@ A one-column course always includes every dish. Food intro `desktopCrop` stores
 width and left position as percentages, aspect ratio, top offset in pixels and
 rotation in degrees. Food images retain their uncropped layout on mobile.
 Editorial photographs accept `desktopPosition` and `mobilePosition` focal points
-for their responsive cover crops. Cocktails uses the same asset in a 258 × 240px
-desktop frame and a full-content-width, 214px-high mobile frame; both focal points
-are preview image data. New presentation fields from `dev` are not all exposed
-by the current Studio schemas and projections; default rendering still applies.
+for their responsive cover crops. Styles own the rendered image frames.
 
 The active project is `w789ottu` (Peploes, in the TrueDevs Sanity organization),
 dataset `development`. Its `production` dataset stays empty until the restaurant
@@ -247,18 +245,8 @@ image, notes and booking-banner objects. Validate unique, URL-safe section keys
 for anchors, optional non-negative prices and required
 image alt text. Preserve editor ordering when projecting content into these types.
 The local catalogs are optional seed inputs; the configured website reads Sanity.
-The compact editorial introduction with descriptive copy caps its desktop paragraph
-at 600px with 14px text and 20px line height. The heading remains 46px; mobile
-retains its full content width and 21px paragraph line height.
-The booking object also accepts `tallOnMobile` for the Wine and Cocktails banners,
-optional desktop image positioning, content width and text alignment. Mobile
-padding, mobile/desktop overlays and full-width mobile actions preserve each
-banner’s reference treatment. These presentation fields preserve the shared
-banner component while matching each photograph and caption. The shared menu
-navigation uses the same 8px top padding on all desktop routes; its mobile
-height remains consistent across routes. A 1px soft-stone divider spans
-the menu navigation below the tabs on desktop and mobile; the active tab keeps
-its burgundy underline.
+The booking object accepts per-menu presentation overrides. Consult its schema
+and component for supported fields; this guide does not duplicate their styles.
 
 The Group and Seasonal desktop frames contain an older, shorter footer with
 different opening hours. These pages use the shared production footer and its
@@ -274,7 +262,7 @@ an error; they never display a local preview menu instead.
 
 ### Run locally
 
-Open two terminals in `D:\JavaScript\peploes-sanity`:
+From the repository root, open separate terminals:
 
 1. Website: `bun run dev` — open `http://localhost:3000/menus?menu=lunch`.
 2. Studio: `bun run studio:dev` — open `http://localhost:3333`.
@@ -345,61 +333,20 @@ falls back to preview fixtures.
 
 ### Development sample content
 
-On 17 October 2026, the development import was applied at Ali's request to
-`3ggctsor/development`. All seven menus and shared menu settings are published.
-Lunch, Dinner and Pre-Theatre kept their existing content; only missing fields
-were added. Wine, Cocktails, Group Set Menu and Seasonal were created from the
-repository's design preview content. Production was not changed.
-
-The pre-import document backup is
-`studio/.sanity/menu-backups/before-1792234841549.json`. Comparing the original
-content with the imported documents confirmed no existing values were replaced.
-
-From the `studio` directory, `bun run seed:preview` reads the current content and
-prints what would happen. It does not upload images or write documents.
-`bun run seed:development` applies the import: it backs up documents under
-`studio/.sanity/menu-backups/`, uploads local images, creates missing documents,
-and adds missing top-level fields to existing documents. It never replaces an
-existing value or fills an existing array. A draft-only menu stays a draft.
-The command refuses any dataset other than `development`. Backups contain
-document data, not separate copies of assets.
-
-The catalogs under `src/lib/constants/*-menu.ts` are sample import inputs. Their
-prices, vintages, duplicate entries and old seasonal dates must be checked with
-the restaurant before real use. They are not live website menu fallbacks.
-
-All seven published menus and shared settings passed the application's content
-validation after import. All seven local menu routes rendered menu content
-without a not-found or content-load error. Wine was also checked in the browser.
-
-On 19 October 2026, a development-only repair restored 59 missing presentation
-fields across eight documents. The repair used revision checks and only filled
-missing values; verification confirmed that every existing value was preserved
-and all eight published documents passed the content schemas. Its backup is
-`studio/.sanity/menu-backups/before-presentation-repair-1792394216063.json`.
-Production was not changed.
+From `studio`, `bun run seed:preview` reads and describes the import without
+writing. `bun run seed:development` backs up documents in
+`studio/.sanity/menu-backups/`, uploads images and fills missing fields. It never
+replaces existing values or arrays; draft-only menus stay drafts. The command
+refuses datasets other than `development`. Backups contain document data, not
+asset copies. Verify the configured project and dataset before an authorized run.
+Sample catalogs are import inputs, never live fallbacks. Restaurant approval is
+required before publishing their prices, vintages and seasonal dates.
 
 The runtime and Studio schemas retain the original image crops, positioning,
 rotation, banner spacing, overlays and wine layout settings. Presentation fields
 are hidden and read-only in Studio so content editing keeps the existing design.
 The Group menu inclusion heading remains editable. Compact menu navigation
 spacing and explicit price decimal formatting are also preserved.
-
-### Code and checks
-
-- `src/lib/sanity-provider.ts` reads the published perspective into the Next
-  data cache, tagged `sanity-content` with a five-minute limit, and verifies the
-  publish webhook signature.
-- `src/app/api/webhooks/sanity/route.ts` expires the tag after a signed publish.
-- `src/services/restaurant-menus.ts` validates external data and returns typed
-  results. Duplicate URL names and invalid content are rejected.
-- `src/lib/menu-content.ts` shares each request between page, metadata and layout.
-- `CmsMenuPage` passes the validated data into the existing menu components.
-- Studio schemas are in `studio/schemaTypes/`. Stable array keys supply anchors;
-  editor order is preserved. Sanity image hosts are configured in Next and CSP.
-- `bun run validate` checks lint, website/Studio types and unit tests.
-- `bun run build` builds the website; `bun run --cwd studio build` builds Studio.
-  Neither command deploys.
 
 For release, review the content and editor access, configure the intended
 production dataset in both website and Studio environments, and publish approved
@@ -411,31 +358,5 @@ allergen visibility and narrow-screen overflow with published content. Check
 Wine index targets and Group/Seasonal dropdowns after adding, hiding and
 reordering entries.
 
-### Current verification limit
-
-On 19 October 2026, after syncing with `dev` at `064be2b`, formatting/lint,
-website and Studio types, all 119 unit tests, both production builds and the
-website high-severity audit passed. The 21 focused menu browser checks passed
-at desktop, phone and narrow-phone widths, including image loading, navigation,
-Group banner alignment and horizontal overflow.
-
-The full browser run passed 161 of 165 checks. One Our Story navigation timed
-out, and three event-page image-loading checks timed out. All four passed on an
-immediate isolated rerun against the same build, without changing the tests or
-application. The full run therefore was not clean on its first attempt.
-Browser menu fixtures use an isolated fake Sanity project; the live development
-repair was separately checked for content preservation and schema validity.
-
-Studio's high-severity audit still fails on `braces@3.0.3` in the Sanity CLI
-tooling. The advisory lists no patched release, and the latest published Sanity
-code-generation package still pulls the affected dependency:
-[GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm).
-The check remains enabled; the full CI gate is not green.
-
-Studio overrides pin patched `js-yaml` and `smol-toml` versions while its CLI
-still pulls vulnerable older versions. Remove those overrides only when the
-normal dependency tree resolves safe versions and the audit remains clear.
-
-The [original implementation review](../reports/menu-cms-review.html) records
-17 October evidence and content/release steps. The verification above supersedes
-its older test counts and build status.
+Editable allergen information is optional. When supplied, show it under a static
+heading without an expand or collapse control.

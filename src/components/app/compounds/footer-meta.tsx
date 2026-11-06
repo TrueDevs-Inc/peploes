@@ -63,7 +63,7 @@ export function FooterMeta() {
                 );
               },
             )}
-            <li className="flex items-center gap-3 xl:gap-4">
+            <li hidden>
               <span aria-hidden="true" className="hidden xl:inline">
                 |
               </span>

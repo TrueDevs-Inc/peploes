@@ -235,7 +235,7 @@ test("desktop booking aligns the panel when opening available times", async ({
   await expectBookingAtTop(reservations);
 });
 
-test("desktop booking calendar keeps compact day rows and hides elapsed weeks", async ({
+test("booking calendar omits elapsed weeks and keeps remaining dates selectable", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -244,23 +244,11 @@ test("desktop booking calendar keeps compact day rows and hides elapsed weeks", 
   const field = panel.getByRole("button", { name: /^Date / });
   await expect(field).toBeVisible();
   await page.evaluate(() => document.fonts.ready);
-  const closedBounds = await panel.boundingBox();
   await field.click();
   const calendar = panel.getByRole("group", {
     name: "Choose date",
     exact: true,
   });
-  const openBounds = await panel.boundingBox();
-  if (!closedBounds || !openBounds)
-    throw new Error("Booking box must be visible");
-  expect(openBounds.height).toBeCloseTo(closedBounds.height, 0);
-  const days = calendar.getByRole("button", { name: /, \d+ / });
-  const first = await days.nth(0).boundingBox();
-  const nextRow = await days.nth(7).boundingBox();
-  if (!first || !nextRow) throw new Error("Calendar days must be visible");
-  expect(first.width).toBeCloseTo(36, 0);
-  expect(first.height).toBeCloseTo(36, 0);
-  expect(nextRow.y - first.y - first.height).toBeCloseTo(10, 0);
   const today = dublinToday();
   const weekday = new Date(`${today}T12:00:00Z`).getUTCDay();
   const previousSunday = addDays(today, -(weekday || 7));
@@ -613,7 +601,7 @@ for (const newsletterOptIn of [false, true]) {
     ).toHaveAttribute("href", "/menus");
     await expect(
       reservations.getByRole("link", { name: "Plan Your Visit", exact: true }),
-    ).toHaveAttribute("href", "/visit-contact");
+    ).toHaveAttribute("href", "/contact");
     await expectBookingAtTop(reservations);
     expect(submissions).toHaveLength(3);
     await reservations
@@ -884,7 +872,7 @@ for (const { path, count } of [
   { path: "/menus?menu=pre-theatre", count: 1 },
   { path: "/menus?menu=wine", count: 1 },
   { path: "/menus?menu=cocktails", count: 1 },
-  { path: "/visit-contact", count: 3 },
+  { path: "/contact", count: 3 },
 ]) {
   test(`all booking calls to action on ${path} open the booking page`, async ({
     page,

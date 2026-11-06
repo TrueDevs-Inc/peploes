@@ -4,9 +4,10 @@ import {
   TrackedAnchor,
   TrackedLink,
 } from "@/components/app/atoms/tracked-link";
+import privateDiningStyles from "@/components/app/compounds/private-dining.module.css";
+import { PrivateDiningEnquiry } from "@/components/app/compounds/private-dining-enquiry";
 import styles from "@/components/app/compounds/visit-contact.module.css";
 import { VisitContactDetails } from "@/components/app/compounds/visit-contact-details";
-import { ContactEnquiryForm } from "@/components/app/molecules/contact-enquiry-form";
 import { VisitLocationMap } from "@/components/app/molecules/visit-location-map";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +15,7 @@ import {
   RESTAURANT_OPENING_HOURS,
   ROUTES,
 } from "@/lib/constants";
+import { PRIVATE_DINING } from "@/lib/constants/private-dining";
 import { VISIT_CONTACT_CONTENT } from "@/lib/constants/visit-contact";
 import { GA4Event } from "@/lib/enums";
 import { dmSans, ebGaramond } from "@/lib/fonts";
@@ -63,7 +65,7 @@ function VisitHero() {
           <p className={styles.description}>
             {VISIT_CONTACT_CONTENT.hero.description}
           </p>
-          <div className={styles.heroActions}>
+          <div data-button-pair className={styles.heroActions}>
             <VisitBookingButton />
             <Button
               asChild
@@ -164,22 +166,27 @@ function VisitContactInformation() {
 
 function VisitLocation() {
   return (
-    <section className={cn("site-container", styles.location)} id="find-us">
-      <div className={styles.locationGrid}>
-        <div data-scroll-reveal className={styles.locationCopy}>
-          <p className={styles.eyebrow}>
-            {VISIT_CONTACT_CONTENT.location.eyebrow}
-          </p>
-          <h2 className={styles.heading}>
-            {VISIT_CONTACT_CONTENT.location.heading}
-          </h2>
-          <p className={styles.description}>
-            {VISIT_CONTACT_CONTENT.location.description}
-          </p>
+    <section className={styles.locationSection} id="find-us">
+      <div className={styles.location}>
+        <div className={cn("site-container", styles.locationGrid)}>
+          <div data-scroll-reveal className={styles.locationCopy}>
+            <p className={styles.eyebrow}>
+              {VISIT_CONTACT_CONTENT.location.eyebrow}
+            </p>
+            <h2 className={styles.heading}>
+              {VISIT_CONTACT_CONTENT.location.heading}
+            </h2>
+            <p className={styles.description}>
+              {VISIT_CONTACT_CONTENT.location.description}
+            </p>
+          </div>
+          <VisitLocationMap />
         </div>
-        <VisitLocationMap />
       </div>
-      <div data-scroll-reveal className={styles.transport}>
+      <div
+        data-scroll-reveal
+        className={cn("site-container", styles.transport)}
+      >
         <h3 className={styles.eyebrow}>
           {VISIT_CONTACT_CONTENT.location.transportHeading}
         </h3>
@@ -229,9 +236,13 @@ export function VisitContact() {
     <main className={cn(dmSans.className, ebGaramond.variable, styles.page)}>
       <VisitHero />
       <VisitContactInformation />
-      <ContactEnquiryForm />
       <VisitLocation />
       <VisitContactDetails />
+      <PrivateDiningEnquiry
+        content={PRIVATE_DINING.enquiry}
+        compact
+        className={privateDiningStyles.page}
+      />
       <VisitClosing />
     </main>
   );

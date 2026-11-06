@@ -5,10 +5,10 @@ import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-
 import cardStyles from "@/components/app/compounds/groups-occasions.module.css";
 import styles from "@/components/app/compounds/seasonal-event.module.css";
 import { SeasonalEventAction } from "@/components/app/molecules/seasonal-event-action";
+import { Button } from "@/components/ui/button";
 import { FOCUS_RING } from "@/lib/constants";
 import type { ISeasonalEventRelatedProps } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -65,7 +65,8 @@ export function SeasonalEventRelated({ content }: ISeasonalEventRelatedProps) {
             {content.eyebrow}
           </h2>
           <div className={styles.carouselControls}>
-            <button
+            <Button
+              variant="plain"
               type="button"
               aria-label="Previous related items"
               aria-controls="event-related-items"
@@ -73,8 +74,9 @@ export function SeasonalEventRelated({ content }: ISeasonalEventRelatedProps) {
               onClick={() => scrollCards(-1)}
             >
               <ArrowLeft aria-hidden="true" className="size-4" />
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="plain"
               type="button"
               aria-label="Next related items"
               aria-controls="event-related-items"
@@ -82,7 +84,7 @@ export function SeasonalEventRelated({ content }: ISeasonalEventRelatedProps) {
               onClick={() => scrollCards(1)}
             >
               <ArrowRight aria-hidden="true" className="size-4" />
-            </button>
+            </Button>
           </div>
         </div>
         <ul

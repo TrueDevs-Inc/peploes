@@ -3,6 +3,7 @@ import "server-only";
 import { err, ok, type Result } from "neverthrow";
 import nodemailer from "nodemailer";
 
+import emailLogo from "@/lib/email-logo.json";
 import { env } from "@/lib/env";
 import type {
   IEmailTransportMessage,
@@ -105,6 +106,18 @@ export async function sendSmtp(
       subject: message.subject,
       html: message.html,
       text: message.text,
+      attachments: message.html.includes(`cid:${emailLogo.contentId}`)
+        ? [
+            {
+              filename: emailLogo.filename,
+              content: emailLogo.content,
+              encoding: "base64",
+              contentType: emailLogo.contentType,
+              contentDisposition: "inline",
+              cid: emailLogo.contentId,
+            },
+          ]
+        : undefined,
       messageId: `<${message.id}@${auth.value.user.slice(auth.value.user.indexOf("@") + 1)}>`,
     });
     return smtpOutcome(info);
@@ -187,6 +200,18 @@ export async function sendResend(
         subject: message.subject,
         html: message.html,
         text: message.text,
+        attachments: message.html.includes(`cid:${emailLogo.contentId}`)
+          ? [
+              {
+                filename: emailLogo.filename,
+                content: emailLogo.content,
+                ...Object.fromEntries([
+                  ["content_id", emailLogo.contentId],
+                  ["content_type", emailLogo.contentType],
+                ]),
+              },
+            ]
+          : undefined,
         ...Object.fromEntries([["reply_to", message.replyTo]]),
       }),
       signal: AbortSignal.timeout(8_000),

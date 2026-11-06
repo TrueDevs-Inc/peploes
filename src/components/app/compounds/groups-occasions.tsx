@@ -32,7 +32,7 @@ export function GroupsOccasions() {
         <div className="site-container relative pt-[185px] pb-10 sm:pt-20 sm:pb-12 lg:py-12">
           <div
             data-scroll-reveal
-            className="flex max-w-[720px] flex-col items-start gap-4 sm:gap-7"
+            className="flex max-w-[720px] flex-col items-start gap-5 sm:gap-7"
           >
             <p className="flex items-center gap-2.5 text-sm leading-4 font-medium tracking-[0.1em] uppercase">
               <span
@@ -52,7 +52,7 @@ export function GroupsOccasions() {
               {GROUPS_OCCASIONS_CONTENT.heading}
             </h2>
 
-            <p className="max-w-[520px] text-base leading-6 text-warm-cream/90">
+            <p className="w-full text-base leading-6 text-warm-cream/90">
               {GROUPS_OCCASIONS_CONTENT.description}
             </p>
 

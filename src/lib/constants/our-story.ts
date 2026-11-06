@@ -40,6 +40,7 @@ export const OUR_STORY_CONTENT = {
   building: {
     eyebrow: "The Building",
     heading: "From Georgian Dublin\nto the dining room\nbelow.",
+    mobileHeading: "From Georgian Dublin\nto the dining room below.",
     description:
       "Peploe’s sits in a beautiful listed Georgian\nbuilding from the 1760s. Before becoming\nthe restaurant it is today, the space was an\nold vault. In 2003, Barry Canny transformed\nit into Peploe’s, creating a warm, welcoming\nplace in the heart of the city.",
     action: "Our Location",

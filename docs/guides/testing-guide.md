@@ -24,7 +24,12 @@ and how to report checks that could not run.
 
 ## Test selection
 
-Use the lowest layer that catches the real failure.
+Use the lowest layer that catches an important failure. End-to-end and
+integration tests must justify their runtime with a critical user outcome or a
+boundary failure that cheaper coverage cannot prove. A complete booking journey
+can earn a browser test; a click followed by decorative CSS checks cannot.
+Run only the checks affected by the change, following the quality guide.
+Ordinary CSS edits do not warrant a suite run.
 
 | Check | Use it for |
 | --- | --- |
@@ -63,6 +68,18 @@ Avoid tests that only:
 - snapshot a large component tree without a specific contract;
 - mirror branches line by line for coverage;
 - test behavior owned by React, Next.js, Drizzle, or Zod.
+
+## Review test maintenance
+
+Apply the [test-quality skill](../../.agents/skills/test-quality/SKILL.md) to new
+and changed tests and accompanying docs. Always flag decorative CSS measurements,
+animation internals, private framework mechanics and implementation-mirroring
+assertions for removal when the requirement is user behavior. Preserve security
+headers, protocol contracts, cache invalidation and useful behavior in mixed tests.
+Existing coverage can satisfy a change; no test or doc is required per source edit.
+Explicit visual or performance requirements need a stable measurement and a
+reason a cheaper behavior check is insufficient. Accessibility and safety
+contracts still need checks. Review evidence belongs in the PR or tracker.
 
 ## Mocks
 
@@ -109,9 +126,11 @@ in ignored `test-results/`.
 The email browser command builds a separate production-mode test artifact with
 an in-memory delivery-record adapter, an allowed rate-limit response, and an
 intercepted Resend endpoint. It uses synthetic `.test` addresses and exercises
-the real form, server action, enquiry service, and mail service. The database
-integration test owns durable claim behavior; the browser fixture does not
-prove PostgreSQL or inbox receipt.
+the private-dining form, server
+action, enquiry service, and mail service. Visit coverage checks the shared
+gathering enquiry and direct contact links, without a separate general message
+form, even when email is configured. The database integration test owns durable
+claim behavior; the browser fixture does not prove PostgreSQL or inbox receipt.
 
 Browser suites use synthetic reporting settings or blank provider credentials
 to avoid sending test events to configured accounts. Payment key acceptance

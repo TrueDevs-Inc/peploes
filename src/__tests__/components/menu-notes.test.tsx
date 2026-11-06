@@ -18,6 +18,16 @@ const menu: IMenuNotesContent = {
 };
 
 describe("menu notes reading order", () => {
+  it.each([{}, { compact: true }, { collection: true }])(
+    "shows allergen information as static content for %j",
+    (layout) => {
+      const html = renderToStaticMarkup(<MenuNotes menu={menu} {...layout} />);
+      expect(html).toMatch(/<h2[^>]*>.*Allergen information.*<\/h2>/);
+      expect(html).toContain("Tell your server about dietary requirements.");
+      expect(html).not.toContain("<details");
+      expect(html).not.toContain("<summary");
+    },
+  );
   it("reads allergens before notes in the compact layout", () => {
     const html = renderToStaticMarkup(<MenuNotes menu={menu} compact />);
     expect(html.indexOf("Allergen information")).toBeGreaterThan(-1);
@@ -41,7 +51,7 @@ describe("menu notes reading order", () => {
     expect(html).toContain("Allergen information");
     expect(html).toContain("Tell your server about dietary requirements.");
     expect(html).not.toContain("<details");
-    expect(html).toContain("<h3");
+    expect(html).toContain("<h2");
   });
 
   it("omits the panel when neither notes nor allergens exist", () => {

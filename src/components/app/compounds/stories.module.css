@@ -122,7 +122,9 @@
   .artOverlay {
     background: linear-gradient(
       180deg,
-      rgb(var(--overlay-warm-ink-rgb) / 0%) 15%,
+      rgb(var(--overlay-warm-ink-rgb) / 0%) 20%,
+      rgb(var(--overlay-warm-ink-rgb) / 60%) 50%,
+      rgb(var(--overlay-warm-ink-rgb) / 92%) 75%,
       rgb(var(--overlay-warm-ink-rgb)) 100%
     );
   }

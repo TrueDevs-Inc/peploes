@@ -3,6 +3,8 @@ import { gunzipSync } from "node:zlib";
 import type { BrowserContext, Page, Request } from "@playwright/test";
 import { test as base, expect } from "@playwright/test";
 
+import { COOKIE_PREFERENCES } from "../src/lib/constants/cookie-consent";
+
 export { expect } from "@playwright/test";
 
 export const GA_ID = "G-TEST000000";
@@ -336,30 +338,28 @@ export const test = base.extend<{ analytics: AnalyticsRecorder }>({
   },
 });
 
-export async function openPreferences(page: Page) {
-  await page
-    .getByRole("button", { name: "Cookie Settings", exact: true })
-    .click();
-  const dialog = page.getByRole("dialog", {
-    name: "Cookie Preferences",
-    exact: true,
-  });
-  await expect(dialog).toBeVisible();
-  return dialog;
+export async function storeAcceptedPreferences(page: Page): Promise<void> {
+  await page.evaluate(
+    ({ key, preferences }) => {
+      localStorage.setItem(key, JSON.stringify(preferences));
+    },
+    {
+      key: COOKIE_PREFERENCES.storageKey,
+      preferences: COOKIE_PREFERENCES.accepted,
+    },
+  );
 }
 
-export async function acceptAll(page: Page): Promise<void> {
-  const dialog = await openPreferences(page);
-  await dialog.getByRole("button", { name: "Accept All", exact: true }).click();
-  await expect(dialog).not.toBeVisible();
-}
-
-export async function rejectAll(page: Page): Promise<void> {
-  const dialog = await openPreferences(page);
-  await dialog
-    .getByRole("button", { name: "Reject non-essential", exact: true })
-    .click();
-  await expect(dialog).not.toBeVisible();
+export async function storeRejectedPreferences(page: Page): Promise<void> {
+  await page.evaluate(
+    ({ key, preferences }) => {
+      localStorage.setItem(key, JSON.stringify(preferences));
+    },
+    {
+      key: COOKIE_PREFERENCES.storageKey,
+      preferences: COOKIE_PREFERENCES.defaults,
+    },
+  );
 }
 
 /** Wait past PostHog's 3 second batch timer before asserting absence. */

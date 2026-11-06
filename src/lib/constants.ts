@@ -126,7 +126,7 @@ export const ROUTES = {
   CELEBRATIONS: "/private-dining/groups-celebrations",
   CORPORATE_EVENTS: "/private-dining/corporate-events",
   WEDDINGS: "/private-dining/weddings",
-  VISIT_CONTACT: "/visit-contact",
+  VISIT_CONTACT: "/contact",
   PRIVACY_COOKIES: "/privacy-cookies",
   PRIVACY_POLICY: "/privacy-policy",
   ACCESSIBILITY_POLICY: "/accessibility-policy",
@@ -417,6 +417,10 @@ export const MOBILE_HOME_CONTENT = {
   menusImage: "/peploes-dining-room-mobile.png",
   ginaEyebrow: "From the cellar",
   ginaHeading: "Wine things just happen.",
+  wineDescription:
+    "Wines from small European producers, trusted estates and classic regions, chosen for discovery and returning favourites.",
+  groupsDescription:
+    "Private dining and group celebrations in the heart of St Stephen’s Green.",
 } as const;
 
 export const SANITY_CONTENT_CACHE_TAG = "sanity-content";

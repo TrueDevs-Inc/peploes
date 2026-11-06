@@ -18,15 +18,15 @@ Set the required values in `.env` before starting the application.
 Use `http://localhost:3000` for local public URLs and a disposable PostgreSQL
 database for `DATABASE_URL`. Optional integration values can remain empty.
 
-The inherited example API requires the existing database migrations. Verify the
-database target before running `bun run db:migrate`. Protected example mutations
-remain disabled until a verified session is implemented.
+Database integration checks require a migrated disposable database. Verify its
+target and obtain explicit permission before running migrations locally.
 
 ## Verification
 
-Run `bun run format`, then `bun run ci`. Database integration tests run separately
-with `bun run test:integration` against a migrated disposable database.
-The GitHub workflow provisions its own database for that check.
+Choose local checks for the changed behavior using the
+[quality guide](docs/guides/quality-guide.md#required-checks). Ordinary CSS and
+prose edits do not require a test run. Shared CI runs the full integration gate.
+Database integration checks require an explicitly approved disposable database.
 
 ## Documentation
 
@@ -36,7 +36,6 @@ The GitHub workflow provisions its own database for that check.
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Branch, commit, review, and contribution workflow |
 | [`AGENTS.md`](AGENTS.md) | Agent authorization and repository-specific operating rules |
 | [`docs/guides/quality-guide.md`](docs/guides/quality-guide.md) | Verification, CI, hooks and review |
-| [`docs/guides/html-report-guide.md`](docs/guides/html-report-guide.md) | Standalone HTML reports |
 | [`docs/guides/project-adoption-guide.md`](docs/guides/project-adoption-guide.md) | Replacing inherited template defaults |
 | [`docs/guides/testing-guide.md`](docs/guides/testing-guide.md) | Test selection and test-suite policy |
 | [`docs/guides/`](docs/guides) | Error handling, logging, analytics, Sentry, performance, and SEO |

@@ -213,7 +213,7 @@ export function SeasonalEvent({ content, join }: ISeasonalEventProps) {
             <div data-scroll-reveal className={styles.invitationCopy}>
               <h2 id="event-invitation">{invitation.heading}</h2>
               <p>{invitation.description}</p>
-              <div className="mt-6 flex flex-col gap-2.5 sm:mt-7 sm:flex-row sm:flex-wrap sm:gap-4">
+              <div data-button-pair className="mt-6 gap-2.5 sm:mt-7 sm:gap-4">
                 <Button
                   asChild
                   variant="brand-primary"

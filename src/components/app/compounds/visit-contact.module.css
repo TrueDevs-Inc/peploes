@@ -63,7 +63,7 @@ body:has(.page) [data-navbar-visit] {
 .directions {
   width: 232px;
   border: 0;
-  border-radius: 2px;
+  border-radius: 4px;
   box-shadow: inset 0 0 0 1px var(--peploe-burgundy);
 }
 .directions:hover {
@@ -131,6 +131,7 @@ body:has(.page) [data-navbar-visit] {
   min-width: 0;
 }
 .contactItem h2 {
+  text-box: trim-start cap alphabetic;
   font-size: 30px;
   line-height: 39px;
 }
@@ -172,9 +173,12 @@ body:has(.page) [data-navbar-visit] {
   max-width: 100%;
   overflow-wrap: anywhere;
   text-underline-offset: 4px;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  transition: text-decoration-color var(--duration-base) var(--ease-organic);
 }
 .contactLinks a:hover {
-  text-decoration: underline;
+  text-decoration-color: currentColor;
 }
 .messageSection {
   padding-block: 72px;
@@ -185,9 +189,6 @@ body:has(.page) [data-navbar-visit] {
 }
 .messageGrid .heading {
   margin-block: 20px;
-}
-.messageGrid .description {
-  max-width: 480px;
 }
 .messageForm {
   display: grid;
@@ -260,7 +261,10 @@ body:has(.page) [data-navbar-visit] {
 }
 .location {
   padding-block: 48px 44px;
+}
+.locationSection {
   scroll-margin-top: 100px;
+  background: var(--warm-cream);
 }
 .locationGrid {
   display: grid;
@@ -274,12 +278,15 @@ body:has(.page) [data-navbar-visit] {
   position: relative;
   display: block;
   aspect-ratio: 760 / 333;
+  border: 0.2px solid var(--soft-stone);
+  box-shadow: 0 4px 18px 3px color-mix(in srgb, var(--ink) 6%, transparent);
 }
 .cover {
   object-fit: cover;
 }
 .transport {
   margin-top: 40px;
+  padding-bottom: 44px;
 }
 .transportGrid {
   display: grid;
@@ -293,6 +300,7 @@ body:has(.page) [data-navbar-visit] {
   align-items: start;
 }
 .transportGrid h4 {
+  text-box: trim-start cap alphabetic;
   font-size: 28px;
   line-height: 37px;
 }
@@ -334,7 +342,6 @@ body:has(.page) [data-navbar-visit] {
   margin-block: 28px;
 }
 .closingCopy > p:not(.eyebrow) {
-  max-width: 430px;
   font-size: 21px;
   line-height: 30px;
 }
@@ -392,21 +399,27 @@ body:has(.page) [data-navbar-visit] {
     gap: 24px;
   }
   .contactItem {
+    grid-template-columns: 47px minmax(0, 1fr);
     gap: 16px;
+  }
+  .contactItem > img {
+    width: 47px;
+    height: 47px;
+  }
+  .contactItem > div {
+    align-self: start;
   }
   .contactItem + .contactItem {
     padding-top: 24px;
     border-top: 1px solid var(--soft-stone);
   }
   .contactItem h2 {
-    font-size: 28px;
-    line-height: 34px;
+    align-self: start;
+    font-size: 27px;
+    line-height: 33px;
   }
   .contactItem:first-child > div {
     display: contents;
-  }
-  .contactItem:first-child h2 {
-    align-self: center;
   }
   .contactItem:first-child .hours {
     grid-column: 1 / -1;
@@ -414,7 +427,7 @@ body:has(.page) [data-navbar-visit] {
   }
   .hours {
     gap: 12px;
-    font-size: 16px;
+    font-size: 15px;
     line-height: 24px;
   }
   .hours > div {
@@ -427,19 +440,22 @@ body:has(.page) [data-navbar-visit] {
     text-align: right;
   }
   .contactItem address {
-    font-size: 16px;
+    font-size: 15px;
     line-height: 24px;
   }
   .contactLinks {
-    gap: 4px;
+    gap: 0;
     margin-top: 8px;
     font-size: 16px;
     line-height: 24px;
   }
   .contactLinks a {
     display: flex;
-    align-items: center;
+    align-items: end;
     min-height: 44px;
+  }
+  .contactLinks a + a {
+    align-items: start;
   }
   .heading {
     font-size: 36px;
@@ -451,6 +467,7 @@ body:has(.page) [data-navbar-visit] {
   .map {
     aspect-ratio: auto;
     height: 240px;
+    box-shadow: 0 4px 18px 5px color-mix(in srgb, var(--ink) 6%, transparent);
   }
   .transport {
     margin-top: 32px;
@@ -609,5 +626,11 @@ body:has(.page) [data-navbar-visit] {
     transform-origin: top left;
     /* Preserve the crop and slight vertical compression authored in Figma. */
     transform: scaleY(0.95045955) translateY(-38.44655%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contactLinks a {
+    transition: none;
   }
 }

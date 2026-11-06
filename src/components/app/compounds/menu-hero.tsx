@@ -28,25 +28,27 @@ export function MenuHero({ content }: IMenuHeroProps) {
         data-scroll-reveal
         className="site-container py-[54px] xl:pt-[68px] xl:pb-[52px]"
       >
-        <p className="text-sm leading-5 font-medium tracking-[0.08em] uppercase">
-          {content.eyebrow}
-        </p>
-        <p
-          id="menus-hero-heading"
-          className={cn(
-            ebGaramond.className,
-            "whitespace-pre-line text-[46px] leading-[44px] tracking-[-0.6px] max-sm:text-[38px] max-sm:leading-[40px] xl:mt-4 xl:text-[62px] xl:leading-[0.96] xl:tracking-[-1.5px]",
-          )}
-        >
-          {content.heading}
-        </p>
-        <span
-          aria-hidden="true"
-          className="mt-5 block xl:mt-4 h-px w-[58px] bg-peploe-burgundy"
-        />
-        <p className="mt-3 max-w-[430px] xl:mt-4 text-base leading-[23px] xl:text-lg xl:leading-[1.35]">
-          {content.description}
-        </p>
+        <div className="max-w-[720px]">
+          <p className="text-sm leading-5 font-medium tracking-[0.08em] uppercase">
+            {content.eyebrow}
+          </p>
+          <p
+            id="menus-hero-heading"
+            className={cn(
+              ebGaramond.className,
+              "whitespace-pre-line text-[46px] leading-[44px] tracking-[-0.6px] xl:mt-4 xl:text-[62px] xl:leading-[0.96] xl:tracking-[-1.5px]",
+            )}
+          >
+            {content.heading}
+          </p>
+          <span
+            aria-hidden="true"
+            className="mt-5 block xl:mt-4 h-px w-[58px] bg-peploe-burgundy"
+          />
+          <p className="mt-3 xl:mt-4 text-base leading-[23px] xl:text-lg xl:leading-[1.35]">
+            {content.description}
+          </p>
+        </div>
       </div>
     </section>
   );

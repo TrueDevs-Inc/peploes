@@ -2,15 +2,16 @@
 
 import { Calendar } from "lucide-react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-
 import { DateCalendar } from "@/components/app/atoms/date-calendar";
 import enquiryStyles from "@/components/app/compounds/private-dining.module.css";
 import styles from "@/components/app/molecules/private-dining-date.module.css";
+import { Button } from "@/components/ui/button";
 import { PRIVATE_DINING_FORM } from "@/lib/constants/private-dining";
 import { dublinToday } from "@/lib/dates";
+import type { IPrivateDiningDateProps } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-export function PrivateDiningDate() {
+export function PrivateDiningDate({ errorId }: IPrivateDiningDateProps) {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   const [minimum, setMinimum] = useState("");
@@ -98,6 +99,8 @@ export function PrivateDiningDate() {
           name="date"
           max="9999-12-31"
           aria-label={PRIVATE_DINING_FORM.date}
+          aria-invalid={Boolean(errorId)}
+          aria-describedby={errorId}
           aria-controls={open ? calendarId : undefined}
           required
           onFocus={refreshMinimum}
@@ -123,7 +126,8 @@ export function PrivateDiningDate() {
         />
         <span aria-hidden="true">{PRIVATE_DINING_FORM.date}</span>
       </label>
-      <button
+      <Button
+        variant="plain"
         type="button"
         className={styles.trigger}
         aria-label="Choose preferred date"
@@ -135,7 +139,7 @@ export function PrivateDiningDate() {
         }}
       >
         <Calendar aria-hidden="true" />
-      </button>
+      </Button>
       {open && minimum && (
         <DateCalendar
           key={`${value}:${minimum}`}

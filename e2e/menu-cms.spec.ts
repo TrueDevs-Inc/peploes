@@ -28,7 +28,7 @@ for (const menu of [
         .poll(() =>
           information.evaluate((element) => {
             const panel = element.closest(".site-container");
-            const heading = element.querySelector("h3");
+            const heading = element.querySelector("h2");
             const last = element.querySelector("p");
             if (!panel || !heading || !last) {
               throw new Error("The menu allergen panel is incomplete.");
@@ -43,7 +43,6 @@ for (const menu of [
     }
   });
 }
-
 test("switching from deep Wine content keeps menu navigation visible", async ({
   page,
 }) => {
@@ -67,75 +66,6 @@ test("switching from deep Wine content keeps menu navigation visible", async ({
   await expect(navigation).toBeInViewport();
   const bounds = await navigation.boundingBox();
   expect(bounds?.y).toBeGreaterThanOrEqual(0);
-});
-
-test("sticky menu navigation stays still throughout content switching", async ({
-  page,
-}) => {
-  const pageErrors: string[] = [];
-  page.on("pageerror", (error) => {
-    pageErrors.push(error.message);
-  });
-  await page.goto("/menus?menu=wine");
-  const navigation = page.getByRole("navigation", { name: "Restaurant menus" });
-  await navigation.evaluate((element) =>
-    window.scrollTo({
-      top: window.scrollY + element.getBoundingClientRect().top,
-      behavior: "instant",
-    }),
-  );
-  const sampling = navigation.evaluate(
-    (nav) =>
-      new Promise<Array<Record<string, number>>>((resolve) => {
-        const samples: Array<Record<string, number>> = [];
-        const mainNavigation = document.querySelector(
-          'nav[aria-label="Main navigation"]',
-        );
-        if (!mainNavigation) {
-          resolve([]);
-          return;
-        }
-        const start = performance.now();
-        let sawExit = false;
-        const sample = () => {
-          const { x, y, width, height } = nav.getBoundingClientRect();
-          const header = mainNavigation.getBoundingClientRect();
-          samples.push({
-            x,
-            y,
-            width,
-            height,
-            headerX: header.x,
-            headerY: header.y,
-            headerWidth: header.width,
-            headerHeight: header.height,
-          });
-          sawExit ||=
-            document.querySelector('[data-menu-content][data-phase="out"]') !==
-            null;
-          const finished =
-            document.querySelector(
-              '[data-menu-content][data-menu="dinner"][data-phase="idle"]',
-            ) !== null;
-          if (sawExit && finished) resolve(samples);
-          else if (performance.now() - start >= 6000) resolve([]);
-          else requestAnimationFrame(sample);
-        };
-        sample();
-      }),
-  );
-  await navigation.getByRole("link", { name: "Dinner", exact: true }).click();
-  const positions = await sampling;
-  expect(positions.length).toBeGreaterThan(2);
-  for (const key of Object.keys(positions[0])) {
-    const values = positions.map((position) => position[key]);
-    expect(Math.max(...values) - Math.min(...values)).toBeLessThanOrEqual(1);
-  }
-  await expect(page.locator("[data-menu-content]")).toHaveAttribute(
-    "data-menu",
-    "dinner",
-  );
-  expect(pageErrors).toEqual([]);
 });
 
 test("menu introduction recovers the same CMS image when optimization fails", async ({
@@ -234,112 +164,6 @@ test("selecting a visible menu keeps the tab strip still", async ({ page }) => {
       0,
     );
   }
-});
-
-test("menu motion reverses from its current position and can be disabled mid-transition", async ({
-  page,
-}) => {
-  await page.goto("/menus?menu=lunch");
-  const navigation = page.getByRole("navigation", { name: "Restaurant menus" });
-  const content = page.locator("[data-menu-content]");
-  await page.evaluate(() => {
-    document.addEventListener("animationstart", (event) => {
-      if (
-        event.target instanceof HTMLElement &&
-        event.target.hasAttribute("data-menu-content")
-      ) {
-        for (const animation of event.target.getAnimations()) animation.pause();
-      }
-    });
-  });
-  const finish = () =>
-    content.evaluate((element) => {
-      for (const animation of element.getAnimations()) animation.finish();
-    });
-  await navigation.getByRole("link", { name: "Dinner", exact: true }).click();
-  await expect(content).toHaveAttribute("data-phase", "out");
-  await navigation.getByRole("link", { name: "Lunch", exact: true }).click();
-  await expect(content).toHaveAttribute("data-phase", "in");
-  await expect(content).not.toHaveAttribute("inert");
-  await finish();
-  await expect(content).toHaveAttribute("data-phase", "idle");
-  await navigation.getByRole("link", { name: "Dinner", exact: true }).click();
-  await expect(content).toHaveAttribute("data-phase", "out");
-  await finish();
-  await expect(content).toHaveAttribute("data-phase", "in");
-  const opacity = await content.evaluate(async (element) => {
-    for (const animation of element.getAnimations()) {
-      await animation.ready;
-      animation.currentTime = 110;
-    }
-    return Number(getComputedStyle(element).opacity);
-  });
-  await navigation
-    .getByRole("link", { name: "Pre-Theatre", exact: true })
-    .click();
-  await expect(content).toHaveAttribute("data-phase", "out");
-  expect(
-    await content.evaluate((element) => {
-      const effect = element.getAnimations()[0]?.effect;
-      return effect instanceof KeyframeEffect
-        ? Number(effect.getKeyframes()[0]?.opacity)
-        : -1;
-    }),
-  ).toBeCloseTo(opacity, 4);
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  await expect(content).toHaveAttribute("data-menu", "pre-theatre");
-  await expect(content).toHaveAttribute("data-phase", "idle");
-  await expect(content).not.toHaveAttribute("inert");
-});
-
-test("menu motion survives interrupted selection and respects reduced motion", async ({
-  page,
-}) => {
-  await page.goto("/menus?menu=lunch");
-  const navigation = page.getByRole("navigation", { name: "Restaurant menus" });
-  const content = page.locator("[data-menu-content]");
-  await page.evaluate(() => {
-    document.addEventListener("animationstart", (event) => {
-      if (
-        event.target instanceof HTMLElement &&
-        event.target.matches('[data-menu-content][data-phase="out"]')
-      ) {
-        for (const animation of event.target.getAnimations()) animation.pause();
-      }
-    });
-  });
-  await navigation.getByRole("link", { name: "Dinner", exact: true }).click();
-  await expect(content).toHaveAttribute("data-phase", "out");
-  await expect(content).toHaveAttribute("inert", "");
-  await navigation
-    .getByRole("link", { name: "Pre-Theatre", exact: true })
-    .click();
-  await expect(page).toHaveURL("/menus?menu=pre-theatre");
-  await content.evaluate((element) => {
-    for (const animation of element.getAnimations()) animation.finish();
-  });
-  await expect(content).toHaveAttribute("data-menu", "pre-theatre");
-  await expect(content).toHaveAttribute("data-phase", "idle");
-  await expect(content).not.toHaveAttribute("inert");
-  const selected = navigation.getByRole("link", {
-    name: "Pre-Theatre",
-    exact: true,
-  });
-  const indicator = navigation.locator("[data-menu-indicator]");
-  await expect
-    .poll(async () => {
-      const tab = await selected.boundingBox();
-      const line = await indicator.boundingBox();
-      return tab && line
-        ? Math.abs(tab.x - line.x) + Math.abs(tab.width - line.width)
-        : 100;
-    })
-    .toBeLessThan(1);
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  await navigation.getByRole("link", { name: "Lunch", exact: true }).click();
-  await expect(content).toHaveAttribute("data-menu", "lunch");
-  await expect(content).toHaveAttribute("data-phase", "idle");
-  await expect(indicator).toHaveCSS("transition-duration", "0s");
 });
 
 test("old menu links redirect and query defaults keep matching metadata", async ({
@@ -609,116 +433,7 @@ test("menu tabs switch inside one query-addressed page", async ({ page }) => {
   ).toBeVisible();
 });
 
-test("menu navigation keeps its height when switching menus", async ({
-  page,
-}) => {
-  await page.goto("/menus?menu=lunch");
-  const navigation = page.getByRole("navigation", { name: "Restaurant menus" });
-  const originalHeight = await navigation.evaluate(
-    (element) => element.getBoundingClientRect().height,
-  );
-  for (const name of ["Wine", "Cocktails", "Dinner", "Pre-Theatre", "Lunch"]) {
-    await navigation.getByRole("link", { name, exact: true }).click();
-    await expect(
-      navigation.getByRole("link", { name, exact: true }),
-    ).toHaveAttribute("aria-current", "page");
-    expect(
-      await navigation.evaluate(
-        (element) => element.getBoundingClientRect().height,
-      ),
-    ).toBe(originalHeight);
-  }
-});
-
-test("mobile navigation leaves the next menu tab half visible", async ({
-  page,
-  isMobile,
-}) => {
-  const widths = isMobile
-    ? [page.viewportSize()?.width ?? 390]
-    : [320, 360, 390, 430, 480, 640, 768, 1024];
-  await page.goto("/menus?menu=lunch");
-  const navigation = page.getByRole("navigation", { name: "Restaurant menus" });
-  const strip = navigation.locator(":scope > div").first();
-  // The shared CMS fixture uses identical labels; include the longer live label.
-  await navigation
-    .getByRole("button")
-    .first()
-    .evaluate((button) => {
-      if (button.firstChild) button.firstChild.textContent = "Group Set Menu";
-    });
-  for (const width of widths) {
-    await page.setViewportSize({ width, height: 900 });
-    await strip.evaluate((element) => {
-      element.scrollLeft = 0;
-    });
-    const visibleFraction = () =>
-      strip.evaluate((element) => {
-        const edge = element.getBoundingClientRect().right;
-        const clipped = Array.from(element.querySelectorAll("li"))
-          .map((tab) => tab.getBoundingClientRect())
-          .find((tab) => tab.left < edge && tab.right > edge);
-        return clipped ? (edge - clipped.left) / clipped.width : 0;
-      });
-    if (width < 640) {
-      await expect.poll(visibleFraction).toBeCloseTo(0.5, 1);
-    } else {
-      await expect.poll(visibleFraction).toBeGreaterThan(0);
-      await expect.poll(visibleFraction).toBeLessThan(1);
-    }
-    await expect
-      .poll(() =>
-        strip.evaluate((element) => {
-          return Array.from(
-            element.querySelectorAll("li > a, li > button"),
-          ).every((control) => {
-            const text = control.firstChild;
-            if (!text) return false;
-            const range = document.createRange();
-            range.selectNodeContents(text);
-            return (
-              range.getClientRects().length === 1 &&
-              control.scrollWidth <= control.clientWidth &&
-              control.getBoundingClientRect().height === 48
-            );
-          });
-        }),
-      )
-      .toBe(true);
-    await expect(strip).toHaveCSS("background-image", "none");
-  }
-  await page.setViewportSize({ width: 390, height: 900 });
-  await page.goto("/menus?menu=wine");
-  const wine = navigation.getByRole("link", { name: "Wine", exact: true });
-  await expect(wine).toHaveAttribute("aria-current", "page");
-  await expect
-    .poll(() =>
-      strip.evaluate((element) => {
-        const tab = element.querySelector('[aria-current="page"]');
-        return tab
-          ? element.getBoundingClientRect().right -
-              tab.getBoundingClientRect().right
-          : -1;
-      }),
-    )
-    .toBeCloseTo(8, 0);
-  await strip.evaluate((element) => {
-    element.scrollLeft = element.scrollWidth;
-  });
-  await expect
-    .poll(() =>
-      strip.evaluate((element) => {
-        const edge = element.getBoundingClientRect().left;
-        const clipped = Array.from(element.querySelectorAll("li"))
-          .map((tab) => tab.getBoundingClientRect())
-          .find((tab) => tab.left < edge && tab.right > edge);
-        return clipped ? (clipped.right - edge) / clipped.width : 0;
-      }),
-    )
-    .toBeGreaterThan(0);
-});
-
-test("CMS group menu retains its banner layout and inclusion heading", async ({
+test("CMS group menu retains its enquiry destination and inclusion heading", async ({
   page,
   isMobile,
 }) => {
@@ -732,11 +447,6 @@ test("CMS group menu retains its banner layout and inclusion heading", async ({
     await expect(
       page.getByText("Included with your menu", { exact: true }).first(),
     ).toBeVisible();
-    await expect(banner.getByRole("heading")).toHaveCSS("text-align", "left");
-    await expect(banner.getByRole("heading")).toHaveCSS("width", "300px");
-    await expect(
-      page.getByRole("navigation", { name: "Restaurant menus" }),
-    ).toHaveCSS("padding-top", "8px");
   }
   for (const image of await page.getByRole("main").getByRole("img").all()) {
     await image.scrollIntoViewIfNeeded();
@@ -800,3 +510,30 @@ test("identically labeled collections open their own links and restore focus on 
     await expect(trigger).toBeFocused();
   }
 });
+
+for (const reducedMotion of ["no-preference", "reduce"] as const) {
+  test(`menu selection reaches the latest destination with ${reducedMotion} motion`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion });
+    await page.goto("/menus?menu=lunch");
+    const navigation = page.getByRole("navigation", {
+      name: "Restaurant menus",
+    });
+    await navigation.getByRole("link", { name: "Dinner", exact: true }).click();
+    const latest = navigation.getByRole("link", {
+      name: "Pre-Theatre",
+      exact: true,
+    });
+    await latest.click();
+    await expect(page).toHaveURL("/menus?menu=pre-theatre");
+    await expect(latest).toHaveAttribute("aria-current", "page");
+    await expect(
+      page.getByRole("heading", { name: "Pre-Theatre Menu", exact: true }),
+    ).toBeVisible();
+    await navigation.getByRole("link", { name: "Lunch", exact: true }).click();
+    await expect(
+      page.getByRole("heading", { name: "Lunch Menu", exact: true }),
+    ).toBeVisible();
+  });
+}

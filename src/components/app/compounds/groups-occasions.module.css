@@ -125,8 +125,9 @@
 .overlay {
   background: linear-gradient(
     180deg,
-    rgb(var(--overlay-warm-ink-rgb) / 6.3%) 0%,
-    rgb(var(--overlay-warm-ink-rgb) / 91%) 100%
+    rgb(var(--overlay-warm-ink-rgb) / 0%) 15%,
+    rgb(var(--overlay-warm-ink-rgb) / 70%) 45%,
+    rgb(var(--overlay-warm-ink-rgb) / 95%) 100%
   );
 }
 

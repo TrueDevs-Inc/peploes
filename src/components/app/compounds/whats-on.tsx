@@ -138,7 +138,7 @@ export function WhatsOn({ events }: IWhatsOnProps) {
           data-scroll-reveal
           className="flex flex-col items-start gap-4 xl:flex-row xl:items-end xl:justify-between xl:gap-8"
         >
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-4 sm:gap-7">
               <p className="flex items-center gap-2 text-xs leading-4 font-medium tracking-[0.1em] uppercase">
                 <span

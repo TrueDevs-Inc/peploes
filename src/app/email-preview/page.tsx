@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-
+import emailLogo from "@/lib/email-logo.json";
 import { renderEnquiryAdmin, renderEnquiryGuest } from "@/lib/email-templates";
 import { env } from "@/lib/env";
 
@@ -43,7 +43,10 @@ export default function EmailPreviewPage() {
           <p>Template: {template.template}</p>
           <iframe
             title={`${template.template} HTML preview`}
-            srcDoc={template.html}
+            srcDoc={template.html.replace(
+              `cid:${emailLogo.contentId}`,
+              `data:${emailLogo.contentType};base64,${emailLogo.content}`,
+            )}
             style={{
               width: "100%",
               height: 580,

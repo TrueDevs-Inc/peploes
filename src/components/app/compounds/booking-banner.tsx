@@ -31,7 +31,7 @@ export function BookingBanner() {
           data-scroll-reveal
           className="relative flex flex-col items-start gap-6 sm:gap-7"
         >
-          <div className="flex flex-col gap-4 sm:gap-6">
+          <div className="flex flex-col gap-5 sm:gap-6">
             <h2
               id="booking-banner-heading"
               className={cn(

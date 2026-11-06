@@ -49,7 +49,7 @@ export function MenuBooking({
           "site-container flex flex-col items-end gap-6 py-(--menu-booking-mobile-padding) xl:py-12",
           !booking.description && "xl:gap-4",
           booking.description && "xl:py-10",
-          booking.fullWidthOnMobile && "gap-4 xl:gap-6",
+          booking.fullWidthOnMobile && "gap-5 xl:gap-6",
           alignLeft &&
             "items-start [&>h2]:text-left [&>p]:text-left xl:grid xl:grid-cols-[1fr_var(--menu-booking-content-width)] xl:justify-items-start xl:[&>*]:col-start-2",
         )}
@@ -71,8 +71,8 @@ export function MenuBooking({
           <p
             className={cn(
               ebGaramond.className,
-              "-mt-3 max-w-full text-right text-base leading-[21px] xl:w-(--menu-booking-content-width) xl:leading-5 xl:[text-align:var(--menu-booking-text-align)]",
-              booking.fullWidthOnMobile && "-mt-0.5 leading-[22px] xl:-mt-3",
+              "-mt-1 hidden max-w-full text-right text-base leading-[21px] sm:block xl:w-(--menu-booking-content-width) xl:leading-5 xl:[text-align:var(--menu-booking-text-align)]",
+              booking.fullWidthOnMobile && "mt-0 leading-[22px] xl:-mt-1",
             )}
           >
             {booking.description}

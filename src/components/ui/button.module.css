@@ -7,6 +7,7 @@
   justify-content: inherit;
   gap: inherit;
   text-decoration: inherit;
+  text-decoration-color: inherit;
   text-underline-offset: inherit;
 }
 

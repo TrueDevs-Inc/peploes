@@ -14,8 +14,8 @@ import {
 } from "date-fns";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { type KeyboardEvent, useRef, useState } from "react";
-
 import styles from "@/components/app/atoms/date-calendar.module.css";
+import { Button } from "@/components/ui/button";
 import { CALENDAR_NAMES } from "@/lib/constants";
 import { dublinToday, isCalendarDate } from "@/lib/dates";
 import type { IDateCalendarProps } from "@/lib/types";
@@ -82,22 +82,24 @@ export function DateCalendar({
     >
       <div className={styles.header}>
         <strong aria-live="polite">{format(month, "MMMM yyyy")}</strong>
-        <button
+        <Button
+          variant="plain"
           type="button"
           aria-label="Previous month"
           disabled={Boolean(min && format(month, "yyyy-MM") <= min.slice(0, 7))}
           onClick={() => changeMonth(-1)}
         >
           <ArrowLeft aria-hidden="true" />
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="plain"
           type="button"
           aria-label="Next month"
           disabled={!isCalendarDate(format(addMonths(month, 1), "yyyy-MM-dd"))}
           onClick={() => changeMonth(1)}
         >
           <ArrowRight aria-hidden="true" />
-        </button>
+        </Button>
       </div>
       <div className={styles.grid}>
         {days.slice(0, 7).map((day) => (
@@ -108,7 +110,8 @@ export function DateCalendar({
         {days.map((day) => {
           const date = format(day, "yyyy-MM-dd");
           return (
-            <button
+            <Button
+              variant="plain"
               type="button"
               key={date}
               aria-label={format(day, "EEEE, d MMMM yyyy")}
@@ -127,7 +130,7 @@ export function DateCalendar({
               onClick={() => onChange(date)}
             >
               {format(day, "d")}
-            </button>
+            </Button>
           );
         })}
       </div>

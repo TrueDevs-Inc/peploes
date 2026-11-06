@@ -42,7 +42,7 @@ export function SeasonalJoin({ join }: ISeasonalJoinProps) {
           <p className={styles.eyebrow}>{join.eyebrow}</p>
           <h2 id="seasonal-join">{join.heading}</h2>
           <p className={styles.description}>{join.description}</p>
-          <div className="mt-6 flex flex-col gap-2.5 sm:mt-7 sm:flex-row sm:flex-wrap sm:gap-5">
+          <div data-button-pair className="mt-6 gap-2.5 sm:mt-7 sm:gap-5">
             <Button
               asChild
               variant="brand-primary"
