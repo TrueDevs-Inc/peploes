@@ -235,7 +235,6 @@
 }
 
 @media (width < 40rem) {
-  .heroCopy .description,
   .joinCopy .description {
     display: none;
   }
@@ -518,7 +517,7 @@
 
 @media (width < 40rem) {
   .heroCopy {
-    min-height: calc(100dvh - 72px);
+    min-height: calc(100svh - 72px);
     padding-block: 40px 80px;
   }
 
