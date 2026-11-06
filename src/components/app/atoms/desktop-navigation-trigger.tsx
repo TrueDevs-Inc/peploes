@@ -37,8 +37,8 @@ export function DesktopNavigationTrigger({
       }}
       className={cn(
         FOCUS_RING,
-        "h-11 rounded-sm p-0 text-base leading-[22px] font-medium text-ink focus-visible:ring-peploe-burgundy data-[active=true]:text-peploe-burgundy data-[active=true]:underline",
-        isOpen && "text-peploe-burgundy underline",
+        "h-11 rounded-sm p-0 text-base leading-[22px] font-medium text-ink focus-visible:ring-peploe-burgundy data-[active=true]:text-peploe-burgundy data-[active=true]:decoration-current",
+        isOpen && "text-peploe-burgundy decoration-current",
       )}
     >
       {href ? (

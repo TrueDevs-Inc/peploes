@@ -85,11 +85,9 @@ subscription success is promised by the booking confirmation.
 
 ## Visit & Contact
 
-The general contact form sends one restaurant notification through the selected
-transactional email provider. It shows success only after provider acceptance,
-keeps the visitor's entries on definite failure, and directs uncertain outcomes
-to the published phone or email contact. The private-dining form remains a
-separate enquiry flow.
+The `/contact` page uses direct phone and email links and the shared gathering
+enquiry immediately before the closing section. It replaces the general contact
+form. Enquiry delivery follows the private-dining contract.
 
 Phone, email, directions and booking links must work on phones and desktops.
 Mapbox loads automatically and keeps a local preview and directions when
@@ -108,7 +106,8 @@ focus. Mobile menus contain focus, prevent background scrolling and close
 on navigation or a desktop resize. Reduced motion must leave controls usable.
 
 Footer legal links reach Privacy, Terms, Accessibility and Booking & Cancellation.
-Cookie Settings opens the consent dialog. Necessary cookies stay enabled;
+Cookie Settings opens the consent dialog where shown. It and its separator stay
+hidden in the mobile footer. The footer remains visible without scroll reveal. Necessary cookies stay enabled;
 optional choices are separate. Failed storage must report a failed save and
 keep optional tracking denied. See the analytics guides for delivery policy.
 Unknown policy URLs return 404. Restaurant approval of legal copy, opening
@@ -269,3 +268,7 @@ message stays visible until dismissal.
 Newsletter signup validates the address and submits to the configured provider.
 Show acceptance only after provider acceptance. Unconfigured delivery reports
 unavailable; definite failures preserve the address for correction or retry.
+
+Newsletter email fields support native saved-email autofill, disable custom
+suggestions and use inline validation. Occasion images and titles link to their
+matching destinations. Descriptive copy wraps within its content column.

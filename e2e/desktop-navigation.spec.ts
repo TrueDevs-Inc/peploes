@@ -26,6 +26,7 @@ for (const destination of [
     await expect(link).toHaveAttribute("href", destination.href);
     await link.hover();
     await expect(link).not.toHaveAttribute("aria-expanded");
+    await expect(link).not.toHaveAttribute("aria-controls");
     await link.focus();
     await link.press("ArrowDown");
     await link.press("Enter");
@@ -39,3 +40,25 @@ for (const destination of [
     await expect(page).toHaveURL(destination.href);
   });
 }
+
+test("desktop Menus opens Lunch by pointer and keyboard", async ({ page }) => {
+  const menus = page
+    .getByRole("navigation", { name: "Main navigation", exact: true })
+    .getByRole("link", { name: "Menus", exact: true });
+
+  await expect(menus).toHaveAttribute("href", "/menus");
+  await menus.click();
+  await expect(page).toHaveURL("/menus");
+  await expect(
+    page.getByRole("heading", { name: "Lunch Menu", exact: true }),
+  ).toBeVisible();
+  await expect(menus).not.toHaveAttribute("aria-expanded");
+
+  await page.goto("/menus?menu=dinner");
+  await menus.focus();
+  await menus.press("Enter");
+  await expect(page).toHaveURL("/menus");
+  await expect(
+    page.getByRole("heading", { name: "Lunch Menu", exact: true }),
+  ).toBeVisible();
+});

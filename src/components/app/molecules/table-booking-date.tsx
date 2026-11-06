@@ -22,6 +22,7 @@ import {
 } from "react";
 
 import styles from "@/components/app/compounds/table-booking-panel.module.css";
+import { Button } from "@/components/ui/button";
 import { TABLE_BOOKING_CONTENT } from "@/lib/constants/table-booking";
 import { dublinToday, isBookableDay, monthGrid } from "@/lib/dates";
 import type { ITableBookingDateProps } from "@/lib/types";
@@ -155,7 +156,8 @@ export function TableBookingDate({
       <span id="booking-date-label" className={styles.fieldLabel}>
         {TABLE_BOOKING_CONTENT.date.label}
       </span>
-      <button
+      <Button
+        variant="plain"
         ref={trigger}
         type="button"
         aria-labelledby="booking-date-label booking-date-value"
@@ -178,7 +180,7 @@ export function TableBookingDate({
             : TABLE_BOOKING_CONTENT.date.placeholder}
         </span>
         <ChevronDown aria-hidden="true" className={styles.chevron} />
-      </button>
+      </Button>
       {open && (
         <fieldset
           ref={grid}
@@ -194,7 +196,8 @@ export function TableBookingDate({
         >
           <div className={styles.calendarHeader}>
             <strong aria-live="polite">{format(month, "MMMM yyyy")}</strong>
-            <button
+            <Button
+              variant="plain"
               type="button"
               aria-label="Previous month"
               aria-disabled={atFirstMonth}
@@ -207,8 +210,9 @@ export function TableBookingDate({
               }}
             >
               <ArrowLeft aria-hidden="true" />
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="plain"
               type="button"
               aria-label="Next month"
               aria-disabled={atLastMonth}
@@ -221,7 +225,7 @@ export function TableBookingDate({
               }}
             >
               <ArrowRight aria-hidden="true" />
-            </button>
+            </Button>
           </div>
           <div className={styles.calendarGrid}>
             {TABLE_BOOKING_CONTENT.weekdays.map((day) => (
@@ -232,7 +236,8 @@ export function TableBookingDate({
             {days.map((day) => {
               const date = format(day, "yyyy-MM-dd");
               return (
-                <button
+                <Button
+                  variant="plain"
                   type="button"
                   key={date}
                   aria-label={format(day, "EEEE, d MMMM yyyy")}
@@ -251,7 +256,7 @@ export function TableBookingDate({
                   }}
                 >
                   {format(day, "d")}
-                </button>
+                </Button>
               );
             })}
           </div>

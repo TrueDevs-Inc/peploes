@@ -130,6 +130,7 @@ export function TableBookingDetails({
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
+        if (sending) return;
         const form = event.currentTarget;
         setAttempted(true);
         if (Object.values(invalid).some(Boolean)) {
@@ -330,19 +331,21 @@ export function TableBookingDetails({
         </p>
       )}
       <div className={styles.flowActions}>
-        <button
+        <Button
+          variant="plain"
           type="button"
           className={styles.backAction}
           disabled={sending}
           onClick={onBack}
         >
           <ArrowLeft aria-hidden="true" /> Back to times
-        </button>
+        </Button>
         <Button
           type="submit"
           variant="brand-primary"
           className={styles.continueAction}
           disabled={sending}
+          aria-busy={sending}
         >
           {sending ? copy.sending : copy.action}
           <ArrowRight aria-hidden="true" />

@@ -42,7 +42,7 @@ test("Visit loads the map automatically and its location controls work", async (
       .getByRole("link", { name: "Visit & Contact", exact: true })
       .click();
   }
-  await expect(page).toHaveURL(/\/visit-contact$/);
+  await expect(page).toHaveURL(/\/contact$/);
   await expect(
     page.getByRole("button", {
       name: "Explore the map",
@@ -115,7 +115,7 @@ test("a Mapbox failure preserves the preview and directions", async ({
   page,
 }) => {
   await page.route("https://*.mapbox.com/**", (route) => route.abort("failed"));
-  await page.goto("/visit-contact#find-us");
+  await page.goto("/contact#find-us");
   await expect(
     page.getByText(
       "Interactive map unavailable. You can still get directions.",

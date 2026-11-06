@@ -1,7 +1,9 @@
 # Transactional email
 
-Issue #100 owns application email delivery. The private-dining enquiry and
-general Visit & Contact form are callers. Reservation messages belong to
+Issue #100 owns application email delivery. The shared gathering enquiry on
+private-dining pages and Visit & Contact is a public caller. General enquiries
+use phone and email links; the separate contact delivery implementation remains
+available without a form on the page. Reservation messages belong to
 ResDiary until #97 confirms a gap;
 newsletter subscriptions belong to #88.
 
@@ -29,6 +31,16 @@ Resend requires `EMAIL_RESEND_API_KEY` and a verified domain matching the same
 approved From identity. Both paths require `EMAIL_FROM_ADDRESS`,
 `EMAIL_FROM_NAME`, `EMAIL_REPLY_TO`, and `EMAIL_RESTAURANT_TO`.
 
+Existing deployment names are also supported: `SMTP_HOST`, `SMTP_PORT`,
+`SMTP_USER`, `SMTP_PASS`, and `RESEND_API_KEY` supply their corresponding
+`EMAIL_*` settings. `SMTP_PASS` implies app-password authentication when no
+explicit authentication method is set. `SMTP_FROM_EMAIL` or `RESEND_FROM_EMAIL`
+supplies the sender for the selected provider; `RESEND_FROM_NAME` supplies the
+display name. `ADMIN_EMAIL` supplies both the restaurant destination and
+Reply-To. Non-empty explicit `EMAIL_*` values take precedence. No provider
+credentials are shared across providers. `NOTIFICATION_BCC_EMAILS` is not a
+staging allowlist and does not authorize enquiry recipients.
+
 The enquiry action requires `UPSTASH_REDIS_REST_URL`,
 `UPSTASH_REDIS_REST_TOKEN`, and `EMAIL_RATE_LIMIT_SECRET`. It fails closed when
 the limit cannot be checked. The current limit is three submissions per visitor
@@ -48,6 +60,14 @@ timed-out rate-limit checks emit sanitized Sentry errors. An exhausted visitor
 quota is an expected refusal and does not emit an error event.
 
 ## Delivery records and recovery
+
+HTML emails embed the Peploe's PNG wordmark as an inline Content-ID attachment
+through both SMTP and Resend. The logo does not need a public image URL or a
+running local server. `/email-preview` displays the same attachment bytes as a
+data URL because browsers do not resolve email Content-IDs. Text alternatives
+remain available when a mail client suppresses images. The header PNG includes
+its opaque cream background so a client darkening HTML backgrounds cannot hide
+the dark wordmark against a recolored background.
 
 The `email_deliveries` table stores an opaque ID, payload hash, template,
 selected provider, status, and provider ID. It stores no recipient or message

@@ -76,6 +76,14 @@ Shared motion uses CSS and IntersectionObserver. Animate `transform` and
 `opacity`. Respect `prefers-reduced-motion`. Avoid JavaScript animation
 libraries until CSS cannot express a required interaction.
 
+Shared text buttons keep their underline transparent at rest and transition its color on hover, including on exit, using the same `--duration-base` and `--ease-organic` tokens as the arrow transition. Active navigation keeps a visible underline. Reduced motion disables the transition.
+
+The Visit map address popup fades in and out with the shared base duration and organic easing. Its top pointer is anchored to the marker tip; the popup stays mounted until its closing animation ends. Reduced motion opens and closes it immediately.
+
+Section links use native smooth scrolling when the visitor has no reduced-motion
+preference. Reduced motion keeps instant scrolling. The root layout declares
+`data-scroll-behavior="smooth"` so Next.js can keep route navigation instant.
+
 ## Verification
 
 ```bash

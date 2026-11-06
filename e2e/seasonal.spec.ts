@@ -79,7 +79,7 @@ test("the homepage What's On link reaches the hub and its contact action reaches
       exact: true,
     })
     .click();
-  await expect(page).toHaveURL("/visit-contact");
+  await expect(page).toHaveURL("/contact");
   await expect(
     page.getByRole("heading", { name: "Step down from the city.", level: 1 }),
   ).toBeVisible();

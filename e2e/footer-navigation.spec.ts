@@ -1,6 +1,6 @@
 import { expect, test } from "./menu-test";
 
-test("mobile footer legal links keep accessible names, touch targets and cookie settings", async ({
+test("mobile footer legal links keep accessible names, touch targets", async ({
   page,
   viewport,
 }) => {
@@ -8,7 +8,7 @@ test("mobile footer legal links keep accessible names, touch targets and cookie 
     await page.setViewportSize({ width: 390, height: 844 });
   }
 
-  for (const path of ["/", "/visit-contact"]) {
+  for (const path of ["/", "/contact"]) {
     await page.goto(path);
     const footer = page.getByRole("contentinfo");
     const legal = footer.getByRole("navigation", {
@@ -16,13 +16,12 @@ test("mobile footer legal links keep accessible names, touch targets and cookie 
     });
     const controls = legal.getByRole("link").or(legal.getByRole("button"));
     await page.evaluate(() => document.fonts.ready);
-    await expect(controls).toHaveCount(5);
+    await expect(controls).toHaveCount(4);
     for (const [index, name] of [
       "Privacy Policy",
       "Terms",
       "Accessibility",
       "Booking & Cancellation",
-      "Cookie Settings",
     ].entries()) {
       await expect(controls.nth(index)).toHaveAccessibleName(name);
     }
@@ -30,13 +29,7 @@ test("mobile footer legal links keep accessible names, touch targets and cookie 
       await controls.evaluateAll((elements) =>
         elements.map((element) => (element as HTMLElement).innerText),
       ),
-    ).toEqual([
-      "Privacy",
-      "Terms",
-      "Accessibility",
-      "Booking",
-      "Cookie Settings",
-    ]);
+    ).toEqual(["Privacy", "Terms", "Accessibility", "Booking"]);
     for (const control of [
       ...(await controls.all()),
       footer.getByRole("link", { name: /on Instagram/ }),
@@ -51,14 +44,12 @@ test("mobile footer legal links keep accessible names, touch targets and cookie 
     await expect(
       legal.getByRole("link", { name: "Privacy Policy", exact: true }),
     ).toHaveAttribute("href", "/privacy-policy");
-    await legal.getByRole("button", { name: "Cookie Settings" }).click();
     await expect(
-      page.getByRole("dialog", { name: "Cookie Preferences" }),
-    ).toBeVisible();
-    await page.keyboard.press("Escape");
-    await expect(
-      legal.getByRole("button", { name: "Cookie Settings" }),
-    ).toBeFocused();
+      legal.getByRole("button", {
+        name: "Cookie Settings",
+        includeHidden: true,
+      }),
+    ).toBeHidden();
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,
@@ -138,7 +129,7 @@ test("footer Explore matches desktop links and keeps them reachable", async ({
   await page.keyboard.press("Space");
   await expect(story).toBeVisible();
   await contact.click();
-  await expect(page).toHaveURL("/visit-contact");
+  await expect(page).toHaveURL("/contact");
 });
 
 test("footer Journal link opens the hub", async ({ page, viewport }) => {
@@ -224,6 +215,6 @@ test("mobile footer address opens the restaurant location", async ({
     exact: true,
   });
   await address.click();
-  await expect(page).toHaveURL("/visit-contact#find-us");
+  await expect(page).toHaveURL("/contact#find-us");
   await expect(page.locator("#find-us")).toBeInViewport();
 });

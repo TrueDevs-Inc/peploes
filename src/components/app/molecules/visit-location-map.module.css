@@ -63,5 +63,81 @@
 }
 .popupAddress {
   white-space: pre-line;
-  padding-right: 16px;
+  margin: 0;
+  padding: 20px 52px 20px 20px;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 24px;
+}
+
+.popup {
+  font-family: inherit;
+  animation: popup-open var(--duration-base) var(--ease-organic) both;
+  filter: drop-shadow(0 8px 18px rgb(45 35 30 / 14%));
+}
+.popup [class~="mapboxgl-popup-content"] {
+  padding: 0;
+  background: var(--warm-cream);
+  border-radius: 8px;
+  box-shadow: none;
+}
+.popup[class~="mapboxgl-popup-anchor-top"] [class~="mapboxgl-popup-tip"] {
+  border-bottom-color: var(--warm-cream);
+  border-width: 8px;
+  border-top-width: 0;
+}
+.popupClose {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--peploe-burgundy);
+  font-size: 24px;
+  cursor: pointer;
+  transition: background-color var(--duration-base) var(--ease-organic);
+}
+.popupClose:hover {
+  background: var(--soft-stone);
+}
+.popupClose:focus-visible {
+  outline: 2px solid var(--peploe-burgundy);
+  outline-offset: -4px;
+}
+.popupClosing {
+  pointer-events: none;
+  animation: popup-close var(--duration-base) var(--ease-organic) both;
+}
+.popupClosing [class~="mapboxgl-popup-content"] {
+  pointer-events: none;
+}
+@keyframes popup-open {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes popup-close {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .popup {
+    animation-duration: 1ms;
+  }
+  .popupClose {
+    transition: none;
+  }
 }

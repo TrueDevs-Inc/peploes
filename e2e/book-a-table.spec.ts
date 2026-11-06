@@ -589,7 +589,7 @@ for (const newsletterOptIn of [false, true]) {
     ).toHaveAttribute("href", "/menus");
     await expect(
       reservations.getByRole("link", { name: "Plan Your Visit", exact: true }),
-    ).toHaveAttribute("href", "/visit-contact");
+    ).toHaveAttribute("href", "/contact");
     expect(submissions).toHaveLength(3);
     await reservations
       .getByRole("button", { name: "Start again", exact: true })
@@ -863,7 +863,7 @@ for (const { path, count } of [
   { path: "/menus?menu=pre-theatre", count: 1 },
   { path: "/menus?menu=wine", count: 1 },
   { path: "/menus?menu=cocktails", count: 1 },
-  { path: "/visit-contact", count: 3 },
+  { path: "/contact", count: 3 },
 ]) {
   test(`all booking calls to action on ${path} open the booking page`, async ({
     page,

@@ -20,11 +20,13 @@ The overview offers Groups & Celebrations, Corporate Event, Exclusive Hire,
 Wedding and Other. Hero enquiry links reach the page's form; telephone and email
 links reach the restaurant. Images and their actions share a destination.
 
-The group-size selector offers 1–7, matching the booking site limit. Restaurant
-capacity and group-menu eligibility are separate content. Preserve full guest
-names, required consent and entered values after a definite send failure.
+Enquiries accept a positive integer guest count, with an optional
+`NEXT_PUBLIC_ENQUIRY_MAX_GUESTS` cap. The online booking limit is separate.
+Preserve full guest names and entered values after a definite send failure.
 Preferred dates use Europe/Dublin, allow today and later, reject past dates,
-and refresh the minimum when an overnight page is used again.
+and refresh the minimum when an overnight page is used again. The custom
+calendar supports keyboard selection and dismissal. Message resizing must not
+submit the form or lose entered text.
 
 The corporate capacity request to remove '~100 seated + standing' still needs
 designer clarification. Retain it pending that decision. The requested corporate
@@ -36,14 +38,16 @@ Approved design comments omit Decorations from Made personal and Menu choices
 from Good to Know. The wedding late-night food item is Canapés & drinks.
 Local catalogs are preview editorial content, not a connected Sanity dataset.
 
+Enquiry select fields use maroon outline chevrons, centered at the right edge with space reserved beside the text. Decorative icons do not intercept clicks.
+
 ## Enquiry submission
 
 The [email guide](../guides/email-guide.md) owns server validation, rate limits,
 delivery records, configuration and provider failures. Provider acceptance does
 not prove inbox receipt. Missing delivery configuration reports unavailable.
 
-The form enables Send after hydration, validates required fields and consent,
-and focuses the first invalid control. A valid submission shows pending state,
+The form enables Send after hydration, validates required fields with a required-field summary and inline errors.
+There is no agreement checkbox. A valid submission shows pending state,
 then Complete only after confirmed acceptance. A live status announces the result.
 Reduced motion retains usable feedback without animation.
 

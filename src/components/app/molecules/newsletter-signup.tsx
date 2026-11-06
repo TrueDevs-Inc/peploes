@@ -20,10 +20,11 @@ export function NewsletterSignup() {
 
   return (
     <form
-      autoComplete="off"
+      noValidate
       onSubmit={(event) => {
         event.preventDefault();
         if (!ready || pending || submitted || inFlight.current) return;
+        if (!event.currentTarget.checkValidity()) return;
         inFlight.current = true;
         setError("");
         startTransition(async () => {
@@ -54,11 +55,12 @@ export function NewsletterSignup() {
         <div className={styles.field}>
           <input
             id={`${id}-email`}
+            name="email"
             type="email"
             required
             disabled={!ready || pending || submitted}
             pattern=".+@.+\..+"
-            autoComplete="off"
+            autoComplete="email"
             autoCapitalize="none"
             spellCheck={false}
             placeholder={FOOTER_CONTENT.newsletter.emailLabel}
@@ -71,6 +73,8 @@ export function NewsletterSignup() {
               setSubmitted(false);
             }}
             onInvalid={(event) => {
+              event.preventDefault();
+              event.currentTarget.focus();
               setError(
                 event.currentTarget.validity.valueMissing
                   ? FOOTER_CONTENT.newsletter.requiredError

@@ -4,6 +4,7 @@ import { LocateFixed } from "lucide-react";
 import type { Map as MapboxMap } from "mapbox-gl";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 import layout from "@/components/app/compounds/visit-contact.module.css";
@@ -79,16 +80,74 @@ export function VisitLocationMap() {
             "aria-label",
             VISIT_CONTACT_CONTENT.location.map.markerLabel,
           );
-          const popup = document.createElement("p");
-          popup.className = styles.popupAddress;
-          popup.textContent = VISIT_CONTACT_CONTENT.contact.address;
+          const address = document.createElement("p");
+          address.className = styles.popupAddress;
+          address.textContent = VISIT_CONTACT_CONTENT.contact.address;
+          const close = document.createElement("button");
+          close.type = "button";
+          close.className = styles.popupClose;
+          close.setAttribute(
+            "aria-label",
+            VISIT_CONTACT_CONTENT.location.map.popupCloseLabel,
+          );
+          close.textContent = "×";
+          const content = document.createElement("div");
+          content.append(address, close);
+          const popup = new mapbox.Popup({
+            anchor: "top",
+            offset: 4,
+            className: styles.popup,
+            closeButton: false,
+            closeOnClick: false,
+            maxWidth: "260px",
+          })
+            .setLngLat([...VISIT_MAP.center])
+            .setDOMContent(content);
+          marker.setAttribute("aria-expanded", "false");
+          function closePopup() {
+            if (!popup.isOpen()) return;
+            marker.setAttribute("aria-expanded", "false");
+            marker.focus({ preventScroll: true });
+            if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+              popup.remove();
+            } else {
+              popup.getElement()?.classList.add(styles.popupClosing);
+            }
+          }
+          marker.addEventListener("click", (event) => {
+            event.stopPropagation();
+            if (marker.getAttribute("aria-expanded") === "true") {
+              closePopup();
+              return;
+            }
+            if (!map) return;
+            popup.addTo(map);
+            const popupElement = popup.getElement();
+            if (!popupElement) return;
+            popupElement.classList.remove(styles.popupClosing);
+            popupElement.onanimationend = (event) => {
+              if (
+                event.target === popupElement &&
+                popupElement.classList.contains(styles.popupClosing)
+              ) {
+                popup.remove();
+              }
+            };
+            marker.setAttribute("aria-expanded", "true");
+          });
+          close.addEventListener("click", closePopup);
+          content.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") {
+              event.stopPropagation();
+              closePopup();
+            }
+          });
+          marker.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") closePopup();
+          });
+          map.on("click", closePopup);
           new mapbox.Marker({ element: marker, anchor: "bottom" })
             .setLngLat([...VISIT_MAP.center])
-            .setPopup(
-              new mapbox.Popup({ anchor: "top", offset: 8 }).setDOMContent(
-                popup,
-              ),
-            )
             .addTo(map);
           clearTimeout(timeout);
           loaded = true;
@@ -137,7 +196,8 @@ export function VisitLocationMap() {
         </p>
       ) : null}
       {ready ? (
-        <button
+        <Button
+          variant="plain"
           type="button"
           className={styles.recenter}
           aria-label={copy.recenterLabel}
@@ -150,7 +210,7 @@ export function VisitLocationMap() {
           }
         >
           <LocateFixed size={18} aria-hidden="true" />
-        </button>
+        </Button>
       ) : null}
     </div>
   );

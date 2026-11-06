@@ -214,9 +214,9 @@ test("event enquiry reaches the private dining form and contact reaches Visit & 
     name: seasonalPageFixture.join.contactAction,
     exact: true,
   });
-  await expect(contact).toHaveAttribute("href", "/visit-contact");
+  await expect(contact).toHaveAttribute("href", "/contact");
   await contact.click();
-  await expect(page).toHaveURL("/visit-contact");
+  await expect(page).toHaveURL("/contact");
   await expect(
     page.getByRole("heading", {
       name: "Step down from the city.",

@@ -1578,6 +1578,10 @@ export interface IPrivateDiningImageSectionProps {
   children?: ReactNode;
 }
 
+export interface IPrivateDiningDateProps {
+  errorId?: string;
+}
+
 export interface IPrivateDiningEnquiryProps {
   content: IPrivateDiningEnquiryContent;
   compact?: boolean;

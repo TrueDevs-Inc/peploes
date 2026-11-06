@@ -4,8 +4,7 @@ import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import styles from "@/components/app/atoms/site-scroll-reveal.module.css";
 
-const targets =
-  "[data-scroll-reveal], [data-footer-section], [data-footer-meta], [data-footer-homepage-extra]";
+const targets = "[data-scroll-reveal]";
 
 export function SiteScrollReveal() {
   const pathname = usePathname();

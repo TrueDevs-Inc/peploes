@@ -7,6 +7,7 @@ test.beforeEach(async ({ page }) => {
 
 test("the Journal opens the featured story and keeps the six reference cards ahead of newer stories", async ({
   page,
+  viewport,
 }) => {
   await page.goto("/journal");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
@@ -16,10 +17,18 @@ test("the Journal opens the featured story and keeps the six reference cards ahe
   for (const text of [
     "Stories from St Stephen’s Green",
     "Food, wine, people, produce, art and the life of the restaurant.",
-    "Seasonal menus, special evenings, wine dinners and occasions throughout the year, all in the heart of St Stephen’s Green.",
     "Stories from St Stephen’s Green — food, wine, people and the life of Peploe’s.",
   ]) {
     await expect(main.getByText(text, { exact: true })).toBeVisible();
+  }
+  const heroDescription = main.getByText(
+    "Seasonal menus, special evenings, wine dinners and occasions throughout the year, all in the heart of St Stephen’s Green.",
+    { exact: true },
+  );
+  if ((viewport?.width ?? 1440) < 640) {
+    await expect(heroDescription).toBeHidden();
+  } else {
+    await expect(heroDescription).toBeVisible();
   }
   await expect(
     page

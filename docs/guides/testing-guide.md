@@ -126,9 +126,11 @@ in ignored `test-results/`.
 The email browser command builds a separate production-mode test artifact with
 an in-memory delivery-record adapter, an allowed rate-limit response, and an
 intercepted Resend endpoint. It uses synthetic `.test` addresses and exercises
-the real form, server action, enquiry service, and mail service. The database
-integration test owns durable claim behavior; the browser fixture does not
-prove PostgreSQL or inbox receipt.
+the private-dining form, server
+action, enquiry service, and mail service. Visit coverage checks the shared
+gathering enquiry and direct contact links, without a separate general message
+form, even when email is configured. The database integration test owns durable
+claim behavior; the browser fixture does not prove PostgreSQL or inbox receipt.
 
 Set `E2E_BOOKING_DATE=YYYY-MM-DD` to keep the fake provider and booking browser
 fixtures on one Dublin date, including when the host crosses midnight.

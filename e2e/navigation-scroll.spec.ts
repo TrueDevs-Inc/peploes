@@ -2,7 +2,7 @@ import { expect, test } from "./menu-test";
 
 for (const destination of [
   { label: "Menus", path: "/menus" },
-  { label: "Visit & Contact", path: "/visit-contact" },
+  { label: "Visit & Contact", path: "/contact" },
 ]) {
   test(`${destination.label} opens at the top without a footer flash`, async ({
     page,

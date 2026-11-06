@@ -14,6 +14,7 @@ const settings = vi.hoisted(() => ({
   EMAIL_RESTAURANT_TO: "restaurant@example.test",
   EMAIL_REPLY_TO: "reply@example.test",
   NEXT_PUBLIC_SITE_URL: "https://example.test",
+  NEXT_PUBLIC_ENQUIRY_MAX_GUESTS: undefined as number | undefined,
 }));
 vi.mock("@/lib/env", () => ({ env: settings }));
 vi.mock("@/lib/error-handler", () => ({ logToSentry: vi.fn() }));
@@ -35,9 +36,59 @@ function enquiryInput() {
 beforeEach(() => {
   vi.mocked(sendEmail).mockReset();
   settings.EMAIL_RESTAURANT_TO = "restaurant@example.test";
+  settings.NEXT_PUBLIC_ENQUIRY_MAX_GUESTS = undefined;
 });
 
 describe("private dining enquiry service", () => {
+  it.each([80, 120])(
+    "enforces the configured maximum of %s guests",
+    async (maximum) => {
+      settings.NEXT_PUBLIC_ENQUIRY_MAX_GUESTS = maximum;
+      vi.mocked(sendEmail).mockResolvedValue(
+        ok({ id: "email-id", provider: "smtp", status: "accepted" }),
+      );
+      const accepted = await deliverPrivateDiningEnquiry(
+        { ...enquiryInput(), guests: String(maximum) },
+        "192.0.2.10",
+      );
+      expect(accepted.status).toBe("success");
+      vi.mocked(sendEmail).mockClear();
+      const rejected = await deliverPrivateDiningEnquiry(
+        { ...enquiryInput(), guests: String(maximum + 1) },
+        "192.0.2.10",
+      );
+      expect(rejected.status).toBe("error");
+      expect(sendEmail).not.toHaveBeenCalled();
+    },
+  );
+  it.each(["80", "120", "250"])(
+    "delivers an enquiry for %s guests",
+    async (guests) => {
+      vi.mocked(sendEmail).mockResolvedValue(
+        ok({ id: "email-id", provider: "smtp", status: "accepted" }),
+      );
+      const result = await deliverPrivateDiningEnquiry(
+        { ...enquiryInput(), guests },
+        "192.0.2.10",
+      );
+      expect(result.status).toBe("success");
+      expect(sendEmail).toHaveBeenCalledTimes(2);
+      expect(vi.mocked(sendEmail).mock.calls[0]?.[0].text).toContain(guests);
+    },
+  );
+
+  it.each(["", "0", "-1", "1.5", "invalid"])(
+    "rejects invalid guest count %s",
+    async (guests) => {
+      const result = await deliverPrivateDiningEnquiry(
+        { ...enquiryInput(), guests },
+        "192.0.2.10",
+      );
+      expect(result.status).toBe("error");
+      expect(sendEmail).not.toHaveBeenCalled();
+    },
+  );
+
   it("reports missing restaurant routing without attempting delivery", async () => {
     settings.EMAIL_RESTAURANT_TO = "";
     expect(

@@ -16,6 +16,19 @@ function Button({
   ...props
 }: IButtonProps) {
   const Comp = asChild ? Slot : "button";
+  if (variant === "plain") {
+    return (
+      <Comp
+        data-slot="button"
+        data-variant={variant}
+        className={className}
+        {...props}
+      >
+        {children}
+      </Comp>
+    );
+  }
+
   const wrapContent =
     hoverArea === "content" ||
     (hoverArea !== "control" &&
@@ -24,9 +37,7 @@ function Button({
 
   if (wrapContent) {
     const child =
-      asChild && isValidElement<{ children?: ReactNode }>(children)
-        ? children
-        : null;
+      asChild && isValidElement<{ children?: ReactNode }>(children) && children;
     const label = (
       <span className={styles.content}>
         {child ? child.props.children : children}

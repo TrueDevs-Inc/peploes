@@ -43,7 +43,7 @@ function StoryHero() {
           >
             {hero.heading}
           </h1>
-          <p className="mt-6 text-lg leading-7 text-text-secondary lg:max-w-[498px]">
+          <p className="mt-6 text-lg leading-7 text-text-secondary">
             {hero.description}
           </p>
           <p className="mt-6 text-xs leading-4 font-semibold text-peploe-burgundy">
@@ -72,7 +72,7 @@ function StoryTimeline() {
           {philosophy.heading}
         </h2>
         <ol
-          className="relative grid gap-7 sm:grid-cols-3 sm:gap-9 sm:before:absolute sm:before:top-[59px] sm:before:right-8 sm:before:left-[7px] sm:before:h-px sm:before:bg-peploe-burgundy lg:self-stretch lg:pt-[22px] lg:before:top-[81px]"
+          className="relative grid gap-7 sm:grid-cols-3 sm:gap-9 sm:before:absolute sm:before:top-[61.5px] sm:before:right-8 sm:before:left-[7px] sm:before:h-px sm:before:bg-peploe-burgundy lg:self-stretch lg:pt-[22px] lg:before:top-[83.5px]"
           aria-label="Peploe’s through the years"
         >
           {philosophy.milestones.map((milestone) => (
@@ -81,17 +81,17 @@ function StoryTimeline() {
               key={milestone.year}
               className="relative min-w-0 pl-[30px] before:absolute before:top-[14px] before:bottom-[-42px] before:left-[6.5px] before:w-px before:bg-peploe-burgundy last:before:hidden sm:pl-0 sm:before:hidden"
             >
-              <p className="font-[family-name:var(--font-eb-garamond),serif] text-[28px] leading-[37px] font-normal text-peploe-burgundy">
+              <p className="text-[28px] leading-[37px] font-normal text-peploe-burgundy">
                 {milestone.year}
               </p>
               <span
                 className="absolute top-3 left-0 size-3.5 rounded-full bg-peploe-burgundy sm:relative sm:top-auto sm:mt-[18px] sm:block"
                 aria-hidden="true"
               />
-              <h3 className="mt-2 text-[25px] leading-[27px] sm:mt-[18px] sm:min-h-[50px] sm:leading-[25px] sm:whitespace-pre-line">
+              <h3 className="mt-2 text-[25px] leading-[27px] whitespace-nowrap sm:mt-[18px] sm:text-xl sm:leading-[25px] lg:text-lg xl:text-xl min-[90rem]:text-[25px]">
                 {milestone.heading}
               </h3>
-              <p className="mt-3 text-base leading-6 text-text-secondary sm:mt-[18px] min-[90rem]:max-w-[199.667px]">
+              <p className="mt-3 text-base leading-6 text-text-secondary sm:mt-[18px]">
                 {milestone.description}
               </p>
             </li>
@@ -120,17 +120,18 @@ function StoryBuilding() {
           </p>
           <h2
             id="story-building"
-            className="mt-4 text-[38px] leading-[42px] text-balance max-[360px]:text-[35px] max-[360px]:leading-10 sm:text-[52px] sm:leading-[52px] lg:text-[48px] lg:leading-[48px] lg:text-wrap lg:whitespace-pre-line xl:text-[clamp(52px,4.166667vw,60px)] xl:leading-[52px] xl:whitespace-pre"
+            className="mt-4 text-[clamp(26px,8vw,32px)] leading-[1.12] whitespace-pre-line sm:text-[52px] sm:leading-[52px] sm:whitespace-normal sm:text-balance lg:text-[48px] lg:leading-[48px] lg:text-wrap lg:whitespace-pre-line xl:text-[clamp(52px,4.166667vw,60px)] xl:leading-[52px] xl:whitespace-pre"
           >
-            {building.heading}
+            <span className="sm:hidden">{building.mobileHeading}</span>
+            <span className="hidden sm:inline">{building.heading}</span>
           </h2>
-          <p className="mt-6 text-lg leading-7 text-text-secondary xl:whitespace-pre-line">
+          <p className="mt-6 text-lg leading-7 text-text-secondary">
             {building.description}
           </p>
           <Button
             asChild
             variant="brand-contact"
-            className="mt-6 h-auto min-h-11 w-[161px] max-w-full gap-[5px] rounded-[4px] border-0 px-5 py-2.5 text-base leading-6 whitespace-normal shadow-[inset_0_0_0_1px_currentColor] hover:bg-peploe-burgundy hover:text-warm-cream hover:shadow-[inset_0_0_0_1px_var(--peploe-burgundy)] focus-visible:ring-0 forced-colors:[&:not(:focus-visible)]:-outline-offset-1 forced-colors:[&:not(:focus-visible)]:[outline:1px_solid_CanvasText]"
+            className="mt-6 h-auto min-h-11 w-fit max-w-full gap-[5px] rounded-[4px] border-0 px-5 py-2.5 text-base leading-6 whitespace-nowrap shadow-[inset_0_0_0_1px_currentColor] hover:bg-peploe-burgundy hover:text-warm-cream hover:shadow-[inset_0_0_0_1px_var(--peploe-burgundy)] focus-visible:ring-0 forced-colors:[&:not(:focus-visible)]:-outline-offset-1 forced-colors:[&:not(:focus-visible)]:[outline:1px_solid_CanvasText]"
           >
             <Link href={`${ROUTES.VISIT_CONTACT}#find-us`}>
               {building.action}
@@ -143,7 +144,7 @@ function StoryBuilding() {
           width={1036}
           height={1084}
           sizes="(min-width: 1584px) 576px, (min-width: 1024px) 36vw, (min-width: 640px) 60vw, calc(100vw - 48px)"
-          className="block h-auto w-full object-contain lg:col-[3] xl:self-start"
+          className="block h-auto w-full object-contain lg:col-[3] lg:h-full lg:self-stretch lg:object-cover lg:object-top"
         />
         <ol
           className="grid gap-6 sm:gap-1.5 lg:col-[5]"
@@ -155,10 +156,10 @@ function StoryBuilding() {
               key={stop.label}
               className="relative pl-6 before:absolute before:top-1.5 before:left-0 before:size-1 before:rounded-full before:bg-ink after:absolute after:top-2.5 after:bottom-[-30px] after:left-[1.5px] after:w-px after:bg-text-secondary last:after:hidden sm:pl-0 sm:before:top-[47px] sm:before:left-[35px] sm:after:top-[51px] sm:after:bottom-0 sm:after:left-[36.5px] sm:last:before:hidden sm:[&:not(:last-child)]:h-24"
             >
-              <p className="text-[11px] leading-[17px] font-semibold uppercase">
+              <p className="text-sm leading-5 font-semibold uppercase sm:text-[11px] sm:leading-[17px]">
                 {stop.label}
               </p>
-              <p className="mt-[5px] text-[11px] leading-[17px] text-text-secondary uppercase sm:whitespace-pre-line">
+              <p className="mt-[5px] text-sm leading-5 text-text-secondary uppercase sm:text-[11px] sm:leading-[17px] sm:whitespace-pre-line">
                 {stop.description}
               </p>
             </li>
@@ -196,7 +197,7 @@ function StoryFounder() {
           >
             {founder.heading}
           </h2>
-          <p className="mt-6 text-lg leading-7 text-text-secondary xl:whitespace-pre-line">
+          <p className="mt-6 text-lg leading-7 text-text-secondary">
             {founder.description}
           </p>
         </div>
@@ -235,13 +236,11 @@ function StoryMural() {
           >
             {mural.heading}
           </h2>
-          <p className="mt-6 text-lg leading-7 lg:whitespace-pre-line">
-            {mural.description}
-          </p>
+          <p className="mt-6 text-lg leading-7">{mural.description}</p>
           <Button
             asChild
             variant="brand-secondary-inverse"
-            className="mt-6 h-auto min-h-11 w-[249px] max-w-full gap-[5px] rounded-[4px] border-0 px-5 py-2.5 text-base leading-6 whitespace-normal shadow-[inset_0_0_0_1px_currentColor] hover:bg-warm-cream hover:text-ink hover:shadow-[inset_0_0_0_1px_var(--warm-cream)] focus-visible:ring-0 forced-colors:[&:not(:focus-visible)]:-outline-offset-1 forced-colors:[&:not(:focus-visible)]:[outline:1px_solid_CanvasText]"
+            className="mt-6 h-auto min-h-11 w-fit max-w-full gap-[5px] rounded-[4px] border-0 px-4 py-2.5 text-base leading-6 whitespace-nowrap shadow-[inset_0_0_0_1px_currentColor] hover:bg-warm-cream hover:text-ink hover:shadow-[inset_0_0_0_1px_var(--warm-cream)] focus-visible:ring-0 sm:px-5 forced-colors:[&:not(:focus-visible)]:-outline-offset-1 forced-colors:[&:not(:focus-visible)]:[outline:1px_solid_CanvasText]"
           >
             <Link href={getJournalArticlePath("the-art-of-peploes")}>
               {mural.action}
@@ -284,13 +283,13 @@ function StoryArchive() {
           >
             {archive.heading}
           </h2>
-          <p className="mt-6 text-lg leading-7 text-text-secondary lg:whitespace-pre-line">
+          <p className="mt-6 text-lg leading-7 text-text-secondary">
             {archive.description}
           </p>
           <Button
             asChild
             variant="brand-contact"
-            className="mt-6 h-auto min-h-11 w-[210px] max-w-full gap-[5px] rounded-[4px] border-0 px-5 py-2.5 text-base leading-6 whitespace-normal shadow-[inset_0_0_0_1px_currentColor] hover:bg-peploe-burgundy hover:text-warm-cream hover:shadow-[inset_0_0_0_1px_var(--peploe-burgundy)] focus-visible:ring-0 lg:mt-5 forced-colors:[&:not(:focus-visible)]:-outline-offset-1 forced-colors:[&:not(:focus-visible)]:[outline:1px_solid_CanvasText]"
+            className="mt-6 h-auto min-h-11 w-fit max-w-full gap-[5px] rounded-[4px] border-0 px-5 py-2.5 text-base leading-6 whitespace-nowrap shadow-[inset_0_0_0_1px_currentColor] hover:bg-peploe-burgundy hover:text-warm-cream hover:shadow-[inset_0_0_0_1px_var(--peploe-burgundy)] focus-visible:ring-0 lg:mt-5 forced-colors:[&:not(:focus-visible)]:-outline-offset-1 forced-colors:[&:not(:focus-visible)]:[outline:1px_solid_CanvasText]"
           >
             <Link href={getJournalCategoryPath("family-history")}>
               {archive.action}
@@ -333,7 +332,7 @@ function StoryNextChapter() {
           >
             {nextChapter.heading}
           </h2>
-          <p className="mt-4 text-lg leading-7 text-text-secondary lg:mt-5 xl:whitespace-pre-line">
+          <p className="mt-4 text-lg leading-7 text-text-secondary lg:mt-5">
             {nextChapter.description}
           </p>
         </div>
@@ -373,17 +372,18 @@ function StoryToday() {
           >
             {today.heading}
           </h2>
-          <p className="mt-6 text-lg leading-7 lg:text-xl lg:whitespace-pre-line">
+          <p className="mt-6 text-lg leading-7 lg:text-xl">
             {today.description}
           </p>
           <Button
-            type="button"
-            aria-disabled="true"
+            asChild
             variant="brand-primary"
             className="mt-6 h-auto min-h-11 w-[156px] max-w-full gap-[5px] rounded-[4px] px-5 py-2.5 text-base leading-6 whitespace-nowrap lg:mt-5"
           >
-            {today.action}
-            <ArrowRight aria-hidden="true" className="size-4" />
+            <Link href={ROUTES.BOOK_A_TABLE}>
+              {today.action}
+              <ArrowRight aria-hidden="true" className="size-4" />
+            </Link>
           </Button>
         </div>
       </div>

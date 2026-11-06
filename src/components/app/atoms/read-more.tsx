@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { READ_MORE_COLLAPSED_HEIGHT } from "@/lib/constants";
 import type { IReadMoreProps } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -28,13 +29,14 @@ export function ReadMore({ children, className }: IReadMoreProps) {
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-background to-transparent" />
         )}
       </div>
-      <button
+      <Button
+        variant="plain"
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
         className="mt-1 text-sm text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
       >
         {isExpanded ? "- read less" : "+ read more"}
-      </button>
+      </Button>
     </div>
   );
 }

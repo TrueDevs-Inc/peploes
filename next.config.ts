@@ -236,6 +236,7 @@ const nextConfig: NextConfig = {
   },
   redirects() {
     return [
+      { source: "/visit-contact", destination: "/contact", permanent: true },
       {
         source: "/menus/:menu",
         destination: "/menus?menu=:menu",

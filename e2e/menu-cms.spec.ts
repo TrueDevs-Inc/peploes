@@ -7,27 +7,21 @@ for (const menu of [
   "group-set-menu",
   "seasonal",
 ]) {
-  test(`${menu} allergen information expands and closes with keyboard access`, async ({
+  test(`${menu} allergen information stays visible without disclosure controls`, async ({
     page,
   }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto(`/menus?menu=${menu}`);
-    const information = page.locator("details").filter({
-      has: page.getByText("Allergen Information", { exact: true }),
+    const heading = page.getByRole("heading", {
+      name: "Allergen Information",
+      exact: true,
     });
-    const description = information.locator("p");
-    await expect(description).toBeVisible();
-    for (const open of [true, false]) {
-      if (!open) await information.locator("summary").click();
-      await expect(information).toHaveJSProperty("open", open);
-    }
-    await expect(description).toBeHidden();
-    await information.locator("summary").focus();
-    await page.keyboard.press("Enter");
-    await expect(description).toBeVisible();
+    const information = heading.locator("..");
+    await expect(heading).toBeVisible();
+    await expect(information.locator("p")).toBeVisible();
+    await expect(information.locator("summary, button")).toHaveCount(0);
   });
 }
-
 test("switching from deep Wine content keeps menu navigation visible", async ({
   page,
 }) => {

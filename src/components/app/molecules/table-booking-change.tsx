@@ -142,7 +142,8 @@ export function TableBookingChange({
 
   return (
     <>
-      <button
+      <Button
+        variant="plain"
         type="button"
         className={styles.editAction}
         aria-label="Edit date & guests"
@@ -152,7 +153,7 @@ export function TableBookingChange({
         <Pencil aria-hidden="true" />
         <span className={styles.desktopOnly}>Edit date &amp; guests</span>
         <span className={styles.mobileOnly}>Edit</span>
-      </button>
+      </Button>
       {asking && payment && (
         <ChangeDialog
           summary={payment.summary}

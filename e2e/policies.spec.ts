@@ -184,7 +184,7 @@ test("footer legal links open the requested policies", async ({
         name: "Visit & Contact",
         exact: true,
       }),
-    ).toHaveAttribute("href", "/visit-contact");
+    ).toHaveAttribute("href", "/contact");
   }
 
   for (const destination of [
@@ -238,8 +238,8 @@ test("footer legal links open the requested policies", async ({
   await expect(
     page
       .getByRole("contentinfo")
-      .getByRole("button", { name: "Cookie Settings" }),
-  ).toBeVisible();
+      .getByRole("button", { name: "Cookie Settings", includeHidden: true }),
+  ).toBeHidden();
 });
 
 test("an unknown policy slug returns a not-found page", async ({ page }) => {

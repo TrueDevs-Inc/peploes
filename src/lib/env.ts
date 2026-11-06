@@ -78,6 +78,11 @@ export const env = createEnv({
   clientPrefix: "NEXT_PUBLIC_",
 
   client: {
+    NEXT_PUBLIC_ENQUIRY_MAX_GUESTS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .optional(),
     NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: z.string().startsWith("pk.").optional(),
     NEXT_PUBLIC_MAPBOX_STYLE_URL: z
       .string()
@@ -106,6 +111,28 @@ export const env = createEnv({
 
   runtimeEnv: {
     ...process.env,
+    NEXT_PUBLIC_ENQUIRY_MAX_GUESTS: process.env.NEXT_PUBLIC_ENQUIRY_MAX_GUESTS,
+    EMAIL_SMTP_HOST: process.env.EMAIL_SMTP_HOST || process.env.SMTP_HOST,
+    EMAIL_SMTP_PORT: process.env.EMAIL_SMTP_PORT || process.env.SMTP_PORT,
+    EMAIL_SMTP_USERNAME:
+      process.env.EMAIL_SMTP_USERNAME || process.env.SMTP_USER,
+    EMAIL_SMTP_PASSWORD:
+      process.env.EMAIL_SMTP_PASSWORD || process.env.SMTP_PASS,
+    EMAIL_SMTP_AUTH_METHOD:
+      process.env.EMAIL_SMTP_AUTH_METHOD ||
+      (process.env.SMTP_PASS ? "app-password" : undefined),
+    EMAIL_RESEND_API_KEY:
+      process.env.EMAIL_RESEND_API_KEY || process.env.RESEND_API_KEY,
+    EMAIL_FROM_ADDRESS:
+      process.env.EMAIL_FROM_ADDRESS ||
+      (process.env.PREFER_SMTP === "false"
+        ? process.env.RESEND_FROM_EMAIL
+        : process.env.SMTP_FROM_EMAIL),
+    EMAIL_FROM_NAME:
+      process.env.EMAIL_FROM_NAME || process.env.RESEND_FROM_NAME,
+    EMAIL_RESTAURANT_TO:
+      process.env.EMAIL_RESTAURANT_TO || process.env.ADMIN_EMAIL,
+    EMAIL_REPLY_TO: process.env.EMAIL_REPLY_TO || process.env.ADMIN_EMAIL,
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,

@@ -272,6 +272,9 @@ production content. Development documents do not automatically appear in
 production. Client access and hosting are separate release steps.
 
 Verify desktop and phone image crops, sticky navigation, keyboard access,
-allergen expansion and narrow-screen overflow with published content. Check
+allergen visibility and narrow-screen overflow with published content. Check
 Wine index targets and Group/Seasonal dropdowns after adding, hiding and
 reordering entries.
+
+Editable allergen information is optional. When supplied, show it under a static
+heading without an expand or collapse control.
