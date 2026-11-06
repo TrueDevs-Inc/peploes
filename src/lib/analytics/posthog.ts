@@ -1,4 +1,8 @@
-import type { CaptureResult, PostHog, PostHogConfig } from "posthog-js";
+import type {
+  CaptureResult,
+  PostHog,
+  PostHogConfig,
+} from "posthog-js/dist/module.slim";
 
 import {
   ANALYTICS,
@@ -213,7 +217,7 @@ export async function activatePostHog(): Promise<void> {
 
   loading = true;
   try {
-    const { default: posthog } = await import("posthog-js");
+    const { default: posthog } = await import("posthog-js/dist/module.slim");
     // The import resolved after the decision that started it; ask again.
     if (!isEnabled()) return;
     const controller = new AbortController();
