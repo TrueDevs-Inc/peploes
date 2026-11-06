@@ -194,6 +194,7 @@
         "**/src/lib/config.ts",
         "**/src/helpers/api.ts",
         "**/src/lib/env.ts",
+        "**/src/lib/public-env.ts",
         "**/src/lib/types.ts",
         "**/src/lib/analytics/**"
       ],

@@ -16,7 +16,7 @@ import {
   POSTHOG_VALUE_MAX_LENGTH,
 } from "@/lib/constants";
 import { GA4Event } from "@/lib/enums";
-import { env } from "@/lib/env";
+import { publicEnv } from "@/lib/public-env";
 import type { IPendingAnalyticsEvent } from "@/lib/types";
 import { clearCookies, clearStorageKeys } from "./browser-storage";
 import { createEventHistory } from "./deduplication";
@@ -39,7 +39,7 @@ const GA4_NAMES_BY_POSTHOG_NAME = new Map<string, string>(
 );
 
 const history = createEventHistory(
-  `peploes:posthog:${env.NEXT_PUBLIC_POSTHOG_KEY}:conversions`,
+  `peploes:posthog:${publicEnv.NEXT_PUBLIC_POSTHOG_KEY}:conversions`,
 );
 let sdk: PostHog | null = null;
 let loading = false;
@@ -54,7 +54,9 @@ function toPostHogName(name: string): string {
 }
 
 function isConfigured(): boolean {
-  return Boolean(env.NEXT_PUBLIC_POSTHOG_KEY && env.NEXT_PUBLIC_POSTHOG_HOST);
+  return Boolean(
+    publicEnv.NEXT_PUBLIC_POSTHOG_KEY && publicEnv.NEXT_PUBLIC_POSTHOG_HOST,
+  );
 }
 
 function isEnabled(): boolean {
@@ -172,7 +174,7 @@ function requestSignal(withdrawn: AbortSignal): AbortSignal {
 
 function buildConfig(withdrawal: AbortController): Partial<PostHogConfig> {
   return {
-    api_host: env.NEXT_PUBLIC_POSTHOG_HOST,
+    api_host: publicEnv.NEXT_PUBLIC_POSTHOG_HOST,
     defaults: "2026-08-30",
     person_profiles: "identified_only",
     // One owner sends $pageview; the SDK must not add events of its own.
@@ -210,7 +212,7 @@ function instanceName(): string {
 }
 
 export async function activatePostHog(): Promise<void> {
-  const key = env.NEXT_PUBLIC_POSTHOG_KEY;
+  const key = publicEnv.NEXT_PUBLIC_POSTHOG_KEY;
   if (!key || !isEnabled() || loading || sdk) return;
   // Without fetch the SDK falls back to XHR, which ignores the abort signal.
   if (typeof fetch !== "function") return;

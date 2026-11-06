@@ -258,7 +258,10 @@ direction, including validation messages, without exposing internal error detail
 `src/lib/env.ts` validates environment values. `.env.example` documents the
 same contract. `next.config.ts`, Drizzle config, Sentry config, and
 instrumentation files may read `process.env` because they run before app aliases
-and validation are available.
+and validation are available. Shared browser code reads public values from
+`src/lib/public-env.ts`, which keeps the validator and its zod dependency out of
+every page bundle. Those values are inlined at build time and `env.ts` still
+validates them during the build and on server start.
 
 The default CSP supports static rendering, so scripts and styles still allow
 inline content. It allows `unsafe-eval` only in development and adds monitoring

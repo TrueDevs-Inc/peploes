@@ -14,6 +14,14 @@ vi.mock("@/lib/env", () => ({
     GA_API_SECRET: "synthetic-test-secret",
   },
 }));
+vi.mock("@/lib/public-env", () => ({
+  isProduction: () => process.env.NODE_ENV === "production",
+  publicEnv: {
+    get NEXT_PUBLIC_GA_MEASUREMENT_ID() {
+      return settings.gaId;
+    },
+  },
+}));
 
 beforeEach(() => {
   vi.resetModules();

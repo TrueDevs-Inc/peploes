@@ -151,6 +151,4 @@ export const env = createEnv({
   emptyStringAsUndefined: true,
 });
 
-export function isProduction(): boolean {
-  return process.env.NODE_ENV === "production";
-}
+export { isProduction } from "@/lib/public-env";
