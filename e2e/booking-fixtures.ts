@@ -56,9 +56,16 @@ export const FAKE_TIMES = [
 ] as const;
 
 export function dublinToday(): string {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Europe/Dublin",
-  }).format(new Date());
+  return (
+    process.env.E2E_BOOKING_DATE ??
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Europe/Dublin",
+    }).format(new Date())
+  );
+}
+
+export function bookingTestTime(): Date {
+  return new Date(`${dublinToday()}T12:00:00Z`);
 }
 
 export function addDays(date: string, days: number): string {

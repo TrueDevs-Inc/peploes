@@ -1,20 +1,26 @@
 import type { Page, Route } from "@playwright/test";
-
-import { addDays, dublinToday, FAKE_TIMES } from "./booking-fixtures";
+import type { IHoldSummary } from "../src/lib/types";
+import {
+  addDays,
+  bookingTestTime,
+  dublinToday,
+  FAKE_TIMES,
+  shortDayLabel,
+} from "./booking-fixtures";
 import {
   chooseDate,
   findTable,
   laterFreeDate,
   openBooking,
 } from "./booking-page";
-import { expect, test } from "./menu-test";
+import { expect, test } from "./booking-test";
 
 function label(time: string): string {
   return FAKE_TIMES.find((slot) => slot.time === time)?.label ?? time;
 }
 
 async function paidFor(page: Page, time: string) {
-  await page.clock.install();
+  await page.clock.install({ time: bookingTestTime() });
   const reservations = await openBooking(page);
   await chooseDate(reservations, laterFreeDate());
   await findTable(reservations);
@@ -25,19 +31,35 @@ async function paidFor(page: Page, time: string) {
     .getByRole("button", { name: "Continue", exact: true })
     .click();
   await expect(reservations.getByRole("timer")).toBeVisible();
-  const reference = await page.evaluate(() => {
-    const hold = JSON.parse(
-      sessionStorage.getItem("peploes:booking-hold") ?? "{}",
-    ) as { holdReference: string; holdRevision: number };
-    sessionStorage.setItem(
-      "peploes:booking-paid",
-      JSON.stringify({
-        reference: hold.holdReference,
-        revision: hold.holdRevision,
-      }),
-    );
-    return hold.holdReference;
-  });
+  const date = laterFreeDate();
+  const reference = await page.evaluate(
+    ({ date, dateLabel, time, timeLabel }) => {
+      const hold = JSON.parse(
+        sessionStorage.getItem("peploes:booking-hold") ?? "{}",
+      ) as { holdReference: string; holdRevision: number };
+      sessionStorage.setItem(
+        "peploes:booking-paid",
+        JSON.stringify({
+          reference: hold.holdReference,
+          revision: hold.holdRevision,
+          date,
+          dateLabel,
+          time,
+          timeLabel,
+          partySize: 4,
+          guestsLabel: "4 guests",
+          offer: {
+            kind: "standard",
+            feeCents: 0,
+            mayRequireCard: false,
+            returnBy: null,
+          },
+        } satisfies IHoldSummary),
+      );
+      return hold.holdReference;
+    },
+    { date, dateLabel: shortDayLabel(date), time, timeLabel: label(time) },
+  );
   await page.reload();
   return { reservations, reference };
 }
@@ -154,7 +176,7 @@ test("while the booking is still confirming the guest can start again, and a rel
     .getByRole("button", { name: "Start Again", exact: true })
     .click();
   const warning = reservations.getByText(
-    `Booking ${reference} may still go through. If it does and you book again, you'll have two bookings and two deposits.`,
+    `Booking ${reference} may still go through. If it does and you book again, you'll have two bookings and could be charged twice.`,
     { exact: true },
   );
   await expect(warning).toBeVisible();

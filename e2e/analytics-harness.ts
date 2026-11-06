@@ -1,5 +1,4 @@
 import { gunzipSync } from "node:zlib";
-
 import type { BrowserContext, Page, Request } from "@playwright/test";
 import { test as base, expect } from "@playwright/test";
 
@@ -73,8 +72,10 @@ const GTAG_STUB = `
       tid = command[1];
       configured = true;
       if (consent.analytics_storage === "granted") {
-        document.cookie = "_ga=GA1.1.111.222; path=/";
-        document.cookie = "_ga_TEST000000=GS2.1.s1; path=/";
+        try {
+          document.cookie = "_ga=GA1.1.111.222; path=/";
+          document.cookie = "_ga_TEST000000=GS2.1.s1; path=/";
+        } catch {}
       }
     } else if (command[0] === "event") {
       if (configured && consent.analytics_storage === "granted") {
@@ -301,7 +302,7 @@ function watchPage(page: Page, recorder: AnalyticsRecorder): void {
 export const test = base.extend<{ analytics: AnalyticsRecorder }>({
   analytics: async ({ context }, use, testInfo) => {
     await context.route("https://sentry.e2e.test/**", (route) =>
-      route.fulfill({ status: 200, body: "{}" }),
+      route.fulfill({ status: 200, body: "{}", headers: CORS }),
     );
     await context.route("**/_next/image?**", async (route) => {
       const request = new URL(route.request().url());

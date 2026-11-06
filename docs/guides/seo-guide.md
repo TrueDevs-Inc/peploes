@@ -50,6 +50,8 @@ describes.
 
 Indexing follows each page's `noIndex` metadata setting. There is no global
 staging/production indexing switch or deployment-based `X-Robots-Tag`.
+Requests with `x-presentation: admin` receive a `noindex` header from
+`next.config.ts`, independently of public page metadata.
 `robots.txt` uses the same configured crawler policy in every environment,
 with the site URL supplied by the hosting project's environment values.
 The policy has three groups in `AI_CRAWLER_POLICY`:

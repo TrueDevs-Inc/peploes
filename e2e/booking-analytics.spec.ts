@@ -1,12 +1,16 @@
 import type { Page } from "@playwright/test";
-
 import { expect, settle, test } from "./analytics-harness";
+import { bookingTestTime } from "./booking-fixtures";
 import {
   chooseDate,
   findTable,
   laterFreeDate,
   openBooking,
 } from "./booking-page";
+
+test.beforeEach(async ({ page }) => {
+  await page.clock.setSystemTime(bookingTestTime());
+});
 
 async function stubStripe(
   page: Page,
@@ -142,7 +146,7 @@ test("the details countdown reports hold expiry before clearing the hold", async
   page,
   analytics,
 }) => {
-  await page.clock.install();
+  await page.clock.install({ time: bookingTestTime() });
   const reservations = await heldDetails(page, "6:00 pm");
   await expect
     .poll(() => analytics.posthogNamed("booking_hold").length)

@@ -1,5 +1,12 @@
 export const E2E_ENVIRONMENT = Object.fromEntries([
   ["NODE_ENV", "production"],
+  [
+    "E2E_BOOKING_DATE",
+    process.env.E2E_BOOKING_DATE ??
+      new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Dublin" }).format(
+        new Date(),
+      ),
+  ],
   ["SENTRY_DSN", ""],
   ["NEXT_PUBLIC_SENTRY_DSN", ""],
   ["SENTRY_AUTH_TOKEN", ""],

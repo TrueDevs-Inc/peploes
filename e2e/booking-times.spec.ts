@@ -16,7 +16,7 @@ import {
   laterFreeDate,
   openBooking,
 } from "./booking-page";
-import { expect, test } from "./menu-test";
+import { expect, test } from "./booking-test";
 
 test("available times show three desktop rows or four mobile rows before Show more", async ({
   page,

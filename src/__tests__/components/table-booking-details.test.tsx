@@ -56,6 +56,19 @@ describe("booking terms", () => {
     }
   });
 
+  it("shows special-request validation beside the field with an accessible description", () => {
+    const message = "Please keep requests under 1,000 characters.";
+    const html = renderToStaticMarkup(
+      <TableBookingDetails {...props} serverErrors={{ requests: message }} />,
+    );
+    const textarea = html.match(/<textarea[^>]*>/)?.[0] ?? "";
+    const description = textarea.match(/aria-describedby="([^"]+)"/)?.[1];
+    expect(textarea).toContain('aria-invalid="true"');
+    expect(description).toBeTruthy();
+    expect(html).toContain(`id="${description}"`);
+    expect(html).toContain(message);
+  });
+
   it("keeps the terms button outside labels and names the checkbox with the full agreement", () => {
     const html = renderToStaticMarkup(<TableBookingDetails {...props} />);
     const labels = html.match(/<label\b[^>]*>[\s\S]*?<\/label>/g) ?? [];

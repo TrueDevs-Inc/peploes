@@ -76,11 +76,13 @@ function ReturnNotice({
 }
 
 export function PaymentOutcome({
+  phase = "payment",
   check,
   reference,
   onStartAgain,
   onCheckAgain,
 }: {
+  phase?: "details" | "payment";
   check: TBookingStatusCheck;
   reference: string;
   onStartAgain: () => void;
@@ -89,6 +91,7 @@ export function PaymentOutcome({
   if (check.kind === "unknown") {
     return (
       <StillConfirming
+        phase={phase}
         reference={reference}
         onStartAgain={onStartAgain}
         onCheckAgain={onCheckAgain}
@@ -121,14 +124,17 @@ export function PaymentOutcome({
 }
 
 function StillConfirming({
+  phase,
   reference,
   onStartAgain,
   onCheckAgain,
 }: {
+  phase: "details" | "payment";
   reference: string;
   onStartAgain: () => void;
   onCheckAgain: () => void;
 }) {
+  const copy = content[phase];
   const [warning, setWarning] = useState(false);
   const message = useRef<HTMLParagraphElement>(null);
 
@@ -145,8 +151,8 @@ function StillConfirming({
         className={styles.flowDescription}
       >
         {warning
-          ? content.payment.startAgainWarning(reference)
-          : content.payment.stillConfirming(reference)}
+          ? copy.startAgainWarning(reference)
+          : copy.stillConfirming(reference)}
       </p>
       {warning ? (
         <>

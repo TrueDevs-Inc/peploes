@@ -17,7 +17,7 @@ import {
   laterFreeDate,
   openBooking,
 } from "./booking-page";
-import { expect, test } from "./menu-test";
+import { expect, test } from "./booking-test";
 
 test("booking opens with the introduction visible and aligns subsequent steps below the navbar", async ({
   page,
@@ -198,8 +198,19 @@ test("an after-midnight hold shows its calendar day and restores the same reserv
   await expect(
     panel.getByText(shortDayLabel(visit), { exact: false }),
   ).toBeVisible();
+  const held = await page.evaluate(() =>
+    JSON.parse(sessionStorage.getItem("peploes:booking-hold") ?? "{}"),
+  );
   await page.reload();
   await expect(panel.getByRole("timer")).toBeVisible();
+  expect(
+    await page.evaluate(() =>
+      JSON.parse(sessionStorage.getItem("peploes:booking-hold") ?? "{}"),
+    ),
+  ).toMatchObject({
+    holdReference: held.holdReference,
+    holdRevision: held.holdRevision,
+  });
   await expect(
     panel.getByText(shortDayLabel(visit), { exact: false }),
   ).toBeVisible();
@@ -574,6 +585,22 @@ for (const newsletterOptIn of [false, true]) {
     await expect(newsletter).not.toBeChecked();
     await newsletter.setChecked(newsletterOptIn);
     await reservations.getByRole("checkbox", { name: /By confirming/ }).check();
+    const phone = reservations.getByLabel(
+      isMobile ? "Telephone number" : "Mobile number",
+      { exact: false },
+    );
+    await phone.fill("00353871234567");
+    const beforeInvalidPhone = submissions.length;
+    await reservations
+      .getByRole("button", { name: "Confirm Reservation", exact: true })
+      .click();
+    await expect(
+      reservations.getByText("Enter the number without the country code.", {
+        exact: true,
+      }),
+    ).toBeVisible();
+    expect(submissions).toHaveLength(beforeInvalidPhone);
+    await phone.fill("087 123 4567");
     await reservations
       .getByRole("button", { name: "Confirm Reservation", exact: true })
       .click();

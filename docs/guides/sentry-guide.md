@@ -90,8 +90,9 @@ One event with useful context is easier to investigate than four copies.
 
 ## Source maps
 
-The Next config enables the Sentry build wrapper when reporting is enabled
-and all upload variables exist, regardless of hosting provider. It passes
+The Next config enables the Sentry build wrapper when `NODE_ENV=production`
+and all upload variables exist, regardless of hosting provider or ingestion
+DSN configuration. It passes
 organization, project and auth token explicitly and requests source-map deletion
 after upload with the installed SDK's `sourcemaps.deleteSourcemapsAfterUpload`
 option.
@@ -124,8 +125,8 @@ build wrapper supplies its release/debug-ID integration.
 
 A separate Next.js project, `truedevs-jw/peploes-staging`, was created in the
 user-supplied organization. The existing `prs-td` project was left unchanged.
-The current ignored `.env` contains matching server/browser staging DSNs,
-independent reporting flags and a local-verification release label.
+During that verification, the ignored `.env` contained matching server/browser
+staging DSNs and a local-verification release label.
 
 The real Node configuration sent a controlled synthetic exception, received as
 [PEPLOES-STAGING-1](https://truedevs-jw.sentry.io/issues/7824269979/), with

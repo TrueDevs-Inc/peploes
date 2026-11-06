@@ -1,8 +1,11 @@
 import type { Page } from "@playwright/test";
-
 import type { TPaymentStep } from "../src/lib/types";
-
-import { FAKE_RESDIARY, FAKE_TIMES } from "./booking-fixtures";
+import {
+  bookingTestTime,
+  FAKE_RESDIARY,
+  FAKE_TIMES,
+  shortDayLabel,
+} from "./booking-fixtures";
 import {
   chooseDate,
   chooseTime,
@@ -11,7 +14,7 @@ import {
   laterFreeDate,
   openBooking,
 } from "./booking-page";
-import { expect, test } from "./menu-test";
+import { expect, test } from "./booking-test";
 
 const RESEND_NOTE =
   "We couldn't tell whether your details reached us. Your table is still held, so please press Confirm Reservation again.";
@@ -242,7 +245,7 @@ test("reloading an unanswered details check keeps the summary and eventually sho
   page,
   isMobile,
 }) => {
-  await page.clock.install();
+  await page.clock.install({ time: bookingTestTime() });
   const { reservations, confirm } = await heldWithDetails(page, isMobile);
   const held = await page.evaluate(() =>
     JSON.parse(sessionStorage.getItem("peploes:booking-hold") ?? "{}"),
@@ -286,7 +289,7 @@ test("reloading while details are still sending waits for the send budget before
   page,
   isMobile,
 }) => {
-  await page.clock.install();
+  await page.clock.install({ time: bookingTestTime() });
   const { reservations, confirm } = await heldWithDetails(page, isMobile);
   await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
   let sending: () => void = () => undefined;
@@ -487,8 +490,9 @@ function savedPaymentStep(
   revision: number,
   kind: TPaymentStep["kind"] = "payment",
 ) {
+  const date = laterFreeDate();
   return page.evaluate(
-    ({ date, reference, revision, kind }) => {
+    ({ date, dateLabel, reference, revision, kind }) => {
       sessionStorage.setItem(
         "peploes:booking-payment",
         JSON.stringify({
@@ -507,7 +511,7 @@ function savedPaymentStep(
             reference,
             revision,
             date,
-            dateLabel: "Sat, 7 Nov 2026",
+            dateLabel,
             time: "18:00",
             timeLabel: "6:00 pm",
             partySize: 4,
@@ -522,7 +526,13 @@ function savedPaymentStep(
         }),
       );
     },
-    { date: laterFreeDate(), reference, revision, kind },
+    {
+      date,
+      dateLabel: shortDayLabel(date),
+      reference,
+      revision,
+      kind,
+    },
   );
 }
 
@@ -702,7 +712,7 @@ for (const kind of ["payment", "card"] as const) {
         exact: true,
       });
       await expect(pay).toBeEnabled();
-      await page.clock.install();
+      await page.clock.install({ time: bookingTestTime() });
       await page.evaluate((status) => {
         Reflect.set(window, "stripeIntentStatus", status);
         Reflect.set(window, "stripeRetrievalFails", status === "unreachable");
@@ -778,7 +788,7 @@ test("a rejected Stripe confirmation with an unanswered intent read enters the p
     exact: true,
   });
   await expect(pay).toBeEnabled();
-  await page.clock.install();
+  await page.clock.install({ time: bookingTestTime() });
   await page.evaluate(() => Reflect.set(window, "stripeStall", "intent"));
   await pay.click();
   await expect
@@ -985,7 +995,7 @@ for (const outcome of [
   test(`Choose Another Time starts a fresh search when the status check gives ${outcome}`, async ({
     page,
   }) => {
-    await page.clock.install();
+    await page.clock.install({ time: bookingTestTime() });
     const reservations = await openBooking(page);
     await page.route("https://js.stripe.com/**", (route) => route.abort());
     await savedPaymentStep(page, "E2E99999", 1);
@@ -1136,7 +1146,7 @@ test("when Stripe can't load, the payment step says so once, under the heading, 
 test("the payment deadline includes the hold check and ignores its late failed reply", async ({
   page,
 }) => {
-  await page.clock.install();
+  await page.clock.install({ time: bookingTestTime() });
   await stubStripe(page, "requires_payment_method", "intent");
   const reservations = await openBooking(page);
   let answerHold = async () => {};
@@ -1205,7 +1215,7 @@ test("the payment deadline includes the hold check and ignores its late failed r
 test("while the payment form is still loading, the guest can't edit the search", async ({
   page,
 }) => {
-  await page.clock.install();
+  await page.clock.install({ time: bookingTestTime() });
   await page.route("https://js.stripe.com/**", () => undefined);
   const reservations = await openBooking(page);
   await page.route("**/api/bookings/hold-status?**", (route) =>
@@ -1261,7 +1271,7 @@ test("if the hold time runs out while the details are sending and the reply is l
   page,
   isMobile,
 }) => {
-  await page.clock.install();
+  await page.clock.install({ time: bookingTestTime() });
   const { reservations, confirm, booked } = await heldWithDetails(
     page,
     isMobile,
@@ -1723,7 +1733,7 @@ for (const status of ["succeeded", "processing"]) {
     const { step } = await depositStep(page, isMobile);
     const returned = await page.context().newPage();
     try {
-      await returned.clock.install();
+      await returned.clock.install({ time: bookingTestTime() });
       await returned.goto(returnedUrl(step, status));
       const reservations = returned.getByRole("region", {
         name: "Table reservations",
@@ -1924,7 +1934,7 @@ for (const answer of ["unanswered", "unavailable"]) {
     const { step } = await depositStep(page, isMobile);
     const returned = await page.context().newPage();
     try {
-      await returned.clock.install();
+      await returned.clock.install({ time: bookingTestTime() });
       await returned.route("**/api/bookings/hold-status?**", (route) => {
         if (answer === "unavailable")
           return route.fulfill({
@@ -2154,4 +2164,47 @@ test("a recovered paid booking survives another reload when session writes fail"
   } finally {
     await returned.close();
   }
+});
+
+test("a missing hold cookie during details recovery offers a safe restart", async ({
+  page,
+  isMobile,
+}) => {
+  const { reservations, confirm } = await heldWithDetails(page, isMobile);
+  await page.route("**/api/bookings/hold-status?**", (route) =>
+    route.fulfill({
+      status: 404,
+      json: { ok: false, error: { code: "NOT_FOUND", message: "Not found" } },
+    }),
+  );
+  await dropPosts(page, false);
+  await confirm.click();
+  await expect(
+    reservations.getByRole("button", { name: "Start Again", exact: true }),
+  ).toBeVisible();
+  await expect(reservations.getByText(/If your card was charged/)).toHaveCount(
+    0,
+  );
+  await expect(
+    reservations.getByRole("button", {
+      name: "Confirm Reservation",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await reservations
+    .getByRole("button", { name: "Start Again", exact: true })
+    .click();
+  await expect(reservations.getByText(/may still go through/)).toBeFocused();
+  await expect(reservations.getByText(/could be charged twice/)).toHaveCount(0);
+  await reservations
+    .getByRole("button", { name: "Start Again", exact: true })
+    .click();
+  await expect(
+    reservations.getByRole("button", { name: "Find a Table", exact: true }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(() =>
+      sessionStorage.getItem("peploes:booking-details"),
+    ),
+  ).toBeNull();
 });

@@ -1,11 +1,14 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
+import type { TPaymentStep } from "../src/lib/types";
+
 import {
   dayLabel,
   dublinToday,
   FAKE_RESDIARY,
   freeDates,
   monthLabel,
+  shortDayLabel,
 } from "./booking-fixtures";
 
 export function bookingCalendar(reservations: Locator) {
@@ -92,4 +95,54 @@ export async function chooseTime(reservations: Locator, name: string) {
   const more = reservations.getByRole("button", { name: /^Show more times/ });
   if ((await more.isVisible()) && !(await slot.isVisible())) await more.click();
   await slot.click();
+}
+
+export async function restorePaymentStep(
+  page: Page,
+  kind: "payment" | "card" = "payment",
+) {
+  const reservations = await openBooking(page);
+  await page.route("**/api/bookings/hold-status?**", (route) =>
+    route.fulfill({ json: { ok: true, data: { status: "pending" } } }),
+  );
+  const date = laterFreeDate();
+  await page.evaluate(
+    ({ date, dateLabel, kind }) => {
+      sessionStorage.setItem(
+        "peploes:booking-payment",
+        JSON.stringify({
+          kind,
+          amountCents: 2000,
+          amountText: "€20.00",
+          stripe: {
+            publishableKey: "pk_test_e2e",
+            accountId: "acct_e2e",
+            clientSecret:
+              kind === "card"
+                ? "seti_saved_secret_saved"
+                : "pi_saved_secret_saved",
+          },
+          summary: {
+            reference: "E2E99999",
+            revision: 1,
+            date,
+            dateLabel,
+            time: "18:00",
+            timeLabel: "6:00 pm",
+            partySize: 4,
+            guestsLabel: "4 guests",
+            offer: {
+              kind: "standard",
+              feeCents: 2000,
+              mayRequireCard: false,
+              returnBy: null,
+            },
+          },
+        } satisfies TPaymentStep),
+      );
+    },
+    { date, dateLabel: shortDayLabel(date), kind },
+  );
+  await page.reload({ waitUntil: "domcontentloaded" });
+  return reservations;
 }

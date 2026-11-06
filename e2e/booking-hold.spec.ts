@@ -7,7 +7,7 @@ import {
   laterFreeDate,
   openBooking,
 } from "./booking-page";
-import { expect, test } from "./menu-test";
+import { expect, test } from "./booking-test";
 
 function label(time: string): string {
   return FAKE_TIMES.find((slot) => slot.time === time)?.label ?? time;

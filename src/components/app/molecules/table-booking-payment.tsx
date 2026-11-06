@@ -21,13 +21,14 @@ import { TableBookingPaymentSkeleton } from "@/components/app/molecules/table-bo
 import { Button } from "@/components/ui/button";
 import { fetcher } from "@/helpers/api";
 import { trackBooking } from "@/lib/analytics/booking";
+import { logClientError } from "@/lib/client-errors";
 import {
   BOOKING_API,
   BOOKING_BUDGET_MS,
   BOOKING_RETURN_PARAMS,
 } from "@/lib/constants/booking";
 import { TABLE_BOOKING_CONTENT } from "@/lib/constants/table-booking";
-import { ErrorCode, GA4Event, HttpVerb } from "@/lib/enums";
+import { AppModule, ErrorCode, GA4Event, HttpVerb, Stage } from "@/lib/enums";
 import type {
   IHoldStatusResult,
   IPaymentFormProps,
@@ -328,6 +329,17 @@ function PaymentForm({
         ? await prepared.stripe.confirmPayment(options)
         : await prepared.stripe.confirmSetup(options);
     } catch {
+      // Raw Stripe errors can contain payment data; report a fixed message and application stack.
+      logClientError(new Error("Stripe confirmation rejected"), {
+        module: AppModule.Api,
+        stage: Stage.Response,
+        context: {
+          stripe: {
+            operation:
+              step.kind === "payment" ? "confirmPayment" : "confirmSetup",
+          },
+        },
+      });
       return {
         error: {
           type: "api_error" as const,

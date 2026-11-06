@@ -132,6 +132,9 @@ gathering enquiry and direct contact links, without a separate general message
 form, even when email is configured. The database integration test owns durable
 claim behavior; the browser fixture does not prove PostgreSQL or inbox receipt.
 
+Set `E2E_BOOKING_DATE=YYYY-MM-DD` to keep the fake provider and booking browser
+fixtures on one Dublin date, including when the host crosses midnight.
+
 Browser suites use synthetic reporting settings or blank provider credentials
 to avoid sending test events to configured accounts. Payment key acceptance
 and page indexing do not depend on deployment labels. SEO checks run alongside
