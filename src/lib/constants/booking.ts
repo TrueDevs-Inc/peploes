@@ -112,7 +112,8 @@ export const BOOKING_LOG = {
   staleHoldToken: "Booking ignored a hold token kept past its lifetime",
   formUnsupported:
     "ResDiary's settings need something the booking form cannot give",
-  guestOutcomeUnknown: "Unclear whether the booking was made",
+  observation: "Booking reconciliation observation",
+  reconciliationRequired: "Booking outcome needs reconciliation",
   holdLimitOff: "Booking holds are not rate-limited: Upstash is not configured",
   holdLimited: "Booking refused a hold over the visitor limit",
   holdLimitUnchecked:

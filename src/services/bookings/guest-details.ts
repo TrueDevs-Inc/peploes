@@ -12,7 +12,7 @@ import {
   BOOKING_TRUNK_PREFIX,
   BOOKING_UNSUPPORTED_SETTINGS,
 } from "@/lib/constants/booking";
-import { LogContext } from "@/lib/enums";
+import { ErrorCode, LogContext } from "@/lib/enums";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import type {
@@ -21,6 +21,7 @@ import type {
   IHoldCookie,
   IResDiaryGuestInput,
   IResDiaryRules,
+  TBookingObservation,
   TBookingProvider,
   TBookingResult,
   TGuestDetails,
@@ -46,6 +47,7 @@ import {
   cookieMaxAgeSeconds,
   holdSummary,
 } from "@/services/bookings/hold-table";
+import { recordBookingObservation } from "@/services/bookings/reconciliation";
 
 function withoutTrunkZero(mobile: string): string {
   return mobile.startsWith(BOOKING_TRUNK_PREFIX)
@@ -142,13 +144,7 @@ async function afterUnclearReply(
     if (again.isOk()) {
       return fromOutcome(again.value, hold);
     }
-    if (again.error.kind !== "outcome_unknown") {
-      return err(fromFailure(again.error));
-    }
   }
-  logger.error(LogContext.Api, BOOKING_LOG.guestOutcomeUnknown, {
-    reference: hold.reference,
-  });
   return err(stillConfirming());
 }
 
@@ -232,6 +228,18 @@ export async function submitGuestDetails(
   }
 
   const guest = guestInput(hold, details.data);
+  recordBookingObservation(hold, secret, "details_submitted");
   const sent = await sendDetails(provider, hold, guest, startedAt, sendBy);
+  const outcomes = {
+    confirmed: "confirmed",
+    payment: "payment_required",
+    card: "card_required",
+  } as const satisfies Record<TGuestDetailsView["kind"], TBookingObservation>;
+  const event = sent.isOk()
+    ? outcomes[sent.value.kind]
+    : sent.error.code === ErrorCode.OutcomeUnknown
+      ? "outcome_unknown"
+      : "details_rejected";
+  recordBookingObservation(hold, secret, event);
   return markDetailsSent(sent, hold, secret);
 }

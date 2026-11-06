@@ -45,6 +45,10 @@ ID when there is one. Booking services map the typed result to a guest message
 without logging it again. A service logs only its own conclusions, such as
 skipped times or a booking whose outcome stays unknown after its checks.
 
+The [booking reconciliation runbook](booking-reconciliation-guide.md) owns
+server observation meanings, restricted hold correlation and staff triage.
+These lifecycle records do not repeat the provider's exception or response body.
+
 Sentry initialization files use `console` because the shared logger may not be
 available during startup. Analytics modules also contain provider diagnostics.
 Application code should still use the logger.

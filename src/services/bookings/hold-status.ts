@@ -8,6 +8,7 @@ import { BOOKING_BUDGET_MS } from "@/lib/constants/booking";
 import type {
   IHoldStatusResult,
   IResDiaryHoldStatus,
+  TBookingObservation,
   TBookingProvider,
   TBookingResult,
   THoldState,
@@ -15,6 +16,7 @@ import type {
 } from "@/lib/types";
 import { holdMissing, otherTab, unavailable } from "@/services/bookings/errors";
 import { holdSummary } from "@/services/bookings/hold-table";
+import { recordBookingObservation } from "@/services/bookings/reconciliation";
 
 function toState(
   status: IResDiaryHoldStatus["status"],
@@ -52,7 +54,23 @@ export async function holdStatus(
     deadlineAt: Date.now() + BOOKING_BUDGET_MS.holdStatus,
   });
   if (reply.isErr()) {
+    if (hold.detailsSent) {
+      recordBookingObservation(hold, secret, "status_unavailable");
+    }
     return err(unavailable());
+  }
+  const observations = {
+    confirmed: "status_confirmed",
+    pending: "status_pending",
+    failed: "status_failed",
+    cancelled: "status_cancelled",
+    unknown: "status_unknown",
+  } as const satisfies Record<
+    IResDiaryHoldStatus["status"],
+    TBookingObservation
+  >;
+  if (hold.detailsSent || reply.value.status !== "pending") {
+    recordBookingObservation(hold, secret, observations[reply.value.status]);
   }
   const status = toState(reply.value.status, hold, Date.now());
   return ok({

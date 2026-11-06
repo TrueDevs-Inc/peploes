@@ -19,6 +19,8 @@ not enable or disable them.
   runtime. It also scrubs HTTP and navigation breadcrumb URLs and span URLs,
   because these can carry a ResDiary guest token. Console breadcrumbs are
   discarded; browser DOM breadcrumbs are disabled to avoid collecting guest text.
+  ResDiary `TableHoldBookingStatus` URLs also redact the hold ID in requests,
+  breadcrumbs and spans, keeping reconciliation signals opaque outside restricted logs.
 - `src/lib/client-errors.ts` reports browser exceptions.
 - `src/components/app/atoms/sentry-error-boundary.tsx` captures React rendering
   failures.
@@ -87,6 +89,13 @@ services themselves.
 
 Avoid capturing the same error in a service, action, route, and global handler.
 One event with useful context is easier to investigate than four copies.
+
+An unresolved booking outcome also needs an operational signal even when the
+provider returned a typed failure. Booking reconciliation emits a stable
+message with an opaque correlation ID and safe state only. Its
+[runbook](booking-reconciliation-guide.md) owns alert routing and manual
+diary/payment checks; provider exceptions and raw references are not copied
+into that signal.
 
 ## Source maps
 
