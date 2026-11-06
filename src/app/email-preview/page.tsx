@@ -2,6 +2,15 @@ import { notFound } from "next/navigation";
 import emailLogo from "@/lib/email-logo.json";
 import { renderEnquiryAdmin, renderEnquiryGuest } from "@/lib/email-templates";
 import { env } from "@/lib/env";
+import { buildSeoMetadata } from "@/lib/seo";
+
+export const metadata = buildSeoMetadata({
+  title: "Transactional email previews",
+  description:
+    "Synthetic previews of Peploe’s enquiry emails. No message is sent.",
+  url: "/email-preview",
+  noIndex: true,
+});
 
 const syntheticEnquiry = {
   notificationId: "00000000-0000-4000-8000-000000000001",
