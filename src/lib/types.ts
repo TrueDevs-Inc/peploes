@@ -1622,6 +1622,7 @@ export interface IStoryCardProps {
 export interface IEventActionProps {
   label: string;
   mobileLabel?: string;
+  eventTitle?: string;
   href?: Route<`/seasonal/${string}`>;
 }
 
