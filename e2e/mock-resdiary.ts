@@ -1,6 +1,7 @@
 // biome-ignore-all lint/style/useNamingConvention: ResDiary's API uses PascalCase field names.
 import {
   addDays,
+  bookingTestTime,
   closedPeriod,
   dublinToday,
   FAKE_RESDIARY,
@@ -14,6 +15,22 @@ if (apiUrl !== FAKE_RESDIARY.url && apiUrl !== FAKE_RESDIARY.downUrl) {
     "Booking browser tests require the fake ResDiary host, never a real one.",
   );
 }
+
+const startedAt = performance.now();
+const bookingTime = bookingTestTime().getTime();
+// Only anchor booking time; replacing Date would alter Next cache expiry and hold deadlines.
+Intl.DateTimeFormat = new Proxy(Intl.DateTimeFormat, {
+  construct(target, args) {
+    const formatter = Reflect.construct(target, args) as Intl.DateTimeFormat;
+    const options = args[1] as Intl.DateTimeFormatOptions | undefined;
+    if (options?.timeZone === "Europe/Dublin" && options.hourCycle === "h23") {
+      const formatToParts = formatter.formatToParts.bind(formatter);
+      formatter.formatToParts = () =>
+        formatToParts(new Date(bookingTime + performance.now() - startedAt));
+    }
+    return formatter;
+  },
+});
 
 const restaurant = `/api/ConsumerApi/v1/Restaurant/${FAKE_RESDIARY.micrositeName}`;
 

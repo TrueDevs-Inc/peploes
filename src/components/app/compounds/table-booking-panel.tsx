@@ -270,10 +270,12 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
   const month = startOfMonth(parseISO(date));
   const monthDates = availability.datesFor(month);
   const dateFull = isDateFull(monthDates, date);
+  const nextMonthDates = availability.datesFor(addMonths(month, 1));
   const firstFree = firstFreeBookingDate(date, findTable.calendar, [
     monthDates,
-    availability.datesFor(addMonths(month, 1)),
+    nextMonthDates,
   ]);
+  const waitingForDate = waitingForNextMonth(datePicked, nextMonthDates);
   const moveDate = dateFull && !datePicked && firstFree !== undefined;
 
   useEffect(() => {
@@ -389,7 +391,10 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
             </Button>
           </div>
           <p role="status" className={styles.dateNote}>
-            {dateFull && !moveDate && content.fullDate(guests, shortDate)}
+            {dateFull &&
+              !moveDate &&
+              !waitingForDate &&
+              content.fullDate(guests, shortDate)}
           </p>
           <HoldError message={hold.error} visible={showRestoreError} />
           <TableBookingSupport />
@@ -550,16 +555,34 @@ interface IDetailsCheckProps {
   hold: IHoldSummary;
   pendingFrom: number;
   onSettled: (check: TBookingStatusCheck) => void;
+  onStartAgain: () => void;
 }
 
-function DetailsCheck({ hold, pendingFrom, onSettled }: IDetailsCheckProps) {
-  const check = useBookingStatus(hold, pendingFrom);
+function DetailsCheck({
+  hold,
+  pendingFrom,
+  onSettled,
+  onStartAgain,
+}: IDetailsCheckProps) {
+  const [checkedHold, setCheckedHold] = useState(hold);
+  const check = useBookingStatus(checkedHold, pendingFrom);
 
   useEffect(() => {
     if (check.kind !== "checking" && check.kind !== "unknown") {
       onSettled(check);
     }
   }, [check, onSettled]);
+
+  if (check.kind === "unknown" && check.notFound) {
+    return (
+      <PaymentOutcome
+        check={check}
+        reference={hold.reference}
+        onStartAgain={onStartAgain}
+        onCheckAgain={() => setCheckedHold({ ...hold })}
+      />
+    );
+  }
 
   return (
     <p role="status" className={styles.flowDescription}>
@@ -702,6 +725,13 @@ function isBusy(
     paymentBusy ||
     paid !== null
   );
+}
+
+function waitingForNextMonth(
+  datePicked: boolean,
+  dates: TOpenDates | undefined,
+): boolean {
+  return !datePicked && dates === "loading";
 }
 
 function isDateFull(dates: TOpenDates | undefined, date: string): boolean {
@@ -893,6 +923,10 @@ function HeldStep({
         hold={guest.unsure}
         pendingFrom={guest.pendingFrom}
         onSettled={settleDetails}
+        onStartAgain={() => {
+          settle({ kind: "unknown", notFound: true });
+          onStartAgain();
+        }}
       />
     );
   }

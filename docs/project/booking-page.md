@@ -31,7 +31,8 @@ the page to them.
 - After a booking action changes a cookie, the page re-renders on the server.
   If loading the booking data fails then, the panel stays mounted with the data
   it already has.
-- The date picker opens on `calendar.defaultDate`. A day can be chosen only when
+- The initial date follows closed-day rules without promising availability.
+  A day can be chosen only when
   `isBookableDay` in `src/lib/dates.ts` allows it: from `today` to `lastDate`,
   and not on a closed weekday or in a closed period. If the selected date moves
   to another month, the picker shows that month. Browsing with the month arrows
@@ -387,7 +388,8 @@ after ResDiary confirms it.
   after another 60 seconds.
   Start Again shows an inline warning with the reference. Warn that the first
   booking may still go through and booking again could mean two bookings and
-  two deposits. Move focus to the warning. Keep Waiting returns to "Hang tight"
+  possible charges. Move focus to the warning. Keep Waiting returns to
+  "Hang tight"
   and keeps the paid state. Start Again in the warning forgets the paid state
   in this tab and opens a fresh search. Until then, a reload checks
   `hold-status` again.
@@ -425,9 +427,9 @@ for any booking channel.
 
 Not yet verified:
 
-- **Peploe's live account.** `stillConfirming` promises an email. Before
-  payments go live, confirm the live account also sends confirmation emails,
-  and review their wording. The sandbox email says "Book.ResDiary.com" and
+- **Peploe's live account.** The current recovery copy does not promise an
+  email. Before payments go live, confirm the live account also sends
+  confirmation emails, and review their wording. The sandbox email says "Book.ResDiary.com" and
   doesn't mention the deposit.
 - **A confirmation that takes longer than 60 seconds.** The slowest seen was
   about 5 seconds.
@@ -516,6 +518,9 @@ Actual email delivery and live ResDiary/gateway mapping remain release checks.
 - Keep the phone and email links visible, including when booking scripts fail.
   Both come from `RESTAURANT_CONTACT` in `src/lib/constants.ts`.
 - Keep the guest's details on any error they can recover from.
+- If details recovery returns `NotFound`, keep the reference and offer Check
+  Again or Start Again with the existing duplicate-booking warning. Do not
+  assume the booking failed or send the details again automatically.
 - If a booking or payment reply is lost, show a "still checking" state and check
   the existing hold before inviting another submission. Show a confirmation only
   after ResDiary confirms.

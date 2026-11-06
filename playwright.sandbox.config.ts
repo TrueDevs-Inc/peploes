@@ -4,8 +4,10 @@ import { defineConfig } from "@playwright/test";
 import { E2E_ENVIRONMENT } from "./e2e/environment";
 
 process.loadEnvFile(".env");
+const sandboxUrl = new URL(process.env.RESDIARY_API_URL ?? "");
 if (
-  new URL(process.env.RESDIARY_API_URL ?? "").hostname !== "api.rdbranch.com"
+  sandboxUrl.protocol !== "https:" ||
+  sandboxUrl.hostname !== "api.rdbranch.com"
 ) {
   throw new Error(
     "The sandbox browser test runs only against ResDiary's sandbox.",

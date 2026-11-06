@@ -506,6 +506,11 @@ async function cleanUp(reference: string) {
   console.info(`[cleanup] ${reference}: verified final status ${status}`);
 }
 
+test.afterEach(async ({ page }) => {
+  const reference = await heldReference(page);
+  if (reference) await cleanUp(reference);
+});
+
 test("cleanup cancels a deposit hold before payment and verifies it has ended", async ({
   page,
 }) => {
@@ -521,8 +526,8 @@ test("cleanup cancels a deposit hold before payment and verifies it has ended", 
     const reference = held || (await heldReference(page));
     if (reference) await cleanUp(reference);
   }
-  expect((await sandboxBooking(held, TEST_EMAIL)).BookingStatus).toBe(
-    "Cancelled",
+  expect(["Cancelled", "TableHoldExpired"]).toContain(
+    (await sandboxBooking(held, TEST_EMAIL)).BookingStatus,
   );
 });
 

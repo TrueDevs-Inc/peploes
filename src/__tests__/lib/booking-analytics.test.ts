@@ -21,6 +21,12 @@ describe("booking funnel", () => {
     booking.bindBookingAttempt("ABC12345", attemptId);
     booking.trackBooking(GA4Event.BookingHold, "succeeded", {
       reference: "ABC12345",
+      ...{
+        firstName: "Synthetic Guest",
+        email: "synthetic@example.test",
+        mobile: "0871234567",
+        specialRequests: "private request",
+      },
     });
     const [, name, params] = browser.gtag.mock.calls[0];
     expect(name).toBe("booking_hold");
@@ -29,7 +35,9 @@ describe("booking funnel", () => {
       result: "succeeded",
       error_code: "NONE",
     });
-    expect(JSON.stringify(params)).not.toContain("ABC12345");
+    expect(JSON.stringify(params)).not.toMatch(
+      /ABC12345|Synthetic|synthetic|0871234567|private request/,
+    );
     expect(attemptId).toMatch(/^[0-9a-f-]{36}$/i);
   });
 

@@ -14,7 +14,7 @@ import {
   laterFreeDate,
   openBooking,
 } from "./booking-page";
-import { expect, test } from "./menu-test";
+import { expect, test } from "./booking-test";
 
 test("while times load the page says so, then lists ResDiary's times", async ({
   page,

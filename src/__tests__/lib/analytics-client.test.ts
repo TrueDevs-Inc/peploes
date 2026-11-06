@@ -235,9 +235,12 @@ describe("dedupe", () => {
   });
 
   it("does not record a navigation that was never dispatched", async () => {
-    const { browser, client } = await load();
+    const { browser, client, ga4 } = await load();
+    browser.removeGtag();
     client.trackPageView({ dedupeKey: "nav-1" });
-    browser.grantAnalytics();
+    expect(browser.gtag).not.toHaveBeenCalled();
+    vi.stubGlobal("window", { ...window, gtag: browser.gtag });
+    ga4.flushAnalyticsQueue();
     client.trackPageView({ dedupeKey: "nav-1" });
     expect(browser.gtag).toHaveBeenCalledTimes(1);
   });

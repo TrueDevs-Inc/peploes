@@ -62,8 +62,14 @@ nor a successful Stripe reply can produce `booking_confirmed` by itself.
 holds locally with that attempt. It sends only `attempt_id`, closed `result`
 and `error_code` values, plus `payment_kind` on payment events. Booking
 references stay in local correlation storage and never enter provider payloads.
-A bounded local hold map supports reload and bank-return recovery; each provider records confirmation deduplication only after accepting the event.
+A bounded local hold map supports reload and bank-return recovery. Each provider
+records confirmation deduplication only after its browser
+transport accepts the event. This means a gtag call or a non-empty PostHog
+capture result, not a network acknowledgement.
 Browser Web Locks serialise that acceptance across tabs where supported.
+A confirmation waiting for a lock can still be lost if its page closes.
+Durable deduplication prioritizes suppressing repeated conversions after reload;
+it does not provide exactly-once delivery.
 In-memory correlation keeps collection working when storage is blocked.
 
 Deduplication is best effort when storage or Web Locks are unavailable. Client

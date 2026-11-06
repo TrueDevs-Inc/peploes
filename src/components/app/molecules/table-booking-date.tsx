@@ -13,7 +13,13 @@ import {
   startOfWeek,
 } from "date-fns";
 import { ArrowLeft, ArrowRight, CalendarDays, ChevronDown } from "lucide-react";
-import { type KeyboardEvent, useEffect, useRef, useState } from "react";
+import {
+  type KeyboardEvent,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
 import styles from "@/components/app/compounds/table-booking-panel.module.css";
 import { TABLE_BOOKING_CONTENT } from "@/lib/constants/table-booking";
@@ -29,6 +35,7 @@ export function TableBookingDate({
   const [open, setOpen] = useState(false);
   const [activeDate, setActiveDate] = useState(value);
   const grid = useRef<HTMLFieldSetElement>(null);
+  const focusedDay = useRef<string | null>(null);
   const [month, setMonth] = useState(() => startOfMonth(parseISO(value)));
   const selectedMonth = value.slice(0, 7);
   const [previousSelectedMonth, setPreviousSelectedMonth] =
@@ -66,6 +73,26 @@ export function TableBookingDate({
       (day) =>
         format(day, "yyyy-MM-dd") === activeDate && !isUnavailable(activeDate),
     ) ?? days.find((day) => !isUnavailable(format(day, "yyyy-MM-dd")));
+
+  const tabDate = tabDay ? format(tabDay, "yyyy-MM-dd") : undefined;
+
+  useLayoutEffect(() => {
+    if (
+      !open ||
+      !focusedDay.current ||
+      !grid.current?.querySelector(
+        `[data-date="${focusedDay.current}"]:disabled`,
+      )
+    )
+      return;
+    if (tabDate) {
+      grid.current
+        .querySelector<HTMLButtonElement>(`[data-date="${tabDate}"]`)
+        ?.focus();
+    } else {
+      trigger.current?.focus();
+    }
+  }, [open, tabDate]);
 
   function moveDay(event: KeyboardEvent<HTMLButtonElement>, day: Date) {
     const next = new Map([
@@ -135,6 +162,9 @@ export function TableBookingDate({
         aria-expanded={open}
         aria-controls="booking-calendar"
         className={styles.selection}
+        onFocus={() => {
+          focusedDay.current = null;
+        }}
         onClick={() => {
           const today = dublinToday();
           if (value < today) onChange(today);
@@ -155,6 +185,12 @@ export function TableBookingDate({
           id="booking-calendar"
           className={styles.calendar}
           aria-label="Choose date"
+          onFocusCapture={(event) => {
+            focusedDay.current =
+              event.target instanceof HTMLButtonElement
+                ? (event.target.dataset.date ?? null)
+                : null;
+          }}
         >
           <div className={styles.calendarHeader}>
             <strong aria-live="polite">{format(month, "MMMM yyyy")}</strong>

@@ -115,7 +115,7 @@ export const TABLE_BOOKING_CONTENT = {
     stillConfirming: (reference: string) =>
       `Hang tight! We're still confirming booking ${reference}. If your card was charged, your confirmation will follow shortly. If you hear nothing in a few minutes, please call us on ${RESTAURANT_CONTACT.phoneLabel}.`,
     startAgainWarning: (reference: string) =>
-      `Booking ${reference} may still go through. If it does and you book again, you'll have two bookings and two deposits.`,
+      `Booking ${reference} may still go through. If it does and you book again, you'll have two bookings and could be charged twice.`,
     keepWaiting: "Keep Waiting",
     notConfirmed: (reference: string) =>
       `We couldn't confirm booking ${reference}. If your card was charged, please call us on ${RESTAURANT_CONTACT.phoneLabel} and quote this reference.`,

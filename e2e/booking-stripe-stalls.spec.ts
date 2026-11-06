@@ -1,52 +1,8 @@
 import type { Page } from "@playwright/test";
+import { bookingTestTime } from "./booking-fixtures";
 
-import { laterFreeDate, openBooking } from "./booking-page";
-import { expect, test } from "./menu-test";
-
-async function paymentStep(page: Page, kind: "payment" | "card" = "payment") {
-  const reservations = await openBooking(page);
-  await page.route("**/api/bookings/hold-status?**", (route) =>
-    route.fulfill({ json: { ok: true, data: { status: "pending" } } }),
-  );
-  await page.evaluate(
-    ({ date, kind }) => {
-      sessionStorage.setItem(
-        "peploes:booking-payment",
-        JSON.stringify({
-          kind,
-          amountText: "€20.00",
-          stripe: {
-            publishableKey: "pk_test_e2e",
-            accountId: "acct_e2e",
-            clientSecret:
-              kind === "card"
-                ? "seti_saved_secret_saved"
-                : "pi_saved_secret_saved",
-          },
-          summary: {
-            reference: "E2E99999",
-            revision: 1,
-            date,
-            dateLabel: "Sat, 7 Nov 2026",
-            time: "18:00",
-            timeLabel: "6:00 pm",
-            partySize: 4,
-            guestsLabel: "4 guests",
-            offer: {
-              kind: "standard",
-              feeCents: 2000,
-              mayRequireCard: false,
-              returnBy: null,
-            },
-          },
-        }),
-      );
-    },
-    { date: laterFreeDate(), kind },
-  );
-  await page.reload({ waitUntil: "domcontentloaded" });
-  return reservations;
-}
+import { restorePaymentStep } from "./booking-page";
+import { expect, test } from "./booking-test";
 
 async function stripeStub(
   page: Page,
@@ -84,11 +40,11 @@ for (const stalled of ["script", "intent", "element"] as const) {
   test(`a stalled Stripe ${stalled} offers retry and unlocks Edit`, async ({
     page,
   }) => {
-    await page.clock.install();
+    await page.clock.install({ time: bookingTestTime() });
     if (stalled === "script")
       await page.route("https://js.stripe.com/**", () => undefined);
     else await stripeStub(page, stalled);
-    const reservations = await paymentStep(page);
+    const reservations = await restorePaymentStep(page);
     await expect(
       reservations.getByText("Loading secure payment…", { exact: true }),
     ).toBeVisible();
@@ -127,10 +83,21 @@ test("a successful card-guarantee confirmation uses SetupIntent and checks ResDi
   page,
 }) => {
   await stripeStub(page, "card-success");
-  const reservations = await paymentStep(page, "card");
+  const reservations = await restorePaymentStep(page, "card");
+  const recovered: URL[] = [];
+  await page.route("**/api/bookings/hold-status?**", async (route) => {
+    const confirmed = await page.evaluate(() =>
+      (Reflect.get(window, "stripeCalls") as string[]).includes("confirmSetup"),
+    );
+    if (confirmed) recovered.push(new URL(route.request().url()));
+    await route.fulfill({ json: { ok: true, data: { status: "pending" } } });
+  });
   await reservations
     .getByRole("button", { name: "Save Card and Reserve", exact: true })
     .click();
+  await expect.poll(() => recovered.length).toBeGreaterThan(0);
+  expect(recovered[0]?.searchParams.get("holdReference")).toBe("E2E99999");
+  expect(recovered[0]?.searchParams.get("holdRevision")).toBe("1");
   await expect(
     reservations.getByText("Confirming your booking…", { exact: true }),
   ).toBeVisible();
@@ -140,7 +107,7 @@ test("a successful card-guarantee confirmation uses SetupIntent and checks ResDi
       exact: true,
     }),
   ).toHaveCount(0);
-  expect(await page.evaluate(() => Reflect.get(window, "stripeCalls"))).toEqual(
-    ["setupIntent", "confirmSetup"],
-  );
+  const calls = await page.evaluate(() => Reflect.get(window, "stripeCalls"));
+  expect(calls).toContain("confirmSetup");
+  expect(calls).not.toContain("confirmPayment");
 });

@@ -9,6 +9,7 @@ import {
   suppressNavigationOfLinks,
   test,
 } from "./analytics-harness";
+import { bookingTestTime } from "./booking-fixtures";
 import { chooseDate, laterFreeDate } from "./booking-page";
 
 test.setTimeout(90_000);
@@ -56,6 +57,14 @@ test.describe("before and after placeholder choices", () => {
     analytics,
   }) => {
     await page.addInitScript(() => {
+      Object.defineProperty(document, "cookie", {
+        get() {
+          throw new Error("blocked");
+        },
+        set() {
+          throw new Error("blocked");
+        },
+      });
       for (const name of ["localStorage", "sessionStorage"])
         Object.defineProperty(window, name, {
           get() {
@@ -441,6 +450,7 @@ test.describe("interaction events", () => {
     page,
     analytics,
   }) => {
+    await page.clock.setSystemTime(bookingTestTime());
     await page.goto("/book-a-table");
     await acceptAll(page);
     await expectPageViews(page, analytics, 1);

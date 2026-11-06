@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   BOOKING_GUEST_LIMITS,
   BOOKING_MESSAGES,
+  BOOKING_PATTERNS,
 } from "@/lib/constants/booking";
 import { TABLE_BOOKING_CONTENT } from "@/lib/constants/table-booking";
 import type {
@@ -17,7 +18,8 @@ import type {
 } from "@/lib/types";
 
 function phoneError(phone: string): string {
-  if (phone.trim().startsWith("+")) return BOOKING_MESSAGES.mobileWithoutCode;
+  if (BOOKING_PATTERNS.internationalPrefix.test(phone.trim()))
+    return BOOKING_MESSAGES.mobileWithoutCode;
   const digits = phone.replace(/\D/g, "").length;
   return /^[\d\s()-]+$/.test(phone) &&
     digits >= BOOKING_GUEST_LIMITS.mobileMinDigits &&
@@ -225,10 +227,19 @@ export function TableBookingDetails({
           <span>Special requests (optional)</span>
           <textarea
             rows={1}
+            aria-invalid={!!errors.requests}
+            aria-describedby={
+              errors.requests ? "booking-requests-error" : undefined
+            }
             value={details.requests}
             placeholder="e.g. dietary requirements, occasion"
             onChange={(event) => update("requests", event.target.value)}
           />
+          {errors.requests && (
+            <span id="booking-requests-error" className={styles.error}>
+              {errors.requests}
+            </span>
+          )}
         </label>
       </div>
       <div className={styles.terms}>

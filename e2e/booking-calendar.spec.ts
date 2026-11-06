@@ -1,7 +1,7 @@
 import type { Page } from "@playwright/test";
-
 import {
   addDays,
+  bookingTestTime,
   closedPeriod,
   dublinToday,
   FAKE_RESDIARY,
@@ -20,7 +20,7 @@ import {
   findTable,
   laterFreeDate,
 } from "./booking-page";
-import { expect, test } from "./menu-test";
+import { expect, test } from "./booking-test";
 
 test("the date picker opens on the first open day and offers only the days ResDiary allows", async ({
   page,
@@ -329,7 +329,7 @@ test("a full default date waits for next month's availability before moving", as
   const dateField = reservations.getByRole("button", { name: /^Date / });
 
   await expect.poll(() => replies.pending.length).toBe(1);
-  await expect(reservations.getByText(/^No tables for/)).toBeVisible();
+  await expect(reservations.getByText(/^No tables for/)).toBeHidden();
   await expect(dateField).toHaveAccessibleName(
     `Date ${shortDayLabel(replies.date)}`,
   );
@@ -391,7 +391,7 @@ test("a calendar reply during the times step moves the default date only on retu
   await replies.open();
   const reservations = page.getByRole("region", { name: "Table reservations" });
   await expect.poll(() => replies.pending.length).toBe(1);
-  await expect(reservations.getByText(/^No tables for/)).toBeVisible();
+  await expect(reservations.getByText(/^No tables for/)).toBeHidden();
   await findTable(reservations);
   await expect(
     reservations.getByRole("heading", { name: "Available times", exact: true }),
@@ -412,7 +412,7 @@ for (const returnTo of ["picker", "search", "month"]) {
   test(`stale full days refresh on returning to the ${returnTo}, keeping known days during the request`, async ({
     page,
   }) => {
-    await page.clock.install();
+    await page.clock.install({ time: bookingTestTime() });
     const date = laterFreeDate();
     const replies = await mockCalendar(page, [date]);
     await page.goto("/book-a-table");
@@ -474,7 +474,7 @@ for (const returnTo of ["picker", "search", "month"]) {
 }
 
 test("reopening a fresh calendar sends no new request", async ({ page }) => {
-  await page.clock.install();
+  await page.clock.install({ time: bookingTestTime() });
   const date = laterFreeDate();
   const replies = await mockCalendar(page, [date]);
   await page.goto("/book-a-table");
@@ -526,7 +526,7 @@ test("a failed calendar retries on reopening without waiting for freshness", asy
 test("a late refresh for the previous party size does not change the current calendar", async ({
   page,
 }) => {
-  await page.clock.install();
+  await page.clock.install({ time: bookingTestTime() });
   const date = laterFreeDate();
   const replies = await mockCalendar(page, []);
   await page.goto("/book-a-table");
@@ -557,7 +557,7 @@ test("a late refresh for the previous party size does not change the current cal
 test("a refresh keeps the guest's chosen date and updates its full-day note", async ({
   page,
 }) => {
-  await page.clock.install();
+  await page.clock.install({ time: bookingTestTime() });
   const date = laterFreeDate();
   const replies = await mockCalendar(page, []);
   await page.goto("/book-a-table");
@@ -569,6 +569,9 @@ test("a refresh keeps the guest's chosen date and updates its full-day note", as
   await page.clock.fastForward("02:01");
   await picker.open();
   await expect(picker.day(date)).toBeDisabled();
+  await expect(
+    reservations.getByRole("button", { name: /^Date / }),
+  ).toBeFocused();
   const note = reservations.getByText(
     `No tables for ${FAKE_RESDIARY.defaultPartySize} guests on ${shortDayLabel(date)}. Please choose another day.`,
     { exact: true },
@@ -588,7 +591,7 @@ test("a refresh keeps the guest's chosen date and updates its full-day note", as
 test("a refreshed full default date moves to the next month and shows its selected day", async ({
   page,
 }) => {
-  await page.clock.install();
+  await page.clock.install({ time: bookingTestTime() });
   const replies = await mockMonthEndCalendar(page);
   replies.full = false;
   await replies.open();
@@ -773,3 +776,28 @@ async function mockMonthEndCalendar(page: Page) {
   });
   return replies;
 }
+
+test("a refreshed full day moves keyboard focus to an enabled day", async ({
+  page,
+}) => {
+  await page.clock.install({ time: bookingTestTime() });
+  const date = laterFreeDate();
+  const replies = await mockCalendar(page, []);
+  await page.goto("/book-a-table");
+  const reservations = page.getByRole("region", { name: "Table reservations" });
+  await chooseDate(reservations, date);
+  await replies.settle();
+  await page.clock.fastForward("02:01");
+  replies.pause = true;
+  replies.full = [date];
+  const picker = bookingCalendar(reservations);
+  await picker.open();
+  await expect.poll(() => replies.pending.length).toBeGreaterThan(0);
+  await picker.day(date).focus();
+  await replies.release();
+  await expect(picker.day(date)).toBeDisabled();
+  const fallback = openDates(dublinToday()).find((day) => day !== date);
+  if (!fallback) throw new Error("Calendar fixture needs an enabled fallback");
+  await expect(picker.day(fallback)).toBeEnabled();
+  await expect(picker.day(fallback)).toBeFocused();
+});
