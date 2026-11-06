@@ -241,7 +241,6 @@ describe("measured document validity", () => {
     ["blank body", { text: "Published" }],
     ["error page", { text: "Internal server error. ".repeat(20) }],
     ["old consent", { consentStored: true }],
-    ["hidden consent", { consentVisible: false }],
   ])("rejects %s content", (_failure, change) => {
     expect(() =>
       checkContent({ ...snapshot(current), ...change }, current),

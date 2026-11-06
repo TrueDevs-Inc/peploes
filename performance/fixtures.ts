@@ -46,7 +46,6 @@ export const snapshot = (current: TRoute) => ({
   bookingAvailable: true,
   mapLoaded: true,
   consentStored: false,
-  consentVisible: true,
 });
 const metric = { numericValue: 100 };
 

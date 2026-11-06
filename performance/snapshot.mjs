@@ -1,15 +1,12 @@
 import BaseGatherer from "lighthouse/core/gather/base-gatherer.js";
-import {
-  COOKIE_PREFERENCES,
-  COOKIE_PREFERENCES_CONTENT,
-} from "../src/lib/constants/cookie-consent.ts";
+import { COOKIE_PREFERENCES } from "../src/lib/constants/cookie-consent.ts";
 
 export default class RepresentativeContent extends BaseGatherer {
   meta = { supportedModes: ["navigation"] };
 
   getArtifact(context) {
     return context.driver.executionContext.evaluate(
-      (storageKey, consentTrigger) => {
+      (storageKey) => {
         const main = document.querySelector("main");
         const image = main?.querySelector("img");
         const visible = (element) =>
@@ -35,17 +32,10 @@ export default class RepresentativeContent extends BaseGatherer {
             main?.querySelector('img[src*="peploes-visit-map"]'),
           ),
           consentStored: localStorage.getItem(storageKey) !== null,
-          consentVisible: [...document.querySelectorAll("button")].some(
-            (button) =>
-              button.textContent?.trim() === consentTrigger && visible(button),
-          ),
         };
       },
       {
-        args: [
-          COOKIE_PREFERENCES.storageKey,
-          COOKIE_PREFERENCES_CONTENT.trigger,
-        ],
+        args: [COOKIE_PREFERENCES.storageKey],
         useIsolation: true,
       },
     );

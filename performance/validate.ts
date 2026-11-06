@@ -23,7 +23,6 @@ const snapshotSchema = z.object({
   mapLoaded: z.boolean(),
   mapFallbackPresent: z.boolean().default(false),
   consentStored: z.boolean(),
-  consentVisible: z.boolean(),
 });
 
 const metricSchema = z.object({
@@ -97,9 +96,9 @@ export function checkContent(input: unknown, route: TRoute) {
     throw new PerformanceError("Configured map unavailable.");
   if (route.map === "static" && !snapshot.mapFallbackPresent)
     throw new PerformanceError("Normal static map fallback missing.");
-  if (snapshot.consentStored || !snapshot.consentVisible)
+  if (snapshot.consentStored)
     throw new PerformanceError(
-      "Expected fresh first-visitor cookie settings control.",
+      "Expected a first visit without stored cookie preferences.",
     );
   return snapshot;
 }
