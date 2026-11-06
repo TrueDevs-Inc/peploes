@@ -7,7 +7,7 @@ process.loadEnvFile(".env");
 const sandboxUrl = new URL(process.env.RESDIARY_API_URL ?? "");
 if (
   sandboxUrl.protocol !== "https:" ||
-  sandboxUrl.hostname !== "api.rdbranch.com"
+  sandboxUrl.host !== "api.rdbranch.com"
 ) {
   throw new Error(
     "The sandbox browser test runs only against ResDiary's sandbox.",
