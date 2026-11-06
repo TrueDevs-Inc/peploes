@@ -1,9 +1,9 @@
 "use client";
 
-import * as Sentry from "@sentry/nextjs";
 import { Component } from "react";
 
 import { Button } from "@/components/ui/button";
+import { clientSentry as Sentry } from "@/lib/client-sentry";
 import type {
   ISentryErrorBoundaryProps,
   ISentryErrorBoundaryState,
@@ -23,9 +23,11 @@ export class SentryErrorBoundary extends Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    Sentry.withScope((scope) => {
+    const sentry = Sentry;
+    if (!sentry) return;
+    sentry.withScope((scope) => {
       scope.setExtra("componentStack", errorInfo.componentStack ?? "");
-      Sentry.captureException(error);
+      sentry.captureException(error);
     });
   }
 

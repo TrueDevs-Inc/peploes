@@ -1,5 +1,5 @@
 import type { SeverityLevel } from "@sentry/nextjs";
-import * as Sentry from "@sentry/nextjs";
+import { clientSentry as Sentry } from "./client-sentry";
 
 import { LogLevel, SentryTag } from "./enums";
 import type { IClientLogConfig } from "./types";
@@ -42,23 +42,25 @@ export function logClientError(error: Error, config: IClientLogConfig): void {
     console.error("[Client Error]", entry);
   }
 
-  Sentry.withScope((scope) => {
-    scope.setLevel(SEVERITY_MAP[config.level ?? LogLevel.Error]);
-    scope.setTag(SentryTag.Module, config.module);
-    scope.setTag(SentryTag.Stage, config.stage);
+  const sentry = Sentry;
+  if (sentry)
+    sentry.withScope((scope) => {
+      scope.setLevel(SEVERITY_MAP[config.level ?? LogLevel.Error]);
+      scope.setTag(SentryTag.Module, config.module);
+      scope.setTag(SentryTag.Stage, config.stage);
 
-    if (config.errorType) {
-      scope.setTag(SentryTag.ErrorType, config.errorType);
-    }
-
-    if (config.context) {
-      for (const [key, value] of Object.entries(config.context)) {
-        scope.setContext(key, value as Record<string, unknown>);
+      if (config.errorType) {
+        scope.setTag(SentryTag.ErrorType, config.errorType);
       }
-    }
 
-    Sentry.captureException(error);
-  });
+      if (config.context) {
+        for (const [key, value] of Object.entries(config.context)) {
+          scope.setContext(key, value as Record<string, unknown>);
+        }
+      }
+
+      sentry.captureException(error);
+    });
 
   const win = window as Window & { clientErrorLog?: unknown[] };
   win.clientErrorLog = win.clientErrorLog ?? [];
