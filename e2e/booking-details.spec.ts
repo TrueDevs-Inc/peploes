@@ -2161,6 +2161,9 @@ test("a missing hold cookie during details recovery offers a safe restart", asyn
   await expect(
     reservations.getByRole("button", { name: "Start Again", exact: true }),
   ).toBeVisible();
+  await expect(reservations.getByText(/If your card was charged/)).toHaveCount(
+    0,
+  );
   await expect(
     reservations.getByRole("button", {
       name: "Confirm Reservation",
@@ -2171,6 +2174,7 @@ test("a missing hold cookie during details recovery offers a safe restart", asyn
     .getByRole("button", { name: "Start Again", exact: true })
     .click();
   await expect(reservations.getByText(/may still go through/)).toBeFocused();
+  await expect(reservations.getByText(/could be charged twice/)).toHaveCount(0);
   await reservations
     .getByRole("button", { name: "Start Again", exact: true })
     .click();

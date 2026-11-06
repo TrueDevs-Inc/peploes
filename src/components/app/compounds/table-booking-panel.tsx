@@ -577,6 +577,7 @@ function DetailsCheck({
   if (check.kind === "unknown" && check.notFound) {
     return (
       <PaymentOutcome
+        phase="details"
         check={check}
         reference={hold.reference}
         onStartAgain={onStartAgain}

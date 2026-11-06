@@ -67,6 +67,8 @@ export const TABLE_BOOKING_CONTENT = {
       "We couldn't tell whether your details reached us. Your table is still held, so please press Confirm Reservation again.",
     stillConfirming: (reference: string) =>
       `Hang tight! We're still confirming booking ${reference}. If you hear nothing in a few minutes, please call us on ${RESTAURANT_CONTACT.phoneLabel} and quote this reference.`,
+    startAgainWarning: (reference: string) =>
+      `Booking ${reference} may still go through. If it does and you book again, you'll have two bookings.`,
   },
   countryCodes: [
     { code: "353", label: "IE +353" },
