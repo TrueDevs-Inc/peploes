@@ -329,11 +329,6 @@
     translate: 0 -49.954%;
   }
 
-  .heroImage img {
-    /* Preserve the image fill authored in Figma's 1440 × 389px hero. */
-    object-fit: fill;
-  }
-
   .hero::after {
     background: linear-gradient(
       90deg,
