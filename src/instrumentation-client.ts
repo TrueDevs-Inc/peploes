@@ -1,6 +1,9 @@
 import * as Sentry from "@sentry/nextjs";
 
 import { scrubBreadcrumb, scrubEvent, scrubSpan } from "./lib/sentry-scrub";
+import { disableZodJit } from "./lib/zod-jit";
+
+disableZodJit();
 
 const isProd = process.env.NODE_ENV === "production";
 const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN || "";
