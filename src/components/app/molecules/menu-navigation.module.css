@@ -10,6 +10,19 @@
     width 260ms ease;
 }
 
+.tabs > li > :is(a, button) {
+  pointer-events: none;
+}
+
+.tabLabel {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.tabs > li > button:disabled .tabLabel {
+  pointer-events: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .indicator {
     transition: none;

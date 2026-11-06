@@ -155,7 +155,7 @@ export function MenuNavigation({
                       "flex items-center justify-center gap-2 border-b-2 border-transparent px-[22px] text-xl leading-6 hover:text-[#8a1735] focus-visible:ring-peploe-burgundy aria-expanded:text-peploe-burgundy aria-[current=page]:text-[#8a1735]",
                     )}
                   >
-                    {item.label}
+                    <span className={styles.tabLabel}>{item.label}</span>
                     <ChevronDown
                       aria-hidden="true"
                       className={cn("size-4", isOpen && "rotate-180")}
@@ -174,7 +174,7 @@ export function MenuNavigation({
                       "flex min-w-24 items-center xl:min-w-0 justify-center border-b-2 border-transparent px-[22px] text-xl leading-6 hover:text-[#8a1735] focus-visible:ring-peploe-burgundy aria-[current=page]:text-[#8a1735]",
                     )}
                   >
-                    {item.label}
+                    <span className={styles.tabLabel}>{item.label}</span>
                   </Link>
                 ) : null}
               </li>
