@@ -54,6 +54,7 @@ describe("sitemap", function sitemapTests() {
     expect(urls).toContain("http://localhost:3000/seasonal/wine-dinner");
     expect(urls).not.toContain("http://localhost:3000/seasonal/draft-event");
     expect(urls).toContain("http://localhost:3000/our-story");
+    expect(urls).toContain("http://localhost:3000/book-a-table");
     expect(urls).toContain("http://localhost:3000/journal");
     expect(urls).toContain("http://localhost:3000/journal/restaurant-story");
     expect(urls).not.toContain("http://localhost:3000/journal/draft-story");

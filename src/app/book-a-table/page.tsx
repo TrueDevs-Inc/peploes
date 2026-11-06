@@ -13,8 +13,6 @@ export const metadata = buildSeoMetadata({
   url: ROUTES.BOOK_A_TABLE,
   image: TABLE_BOOK_PAGE_CONTENT.hero.image.src,
   imageAlt: TABLE_BOOK_PAGE_CONTENT.hero.image.alt,
-  // Keep the design-only booking page out of search until reservations are connected.
-  noIndex: true,
 });
 
 export default async function BookATablePage() {

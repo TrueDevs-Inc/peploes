@@ -55,7 +55,7 @@ visual tokens or selecting final crops.
 
 ## Book a Table
 
-The noindex `/book-a-table` flow uses ResDiary availability, holds and guest
+The indexable `/book-a-table` flow uses ResDiary availability, holds and guest
 details. Start on its first open date; reject past Dublin dates and recheck
 before searching. The date refreshes on focus or visibility, keeping future
 choices. Date or party-size changes clear the selected time. Preserve guest

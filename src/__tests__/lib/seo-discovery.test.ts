@@ -76,10 +76,12 @@ describe("public discovery", function publicDiscoveryTests() {
     );
   });
 
-  it("omits the noindex booking preview and placeholder text", function llmsPlaceholderTest() {
+  it("lists the booking page and omits placeholder text", function llmsPlaceholderTest() {
     const content = buildLlmsText("https://example.com/");
 
-    expect(content).not.toContain("/book-a-table");
+    expect(content).toContain(
+      "- [Book a Table](https://example.com/book-a-table): Book a table online",
+    );
     expect(content).not.toContain("Application home page");
     expect(content).not.toContain("production-ready");
     expect(content).not.toContain("Campaign/Event Title");
