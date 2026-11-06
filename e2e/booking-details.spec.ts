@@ -2171,6 +2171,10 @@ test("a missing hold cookie during details recovery offers a safe restart", asyn
   isMobile,
 }) => {
   const { reservations, confirm } = await heldWithDetails(page, isMobile);
+  const newsletter = reservations.getByRole("checkbox", {
+    name: "Email me news and updates from Peploe’s (optional)",
+  });
+  await newsletter.uncheck();
   await page.route("**/api/bookings/hold-status?**", (route) =>
     route.fulfill({
       status: 404,
@@ -2207,4 +2211,48 @@ test("a missing hold cookie during details recovery offers a safe restart", asyn
       sessionStorage.getItem("peploes:booking-details"),
     ),
   ).toBeNull();
+  await page.unroute("**/api/bookings/hold-status?**");
+  await page.unroute("**/book-a-table");
+  await chooseDate(reservations, laterFreeDate());
+  await findTable(reservations);
+  await chooseTime(reservations, "6:00 pm");
+  await reservations
+    .getByRole("button", { name: "Continue", exact: true })
+    .click();
+  await expect(newsletter).toBeChecked();
+  await expect(
+    reservations.getByLabel("Email address", { exact: false }),
+  ).toHaveValue("preview@example.com");
+});
+
+test("Choose Another Time keeps the newsletter opt-out and guest details", async ({
+  page,
+  isMobile,
+}) => {
+  await stubStripe(page);
+  const { reservations, confirm } = await heldWithDetails(page, isMobile, {
+    time: "6:30 pm",
+  });
+  const newsletter = reservations.getByRole("checkbox", {
+    name: "Email me news and updates from Peploe’s (optional)",
+  });
+  await newsletter.uncheck();
+  await confirm.click();
+  await expect(
+    reservations.getByText("Card details", { exact: true }),
+  ).toBeVisible();
+  await reservations
+    .getByRole("button", { name: "Edit date & guests" })
+    .click();
+  await changeDialog(page).choose.click();
+  await chooseDate(reservations, laterFreeDate());
+  await findTable(reservations);
+  await chooseTime(reservations, "6:00 pm");
+  await reservations
+    .getByRole("button", { name: "Continue", exact: true })
+    .click();
+  await expect(newsletter).not.toBeChecked();
+  await expect(
+    reservations.getByLabel("Email address", { exact: false }),
+  ).toHaveValue("preview@example.com");
 });

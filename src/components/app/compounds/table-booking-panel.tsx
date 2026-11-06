@@ -283,6 +283,14 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
     editSearch();
   }
 
+  function startAgain() {
+    setDetails((current) => ({
+      ...current,
+      newsletterOptIn: emptyDetails().newsletterOptIn,
+    }));
+    startOver();
+  }
+
   function holdChosenTime() {
     if (!time) return;
     setShowRestoreError(false);
@@ -347,7 +355,7 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
           returned={returned}
           onPaid={resumePaid}
           onConfirmed={confirmBooking}
-          onStartAgain={startOver}
+          onStartAgain={startAgain}
         />
       </section>
     );
@@ -493,7 +501,7 @@ export function TableBookingPanel({ findTable }: ITableBookingPanelProps) {
                   setStep(1);
                 }}
                 onContinue={sendDetails}
-                onStartAgain={startOver}
+                onStartAgain={startAgain}
                 onCheckAgain={() => setPaid(paid ? { ...paid } : null)}
               />
             )}
