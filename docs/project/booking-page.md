@@ -31,7 +31,8 @@ the page to them.
 - After a booking action changes a cookie, the page re-renders on the server.
   If loading the booking data fails then, the panel stays mounted with the data
   it already has.
-- The initial date follows closed-day rules without promising availability.
+- The initial date is the first non-closed day found within the bounded search,
+  or today if none is found. It does not promise availability.
   A day can be chosen only when
   `isBookableDay` in `src/lib/dates.ts` allows it: from `today` to `lastDate`,
   and not on a closed weekday or in a closed period. If the selected date moves
