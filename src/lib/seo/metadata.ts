@@ -13,6 +13,7 @@ import type {
   ISeoConfig,
   IWebsiteSchemaConfig,
 } from "@/lib/types";
+import { isSearchIndexableSite } from "./indexing";
 
 export function getSiteUrl(): string {
   const url = env.NEXT_PUBLIC_SITE_URL;
@@ -77,7 +78,7 @@ export function buildSeoMetadata(config: ISeoConfig): Metadata {
       images: [socialImage],
     },
     robots: {
-      index: !noIndex,
+      index: !noIndex && isSearchIndexableSite(getSiteUrl()),
       follow: !noFollow,
     },
   };

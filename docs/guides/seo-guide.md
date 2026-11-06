@@ -48,8 +48,20 @@ describes.
 
 ## Robots and sitemap
 
-Indexing follows each page's `noIndex` metadata setting. There is no global
-staging/production indexing switch or deployment-based `X-Robots-Tag`.
+Indexing follows each page's `noIndex` metadata setting. Deployment labels
+do not change indexing, because a staging project may also be labelled
+`production`. A site whose `NEXT_PUBLIC_SITE_URL` is on a platform host
+(`*.netlify.app` or `*.vercel.app`, listed in `src/lib/seo/indexing.ts`) is a
+non-production copy: every page has `noindex` metadata and every response
+carries `X-Robots-Tag: noindex`. Any other site URL, including the public
+domain and local builds, stays indexable. `peploes.netlify.app` is a temporary
+exception so its Lighthouse SEO results can be tested before the public domain
+is connected; remove it from `INDEXABLE_PLATFORM_HOSTS_UNTIL_DOMAIN_LAUNCH`
+when `peploes.com` goes live. The module has no imports so
+`next.config.ts` and `buildSeoMetadata()` share one rule. Both read the value
+at build time. `robots.txt` stays permissive on those hosts so crawlers can
+read the noindex signal; see
+[Block search indexing](https://developers.google.com/search/docs/crawling-indexing/block-indexing).
 Requests with `x-presentation: admin` receive a `noindex` header from
 `next.config.ts`, independently of public page metadata.
 `robots.txt` uses the same configured crawler policy in every environment,
@@ -133,6 +145,7 @@ and the CSP.
 - Titles and descriptions match visible content.
 - Canonical URLs point to the public deployment.
 - Deployment labels do not change indexing; page-specific `noIndex` remains effective.
+- A platform-host deployment serves `X-Robots-Tag: noindex`; the public domain does not.
 - JSON-LD contains real names, URLs, images, prices, and dates.
 - Sitemap contains canonical public pages only.
 - Search, training, and mixed-use crawler rules match product policy.
