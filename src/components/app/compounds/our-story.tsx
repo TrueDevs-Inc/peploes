@@ -130,7 +130,7 @@ function StoryBuilding() {
           <Button
             asChild
             variant="brand-contact"
-            className="mt-6 h-auto min-h-11 w-[161px] max-w-full gap-[5px] rounded-[4px] border-0 px-5 py-2.5 text-base leading-6 whitespace-normal shadow-[inset_0_0_0_1px_currentColor] hover:bg-peploe-burgundy hover:text-warm-cream hover:shadow-[inset_0_0_0_1px_var(--peploe-burgundy)] focus-visible:ring-0 forced-colors:[&:not(:focus-visible)]:-outline-offset-1 forced-colors:[&:not(:focus-visible)]:[outline:1px_solid_CanvasText]"
+            className="mt-6 h-auto min-h-11 w-fit max-w-full gap-[5px] rounded-[4px] border-0 px-5 py-2.5 text-base leading-6 whitespace-nowrap shadow-[inset_0_0_0_1px_currentColor] hover:bg-peploe-burgundy hover:text-warm-cream hover:shadow-[inset_0_0_0_1px_var(--peploe-burgundy)] focus-visible:ring-0 forced-colors:[&:not(:focus-visible)]:-outline-offset-1 forced-colors:[&:not(:focus-visible)]:[outline:1px_solid_CanvasText]"
           >
             <Link href={`${ROUTES.VISIT_CONTACT}#find-us`}>
               {building.action}
@@ -241,7 +241,7 @@ function StoryMural() {
           <Button
             asChild
             variant="brand-secondary-inverse"
-            className="mt-6 h-auto min-h-11 w-[249px] max-w-full gap-[5px] rounded-[4px] border-0 px-5 py-2.5 text-base leading-6 whitespace-normal shadow-[inset_0_0_0_1px_currentColor] hover:bg-warm-cream hover:text-ink hover:shadow-[inset_0_0_0_1px_var(--warm-cream)] focus-visible:ring-0 forced-colors:[&:not(:focus-visible)]:-outline-offset-1 forced-colors:[&:not(:focus-visible)]:[outline:1px_solid_CanvasText]"
+            className="mt-6 h-auto min-h-11 w-fit max-w-full gap-[5px] rounded-[4px] border-0 px-4 py-2.5 text-base leading-6 whitespace-nowrap shadow-[inset_0_0_0_1px_currentColor] hover:bg-warm-cream hover:text-ink hover:shadow-[inset_0_0_0_1px_var(--warm-cream)] focus-visible:ring-0 sm:px-5 forced-colors:[&:not(:focus-visible)]:-outline-offset-1 forced-colors:[&:not(:focus-visible)]:[outline:1px_solid_CanvasText]"
           >
             <Link href={getJournalArticlePath("the-art-of-peploes")}>
               {mural.action}
@@ -290,7 +290,7 @@ function StoryArchive() {
           <Button
             asChild
             variant="brand-contact"
-            className="mt-6 h-auto min-h-11 w-[210px] max-w-full gap-[5px] rounded-[4px] border-0 px-5 py-2.5 text-base leading-6 whitespace-normal shadow-[inset_0_0_0_1px_currentColor] hover:bg-peploe-burgundy hover:text-warm-cream hover:shadow-[inset_0_0_0_1px_var(--peploe-burgundy)] focus-visible:ring-0 lg:mt-5 forced-colors:[&:not(:focus-visible)]:-outline-offset-1 forced-colors:[&:not(:focus-visible)]:[outline:1px_solid_CanvasText]"
+            className="mt-6 h-auto min-h-11 w-fit max-w-full gap-[5px] rounded-[4px] border-0 px-5 py-2.5 text-base leading-6 whitespace-nowrap shadow-[inset_0_0_0_1px_currentColor] hover:bg-peploe-burgundy hover:text-warm-cream hover:shadow-[inset_0_0_0_1px_var(--peploe-burgundy)] focus-visible:ring-0 lg:mt-5 forced-colors:[&:not(:focus-visible)]:-outline-offset-1 forced-colors:[&:not(:focus-visible)]:[outline:1px_solid_CanvasText]"
           >
             <Link href={getJournalCategoryPath("family-history")}>
               {archive.action}
