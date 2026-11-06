@@ -81,7 +81,7 @@ function StoryTimeline() {
               key={milestone.year}
               className="relative min-w-0 pl-[30px] before:absolute before:top-[14px] before:bottom-[-42px] before:left-[6.5px] before:w-px before:bg-peploe-burgundy last:before:hidden sm:pl-0 sm:before:hidden"
             >
-              <p className="font-[family-name:var(--font-eb-garamond),serif] text-[28px] leading-[37px] font-normal text-peploe-burgundy">
+              <p className="text-[28px] leading-[37px] font-normal text-peploe-burgundy">
                 {milestone.year}
               </p>
               <span
