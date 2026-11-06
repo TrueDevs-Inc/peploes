@@ -17,7 +17,7 @@ export function NavbarBrand({ onClick }: INavbarBrandProps) {
     >
       <span
         aria-hidden="true"
-        className="h-[52px] w-full bg-ink mask-[url('/peploes-logo.webp')] mask-contain mask-center mask-no-repeat"
+        className="h-[52px] w-full bg-ink mask-[url('/peploes-logo-mask.webp')] mask-contain mask-center mask-no-repeat"
       />
     </Link>
   );

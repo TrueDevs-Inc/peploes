@@ -59,7 +59,7 @@ export function Footer() {
             >
               <span
                 aria-hidden="true"
-                className="block h-full w-full bg-ink mask-[url('/peploes-logo.webp')] mask-contain mask-center mask-no-repeat"
+                className="block h-full w-full bg-ink mask-[url('/peploes-logo-mask.webp')] mask-contain mask-center mask-no-repeat"
               />
             </Link>
             <div className="space-y-0 xl:space-y-2">

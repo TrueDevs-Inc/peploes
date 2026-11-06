@@ -29,15 +29,13 @@ function PageScrollReveal() {
       }
       elements.clear();
     };
-    const registerElement = (element: HTMLElement) => {
-      if (elements.has(element) || element.parentElement?.closest(targets))
-        return;
-      // Streamed content is staged in hidden containers before entering the page.
-      if (element.getClientRects().length === 0) return;
+    const registerElement = (
+      element: HTMLElement,
+      initiallyVisible: boolean,
+    ) => {
       elements.add(element);
-      const bounds = element.getBoundingClientRect();
       element.classList.add(styles.target);
-      if (bounds.top < window.innerHeight - 24) {
+      if (initiallyVisible) {
         reveal(element);
       } else {
         element.dataset.scrollRevealState = "pending";
@@ -52,7 +50,24 @@ function PageScrollReveal() {
         }
       }
       if (!media.matches) return;
-      document.querySelectorAll<HTMLElement>(targets).forEach(registerElement);
+      // Streamed content is staged in hidden containers before entering the page.
+      const candidates = Array.from(
+        document.querySelectorAll<HTMLElement>(targets),
+      )
+        .filter(
+          (element) =>
+            !elements.has(element) &&
+            !element.parentElement?.closest(targets) &&
+            element.getClientRects().length > 0,
+        )
+        .map((element) => ({
+          element,
+          initiallyVisible:
+            element.getBoundingClientRect().top < window.innerHeight - 24,
+        }));
+      for (const { element, initiallyVisible } of candidates) {
+        registerElement(element, initiallyVisible);
+      }
     };
     const observe = () => {
       reset();
