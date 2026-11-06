@@ -567,6 +567,8 @@
   opacity: 1;
 }
 .enquiryFields textarea {
+  min-height: 44px;
+  padding-block: 10px;
   resize: vertical;
 }
 .messageField {
@@ -1889,7 +1891,8 @@
   }
   .compactEnquiry .enquiryFields textarea {
     height: 90px;
-    padding-top: 8px;
+    min-height: 40px;
+    padding-block: 8px;
   }
   .compactEnquiry .enquiryFields :is(input, select, textarea) {
     border: 1px solid var(--soft-stone);
@@ -2898,7 +2901,8 @@
     line-height: 22px;
   }
   .enquiry .enquiryFields textarea[name="message"] {
-    padding-block: 12px;
+    min-height: 44px;
+    padding-block: 10px;
     padding-right: 32px;
   }
   .messageResize {
