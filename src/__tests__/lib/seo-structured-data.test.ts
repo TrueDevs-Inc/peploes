@@ -141,6 +141,21 @@ describe("page indexing metadata", () => {
     },
   );
 
+  it.each([
+    ["https://deploy-preview-12--peploes.netlify.app", false],
+    ["https://peploes-git-dev-truedevs.vercel.app", false],
+    ["https://peploes.netlify.app", true],
+    ["https://peploes.com", true],
+  ])("indexes pages on site %s: %s", async (siteUrl, indexable) => {
+    vi.resetModules();
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", siteUrl);
+    const { buildSeoMetadata: metadata } = await import("@/lib/seo");
+    expect(metadata(config).robots).toEqual({
+      index: indexable,
+      follow: true,
+    });
+  });
+
   it("declares the real size of a social image", function imageSizeTest() {
     expect(
       buildSeoMetadata({

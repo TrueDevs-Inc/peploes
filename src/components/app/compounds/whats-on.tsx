@@ -12,7 +12,12 @@ import type {
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-function EventAction({ label, mobileLabel, href }: IEventActionProps) {
+function EventAction({
+  label,
+  mobileLabel,
+  eventTitle,
+  href,
+}: IEventActionProps) {
   const content = (
     <>
       {mobileLabel ? (
@@ -23,6 +28,7 @@ function EventAction({ label, mobileLabel, href }: IEventActionProps) {
       ) : (
         label
       )}
+      {eventTitle && <span className="sr-only">: {eventTitle}</span>}
       <ArrowRight aria-hidden="true" className="size-4" />
     </>
   );
@@ -111,6 +117,7 @@ function EventCard({ event, featured = false }: IEventCardProps) {
           <EventAction
             label={event.ctaLabel}
             mobileLabel={event.mobileCtaLabel}
+            eventTitle={event.title}
             href={event.href}
           />
         </div>

@@ -129,7 +129,8 @@
   transform: translateY(-16.0948%);
 }
 
-.photoBounds.terms img {
+.photoBounds.terms img,
+.photoBounds.booking img {
   object-fit: cover;
 }
 

@@ -1694,10 +1694,10 @@
     width: 100%;
   }
   :where(.celebrationMenus .promoImage) .cover {
-    /* Preserve Figma's stretched portrait crop within the full-width section. */
-    object-fit: fill;
-    transform-origin: top left;
-    transform: translate(47.1079%, -35.5653%) scale(0.572529, 3.028252);
+    max-width: 57.2529%;
+    min-height: 302.8252%;
+    margin-left: 47.1079%;
+    transform: translateY(-11.7445%);
   }
   .celebrationMenus .promoImage::after {
     background: linear-gradient(
@@ -2203,10 +2203,10 @@
     overflow: visible;
   }
   :where(.corporateMenus .promoImage) .cover {
-    /* Reproduce the image fill in Figma's 1440 × 435px frame. */
-    object-fit: fill;
-    transform-origin: top left;
-    transform: translate(-8.29218%, -20.718%) scale(0.58291011, 2.4140238);
+    max-width: 58.291%;
+    min-height: 241.4024%;
+    margin-left: -8.2922%;
+    transform: translateY(-8.5824%);
   }
   .corporateMenus::after {
     background: linear-gradient(

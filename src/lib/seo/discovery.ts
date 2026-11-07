@@ -15,6 +15,7 @@ import { CORPORATE_EVENTS } from "@/lib/constants/private-dining-corporate";
 import { WEDDINGS } from "@/lib/constants/private-dining-weddings";
 import { SEASONAL_CONTENT } from "@/lib/constants/seasonal";
 import { SEASONAL_MENU } from "@/lib/constants/seasonal-menu";
+import { TABLE_BOOK_PAGE_CONTENT } from "@/lib/constants/table-book-page";
 import { VISIT_CONTACT_CONTENT } from "@/lib/constants/visit-contact";
 import { WINE_MENU } from "@/lib/constants/wine-menu";
 import { seasonalPath } from "@/lib/seasonal-data";
@@ -69,6 +70,11 @@ export const LLMS_SECTIONS: { heading: string; pages: ILlmsPage[] }[] = [
         name: "Home",
         path: ROUTES.HOME,
         description: DEFAULT_SEO.description,
+      },
+      {
+        name: TABLE_BOOK_PAGE_CONTENT.title,
+        path: ROUTES.BOOK_A_TABLE,
+        description: TABLE_BOOK_PAGE_CONTENT.description,
       },
       {
         name: "What’s On",

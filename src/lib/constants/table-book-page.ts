@@ -1,7 +1,7 @@
 export const TABLE_BOOK_PAGE_CONTENT = {
   title: "Book a Table",
   description:
-    "Plan your visit to Peploe’s on St Stephen’s Green. Contact our team for reservations, larger groups and private dining.",
+    "Book a table online at Peploe’s on St Stephen’s Green, Dublin. Choose a date, party size and time, or contact our team for larger groups.",
   hero: {
     eyebrow: "Book",
     heading: "A table at Peploe’s.",

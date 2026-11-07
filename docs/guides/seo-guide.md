@@ -48,8 +48,20 @@ describes.
 
 ## Robots and sitemap
 
-Indexing follows each page's `noIndex` metadata setting. There is no global
-staging/production indexing switch or deployment-based `X-Robots-Tag`.
+Indexing follows each page's `noIndex` metadata setting. Deployment labels
+do not change indexing, because a staging project may also be labelled
+`production`. A site whose `NEXT_PUBLIC_SITE_URL` is on a platform host
+(`*.netlify.app` or `*.vercel.app`, listed in `src/lib/seo/indexing.ts`) is a
+non-production copy: every page has `noindex` metadata and every response
+carries `X-Robots-Tag: noindex`. Any other site URL, including the public
+domain and local builds, stays indexable. `peploes.netlify.app` is a temporary
+exception so its Lighthouse SEO results can be tested before the public domain
+is connected; remove it from `INDEXABLE_PLATFORM_HOSTS_UNTIL_DOMAIN_LAUNCH`
+when `peploes.com` goes live. The module has no imports so
+`next.config.ts` and `buildSeoMetadata()` share one rule. Both read the value
+at build time. `robots.txt` stays permissive on those hosts so crawlers can
+read the noindex signal; see
+[Block search indexing](https://developers.google.com/search/docs/crawling-indexing/block-indexing).
 Requests with `x-presentation: admin` receive a `noindex` header from
 `next.config.ts`, independently of public page metadata.
 `robots.txt` uses the same configured crawler policy in every environment,
@@ -69,7 +81,7 @@ routes, enforce access on the server, prevent shared caching, and exclude those
 routes from public discovery. Use non-indexing response headers and metadata
 where appropriate; crawler directives alone do not protect private content.
 
-`src/app/sitemap.ts` contains the home page, Our Story, What’s On, all seven
+`src/app/sitemap.ts` contains the home page, Book a Table, Our Story, What’s On, all seven
 query-selected menu URLs, the four private dining pages, the policy pages and
 Visit & Contact, plus the Journal hub and published (not `noIndex`) What's On
 entries and Journal articles. Journal articles use their CMS update time for
@@ -83,11 +95,11 @@ sitemap, `llms.txt` and structured data until an editor publishes them.
 
 `src/app/llms.txt/route.ts` serves Markdown built by `buildLlmsText()` in
 `src/lib/seo/discovery.ts`. It lists the site name and description, the public
-pages (home, What's On, Our Story, Journal, Visit & Contact), the seven menus and
+pages (home, Book a Table, What's On, Our Story, Journal, Visit & Contact), the seven menus and
 the four private dining pages, each with the description from its own page metadata, then
 published What's On entries labelled by kind with their dates, then the sitemap
 and robots links. The route handler renders per request, reads the cached CMS entries, and sets a one-hour CDN `Cache-Control` header. If the CMS fails it serves the
-static sections with `no-store`, so the fallback is not cached. `/book-a-table` is left out while it is `noindex`. The root layout points agents to it with `rel="describedby"`.
+static sections with `no-store`, so the fallback is not cached. The root layout points agents to it with `rel="describedby"`.
 
 Add a public page to `llms.txt` only when the URL exists and its description
 matches the page. Do not copy the sitemap, claim unsupported features, or treat
@@ -133,6 +145,8 @@ and the CSP.
 - Titles and descriptions match visible content.
 - Canonical URLs point to the public deployment.
 - Deployment labels do not change indexing; page-specific `noIndex` remains effective.
+- A platform-host deployment serves `X-Robots-Tag: noindex`; the public domain
+  and hosts in `INDEXABLE_PLATFORM_HOSTS_UNTIL_DOMAIN_LAUNCH` do not.
 - JSON-LD contains real names, URLs, images, prices, and dates.
 - Sitemap contains canonical public pages only.
 - Search, training, and mixed-use crawler rules match product policy.

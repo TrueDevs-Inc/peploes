@@ -53,6 +53,17 @@ describe("security headers", function securityHeaderTests() {
     },
   );
 
+  it.each([
+    ["https://deploy-preview-12--peploes.netlify.app", "noindex"],
+    ["https://deploy-preview-12--peploes.netlify.app./", "noindex"],
+    ["https://peploes-git-dev-truedevs.vercel.app", "noindex"],
+    ["https://peploes.netlify.app", undefined],
+    ["https://peploes.com", undefined],
+  ])("sets the indexing header for site %s", async (siteUrl, expected) => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", siteUrl);
+    expect((await getGlobalHeaders()).get("X-Robots-Tag")).toBe(expected);
+  });
+
   it("allows configured Mapbox across documents for client navigation", async function mapboxPolicyTest() {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN", "pk.test-only");

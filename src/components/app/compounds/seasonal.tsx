@@ -155,6 +155,7 @@ function SeasonalDiary({ content, months }: ISeasonalProps) {
                       >
                         <Link href={seasonalPath(event.slug)} prefetch={true}>
                           {event.action ?? diary.action}
+                          <span className="sr-only">: {event.title}</span>
                           <ArrowRight aria-hidden="true" className="size-4" />
                         </Link>
                       </Button>
