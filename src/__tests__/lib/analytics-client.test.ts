@@ -6,9 +6,9 @@ const envState = vi.hoisted(() => ({
   production: true,
   gaId: "G-TEST" as string | undefined,
 }));
-vi.mock("@/lib/env", () => ({
+vi.mock("@/lib/public-env", () => ({
   isProduction: () => envState.production,
-  env: {
+  publicEnv: {
     get NEXT_PUBLIC_GA_MEASUREMENT_ID() {
       return envState.gaId;
     },

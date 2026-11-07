@@ -1,14 +1,23 @@
-import * as Sentry from "@sentry/nextjs";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { fetcher } from "@/helpers/api";
 import { HttpVerb } from "@/lib/enums";
 
-vi.mock("@sentry/nextjs", () => ({ captureException: vi.fn() }));
+const Sentry = vi.hoisted(() => ({
+  available: true,
+  captureException: vi.fn(),
+}));
+vi.mock("@/lib/client-sentry", () => ({
+  get clientSentry() {
+    return Sentry.available ? Sentry : undefined;
+  },
+}));
 
 describe("fetcher", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+    Sentry.available = true;
+    Sentry.captureException.mockClear();
   });
 
   it.each([
@@ -110,6 +119,19 @@ describe("fetcher", () => {
       status: 503,
       error: "Service Unavailable",
     });
+  });
+
+  it("returns a network failure when browser Sentry is unconfigured", async () => {
+    Sentry.available = false;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn<typeof fetch>().mockRejectedValue(new TypeError("Failed to fetch")),
+    );
+
+    expect(
+      await fetcher({ url: "/api/bookings/times", method: HttpVerb.Get }),
+    ).toEqual({ ok: false, status: 0, data: null, error: "Failed to fetch" });
+    expect(Sentry.captureException).not.toHaveBeenCalled();
   });
 
   it("captures a network failure and returns an unsuccessful result", async () => {

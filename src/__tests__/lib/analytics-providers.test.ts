@@ -9,9 +9,9 @@ const envState = vi.hoisted(() => ({
   phKey: "phc_synthetic" as string | undefined,
   phHost: "https://eu.i.posthog.com" as string | undefined,
 }));
-vi.mock("@/lib/env", () => ({
+vi.mock("@/lib/public-env", () => ({
   isProduction: () => envState.production,
-  env: {
+  publicEnv: {
     get NEXT_PUBLIC_GA_MEASUREMENT_ID() {
       return envState.gaId;
     },
@@ -66,7 +66,7 @@ async function load(options: ILoadOptions = {}) {
   const gate = new Promise<void>((resolve) => {
     release = resolve;
   });
-  vi.doMock("posthog-js", async () => {
+  vi.doMock("posthog-js/dist/module.slim", async () => {
     if (options.importFails) throw new Error("chunk failed");
     if (options.holdImport) await gate;
     return { default: posthog };
@@ -117,7 +117,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers();
   vi.unstubAllGlobals();
-  vi.doUnmock("posthog-js");
+  vi.doUnmock("posthog-js/dist/module.slim");
 });
 
 describe("before consent and without configuration", () => {

@@ -1,11 +1,11 @@
 import { ANALYTICS } from "@/lib/constants";
-import { env } from "@/lib/env";
+import { publicEnv } from "@/lib/public-env";
 import type { IPendingAnalyticsEvent } from "@/lib/types";
 import { clearCookies } from "./browser-storage";
 import { createEventHistory } from "./deduplication";
 import { isAnalyticsPermitted } from "./permission";
 
-const GA_MEASUREMENT_ID = env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+const GA_MEASUREMENT_ID = publicEnv.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 const GTAG_SCRIPT_URL = "https://www.googletagmanager.com/gtag/js";
 const GOOGLE_COOKIES = /^(_ga|_ga_[A-Z0-9]+|_gid|_gat.*)$/;
 const CONSENT_DENIED = {

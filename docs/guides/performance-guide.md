@@ -98,3 +98,92 @@ smoke check, not a performance budget.
 
 Optimize the measured bottleneck and record the before and after result in the
 pull request.
+
+## Repeated Lighthouse collection
+
+`bun run perf` uses the locked development-only LHCI 0.16.0 and Lighthouse
+13.6.0 packages. Run audits with Node 22.23.4, Bun 1.4.0 and the Chromium
+installed by the locked Playwright release:
+
+```bash
+bun ci
+bunx playwright install --with-deps chromium
+export AUDIT_NODE_PATH=/absolute/path/to/node-22.23.4/bin/node
+bun run build
+bun run start --port 3118
+```
+
+In another terminal, with the same representative public CMS and integration
+configuration:
+
+```bash
+bun run perf --origin http://127.0.0.1:3118 --phase baseline \
+  --evidence .omo/evidence/issue-181-performance/baseline-001 \
+  --manifest performance/manifest.json
+```
+
+The evidence parent directory must exist; the attempt directory must be new.
+Do not replace missing content with fixtures. A ready manifest
+contains all 22 approved static paths and one published, image-bearing
+detail of each type. Representative baseline, candidate and deployment phases
+require indexable published details from the sitemap. Published noindex
+development pages are allowed only with `--phase diagnostic`; diagnostic scores
+cannot establish representative acceptance. Indexing state is frozen and
+checked without changing CMS content. Select eligible details by descending body-image count, then lexical
+pathname. Freeze headings, representative body text, menu selection, hero
+expectations and CMS document IDs, revisions, timestamps and hashes. Visit's map
+expectation must match the environment's normal interactive or static mode;
+never remove a configured token for an audit. The
+`performance/manifest.ts` schema defines the machine-readable contract; ignored
+task-1 evidence records the current content-selection result.
+
+The command keeps three independent fresh-browser runs per URL on standard
+mobile and desktop profiles, preserving query strings. Each URL receives one
+ordinary unscored navigation before its three measured runs. Consent is never
+preaccepted; the measured document must retain the normal Cookie Settings
+trigger with no saved preferences. The preferences dialog stays closed during
+scored runs, matching the ordinary first visit.
+The readiness audit has a separate category and does not contribute to the
+Performance score. It checks the measured document rather than a second fetch.
+The built-in desktop settings come from Lighthouse's desktop preset.
+
+Collection invokes the bundled Lighthouse CLI once per run because LHCI's
+collector automatically retries failed runs. Native LHCI assertions enforce
+the raw three-run median of at least 0.90. Any invalid or missing report stops
+the attempt; a score failure retains the complete population. Retain failed
+attempts and rerun the whole matrix under a new attempt ID. A machine-wide
+temporary lock prevents concurrent collection; an existing lock is a failure,
+including after an interrupted process, until its owner is checked.
+
+Reports retain JSON, HTML, traces, network logs, screenshots, exact device
+settings and metric summaries. Population metadata binds them to the source
+digest, uncommitted diff digest, production build ID, CMS identity, origin and
+tool/browser versions. Token query parameters and configured secret values are
+redacted from collected text artifacts without changing scores or menu query
+identity. No environment dump is saved. LHCI makes no remote
+upload. The development-only `basic-ftp` override fixes
+[GHSA-c475-qrg2-pj4r](https://github.com/advisories/GHSA-c475-qrg2-pj4r)
+in LHCI's proxy dependency chain while preserving the approved LHCI pin.
+
+Run `bun run test performance/validate.test.ts performance/process.test.ts performance/content.test.ts` for
+tooling failure and cleanup checks. Synthetic populations prove tooling behavior
+only. A local score population does not establish full acceptance: cold runtime
+cache diagnostics, returning-consent traces, visitor-flow and visual checks are
+separate requirements. Representative scoring requires the real manifest and
+normally configured integrations. Deployment mode fails
+explicitly until trusted deployment resolution and its environment/origin
+allowlist are implemented. Do not use an unrelated live revision as
+candidate evidence or deploy solely to bypass that blocker.
+
+The **Performance tooling** CI job installs locked dependencies, checks the
+pinned audit runtime and CLI, tests synthetic report populations, and proves
+that the public command rejects an unavailable server. It uses only synthetic
+configuration and read-only repository access. Its failure evidence is retained
+as a workflow artifact for 14 days; missing artifact files fail the upload.
+This check proves tooling behavior and does not establish representative scores.
+
+The browser Sentry DSN compiles to an explicit empty value when unconfigured,
+allowing unused SDK imports to leave the browser bundle. Configured browser
+reporting initializes synchronously before hydration with the existing privacy
+and sampling settings. The private server DSN never supplies a missing browser
+DSN.

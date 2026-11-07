@@ -1,4 +1,4 @@
-import * as Sentry from "@sentry/nextjs";
+import { clientSentry as Sentry } from "@/lib/client-sentry";
 
 import { HTTP_CONTENT_TYPE } from "@/lib/constants";
 import type { IFetchOptions, IFetchResponse } from "@/lib/types";
@@ -52,7 +52,7 @@ export async function fetcher<TRequest = unknown, TResponse = unknown>({
       error: null,
     };
   } catch (error) {
-    Sentry.captureException(error);
+    Sentry?.captureException(error);
     const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       ok: false,

@@ -1,13 +1,21 @@
-import { z } from "zod";
-
 import { COOKIE_PREFERENCES } from "@/lib/constants/cookie-consent";
 import type { ICookiePreferences } from "@/lib/types";
 
-export const cookiePreferencesSchema = z.object({
-  analytics: z.boolean(),
-  performance: z.boolean(),
-  marketing: z.boolean(),
-});
+function parseCookiePreferences(value: unknown): ICookiePreferences | null {
+  if (typeof value !== "object" || value === null) return null;
+  const { analytics, performance, marketing } = value as Record<
+    string,
+    unknown
+  >;
+  if (
+    typeof analytics !== "boolean" ||
+    typeof performance !== "boolean" ||
+    typeof marketing !== "boolean"
+  ) {
+    return null;
+  }
+  return { analytics, performance, marketing };
+}
 
 let denyOptionalCookies = false;
 const listeners = new Set<() => void>();
@@ -96,10 +104,10 @@ export function getCookiePreferences(): ICookiePreferences {
   try {
     if (hasStoredDenial()) return COOKIE_PREFERENCES.defaults;
     const stored = window.localStorage.getItem(COOKIE_PREFERENCES.storageKey);
-    const result = cookiePreferencesSchema.safeParse(
-      stored ? JSON.parse(stored) : null,
+    return (
+      parseCookiePreferences(stored ? JSON.parse(stored) : null) ??
+      COOKIE_PREFERENCES.defaults
     );
-    return result.success ? result.data : COOKIE_PREFERENCES.defaults;
   } catch {
     return COOKIE_PREFERENCES.defaults;
   }

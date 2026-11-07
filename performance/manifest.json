@@ -1,0 +1,224 @@
+{
+  "version": 1,
+  "status": "ready",
+  "cms": {
+    "projectId": "w789ottu",
+    "dataset": "development",
+    "apiVersion": "2026-10-06"
+  },
+  "routes": [
+    {
+      "path": "/",
+      "heading": "Good food, fine wine and a room worth being in.",
+      "requiredText": [
+        "Great food, exceptional wine and genuine hospitality in the heart of the city."
+      ],
+      "hero": true
+    },
+    {
+      "path": "/menus",
+      "heading": "Lunch Menu",
+      "requiredText": [
+        "Seasonal Irish ingredients, familiar favourites and an exceptional wine list, served in a room worth being in."
+      ],
+      "hero": true,
+      "menu": "lunch"
+    },
+    {
+      "path": "/book-a-table",
+      "heading": "A table at Peploe’s.",
+      "requiredText": [
+        "Join us at 16 St Stephen’s Green for relaxed lunches, indulgent dinners and special occasions in our beautiful Georgian setting."
+      ],
+      "hero": true
+    },
+    {
+      "path": "/our-story",
+      "heading": "A family restaurant,\nmore than two\ndecades on.",
+      "requiredText": [
+        "Peploe’s opened on St Stephen’s Green in 2003, but the story of the room reaches much further back shaped by a remarkable building, a passionate family and the people who fill it with life."
+      ],
+      "hero": true
+    },
+    {
+      "path": "/contact",
+      "heading": "Step down\nfrom the city.",
+      "requiredText": ["16 St Stephen’s Green, Dublin 2"],
+      "hero": true,
+      "map": "static"
+    },
+    {
+      "path": "/journal",
+      "heading": "The Journal",
+      "requiredText": ["Stories from St Stephen’s Green"],
+      "hero": true
+    },
+    {
+      "path": "/seasonal",
+      "heading": "There’s always\nsomething happening\nat Peploe’s.",
+      "requiredText": [
+        "Seasonal menus, special evenings, wine dinners and occasions throughout the year, all in the heart of St Stephen’s Green."
+      ],
+      "hero": true
+    },
+    {
+      "path": "/menus?menu=lunch",
+      "heading": "Lunch Menu",
+      "requiredText": [
+        "Seasonal Irish ingredients, familiar favourites and an exceptional wine list, served in a room worth being in."
+      ],
+      "hero": true,
+      "menu": "lunch"
+    },
+    {
+      "path": "/menus?menu=dinner",
+      "heading": "Dinner Menu",
+      "requiredText": [
+        "Seasonal Irish ingredients, familiar favourites and an exceptional wine list, served in a room worth being in."
+      ],
+      "hero": true,
+      "menu": "dinner"
+    },
+    {
+      "path": "/menus?menu=pre-theatre",
+      "heading": "Pre-Theatre Menu",
+      "requiredText": [
+        "Seasonal Irish ingredients, familiar favourites and an exceptional wine list, served in a room worth being in."
+      ],
+      "hero": true,
+      "menu": "pre-theatre"
+    },
+    {
+      "path": "/menus?menu=wine",
+      "heading": "Bottles worth\nlingering over.",
+      "requiredText": [
+        "Seasonal Irish ingredients, familiar favourites and an exceptional wine list, served in a room worth being in."
+      ],
+      "hero": true,
+      "menu": "wine"
+    },
+    {
+      "path": "/menus?menu=cocktails",
+      "heading": "Cocktails at Peploe’s",
+      "requiredText": [
+        "Seasonal Irish ingredients, familiar favourites and an exceptional wine list, served in a room worth being in."
+      ],
+      "hero": true,
+      "menu": "cocktails"
+    },
+    {
+      "path": "/menus?menu=group-set-menu",
+      "heading": "Group Set Menu",
+      "requiredText": [
+        "Seasonal Irish ingredients, familiar favourites and an exceptional wine list, served in a room worth being in."
+      ],
+      "hero": true,
+      "menu": "group-set-menu"
+    },
+    {
+      "path": "/menus?menu=seasonal",
+      "heading": "Seasonal Menus",
+      "requiredText": [
+        "Seasonal Irish ingredients, familiar favourites and an exceptional wine list, served in a room worth being in."
+      ],
+      "hero": true,
+      "menu": "seasonal"
+    },
+    {
+      "path": "/private-dining",
+      "heading": "Life tastes\nbetter together.",
+      "requiredText": [
+        "From long lunches and family celebrations to business dinners and intimate city weddings, Peploe’s offers a warm setting for bringing people together in the heart of Dublin."
+      ],
+      "hero": true
+    },
+    {
+      "path": "/private-dining/groups-celebrations",
+      "heading": "A table worth\ngathering around.",
+      "requiredText": [
+        "From milestone birthdays and family celebrations to long lunches with friends, Peploe’s is a warm Dublin setting for bringing people together."
+      ],
+      "hero": true
+    },
+    {
+      "path": "/private-dining/corporate-events",
+      "heading": "An exceptional setting for\nbusiness and celebration.",
+      "requiredText": ["Corporate events & exclusive hire"],
+      "hero": true
+    },
+    {
+      "path": "/private-dining/weddings",
+      "heading": "A day to remember, in a\nsetting like no other.",
+      "requiredText": [
+        "An intimate and elegant setting in the heart of Dublin for your wedding celebration, with exceptional food, wine and warm hospitality."
+      ],
+      "hero": true
+    },
+    {
+      "path": "/privacy-cookies",
+      "heading": "Your privacy\nmatters.",
+      "requiredText": [
+        "We are committed to protecting your personal information and being transparent about how we use it. This page explains how we collect, use and safeguard your data, and how we use cookies on our website."
+      ],
+      "hero": true
+    },
+    {
+      "path": "/accessibility-policy",
+      "heading": "A warm welcome\nfor everyone.",
+      "requiredText": [
+        "At Peploe’s, we want all our guests to feel comfortable, valued and able to enjoy our restaurant. We are committed to making our website and our restaurant as accessible and inclusive as possible."
+      ],
+      "hero": true
+    },
+    {
+      "path": "/terms-conditions",
+      "heading": "Our terms\nand conditions.",
+      "requiredText": [
+        "These terms set out the conditions for using our website and services, including information about gift vouchers, payments and third-party services."
+      ],
+      "hero": true
+    },
+    {
+      "path": "/booking-cancellation-terms",
+      "heading": "Before you book.",
+      "requiredText": [
+        "These terms apply to all reservations at Peploe’s, St Stephen’s Green, and help us provide the best possible experience for all our guests."
+      ],
+      "hero": true
+    },
+    {
+      "path": "/journal/a-focus-on-seasonal-ingredients",
+      "heading": "A focus on seasonal ingredients.",
+      "requiredText": [
+        "From milestone birthdays and family celebrations to long lunches with friends, Peploe’s is a warm Dublin setting for bringing people together."
+      ],
+      "hero": true,
+      "content": {
+        "id": "journal-article-a-focus-on-seasonal-ingredients",
+        "revision": "MhnO5j0Xf0Gda41Dlwhqht",
+        "updatedAt": "2026-11-02T07:38:37Z",
+        "hash": "ea2063784c240f899074ea70e62142996f9fa94ebbc30fc7affd379e86bbc68c",
+        "imageHash": "8a425def93d20623d40c39c8c48360df0fea616b5ced86a25ac7ae154f1d2b3d",
+        "noIndex": true,
+        "bodyImages": 0
+      }
+    },
+    {
+      "path": "/seasonal/italian-wine-dinner",
+      "heading": "A Seasonal\nWine Dinner",
+      "requiredText": [
+        "An intimate evening exploring remarkable wines and seasonal dishes, hosted by our team and special guests. This is sample content, not a confirmed restaurant event."
+      ],
+      "hero": true,
+      "content": {
+        "id": "event-italian-wine-dinner",
+        "revision": "S5qNdSZhOju0QETYuW05WS",
+        "updatedAt": "2026-11-02T07:38:36Z",
+        "hash": "fcb113fedbdce93204bd6729527f27c8bbcf7599a362fccc26f399bdf71b6384",
+        "imageHash": "e4e5b13ebedd1159f98e50507275862c030509ef342ad60bfc51e3b00afc478c",
+        "noIndex": true,
+        "bodyImages": 7
+      }
+    }
+  ]
+}

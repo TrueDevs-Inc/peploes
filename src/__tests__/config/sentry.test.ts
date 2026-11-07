@@ -28,6 +28,34 @@ const runtimeCheck = `
 `;
 
 describe("Sentry deployment policy", function sentryDeploymentTests() {
+  it.each(["", "https://public@browser.ingest.sentry.io/2"])(
+    "compiles only the browser DSN without falling back to the server DSN: %s",
+    (browserDsn) => {
+      const result = spawnSync(
+        "bun",
+        [
+          "--eval",
+          'const { default: config } = await import("./next.config.ts"); console.log(config.env.NEXT_PUBLIC_SENTRY_DSN);',
+        ],
+        {
+          cwd: process.cwd(),
+          env: {
+            ...process.env,
+            NODE_ENV: "production",
+            SENTRY_DSN: "https://server@server.ingest.sentry.io/1",
+            NEXT_PUBLIC_SENTRY_DSN: browserDsn,
+            SENTRY_AUTH_TOKEN: "",
+          },
+          encoding: "utf8",
+          timeout: 10000,
+        },
+      );
+      expect(result.error).toBeUndefined();
+      expect(result.status, result.stderr).toBe(0);
+      expect(result.stdout.trim()).toBe(browserDsn);
+    },
+  );
+
   for (const runtime of ["server", "edge"]) {
     it.each([
       {

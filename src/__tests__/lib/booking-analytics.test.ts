@@ -3,9 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GA4Event } from "@/lib/enums";
 import { installFakeBrowser } from "../helpers/browser";
 
-vi.mock("@/lib/env", () => ({
+vi.mock("@/lib/public-env", () => ({
   isProduction: () => true,
-  env: {
+  publicEnv: {
     NEXT_PUBLIC_GA_MEASUREMENT_ID: "G-BOOKING",
   },
 }));

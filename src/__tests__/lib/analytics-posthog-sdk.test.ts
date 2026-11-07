@@ -17,9 +17,9 @@ const envState = vi.hoisted(() => ({
   phKey: "phc_synthetic" as string | undefined,
   phHost: "https://eu.i.posthog.com" as string | undefined,
 }));
-vi.mock("@/lib/env", () => ({
+vi.mock("@/lib/public-env", () => ({
   isProduction: () => true,
-  env: {
+  publicEnv: {
     get NEXT_PUBLIC_GA_MEASUREMENT_ID() {
       return envState.gaId;
     },
