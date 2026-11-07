@@ -145,7 +145,8 @@ and the CSP.
 - Titles and descriptions match visible content.
 - Canonical URLs point to the public deployment.
 - Deployment labels do not change indexing; page-specific `noIndex` remains effective.
-- A platform-host deployment serves `X-Robots-Tag: noindex`; the public domain does not.
+- A platform-host deployment serves `X-Robots-Tag: noindex`; the public domain
+  and hosts in `INDEXABLE_PLATFORM_HOSTS_UNTIL_DOMAIN_LAUNCH` do not.
 - JSON-LD contains real names, URLs, images, prices, and dates.
 - Sitemap contains canonical public pages only.
 - Search, training, and mixed-use crawler rules match product policy.

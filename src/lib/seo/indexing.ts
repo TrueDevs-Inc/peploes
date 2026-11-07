@@ -6,7 +6,7 @@ const INDEXABLE_PLATFORM_HOSTS_UNTIL_DOMAIN_LAUNCH = [
 export function isSearchIndexableSite(siteUrl: string | undefined): boolean {
   if (!siteUrl || !URL.canParse(siteUrl)) return true;
 
-  const { hostname } = new URL(siteUrl);
+  const hostname = new URL(siteUrl).hostname.replace(/\.$/u, "");
   if (
     INDEXABLE_PLATFORM_HOSTS_UNTIL_DOMAIN_LAUNCH.some(
       (host) => hostname === host,

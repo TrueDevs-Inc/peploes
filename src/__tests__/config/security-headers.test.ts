@@ -55,6 +55,7 @@ describe("security headers", function securityHeaderTests() {
 
   it.each([
     ["https://deploy-preview-12--peploes.netlify.app", "noindex"],
+    ["https://deploy-preview-12--peploes.netlify.app./", "noindex"],
     ["https://peploes-git-dev-truedevs.vercel.app", "noindex"],
     ["https://peploes.netlify.app", undefined],
     ["https://peploes.com", undefined],
