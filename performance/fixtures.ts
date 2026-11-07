@@ -20,7 +20,7 @@ export const route = (path: string): TRoute => ({
   heading: "Published content",
   requiredText: ["Published"],
   hero: false,
-  ...(path === "/visit-contact" ? { map: "interactive" as const } : {}),
+  ...(path === "/contact" ? { map: "interactive" as const } : {}),
   ...(path.startsWith("/menus")
     ? {
         menu:

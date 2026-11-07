@@ -131,7 +131,7 @@ describe("complete report populations", () => {
 
 describe("measured document validity", () => {
   it("preserves the ordinary static map when no interactive token is configured", () => {
-    const current = { ...route("/visit-contact"), map: "static" as const };
+    const current = { ...route("/contact"), map: "static" as const };
     expect(
       checkContent(
         { ...snapshot(current), mapLoaded: false, mapFallbackPresent: true },
@@ -248,7 +248,7 @@ describe("measured document validity", () => {
   });
   it.each([
     ["/book-a-table", { bookingAvailable: false }],
-    ["/visit-contact", { mapLoaded: false }],
+    ["/contact", { mapLoaded: false }],
     ["/journal/probe", { heroLoaded: false }],
   ])("rejects unavailable integration/hero on %s", (path, change) => {
     const target = route(path);

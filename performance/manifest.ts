@@ -20,7 +20,7 @@ export const STATIC_PATHS = [
   "/menus",
   "/book-a-table",
   "/our-story",
-  "/visit-contact",
+  "/contact",
   "/journal",
   "/seasonal",
   "/menus?menu=lunch",
@@ -60,7 +60,7 @@ export const routeSchema = z
     map: z.enum(["static", "interactive"]).optional(),
     content: contentSchema.optional(),
   })
-  .refine((route) => route.path !== "/visit-contact" || Boolean(route.map), {
+  .refine((route) => route.path !== "/contact" || Boolean(route.map), {
     message: "Visit requires an explicit normal map configuration.",
   });
 export type TRoute = z.infer<typeof routeSchema>;

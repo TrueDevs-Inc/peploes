@@ -41,7 +41,7 @@
       "hero": true
     },
     {
-      "path": "/visit-contact",
+      "path": "/contact",
       "heading": "Step down\nfrom the city.",
       "requiredText": ["16 St Stephen’s Green, Dublin 2"],
       "hero": true,
